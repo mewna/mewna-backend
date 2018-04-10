@@ -4,6 +4,9 @@ import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author amy
  * @since 4/8/18.

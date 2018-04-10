@@ -48,7 +48,7 @@ public class DiscordCache {
                 "region TEXT," +
                 "memberCount INT" +
                 ");");
-        //session.execute("CREATE INDEX IF NOT EXISTS guild_names ON cute.guilds (name);");
+        session.execute("CREATE INDEX IF NOT EXISTS ON cute.guilds (ownerId);");
         // Channels
         session.execute("CREATE TABLE IF NOT EXISTS cute.channels (" +
                 "id TEXT PRIMARY KEY," +
@@ -57,14 +57,15 @@ public class DiscordCache {
                 "name TEXT," +
                 "nsfw BOOLEAN" +
                 ");");
-        //session.execute("CREATE INDEX IF NOT EXISTS channel_names ON cute.channels (name);");
+        session.execute("CREATE INDEX IF NOT EXISTS ON cute.channels (guildId);");
         // Roles
         session.execute("CREATE TABLE IF NOT EXISTS cute.roles (" +
                 "id TEXT PRIMARY KEY," +
                 "name TEXT," +
-                "color INT" +
+                "color INT," +
+                "guildId TEXT" +
                 ");");
-        //session.execute("CREATE INDEX IF NOT EXISTS role_names ON cute.roles (name);");
+        session.execute("CREATE INDEX IF NOT EXISTS ON cute.roles (name);");
         // Users
         session.execute("CREATE TABLE IF NOT EXISTS cute.users (" +
                 "id TEXT PRIMARY KEY," +
@@ -73,7 +74,7 @@ public class DiscordCache {
                 "bot BOOLEAN," +
                 "avatar TEXT," +
                 ");");
-        //session.execute("CREATE INDEX IF NOT EXISTS user_names ON cute.users (name);");
+        session.execute("CREATE INDEX IF NOT EXISTS ON cute.users (name);");
     }
     
     public void shutdown() {
@@ -179,8 +180,8 @@ public class DiscordCache {
         final String id = data.getString("id");
         final User old = mappingManager.mapper(User.class).get(id);
         final UserBuilder user = User.builder().id(id);
-        if(data.has("name")) {
-            user.name(data.getString("name"));
+        if(data.has("username")) {
+            user.name(data.getString("username"));
         } else if(old != null) {
             user.name(old.getName());
         }
@@ -210,18 +211,24 @@ public class DiscordCache {
     }
     
     public void cacheRole(final JSONObject data) {
-        final String id = data.getString("id");
+        JSONObject rData = data.getJSONObject("role");
+        final String id = rData.getString("id");
         final Role old = mappingManager.mapper(Role.class).get(id);
         final RoleBuilder role = Role.builder().id(id);
-        if(data.has("name")) {
-            role.name(data.getString("name"));
+        if(rData.has("name")) {
+            role.name(rData.getString("name"));
         } else if(old != null) {
             role.name(old.getName());
         }
-        if(data.has("color")) {
-            role.color(data.getInt("color"));
+        if(rData.has("color")) {
+            role.color(rData.getInt("color"));
         } else if(old != null) {
             role.color(old.getColor());
+        }
+        if(data.has("guild_id")) {
+            role.guildId(data.getString("guild_id"));
+        } else if(old != null) {
+            role.guildId(old.getGuildId());
         }
         mappingManager.mapper(Role.class).save(role.build());
         logger.info("Updated role {}", id);

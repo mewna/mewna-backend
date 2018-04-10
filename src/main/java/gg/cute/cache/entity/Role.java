@@ -19,4 +19,5 @@ public class Role {
     private String id;
     private String name;
     private int color;
+    private String guildId;
 }

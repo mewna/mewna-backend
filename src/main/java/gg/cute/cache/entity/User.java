@@ -21,4 +21,8 @@ public class User {
     private String discriminator;
     private String avatar;
     private boolean bot;
+    
+    public String asMention() {
+        return "<@" + id + '>';
+    }
 }

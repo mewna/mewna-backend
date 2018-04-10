@@ -21,4 +21,8 @@ public class Channel {
     private String guildId;
     private String name;
     private boolean nsfw;
+    
+    public String asMention() {
+        return "<#" + id + '>';
+    }
 }

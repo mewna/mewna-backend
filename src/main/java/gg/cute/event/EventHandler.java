@@ -22,8 +22,6 @@ public class EventHandler {
     
     private final Logger logger = LoggerFactory.getLogger(getClass());
     
-    private final RestJDA restJDA = new RestJDA(System.getenv("TOKEN"));
-    
     @Getter
     private final DiscordCache cache = new DiscordCache();
     
@@ -54,8 +52,16 @@ public class EventHandler {
                 final JSONArray roles = data.getJSONArray("roles");
                 final JSONArray members = data.getJSONArray("members");
                 final JSONArray channels = data.getJSONArray("channels");
-                channels.forEach(r -> cache.cacheChannel((JSONObject) r));
-                roles.forEach(r -> cache.cacheRole((JSONObject) r));
+                channels.forEach(r -> {
+                    final JSONObject o = (JSONObject) r;
+                    cache.cacheChannel(o.put("guild_id", data.getString("id")));
+                });
+                roles.forEach(r -> {
+                    // We do this because ROLE_* events give us {role: {}, guild_id: ""}
+                    // and it's easier to just have one method and transform data before
+                    final JSONObject o = (JSONObject) r;
+                    cache.cacheRole(new JSONObject().put("guild_id", data.getString("id")).put("role", o));
+                });
                 members.forEach(r -> cache.cacheUser(((JSONObject) r).getJSONObject("user")));
                 break;
             }
@@ -80,7 +86,7 @@ public class EventHandler {
             
             // Members
             case "GUILD_MEMBER_ADD": {
-                cache.cacheUser(data);
+                cache.cacheUser(data.getJSONObject("user"));
                 final Guild guild = cache.getGuild(data.getString("guild_id"));
                 cache.getMappingManager().mapper(Guild.class).save(guild.toBuilder().memberCount(guild.getMemberCount() + 1).build());
                 break;
@@ -128,12 +134,7 @@ public class EventHandler {
             
             // Messages
             case "MESSAGE_CREATE": {
-                if(data.getJSONObject("author").getString("id").equalsIgnoreCase("128316294742147072")) {
-                    if(data.getString("content").equalsIgnoreCase("=help")) {
-                        logger.info("Got MESSAGE_CREATE with data: {}", data);
-                        restJDA.sendMessage(data.getString("channel_id"), "Magic!").queue();
-                    }
-                }
+                cute.getPluginManager().handleMessage(event.getData());
                 break;
             }
             

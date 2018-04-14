@@ -17,22 +17,6 @@ import java.util.List;
  */
 @Plugin("utility")
 public class PluginUtility extends BasePlugin {
-    @Command(names = "test", desc = "Test command!")
-    public void test(final CommandContext ctx) {
-        final User user = ctx.getUser();
-        final Channel channel = ctx.getChannel();
-        final Guild guild = ctx.getGuild();
-        final List<User> mentions = ctx.getMentions();
-    
-        final StringBuilder sb = new StringBuilder("Success! You are `").append(user.getName()).append("` (")
-                .append(user.asMention()).append(") triggering this command in `").append(guild.getName())
-                .append("` channel `").append(channel.getName()).append("` (").append(channel.asMention())
-                .append(").\nYou mentioned the following users:\n");
-        mentions.forEach(e -> sb.append("* `").append(e.getName()).append("` (").append(e.asMention()).append(")\n"));
-        
-        getCute().getRestJDA().sendMessage(channel.getId(), sb.toString()).queue();
-    }
-    
     @Command(names = {"help", "?"}, desc = "Get links to helpful information.")
     public void help(final CommandContext ctx) {
         final EmbedBuilder builder = new EmbedBuilder();
@@ -47,11 +31,5 @@ public class PluginUtility extends BasePlugin {
     @Command(names = "invite", desc = "Get the invite link.")
     public void invite(final CommandContext ctx) {
         getCute().getRestJDA().sendMessage(ctx.getChannel().getId(), "Click here: <https://amy.chat/invite>").queue();
-    }
-    
-    @Command(names = {"main_name", "alias_1", "alias_2"},
-            desc = "Your command description goes here. Used for auto-generated documentation.")
-    public void myCommand(final CommandContext ctx) {
-        getCute().getRestJDA().sendMessage(ctx.getChannel().getId(), "magic");
     }
 }

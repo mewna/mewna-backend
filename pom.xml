@@ -23,6 +23,11 @@
             <name>jcenter</name>
             <url>http://jcenter.bintray.com/</url>
         </repository>
+
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -154,6 +159,14 @@
             <artifactId>commons-collections4</artifactId>
             <version>${commons.collections.version}</version>
             <classifier>javadoc</classifier>
+        </dependency>
+
+
+        <!-- PG ORM -->
+        <dependency>
+            <groupId>com.github.queer</groupId>
+            <artifactId>async-postgres-jsonb-orm</artifactId>
+            <version>675e57fb97</version>
         </dependency>
     </dependencies>
 

@@ -3,6 +3,7 @@ package gg.cute.jda;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.impl.GuildImpl;
 import net.dv8tion.jda.core.entities.impl.JDAImpl;
 import net.dv8tion.jda.core.entities.impl.TextChannelImpl;
@@ -46,6 +47,16 @@ public class RestJDA {
     @CheckReturnValue
     public MessageAction sendMessage(final long channelId, final String msg) {
         return sendMessage(channelId, new MessageBuilder().append(msg).build());
+    }
+    
+    @CheckReturnValue
+    public MessageAction sendMessage(final String channelId, final MessageEmbed embed) {
+        return sendMessage(channelId, new MessageBuilder().setEmbed(embed).build());
+    }
+    
+    @CheckReturnValue
+    public MessageAction sendMessage(final long channelId, final MessageEmbed embed) {
+        return sendMessage(channelId, new MessageBuilder().setEmbed(embed).build());
     }
     
     @CheckReturnValue

@@ -176,6 +176,7 @@ public class DiscordCache {
         mappingManager.mapper(Channel.class).delete(id);
     }
     
+    // TODO: Consider moving these to redis instead
     public void cacheUser(final JSONObject data) {
         final String id = data.getString("id");
         final User old = mappingManager.mapper(User.class).get(id);

@@ -3,7 +3,6 @@ package gg.cute.event;
 import gg.cute.Cute;
 import gg.cute.cache.DiscordCache;
 import gg.cute.cache.entity.Guild;
-import gg.cute.jda.RestJDA;
 import gg.cute.nats.SocketEvent;
 import lombok.Getter;
 import org.json.JSONArray;
@@ -112,7 +111,9 @@ public class EventHandler {
                 break;
             }
             case "GUILD_ROLE_DELETE": {
-                cache.deleteRole(data.getString("id"));
+                // data.role.id
+                System.out.println("G_R_D: " + data);
+                cache.deleteRole(data.getString("role_id"));
                 break;
             }
             case "GUILD_ROLE_UPDATE": {

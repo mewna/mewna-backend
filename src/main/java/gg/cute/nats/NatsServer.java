@@ -11,6 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author amy
@@ -21,6 +23,8 @@ public class NatsServer {
     private final StreamingConnectionFactory connectionFactory = new StreamingConnectionFactory("cute-nats", "cute-discord-backend");
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Cute cute;
+    
+    private final ExecutorService pool = Executors.newCachedThreadPool();
     
     @Getter
     private StreamingConnection connection;
@@ -39,12 +43,12 @@ public class NatsServer {
             connection.subscribe("discord-event-queue", m -> {
                 final String message = new String(m.getData());
                 try {
-    
+                    
                     final JSONObject o = new JSONObject(message);
                     final JSONObject shard = o.getJSONObject("shard");
                     final SocketEvent event = new SocketEvent(o.getString("t"), o.getJSONObject("d"), o.getLong("ts"),
                             shard.getInt("id"), shard.getInt("limit"));
-                    cute.getEventHandler().handle(event);
+                    pool.execute(() -> cute.getEventHandler().handle(event));
                     /*
                     final String source = o.getString("source");
                     cute.getStatsDClient().incrementCounter("socketMessages", 1, "type:incoming", "source:" + source);

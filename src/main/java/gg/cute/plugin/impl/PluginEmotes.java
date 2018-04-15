@@ -12,7 +12,8 @@ import gg.cute.plugin.Plugin;
 @Plugin("emotes")
 public class PluginEmotes extends BasePlugin {
     @Command(names = {"bap", "chew", "cookie", "hug", "lick", "nom", "poke", "prod", "shoot", "stab", "tickle"},
-            desc = "Fun little emote commands. You need to mention someone to use them.")
+            desc = "Fun little emote commands. You need to mention someone to use them.", usage = "<command> <person>",
+            examples = {"bap someone", "stab someone else", "poke everyone"}, aliased = false)
     public void emote(final CommandContext ctx) {
         final String action;
         switch(ctx.getCommand()) {

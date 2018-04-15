@@ -14,7 +14,9 @@
         <cassandra.version>3.4.0</cassandra.version>
         <fcps.version>LATEST</fcps.version>
         <javax.inject.version>1</javax.inject.version>
+        <commons.lang.version>3.7</commons.lang.version>
         <commons.collections.version>LATEST</commons.collections.version>
+        <jedis.version>2.9.0</jedis.version>
     </properties>
 
     <repositories>
@@ -31,12 +33,14 @@
     </repositories>
 
     <dependencies>
+        <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.16.18</version>
         </dependency>
 
+        <!-- JDA -->
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
@@ -55,6 +59,7 @@
             <classifier>javadoc</classifier>
         </dependency>
 
+        <!-- nats-streaming -->
         <dependency>
             <groupId>io.nats</groupId>
             <artifactId>java-nats-streaming</artifactId>
@@ -73,6 +78,7 @@
             <classifier>javadoc</classifier>
         </dependency>
 
+        <!-- Logback -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
@@ -91,6 +97,7 @@
             <classifier>javadoc</classifier>
         </dependency>
 
+        <!-- Cassandra -->
         <dependency>
             <groupId>com.datastax.cassandra</groupId>
             <artifactId>cassandra-driver-core</artifactId>
@@ -107,6 +114,7 @@
             <version>${cassandra.version}</version>
         </dependency>
 
+        <!-- Fast Classpath Scanner -->
         <dependency>
             <groupId>io.github.lukehutch</groupId>
             <artifactId>fast-classpath-scanner</artifactId>
@@ -125,6 +133,7 @@
             <classifier>javadoc</classifier>
         </dependency>
 
+        <!-- @Inject -->
         <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
@@ -143,6 +152,7 @@
             <classifier>javadoc</classifier>
         </dependency>
 
+        <!-- Commons collections -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
@@ -161,12 +171,57 @@
             <classifier>javadoc</classifier>
         </dependency>
 
+        <!-- Apache Commons Lang -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons.lang.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons.lang.version}</version>
+            <classifier>sources</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons.lang.version}</version>
+            <classifier>javadoc</classifier>
+        </dependency>
 
         <!-- PG ORM -->
         <dependency>
             <groupId>com.github.queer</groupId>
             <artifactId>async-postgres-jsonb-orm</artifactId>
-            <version>675e57fb97</version>
+            <version>87ae9d59d5</version>
+        </dependency>
+
+        <!-- Jedis -->
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>${jedis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>${jedis.version}</version>
+            <classifier>sources</classifier>
+        </dependency>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>${jedis.version}</version>
+            <classifier>javadoc</classifier>
+        </dependency>
+
+        <!-- JUnit -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

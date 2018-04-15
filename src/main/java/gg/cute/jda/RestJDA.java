@@ -1,5 +1,6 @@
 package gg.cute.jda;
 
+import gg.cute.cache.entity.Channel;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Message;
@@ -42,6 +43,11 @@ public class RestJDA {
         Checks.notNull(newContent, "message");
         final CompiledRoute route = Messages.EDIT_MESSAGE.compile(Long.toString(channelId), Long.toString(messageId));
         return new MessageAction(fakeJDA, route, new TextChannelImpl(channelId, new GuildImpl(fakeJDA, 0))).apply(newContent);
+    }
+    
+    @CheckReturnValue
+    public MessageAction sendMessage(final Channel channel, final String msg) {
+        return sendMessage(channel.getId(), new MessageBuilder().append(msg).build());
     }
     
     @CheckReturnValue

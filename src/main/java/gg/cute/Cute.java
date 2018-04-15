@@ -1,22 +1,26 @@
 package gg.cute;
 
 import gg.cute.cache.DiscordCache;
+import gg.cute.data.Database;
 import gg.cute.event.EventHandler;
 import gg.cute.jda.RestJDA;
 import gg.cute.nats.NatsServer;
 import gg.cute.plugin.PluginManager;
+import gg.cute.util.Ratelimiter;
 import lombok.Getter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author amy
  * @since 4/8/18.
  */
-public class Cute {
+public final class Cute {
     @Getter
     private NatsServer nats;
     
     @Getter
-    private EventHandler eventHandler = new EventHandler(this);
+    private final EventHandler eventHandler = new EventHandler(this);
     
     @Getter
     private final PluginManager pluginManager = new PluginManager(this);
@@ -24,18 +28,28 @@ public class Cute {
     @Getter
     private final RestJDA restJDA = new RestJDA(System.getenv("TOKEN"));
     
+    @Getter
+    private final Database database = new Database(this);
+    
+    @Getter
+    private final Ratelimiter ratelimiter = new Ratelimiter(this);
+    
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    
     private Cute() {
     }
     
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         new Cute().start();
     }
     
     private void start() {
         eventHandler.getCache().connect();
+        database.init();
         pluginManager.init();
         nats = new NatsServer(this);
         nats.connect();
+        logger.info("Finished starting!");
     }
     
     public DiscordCache getCache() {

@@ -16,6 +16,12 @@ public @interface Command {
     
     String desc();
     
+    String usage();
+    
+    String[] examples();
+    
     boolean owner() default false;
+    
+    boolean aliased() default true;
 }
 

@@ -3,6 +3,8 @@ package gg.cute.plugin;
 import gg.cute.cache.entity.Channel;
 import gg.cute.cache.entity.Guild;
 import gg.cute.cache.entity.User;
+import gg.cute.data.DiscordSettings;
+import gg.cute.data.Player;
 import lombok.Value;
 
 import java.util.List;
@@ -20,4 +22,6 @@ public class CommandContext {
     private Guild guild;
     private Channel channel;
     private List<User> mentions;
+    private DiscordSettings settings;
+    private Player player;
 }

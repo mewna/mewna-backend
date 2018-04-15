@@ -4,9 +4,14 @@ import com.google.common.collect.ImmutableMap;
 import gg.cute.Cute;
 import gg.cute.cache.entity.Channel;
 import gg.cute.cache.entity.User;
+import gg.cute.data.Database;
+import gg.cute.data.DiscordSettings;
+import gg.cute.plugin.ratelimit.Ratelimit;
+import gg.cute.util.Time;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import lombok.Getter;
 import lombok.Value;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +20,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
@@ -42,6 +48,8 @@ public class PluginManager {
         injectionClasses = ImmutableMap.<Class<?>, Function<Class<?>, Object>>builder()
                 .put(Cute.class, __ -> this.cute)
                 .put(Logger.class, LoggerFactory::getLogger)
+                .put(Database.class, __ -> this.cute.getDatabase())
+                .put(Random.class, __ -> new Random())
                 .build();
     }
     
@@ -87,7 +95,10 @@ public class PluginManager {
                         final Command cmd = m.getDeclaredAnnotation(Command.class);
                         
                         for(final String s : cmd.names()) {
-                            commands.put(s.toLowerCase(), new CommandWrapper(s.toLowerCase(), cmd.names(), cmd.desc(),
+                            commands.put(s.toLowerCase(), new CommandWrapper(s.toLowerCase(),
+                                    cmd.aliased() ? cmd.names()[0].toLowerCase() : s.toLowerCase(), cmd.names(),
+                                    m.getDeclaredAnnotation(Ratelimit.class),
+                                    cmd.desc(),
                                     cmd.owner(), plugin, m));
                             logger.info("Loaded plugin command '{}' for plugin '{}' ({})", s,
                                     p.value(), c.getName());
@@ -100,59 +111,113 @@ public class PluginManager {
         }
     }
     
-    public void handleMessage(final JSONObject data) {
-        // Parse prefixes
-        // TODO: Per-guild support?
-        String content = data.getString("content");
-        String prefix = null;
-        boolean found = false;
-        for(final String p : PREFIXES) {
-            if(p != null && !p.isEmpty()) {
-                if(content.toLowerCase().startsWith(p.toLowerCase())) {
-                    prefix = p;
-                    found = true;
-                }
-            }
+    @SuppressWarnings("TypeMayBeWeakened")
+    private List<String> getAllPrefixes(final DiscordSettings guildSettings) {
+        final List<String> prefixes = new ArrayList<>(PREFIXES);
+        final String custom = guildSettings.getCustomPrefix();
+        if(custom != null && !custom.isEmpty()) {
+            prefixes.add(custom);
         }
-        if(found) {
-            content = content.substring(prefix.length()).trim();
-            if(content.isEmpty()) {
+        return prefixes;
+    }
+    
+    public void handleMessage(final JSONObject data) {
+        try {
+            // TODO: Temporary dev. block
+            final String channelId = data.getString("channel_id");
+            final String guildId = data.getString("guild_id");
+            final User user = cute.getCache().getUser(data.getJSONObject("author").getString("id"));
+    
+            if(!user.getId().equals("128316294742147072")) {
                 return;
             }
-            final String[] split = content.split("\\s+", 2);
-            final String commandName = split[0];
-            final String argstr = split.length > 1 ? split[1] : "";
-            if(commands.containsKey(commandName)) {
-                final Channel channel = cute.getCache().getChannel(data.getString("channel_id"));
-                final List<User> mentions = new ArrayList<>();
-                for(final Object o : data.getJSONArray("mentions")) {
-                    final JSONObject j = (JSONObject) o;
-                    // TODO: Build this from the object instead of hitting the cache all the time?
-                    mentions.add(cute.getCache().getUser(j.getString("id")));
-                }
-                final CommandContext ctx = new CommandContext(
-                        cute.getCache().getUser(data.getJSONObject("author").getString("id")),
-                        commandName,
-                        new ArrayList<>(Arrays.asList(argstr.split("\\s+"))),
-                        argstr,
-                        cute.getCache().getGuild(channel.getGuildId()),
-                        channel,
-                        mentions
-                );
-                final CommandWrapper cmd = commands.get(commandName);
-                try {
-                    cmd.getMethod().invoke(cmd.getPlugin(), ctx);
-                } catch(final IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
+    
+            if(user.isBot()) {
+                return;
+            }
+            // Parse prefixes
+            String content = data.getString("content");
+            String prefix = null;
+            boolean found = false;
+            final DiscordSettings settings = cute.getDatabase().getGuildSettings(guildId);
+            for(final String p : getAllPrefixes(settings)) {
+                if(p != null && !p.isEmpty()) {
+                    if(content.toLowerCase().startsWith(p.toLowerCase())) {
+                        prefix = p;
+                        found = true;
+                    }
                 }
             }
+            if(found) {
+                content = content.substring(prefix.length()).trim();
+                if(content.isEmpty()) {
+                    return;
+                }
+                final String[] split = content.split("\\s+", 2);
+                final String commandName = split[0];
+                final String argstr = split.length > 1 ? split[1] : "";
+                if(commands.containsKey(commandName)) {
+                    final CommandWrapper cmd = commands.get(commandName);
+            
+                    if(cmd.getRatelimit() != null) {
+                        final String baseName = cmd.getBaseName();
+                
+                        final String ratelimitKey;
+                        switch(cmd.getRatelimit().type()) {
+                            case GUILD:
+                                ratelimitKey = guildId;
+                                break;
+                            case GLOBAL:
+                                ratelimitKey = user.getId();
+                                break;
+                            case CHANNEL:
+                                ratelimitKey = channelId;
+                                break;
+                            default:
+                                ratelimitKey = user.getId();
+                                break;
+                        }
+                
+                        final ImmutablePair<Boolean, Long> check = cute.getRatelimiter().checkUpdateRatelimit(user.getId(),
+                                baseName + ':' + ratelimitKey,
+                                TimeUnit.SECONDS.toMillis(cmd.getRatelimit().time()));
+                        if(check.left) {
+                            cute.getRestJDA().sendMessage(channelId,
+                                    String.format("You're using that command too fast! Try again in **%s**.",
+                                            Time.toHumanReadableDuration(check.right))).queue();
+                            return;
+                        }
+                    }
+            
+                    final Channel channel = cute.getCache().getChannel(channelId);
+                    final List<User> mentions = new ArrayList<>();
+                    for(final Object o : data.getJSONArray("mentions")) {
+                        final JSONObject j = (JSONObject) o;
+                        // TODO: Build this from the JSON object instead of hitting the cache all the time?
+                        mentions.add(cute.getCache().getUser(j.getString("id")));
+                    }
+                    final CommandContext ctx = new CommandContext(user, commandName,
+                            new ArrayList<>(Arrays.asList(argstr.split("\\s+"))), argstr,
+                            cute.getCache().getGuild(channel.getGuildId()), channel, mentions, settings,
+                            cute.getDatabase().getPlayer(user));
+                    try {
+                        cmd.getMethod().invoke(cmd.getPlugin(), ctx);
+                    } catch(final IllegalAccessException | InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } catch(final Throwable t) {
+            logger.error("Error at high-level command processor:", t);
         }
     }
     
     @Value
     public static final class CommandWrapper {
         private String name;
+        private String baseName;
         private String[] names;
+        private Ratelimit ratelimit;
         private String desc;
         private boolean owner;
         private Object plugin;

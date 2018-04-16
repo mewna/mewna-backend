@@ -13,14 +13,13 @@ import lombok.ToString;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static gg.cute.plugin.impl.PluginCurrency.ReelSymbol.*;
 
 /**
+ * TODO: Make all the chances auto-adjusting on a per-user basis. These testing chance numbers aren't good...
+ *
  * @author amy
  * @since 4/14/18.
  */
@@ -34,6 +33,9 @@ public class PluginCurrency extends BasePlugin {
     
     private static final long DAILY_BASE_REWARD = 100;
     
+    private static final int GAMBLE_WUMPUS_COUNT = 5;
+    
+    private final Map<String, SlotMachine> slotsCache = new HashMap<>();
     @Inject
     private CurrencyHelper helper;
     
@@ -154,7 +156,7 @@ public class PluginCurrency extends BasePlugin {
             final long reward = HEIST_BASE_COST * 10;
             ctx.getPlayer().incrementBalance(ctx.getGuild(), reward);
             getDatabase().savePlayer(ctx.getPlayer());
-    
+            
             getRestJDA().sendMessage(ctx.getChannel(), String.format("You break into Fort Knick-Knacks and steal %s%s from inside.",
                     reward, helper.getCurrencySymbol(ctx))).queue();
         } else {
@@ -169,14 +171,82 @@ public class PluginCurrency extends BasePlugin {
     @Command(names = "slots", desc = "Gamble your life away at the slot machines.", usage = "slots [amount]",
             examples = {"slots", "slots 100"})
     public void slots(final CommandContext ctx) {
-        getRestJDA().sendMessage(ctx.getChannel().getId(), "<<unimplemented>>").queue();
+        final User user = ctx.getUser();
+        if(!slotsCache.containsKey(user.getId())) {
+            slotsCache.put(user.getId(), new SlotMachine());
+        }
+        
+        final long payment = ctx.getCost();
+        final ReelSymbol[][] roll = slotsCache.get(user.getId()).roll();
+        
+        // 10% chance of guaranteed win
+        if(getRandom().nextInt(100) < 10) {
+            // Middle row == "winning" row
+            @SuppressWarnings("UnnecessarilyQualifiedStaticallyImportedElement")
+            final ReelSymbol[] symbols = ReelSymbol.values();
+            final ReelSymbol win = symbols[getRandom().nextInt(symbols.length)];
+            for(int i = 0; i < roll[1].length; i++) {
+                roll[1][i] = win;
+            }
+        }
+        
+        final boolean win = roll[1][0] == roll[1][1] && roll[1][0] == roll[1][2];
+        
+        final StringBuilder sb = new StringBuilder("The slot machines rolled up:\n");
+        for(final ReelSymbol[] row : roll) {
+            for(final ReelSymbol col : row) {
+                sb.append(col.emote);
+            }
+            sb.append('\n');
+        }
+        
+        if(win) {
+            // calc payment and send messages
+            final long payout = roll[1][0].worth + payment;
+            // TODO: Rare bonus chance like I always do
+            
+            ctx.getPlayer().incrementBalance(ctx.getGuild(), payout);
+            getDatabase().savePlayer(ctx.getPlayer());
+            
+            //noinspection UnnecessarilyQualifiedStaticallyImportedElement
+            if(roll[1][0] == ReelSymbol.BOOM) {
+                sb.append("\nOh no! The slot machine exploded! You pay out **").append(payout).append(helper.getCurrencySymbol(ctx))
+                        .append("** to cover the repair cost.");
+            } else {
+                sb.append("\nYou won **").append(payout).append(helper.getCurrencySymbol(ctx)).append("**!");
+            }
+            
+            getRestJDA().sendMessage(ctx.getChannel(), sb.toString()).queue();
+        } else {
+            getRestJDA().sendMessage(ctx.getChannel(), sb.append("\nThe slot machine paid out nothing...").toString()).queue();
+        }
     }
     
+    @Payment(min = 20, max = 1000, fromFirstArg = true)
     @Ratelimit(time = 60)
     @Command(names = "gamble", desc = "Bet big on the Wumpus Races.", usage = "gamble [amount]",
             examples = {"gamble", "gamble 100"})
     public void gamble(final CommandContext ctx) {
-        getRestJDA().sendMessage(ctx.getChannel().getId(), "<<unimplemented>>").queue();
+        // TODO: Allow a way for a player to choose this
+        final int playerWumpus = getRandom().nextInt(GAMBLE_WUMPUS_COUNT);
+        final int winningWumpus = getRandom().nextInt(GAMBLE_WUMPUS_COUNT);
+        
+        final StringBuilder sb = new StringBuilder("You head off to the Wumpus Races to gamble your life away.");
+        sb.append("You bet **").append(ctx.getCost()).append(helper.getCurrencySymbol(ctx)).append("** on Wumpus **#")
+                .append(playerWumpus).append("**.\n\n");
+        sb.append("And the winner is Wumpus **#").append(winningWumpus).append("**!\n\n");
+        
+        if(playerWumpus == winningWumpus) {
+            final long payout = ctx.getCost() * 5; // TODO: Might be high...?
+            ctx.getPlayer().incrementBalance(ctx.getGuild(), payout);
+            getDatabase().savePlayer(ctx.getPlayer());
+            sb.append("You bet on the right one! You win **").append(payout).append(helper.getCurrencySymbol(ctx))
+                    .append("** for betting right!");
+        } else {
+            sb.append("You bet on a loser! Your **").append(ctx.getCost()).append(helper.getCurrencySymbol(ctx))
+                    .append("** is gone forever...");
+        }
+        getRestJDA().sendMessage(ctx.getChannel(), sb.toString()).queue();
     }
     
     @ToString

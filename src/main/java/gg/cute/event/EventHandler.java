@@ -30,6 +30,7 @@ public class EventHandler {
     
     public void handle(final SocketEvent event) {
         final JSONObject data = event.getData();
+        // TODO: Consider making real "handlers" instead of this god-awful mess
         switch(event.getType()) {
             // Channels
             case "CHANNEL_CREATE": {
@@ -62,6 +63,7 @@ public class EventHandler {
                     final JSONObject o = (JSONObject) r;
                     cache.cacheRole(new JSONObject().put("guild_id", id).put("role", o));
                 });
+                logger.info("Caching initial {} member chunk.", members.length());
                 members.forEach(r -> {
                     cache.cacheUser(((JSONObject) r).getJSONObject("user"));
                     cache.cacheMember(id, (JSONObject) r);
@@ -110,6 +112,7 @@ public class EventHandler {
             }
             case "GUILD_MEMBERS_CHUNK": {
                 final JSONArray members = data.getJSONArray("members");
+                logger.info("Caching chunk with {} members.", members.length());
                 members.forEach(m -> {
                     cache.cacheUser(((JSONObject) m).getJSONObject("user"));
                     cache.cacheMember(data.getString("guild_id"), (JSONObject) m);

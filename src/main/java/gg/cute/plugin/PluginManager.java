@@ -13,6 +13,7 @@ import gg.cute.util.Time;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import lombok.Getter;
 import lombok.Value;
+import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -44,6 +45,8 @@ public class PluginManager {
     @Getter
     private final Cute cute;
     private final CurrencyHelper currencyHelper;
+    @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
+    private final OkHttpClient okHttpClient = new OkHttpClient.Builder().build();
     
     public PluginManager(final Cute cute) {
         this.cute = cute;
@@ -55,6 +58,7 @@ public class PluginManager {
                 .put(Database.class, __ -> this.cute.getDatabase())
                 .put(Random.class, __ -> new Random())
                 .put(CurrencyHelper.class, __ -> currencyHelper)
+                .put(OkHttpClient.class, __ -> okHttpClient)
                 .build();
     }
     
@@ -176,6 +180,9 @@ public class PluginManager {
                 final ArrayList<String> args = new ArrayList<>(Arrays.asList(argstr.split("\\s+")));
                 if(commands.containsKey(commandName)) {
                     final CommandWrapper cmd = commands.get(commandName);
+                    if(cmd.isOwner() && !user.getId().equalsIgnoreCase("128316294742147072")) {
+                        return;
+                    }
                     
                     if(cmd.getRatelimit() != null) {
                         final String baseName = cmd.getBaseName();
@@ -251,6 +258,7 @@ public class PluginManager {
                             args, argstr,
                             cute.getCache().getGuild(channel.getGuildId()), channel, mentions, settings,
                             cute.getDatabase().getPlayer(user), cost);
+                    
                     try {
                         cmd.getMethod().invoke(cmd.getPlugin(), ctx);
                     } catch(final IllegalAccessException | InvocationTargetException e) {

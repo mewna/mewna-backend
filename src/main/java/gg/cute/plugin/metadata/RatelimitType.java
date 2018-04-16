@@ -1,4 +1,4 @@
-package gg.cute.plugin.ratelimit;
+package gg.cute.plugin.metadata;
 
 /**
  * @author amy

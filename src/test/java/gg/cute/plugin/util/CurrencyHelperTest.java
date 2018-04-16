@@ -1,4 +1,4 @@
-package gg.cute.plugin;
+package gg.cute.plugin.util;
 
 import gg.cute.cache.entity.Guild;
 import gg.cute.data.Player;
@@ -7,17 +7,17 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static gg.cute.plugin.BasePlugin.PaymentResult.*;
+import static gg.cute.plugin.util.CurrencyHelper.PaymentResult.*;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author amy
- * @since 4/14/18.
+ * @since 4/15/18.
  */
-public class BasePluginTest {
+public class CurrencyHelperTest {
     @Test
     public void checkPayment() {
-        final BasePlugin base = new BasePlugin();
+        final CurrencyHelper base = new CurrencyHelper();
         final Guild fakeGuild = new Guild("267500017260953601", "fake guild", null, "128316294742147072",
                 "us-east", 1234);
         final Map<String, Long> guildBalances = new HashMap<>();

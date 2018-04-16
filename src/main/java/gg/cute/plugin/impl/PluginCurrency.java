@@ -6,19 +6,19 @@ import gg.cute.plugin.BasePlugin;
 import gg.cute.plugin.Command;
 import gg.cute.plugin.CommandContext;
 import gg.cute.plugin.Plugin;
-import gg.cute.plugin.ratelimit.Ratelimit;
-import gg.cute.util.Time;
+import gg.cute.plugin.metadata.Payment;
+import gg.cute.plugin.metadata.Ratelimit;
+import gg.cute.plugin.util.CurrencyHelper;
 import lombok.ToString;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static gg.cute.plugin.impl.PluginCurrency.ReelSymbol.*;
-import static gg.cute.plugin.ratelimit.RatelimitType.GUILD;
 
 /**
  * @author amy
@@ -27,16 +27,15 @@ import static gg.cute.plugin.ratelimit.RatelimitType.GUILD;
 @Plugin("currency")
 @SuppressWarnings("unused")
 public class PluginCurrency extends BasePlugin {
-    private static final long SLOTS_BASE = 10;
-    private static final long GAMBLE_BASE = 25;
-    private static final long HEIST_BASE = 300;
-    private static final long CRIME_BASE = 10;
-    private static final long DAILY_BASE = 100;
+    private static final long SLOTS_BASE_COST = 10;
+    private static final long GAMBLE_BASE_COST = 25;
+    private static final long HEIST_BASE_COST = 300;
+    private static final long CRIME_BASE_COST = 10;
     
-    private static final long SLOTS_COOLDOWN = TimeUnit.SECONDS.toMillis(10);
-    private static final long GAMBLE_COOLDOWN = TimeUnit.MINUTES.toMillis(1);
-    private static final long HEIST_COOLDOWN = TimeUnit.MINUTES.toMillis(5);
-    private static final long CRIME_COOLDOWN = TimeUnit.SECONDS.toMillis(20);
+    private static final long DAILY_BASE_REWARD = 100;
+    
+    @Inject
+    private CurrencyHelper helper;
     
     @Command(names = {"balance", "bal"}, desc = "Check your balance, or someone else's balance.", usage = "balance [player]",
             examples = {"balance", "balance @someone"})
@@ -45,13 +44,13 @@ public class PluginCurrency extends BasePlugin {
             final Player player = ctx.getPlayer();
             final long balance = player.getBalance(ctx);
             getRestJDA().sendMessage(ctx.getChannel(),
-                    String.format("**You** have **%s%s**.", balance, getCurrencySymbol(ctx))).queue();
+                    String.format("**You** have **%s%s**.", balance, helper.getCurrencySymbol(ctx))).queue();
         } else {
             final User m = ctx.getMentions().get(0);
             final Player player = getDatabase().getPlayer(m);
             final long balance = player.getBalance(ctx);
             getRestJDA().sendMessage(ctx.getChannel(),
-                    String.format("**%s** has **%s%s**.", m.getName(), balance, getCurrencySymbol(ctx))).queue();
+                    String.format("**%s** has **%s%s**.", m.getName(), balance, helper.getCurrencySymbol(ctx))).queue();
         }
     }
     
@@ -68,12 +67,12 @@ public class PluginCurrency extends BasePlugin {
         }
         final Player sender = ctx.getPlayer();
         final Player target = getDatabase().getPlayer(ctx.getMentions().get(0));
-        final ImmutablePair<Boolean, Long> res = handlePayment(ctx, ctx.getArgs().get(1), 1, Long.MAX_VALUE);
+        final ImmutablePair<Boolean, Long> res = helper.handlePayment(ctx, ctx.getArgs().get(1), 1, Long.MAX_VALUE);
         if(res.left) {
             target.incrementBalance(ctx.getGuild(), res.right);
             getDatabase().savePlayer(target);
             getRestJDA().sendMessage(ctx.getChannel(), String.format("**%s**, you sent **%s%s** to **%s**.",
-                    ctx.getUser().getName(), res.right, getCurrencySymbol(ctx), ctx.getMentions().get(0).getName())).queue();
+                    ctx.getUser().getName(), res.right, helper.getCurrencySymbol(ctx), ctx.getMentions().get(0).getName())).queue();
         }
     }
     
@@ -81,30 +80,99 @@ public class PluginCurrency extends BasePlugin {
     public void daily(final CommandContext ctx) {
         // TODO: Ratelimit this
         // TODO: Streaks
-        ctx.getPlayer().incrementBalance(ctx.getGuild(), DAILY_BASE);
+        ctx.getPlayer().incrementBalance(ctx.getGuild(), DAILY_BASE_REWARD);
         getDatabase().savePlayer(ctx.getPlayer());
-        getRestJDA().sendMessage(ctx.getChannel(), String.format("You collect your daily **%s%s**.", DAILY_BASE,
-                getCurrencySymbol(ctx))).queue();
+        getRestJDA().sendMessage(ctx.getChannel(), String.format("You collect your daily **%s%s**.", DAILY_BASE_REWARD,
+                helper.getCurrencySymbol(ctx))).queue();
     }
     
-    @Ratelimit(time = CRIME_BASE)
+    @Ratelimit(time = 20)
     @Command(names = "crime", desc = "Shake down some people for some money.", usage = "crime", examples = "crime")
     public void crime(final CommandContext ctx) {
-        getRestJDA().sendMessage(ctx.getChannel().getId(), "<<unimplemented>>").queue();
+        final int choice = getRandom().nextInt(10) + 1;
+        final int amount = getRandom().nextInt(Math.toIntExact(CRIME_BASE_COST)) + 1;
+        final String text;
+        switch(choice) {
+            case 1: {
+                text = String.format("You steal candy from a baby and sell it back to him, netting %s%s.", amount, helper.getCurrencySymbol(ctx));
+                break;
+            }
+            case 2: {
+                text = String.format("You sell someone a shiny (but worthless) rock for %s%s.", amount, helper.getCurrencySymbol(ctx));
+                break;
+            }
+            case 3: {
+                text = String.format("You pretend to get hit by someone's Wumpus, and scam Bamboozle Insurance:tm: out of %s%s.", amount, helper.getCurrencySymbol(ctx));
+                break;
+            }
+            case 4: {
+                text = String.format("You successfully steal a cash register, and take the %s%s inside.", amount, helper.getCurrencySymbol(ctx));
+                break;
+            }
+            case 5: {
+                text = String.format("You sell someone a rotten :potato: for %s%s.", amount, helper.getCurrencySymbol(ctx));
+                break;
+            }
+            case 6: {
+                text = String.format("You robbed the Society of Schmoogaloo and ended up in a lake, but still managed to steal %s%s.", amount, helper.getCurrencySymbol(ctx));
+                break;
+            }
+            case 7: {
+                text = String.format("You start the Cult of Wumpus, and scam the cult members out of %s%s.", amount, helper.getCurrencySymbol(ctx));
+                break;
+            }
+            case 8: {
+                text = String.format("You kidnap someone's pet Wumpus, only returning it after they pay the ransom of %s%s.", amount, helper.getCurrencySymbol(ctx));
+                break;
+            }
+            case 9: {
+                text = String.format("You sell candy to young school children, bringing in %s%s.", amount, helper.getCurrencySymbol(ctx));
+                break;
+            }
+            case 10: {
+                text = String.format("You sell a Wumpus to the circus for %s%s.", amount, helper.getCurrencySymbol(ctx));
+                break;
+            }
+            default: {
+                text = ":fire:";
+                break;
+            }
+        }
+        ctx.getPlayer().incrementBalance(ctx.getGuild(), amount);
+        getDatabase().savePlayer(ctx.getPlayer());
+        getRestJDA().sendMessage(ctx.getChannel().getId(), text).queue();
     }
     
+    @Payment(min = HEIST_BASE_COST)
+    @Ratelimit(time = 5 * 60)
     @Command(names = "heist", desc = "Execute a daring raid on the impenetrable Fort Knick-Knacks.", usage = "heist",
             examples = "heist")
     public void heist(final CommandContext ctx) {
-        getRestJDA().sendMessage(ctx.getChannel().getId(), "<<unimplemented>>").queue();
+        final int chance = getRandom().nextInt(1000);
+        if(chance < 125) {
+            // win
+            final long reward = HEIST_BASE_COST * 10;
+            ctx.getPlayer().incrementBalance(ctx.getGuild(), reward);
+            getDatabase().savePlayer(ctx.getPlayer());
+    
+            getRestJDA().sendMessage(ctx.getChannel(), String.format("You break into Fort Knick-Knacks and steal %s%s from inside.",
+                    reward, helper.getCurrencySymbol(ctx))).queue();
+        } else {
+            // lose
+            getRestJDA().sendMessage(ctx.getChannel(), String.format("Oh no! The guards caught you! They take %s%s from you and let you go.",
+                    HEIST_BASE_COST, helper.getCurrencySymbol(ctx))).queue();
+        }
     }
     
+    @Payment(min = 5, max = 1000, fromFirstArg = true)
+    @Ratelimit(time = 10)
     @Command(names = "slots", desc = "Gamble your life away at the slot machines.", usage = "slots [amount]",
             examples = {"slots", "slots 100"})
     public void slots(final CommandContext ctx) {
         getRestJDA().sendMessage(ctx.getChannel().getId(), "<<unimplemented>>").queue();
     }
     
+    @Ratelimit(time = 60)
     @Command(names = "gamble", desc = "Bet big on the Wumpus Races.", usage = "gamble [amount]",
             examples = {"gamble", "gamble 100"})
     public void gamble(final CommandContext ctx) {

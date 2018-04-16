@@ -1,22 +1,30 @@
 package gg.cute.cache;
 
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.mapping.MappingManager;
-import gg.cute.cache.entity.Channel;
+import gg.cute.cache.entity.*;
 import gg.cute.cache.entity.Channel.ChannelBuilder;
-import gg.cute.cache.entity.Guild;
 import gg.cute.cache.entity.Guild.GuildBuilder;
-import gg.cute.cache.entity.Role;
+import gg.cute.cache.entity.Member.MemberBuilder;
 import gg.cute.cache.entity.Role.RoleBuilder;
-import gg.cute.cache.entity.User;
 import gg.cute.cache.entity.User.UserBuilder;
 import lombok.Getter;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
+ * TODO: Move this to a multi-level Cassandra / Redis cache
+ * TODO: Consider storing users in ElasticSearch?
+ *
  * @author amy
  * @since 4/8/18.
  */
@@ -75,6 +83,25 @@ public class DiscordCache {
                 "avatar TEXT," +
                 ");");
         session.execute("CREATE INDEX IF NOT EXISTS ON cute.users (name);");
+        // Overwrites
+        session.execute("CREATE TABLE IF NOT EXISTS cute.overwrites (" +
+                "channel TEXT PRIMARY KEY," +
+                "id TEXT," +
+                "type TEXT," +
+                // Note that "allow" is a reserved keyword, so we wrap it in quotes to bypass that
+                "\"allow\" BIGINT," +
+                "deny BIGINT," +
+                ");");
+        session.execute("CREATE INDEX IF NOT EXISTS ON cute.overwrites (id);");
+        // Members
+        session.execute("CREATE TABLE IF NOT EXISTS cute.members (" +
+                "guildId TEXT," +
+                "id TEXT," +
+                "nick TEXT," +
+                "joinedAt TEXT," +
+                "roles LIST<TEXT>," +
+                "PRIMARY KEY (guildId, id)," +
+                ");");
     }
     
     public void shutdown() {
@@ -123,8 +150,9 @@ public class DiscordCache {
         } else if(old != null) {
             guild.memberCount(old.getMemberCount());
         }
+        // Member objects
         mappingManager.mapper(Guild.class).save(guild.build());
-        logger.info("Updated guild {}", id);
+        logger.debug("Updated guild {}", id);
     }
     
     public Guild getGuild(final String id) {
@@ -133,6 +161,48 @@ public class DiscordCache {
     
     public void deleteGuild(final String id) {
         mappingManager.mapper(Guild.class).delete(id);
+    }
+    
+    public void cacheMember(final String guildId, final JSONObject json) {
+        final String id = json.getJSONObject("user").getString("id");
+        final Member old = mappingManager.mapper(Member.class).get(guildId, id);
+        final MemberBuilder member = Member.builder();
+        member.id(id).guildId(guildId);
+        if(json.has("nick")) {
+            if(!json.isNull("nick")) {
+                member.nick(json.getString("nick"));
+            }
+        } else if(old != null && old.getNick() != null) {
+            member.nick(old.getNick());
+        }
+        final List<String> roles = new ArrayList<>();
+        json.getJSONArray("roles").forEach(r -> roles.add((String) r));
+        final Set<String> mergedRoles = new HashSet<>(roles);
+        if(old != null && old.getRoles() != null) {
+            mergedRoles.addAll(old.getRoles());
+        }
+        member.roles(new ArrayList<>(mergedRoles));
+        if(json.has("joined_at")) {
+            member.joinedAt(json.getString("joined_at"));
+        } else if(old != null && old.getJoinedAt() != null) {
+            member.joinedAt(old.getJoinedAt());
+        }
+        mappingManager.mapper(Member.class).save(member.build());
+    }
+    
+    public Member getMember(final Guild guild, final User user) {
+        return mappingManager.mapper(Member.class).get(guild.getId(), user.getId());
+    }
+    
+    public void deleteMember(final String guildId, final String userId) {
+        mappingManager.mapper(Member.class).delete(guildId, userId);
+    }
+    
+    public List<PermissionOverwrite> getOverwrites(final Channel channel) {
+        // Grab all
+        // TODO: Use an accessor here?
+        final ResultSet res = session.execute(String.format("SELECT * FROM cute.overwrites WHERE channel = %s;", channel.getId()));
+        return mappingManager.mapper(PermissionOverwrite.class).map(res).all();
     }
     
     public void cacheChannel(final JSONObject data) {
@@ -165,7 +235,22 @@ public class DiscordCache {
             channel.type(old.getType());
         }
         mappingManager.mapper(Channel.class).save(channel.build());
-        logger.info("Updated channel {}", id);
+        
+        // Permission overwrites
+        if(data.has("permission_overwrites")) {
+            if(!data.isNull("permission_overwrites")) {
+                // Delete old overwrites just to be safe
+                session.execute("DELETE FROM cute.overwrites WHERE channel = '" + id + "'; ");
+                final JSONArray overs = data.getJSONArray("permission_overwrites");
+                for(final Object o : overs) {
+                    final JSONObject over = (JSONObject) o;
+                    final PermissionOverwrite permissionOverwrite = new PermissionOverwrite(id, over.getString("id"),
+                            over.getString("type"), over.getLong("allow"), over.getLong("deny"));
+                    mappingManager.mapper(PermissionOverwrite.class).save(permissionOverwrite);
+                }
+            }
+        }
+        logger.debug("Updated channel {}", id);
     }
     
     public Channel getChannel(final String id) {
@@ -204,7 +289,7 @@ public class DiscordCache {
             }
         }
         mappingManager.mapper(User.class).save(user.build());
-        logger.info("Updated user {}", id);
+        logger.debug("Updated user {}", id);
     }
     
     public User getUser(final String id) {
@@ -212,7 +297,7 @@ public class DiscordCache {
     }
     
     public void cacheRole(final JSONObject data) {
-        JSONObject rData = data.getJSONObject("role");
+        final JSONObject rData = data.getJSONObject("role");
         final String id = rData.getString("id");
         final Role old = mappingManager.mapper(Role.class).get(id);
         final RoleBuilder role = Role.builder().id(id);
@@ -232,7 +317,7 @@ public class DiscordCache {
             role.guildId(old.getGuildId());
         }
         mappingManager.mapper(Role.class).save(role.build());
-        logger.info("Updated role {}", id);
+        logger.debug("Updated role {}", id);
     }
     
     public Role getRole(final String id) {

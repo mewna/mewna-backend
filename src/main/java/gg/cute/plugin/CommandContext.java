@@ -24,4 +24,5 @@ public class CommandContext {
     private List<User> mentions;
     private DiscordSettings settings;
     private Player player;
+    private long cost;
 }

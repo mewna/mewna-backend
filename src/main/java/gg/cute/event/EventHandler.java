@@ -47,21 +47,25 @@ public class EventHandler {
             
             // Guilds
             case "GUILD_CREATE": {
+                final String id = data.getString("id");
                 cache.cacheGuild(data);
                 final JSONArray roles = data.getJSONArray("roles");
                 final JSONArray members = data.getJSONArray("members");
                 final JSONArray channels = data.getJSONArray("channels");
                 channels.forEach(r -> {
                     final JSONObject o = (JSONObject) r;
-                    cache.cacheChannel(o.put("guild_id", data.getString("id")));
+                    cache.cacheChannel(o.put("guild_id", id));
                 });
                 roles.forEach(r -> {
                     // We do this because ROLE_* events give us {role: {}, guild_id: ""}
                     // and it's easier to just have one method and transform data before
                     final JSONObject o = (JSONObject) r;
-                    cache.cacheRole(new JSONObject().put("guild_id", data.getString("id")).put("role", o));
+                    cache.cacheRole(new JSONObject().put("guild_id", id).put("role", o));
                 });
-                members.forEach(r -> cache.cacheUser(((JSONObject) r).getJSONObject("user")));
+                members.forEach(r -> {
+                    cache.cacheUser(((JSONObject) r).getJSONObject("user"));
+                    cache.cacheMember(id, (JSONObject) r);
+                });
                 break;
             }
             case "GUILD_DELETE": {
@@ -85,23 +89,31 @@ public class EventHandler {
             
             // Members
             case "GUILD_MEMBER_ADD": {
-                cache.cacheUser(data.getJSONObject("user"));
+                final JSONObject user = data.getJSONObject("user");
+                cache.cacheUser(user);
+                cache.cacheMember(data.getString("guild_id"), data);
                 final Guild guild = cache.getGuild(data.getString("guild_id"));
                 cache.getMappingManager().mapper(Guild.class).save(guild.toBuilder().memberCount(guild.getMemberCount() + 1).build());
                 break;
             }
             case "GUILD_MEMBER_REMOVE": {
                 final Guild guild = cache.getGuild(data.getString("guild_id"));
+                cache.deleteMember(data.getString("guild_id"), data.getJSONObject("user").getString("id"));
                 cache.getMappingManager().mapper(Guild.class).save(guild.toBuilder().memberCount(guild.getMemberCount() - 1).build());
                 break;
             }
             case "GUILD_MEMBER_UPDATE": {
-                // TODO: Do I care?
+                // Rearrange the JSON to make it work
+                final String guildId = data.getString("guild_id");
+                cache.cacheMember(guildId, data);
                 break;
             }
             case "GUILD_MEMBERS_CHUNK": {
                 final JSONArray members = data.getJSONArray("members");
-                members.forEach(m -> cache.cacheUser(((JSONObject) m).getJSONObject("user")));
+                members.forEach(m -> {
+                    cache.cacheUser(((JSONObject) m).getJSONObject("user"));
+                    cache.cacheMember(data.getString("guild_id"), (JSONObject) m);
+                });
                 break;
             }
             

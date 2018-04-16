@@ -6,7 +6,9 @@ import gg.cute.cache.entity.Channel;
 import gg.cute.cache.entity.User;
 import gg.cute.data.Database;
 import gg.cute.data.DiscordSettings;
-import gg.cute.plugin.ratelimit.Ratelimit;
+import gg.cute.plugin.metadata.Payment;
+import gg.cute.plugin.metadata.Ratelimit;
+import gg.cute.plugin.util.CurrencyHelper;
 import gg.cute.util.Time;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import lombok.Getter;
@@ -32,7 +34,7 @@ public class PluginManager {
     private static final List<String> PREFIXES;
     
     static {
-        PREFIXES = Arrays.asList(Optional.ofNullable(System.getenv("PREFIXES")).orElse("bmy!,b:").split(","));
+        PREFIXES = Arrays.asList(Optional.ofNullable(System.getenv("PREFIXES")).orElse("bmy!,b:,=").split(","));
     }
     
     private final Map<String, CommandWrapper> commands = new HashMap<>();
@@ -41,21 +43,44 @@ public class PluginManager {
     private final Map<Class<?>, Function<Class<?>, Object>> injectionClasses;
     @Getter
     private final Cute cute;
+    private final CurrencyHelper currencyHelper;
     
     public PluginManager(final Cute cute) {
         this.cute = cute;
+        currencyHelper = new CurrencyHelper();
         
         injectionClasses = ImmutableMap.<Class<?>, Function<Class<?>, Object>>builder()
                 .put(Cute.class, __ -> this.cute)
                 .put(Logger.class, LoggerFactory::getLogger)
                 .put(Database.class, __ -> this.cute.getDatabase())
                 .put(Random.class, __ -> new Random())
+                .put(CurrencyHelper.class, __ -> currencyHelper)
                 .build();
     }
     
     public void init() {
+        inject(currencyHelper);
         new FastClasspathScanner(Plugin.class.getPackage().getName())
                 .matchClassesWithAnnotation(Plugin.class, this::initPlugin).scan();
+    }
+    
+    private <T> void inject(final T obj) {
+        Class<?> injectable = obj.getClass();
+        
+        while(injectable != null && !Objects.equals(injectable, Object.class)) {
+            for(final Field f : injectable.getDeclaredFields()) {
+                if(injectionClasses.containsKey(f.getType())) {
+                    f.setAccessible(true);
+                    try {
+                        f.set(obj, injectionClasses.get(f.getType()).apply(obj.getClass()));
+                        logger.debug("Injected into {}#{}", obj.getClass().getName(), f.getName());
+                    } catch(final IllegalAccessException e) {
+                        logger.error("Coouldn't inject {}#{}: {}", obj.getClass().getName(), f.getName(), e);
+                    }
+                }
+            }
+            injectable = injectable.getSuperclass();
+        }
     }
     
     private void initPlugin(final Class<?> c) {
@@ -67,19 +92,7 @@ public class PluginManager {
             try {
                 final Plugin p = c.getDeclaredAnnotation(Plugin.class);
                 final Object plugin = c.newInstance();
-                // Inject
-                Class<?> injectable = c;
-                
-                while(injectable != null && !Objects.equals(injectable, Object.class)) {
-                    for(final Field f : injectable.getDeclaredFields()) {
-                        if(injectionClasses.containsKey(f.getType())) {
-                            f.setAccessible(true);
-                            f.set(plugin, injectionClasses.get(f.getType()).apply(plugin.getClass()));
-                            logger.debug("Injected into {}#{}", plugin.getClass().getName(), f.getName());
-                        }
-                    }
-                    injectable = injectable.getSuperclass();
-                }
+                inject(plugin);
                 
                 for(final Method m : c.getDeclaredMethods()) {
                     m.setAccessible(true);
@@ -98,6 +111,7 @@ public class PluginManager {
                             commands.put(s.toLowerCase(), new CommandWrapper(s.toLowerCase(),
                                     cmd.aliased() ? cmd.names()[0].toLowerCase() : s.toLowerCase(), cmd.names(),
                                     m.getDeclaredAnnotation(Ratelimit.class),
+                                    m.getDeclaredAnnotation(Payment.class),
                                     cmd.desc(),
                                     cmd.owner(), plugin, m));
                             logger.info("Loaded plugin command '{}' for plugin '{}' ({})", s,
@@ -127,11 +141,14 @@ public class PluginManager {
             final String channelId = data.getString("channel_id");
             final String guildId = data.getString("guild_id");
             final User user = cute.getCache().getUser(data.getJSONObject("author").getString("id"));
-    
+            if(user == null) {
+                logger.error("Got message from unknown (uncached) user {}!?", data.getJSONObject("author").getString("id"));
+                return;
+            }
             if(!user.getId().equals("128316294742147072")) {
                 return;
             }
-    
+            
             if(user.isBot()) {
                 return;
             }
@@ -156,12 +173,13 @@ public class PluginManager {
                 final String[] split = content.split("\\s+", 2);
                 final String commandName = split[0];
                 final String argstr = split.length > 1 ? split[1] : "";
+                final ArrayList<String> args = new ArrayList<>(Arrays.asList(argstr.split("\\s+")));
                 if(commands.containsKey(commandName)) {
                     final CommandWrapper cmd = commands.get(commandName);
-            
+                    
                     if(cmd.getRatelimit() != null) {
                         final String baseName = cmd.getBaseName();
-                
+                        
                         final String ratelimitKey;
                         switch(cmd.getRatelimit().type()) {
                             case GUILD:
@@ -177,7 +195,7 @@ public class PluginManager {
                                 ratelimitKey = user.getId();
                                 break;
                         }
-                
+                        
                         final ImmutablePair<Boolean, Long> check = cute.getRatelimiter().checkUpdateRatelimit(user.getId(),
                                 baseName + ':' + ratelimitKey,
                                 TimeUnit.SECONDS.toMillis(cmd.getRatelimit().time()));
@@ -188,7 +206,7 @@ public class PluginManager {
                             return;
                         }
                     }
-            
+    
                     final Channel channel = cute.getCache().getChannel(channelId);
                     final List<User> mentions = new ArrayList<>();
                     for(final Object o : data.getJSONArray("mentions")) {
@@ -196,10 +214,43 @@ public class PluginManager {
                         // TODO: Build this from the JSON object instead of hitting the cache all the time?
                         mentions.add(cute.getCache().getUser(j.getString("id")));
                     }
+                    
+                    long cost = 0L;
+                    // Commands may require payment before running
+                    if(cmd.getPayment() != null) {
+                        // By default, try to make the minimum payment
+                        String maybePayment = cmd.getPayment().min() + "";
+                        if(cmd.getPayment().fromFirstArg()) {
+                            // If we calculate the payment from the first argument:
+                            // - if there is no argument, go with the minimum payment
+                            // - if there is an argument, try to parse it
+                            if(args.isEmpty()) {
+                                maybePayment = cmd.getPayment().min() + "";
+                            } else {
+                                maybePayment = args.get(0);
+                            }
+                        }
+    
+                        final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr,
+                                cute.getCache().getGuild(channel.getGuildId()), channel, mentions, settings,
+                                cute.getDatabase().getPlayer(user), 0L);
+                        
+                        final ImmutablePair<Boolean, Long> res = currencyHelper.handlePayment(paymentCtx,
+                                maybePayment, cmd.getPayment().min(),
+                                cmd.getPayment().max());
+                        // If we can make the payment, set the cost and continue
+                        // Otherwise, return early (the payment-handler sends error messages for us)
+                        if(res.left) {
+                            cost = res.right;
+                        } else {
+                            return;
+                        }
+                    }
+                    
                     final CommandContext ctx = new CommandContext(user, commandName,
-                            new ArrayList<>(Arrays.asList(argstr.split("\\s+"))), argstr,
+                            args, argstr,
                             cute.getCache().getGuild(channel.getGuildId()), channel, mentions, settings,
-                            cute.getDatabase().getPlayer(user));
+                            cute.getDatabase().getPlayer(user), cost);
                     try {
                         cmd.getMethod().invoke(cmd.getPlugin(), ctx);
                     } catch(final IllegalAccessException | InvocationTargetException e) {
@@ -218,6 +269,7 @@ public class PluginManager {
         private String baseName;
         private String[] names;
         private Ratelimit ratelimit;
+        private Payment payment;
         private String desc;
         private boolean owner;
         private Object plugin;

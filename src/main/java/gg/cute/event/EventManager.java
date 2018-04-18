@@ -9,15 +9,13 @@ import gg.cute.plugin.event.guild.member.GuildMemberRemoveEvent;
 import gg.cute.plugin.event.message.MessageDeleteBulkEvent;
 import gg.cute.plugin.event.message.MessageDeleteEvent;
 import lombok.Getter;
+import net.dv8tion.jda.core.entities.MessageType;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 import static gg.cute.plugin.event.EventType.*;
@@ -48,7 +46,7 @@ public class EventManager {
         });
         handlers.put(CHANNEL_DELETE, (event, data) -> cache.deleteChannel(data.getString("id")));
         handlers.put(CHANNEL_UPDATE, (event, data) -> cache.cacheChannel(data));
-    
+        
         // Guilds
         handlers.put(GUILD_CREATE, (event, data) -> {
             final String id = data.getString("id");
@@ -80,12 +78,12 @@ public class EventManager {
             }
         });
         handlers.put(GUILD_UPDATE, (event, data) -> cache.cacheGuild(data));
-    
+        
         // Emotes
         // TODO: Do I REALLY care?
         handlers.put(GUILD_EMOJIS_UPDATE, (event, data) -> {
         });
-    
+        
         // Members
         handlers.put(GUILD_MEMBER_ADD, (event, data) -> {
             final JSONObject user = data.getJSONObject("user");
@@ -115,7 +113,7 @@ public class EventManager {
                 cache.cacheMember(data.getString("guild_id"), (JSONObject) m);
             });
         });
-    
+        
         // Roles
         handlers.put(GUILD_ROLE_CREATE, (event, data) -> cache.cacheRole(data));
         handlers.put(GUILD_ROLE_DELETE, (event, data) -> {
@@ -124,20 +122,39 @@ public class EventManager {
             cache.deleteRole(data.getString("role_id"));
         });
         handlers.put(GUILD_ROLE_UPDATE, (event, data) -> cache.cacheRole(data));
-    
+        
         // Users
         handlers.put(USER_UPDATE, (event, data) -> cache.cacheUser(data));
-    
+        
         // Voice
         handlers.put(VOICE_SERVER_UPDATE, (event, data) -> {
             // TODO: Handle voice...
         });
-    
+        
         // Messages
         handlers.put(MESSAGE_CREATE, (event, data) -> {
-            // This will pass down to the event handler, so we don't need to worry
-            // TODO: Handling webhooks
-            cute.getPluginManager().tryExecCommand(event.getData());
+            // If it's a webhook ID, **or** it's not a default message, ignore it.
+            // Possible message types:
+            //
+            // TYPE                     ID
+            // ---------------------------
+            // DEFAULT                  0
+            // RECIPIENT_ADD            1
+            // RECIPIENT_REMOVE         2
+            // CALL                     3
+            // CHANNEL_NAME_CHANGE      4
+            // CHANNEL_ICON_CHANGE      5
+            // CHANNEL_PINNED_MESSAGE   6
+            // GUILD_MEMBER_JOIN        7
+            //
+            // Note: Ignoring system messages here (non-type-0 messages) is important!
+            // Without ignoring them, there may be race conditions (like the message coming before we can finish caching the
+            // user) which will cause :fire: to happen,
+            if(!data.isNull("webhook_id") || data.getInt("type") != MessageType.DEFAULT.getId()) {
+                return;
+            }
+            // This will pass down to the event handler, so we don't need to worry about it here
+            cute.getPluginManager().tryExecCommand(data);
         });
         handlers.put(MESSAGE_DELETE, (event, data) -> {
             // TODO: Would have to cache messages...
@@ -155,22 +172,31 @@ public class EventManager {
         handlers.put(MESSAGE_UPDATE, (event, data) -> {
             // TODO: How to model this?
         });
-    
-        // We don't really care about these
-        handlers.put(GUILD_SYNC, (event, data) -> {});
-        handlers.put(GUILD_BAN_ADD, (event, data) -> {});
-        handlers.put(GUILD_BAN_REMOVE, (event, data) -> {});
-        handlers.put(MESSAGE_REACTION_ADD, (event, data) -> {});
-        handlers.put(MESSAGE_REACTION_REMOVE, (event, data) -> {});
-        handlers.put(MESSAGE_REACTION_REMOVE_ALL, (event, data) -> {});
-        handlers.put(PRESENCE_UPDATE, (event, data) -> {});
-        handlers.put(READY, (event, data) -> {});
-        handlers.put(TYPING_START, (event, data) -> {});
-        handlers.put(VOICE_STATE_UPDATE, (event, data) -> {});
         
+        // We don't really care about these
+        handlers.put(GUILD_SYNC, (event, data) -> {
+        });
+        handlers.put(GUILD_BAN_ADD, (event, data) -> {
+        });
+        handlers.put(GUILD_BAN_REMOVE, (event, data) -> {
+        });
+        handlers.put(MESSAGE_REACTION_ADD, (event, data) -> {
+        });
+        handlers.put(MESSAGE_REACTION_REMOVE, (event, data) -> {
+        });
+        handlers.put(MESSAGE_REACTION_REMOVE_ALL, (event, data) -> {
+        });
+        handlers.put(PRESENCE_UPDATE, (event, data) -> {
+        });
+        handlers.put(READY, (event, data) -> {
+        });
+        handlers.put(TYPING_START, (event, data) -> {
+        });
+        handlers.put(VOICE_STATE_UPDATE, (event, data) -> {
+        });
     }
     
     public void handle(final SocketEvent event) {
-        handlers.get(event.getType()).accept(event, event.getData());
+        Optional.ofNullable(handlers.get(event.getType())).ifPresent(e -> e.accept(event, event.getData()));
     }
 }

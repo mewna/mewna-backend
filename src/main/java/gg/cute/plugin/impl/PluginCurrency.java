@@ -1,5 +1,6 @@
 package gg.cute.plugin.impl;
 
+import gg.cute.cache.entity.Guild;
 import gg.cute.cache.entity.User;
 import gg.cute.data.Player;
 import gg.cute.plugin.BasePlugin;
@@ -9,11 +10,16 @@ import gg.cute.plugin.Plugin;
 import gg.cute.plugin.metadata.Payment;
 import gg.cute.plugin.metadata.Ratelimit;
 import gg.cute.plugin.util.CurrencyHelper;
+import gg.cute.util.Time;
 import lombok.ToString;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import javax.inject.Inject;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static gg.cute.plugin.impl.PluginCurrency.ReelSymbol.*;
 
@@ -80,10 +86,24 @@ public class PluginCurrency extends BasePlugin {
     
     @Command(names = "daily", desc = "Collect some money once a day.", usage = "daily", examples = "daily")
     public void daily(final CommandContext ctx) {
-        // TODO: Ratelimit this
+        final Player player = ctx.getPlayer();
+        final Guild guild = ctx.getGuild();
         // TODO: Streaks
-        ctx.getPlayer().incrementBalance(ctx.getGuild(), DAILY_BASE_REWARD);
-        getDatabase().savePlayer(ctx.getPlayer());
+        final ZoneId zone = ZoneId.systemDefault();
+        final LocalDateTime last = Instant.ofEpochMilli(player.getLastDaily(guild)).atZone(zone).toLocalDateTime();
+        final LocalDateTime now = LocalDateTime.now();
+        if(last.toLocalDate().plusDays(1).toEpochDay() > now.toLocalDate().toEpochDay()) {
+            final long nextMillis = TimeUnit.SECONDS.toMillis(last.toLocalDate().plusDays(1).atStartOfDay(zone).toEpochSecond());
+            final long nowMillis = TimeUnit.SECONDS.toMillis(now.toEpochSecond(zone.getRules().getOffset(now)));
+            getRestJDA().sendMessage(ctx.getChannel(),
+                    String.format("You can collect your daily again in **%s**.",
+                            Time.toHumanReadableDuration(nextMillis - nowMillis))).queue();
+            return;
+        }
+        
+        player.incrementBalance(guild, DAILY_BASE_REWARD);
+        player.updateLastDaily(guild);
+        getDatabase().savePlayer(player);
         getRestJDA().sendMessage(ctx.getChannel(), String.format("You collect your daily **%s%s**.", DAILY_BASE_REWARD,
                 helper.getCurrencySymbol(ctx))).queue();
     }

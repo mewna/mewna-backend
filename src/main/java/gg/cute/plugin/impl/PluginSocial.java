@@ -1,5 +1,6 @@
 package gg.cute.plugin.impl;
 
+import gg.cute.cache.entity.Guild;
 import gg.cute.cache.entity.User;
 import gg.cute.data.Player;
 import gg.cute.plugin.BasePlugin;
@@ -8,6 +9,7 @@ import gg.cute.plugin.CommandContext;
 import gg.cute.plugin.Plugin;
 import gg.cute.plugin.event.Event;
 import gg.cute.plugin.event.message.MessageCreateEvent;
+import net.dv8tion.jda.core.MessageBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.util.concurrent.TimeUnit;
@@ -57,25 +59,31 @@ public class PluginSocial extends BasePlugin {
     public void handleChatMessage(final MessageCreateEvent event) {
         final User author = event.getAuthor();
         final Player player = getDatabase().getPlayer(author);
+        final Guild guild = event.getGuild();
+        getLogger().trace("Handling chat message for player {} in {}", author.getId(), guild.getId());
         
         // Calc. cooldown
         final ImmutablePair<Boolean, Long> localRes = getCute().getRatelimiter()
-                .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-local:" + event.getGuild().getId(),
+                .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-local:" + guild.getId(),
                         TimeUnit.MINUTES.toMillis(1));
         final ImmutablePair<Boolean, Long> globalRes = getCute().getRatelimiter()
                 .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-global", TimeUnit.MINUTES.toMillis(1));
         
         if(!localRes.left) {
-            final long oldXp = player.getXp(event.getGuild());
+            final long oldXp = player.getXp(guild);
             final long xp = getXp(player);
-            player.incrementLocalXp(event.getGuild(), xp);
+            player.incrementLocalXp(guild, xp);
+            getDatabase().savePlayer(player);
+            getLogger().trace("Local XP: {} in {}: {} -> {}", author.getId(), guild.getId(), oldXp, oldXp + xp);
             if(isLevelUp(oldXp, oldXp + xp)) {
                 // TODO: Level-up notification
+                getLogger().debug("{} in {}: Level up to {}", author.getId(), guild.getId(), xpToLevel(oldXp + xp));
             }
         }
         if(!globalRes.left) {
             player.incrementGlobalXp(getXp(player));
-            // Level-up notifications here?
+            getDatabase().savePlayer(player);
+            // TODO: Level-up notifications here?
         }
     }
     

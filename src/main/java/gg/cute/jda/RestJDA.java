@@ -18,6 +18,9 @@ import net.dv8tion.jda.core.utils.Checks;
 import okhttp3.OkHttpClient;
 
 import javax.annotation.CheckReturnValue;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 /**
  * Based off of Jagrosh's RestJDA for GiveawayBot.
@@ -43,6 +46,21 @@ public class RestJDA {
         Checks.notNull(newContent, "message");
         final CompiledRoute route = Messages.EDIT_MESSAGE.compile(Long.toString(channelId), Long.toString(messageId));
         return new MessageAction(fakeJDA, route, new TextChannelImpl(channelId, new GuildImpl(fakeJDA, 0))).apply(newContent);
+    }
+    
+    @CheckReturnValue
+    public MessageAction sendFile(final Channel channel, final File file, final String fileName, final Message message) {
+        Checks.notNull(file, "data File");
+        Checks.notNull(fileName, "fileName");
+        final String channelId = channel.getId();
+        
+        final CompiledRoute route = Messages.SEND_MESSAGE.compile(channelId);
+        try {
+            return new MessageAction(fakeJDA, route, new TextChannelImpl(Long.parseLong(channelId), new GuildImpl(fakeJDA, 0)))
+                    .apply(message).addFile(new FileInputStream(file), fileName);
+        } catch(final FileNotFoundException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
     
     @CheckReturnValue

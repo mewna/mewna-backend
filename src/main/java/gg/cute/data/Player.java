@@ -31,7 +31,7 @@ public class Player {
     private Map<String, Long> guildXp = new HashMap<>();
     private Map<String, Long> guildDailyTimes = new HashMap<>();
     private long globalXp;
-    private long petals;
+    private long points;
     
     public static Player base(final String id) {
         return new Player(id, new HashMap<>(), new HashMap<>(), new HashMap<>(), 0L,0L);
@@ -70,7 +70,7 @@ public class Player {
         return getBalance(ctx.getGuild());
     }
     
-    public void incrementBalance(Guild guild, long amount) {
+    public void incrementBalance(final Guild guild, final long amount) {
         incrementBalance(guild.getId(), amount);
     }
     

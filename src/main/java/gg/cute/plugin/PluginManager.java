@@ -3,9 +3,13 @@ package gg.cute.plugin;
 import com.google.common.collect.ImmutableMap;
 import gg.cute.Cute;
 import gg.cute.cache.entity.Channel;
+import gg.cute.cache.entity.Guild;
 import gg.cute.cache.entity.User;
 import gg.cute.data.Database;
 import gg.cute.data.DiscordSettings;
+import gg.cute.plugin.event.BaseEvent;
+import gg.cute.plugin.event.Event;
+import gg.cute.plugin.event.message.MessageCreateEvent;
 import gg.cute.plugin.metadata.Payment;
 import gg.cute.plugin.metadata.Ratelimit;
 import gg.cute.plugin.util.CurrencyHelper;
@@ -47,6 +51,24 @@ public class PluginManager {
     private final CurrencyHelper currencyHelper;
     @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
     private final OkHttpClient okHttpClient = new OkHttpClient.Builder().build();
+    
+    /**
+     * Event handlers for Discord events. Things like cache are done before the
+     * handlers here are hit by any events, but beyond that handful of things,
+     * just about anything goes. <p />
+     * <p>
+     * The reason for having this is because of the functionality needed.
+     * Before, there was a event handler that just passed some MESSAGE_CREATE
+     * events on to this class, but the problem then comes handling other
+     * events nicely. This is solved by just allowing plugins to register
+     * handlers for these events. <p />
+     * <p>
+     * Note that we don't have to worry about thread-safety (per se) on this
+     * field since it's only ever written once at boot. <p />
+     * <p>
+     * TODO: Consider going as far as making command-handling itself a plugin?
+     */
+    private final Map<String, HashSet<EventHolder>> discordEventHandlers = new HashMap<>();
     
     public PluginManager(final Cute cute) {
         this.cute = cute;
@@ -121,6 +143,17 @@ public class PluginManager {
                             logger.info("Loaded plugin command '{}' for plugin '{}' ({})", s,
                                     p.value(), c.getName());
                         }
+                    } else if(m.isAnnotationPresent(Event.class)) {
+                        // Map event handlers to handle various Discord events or w/e
+                        final Event event = m.getDeclaredAnnotation(Event.class);
+                        if(!discordEventHandlers.containsKey(event.value())) {
+                            discordEventHandlers.put(event.value(), new HashSet<>());
+                        }
+                        discordEventHandlers.get(event.value()).add(new EventHolder(event.value(), m, plugin));
+                        
+                        // TODO: How are we going to pass event data down nicely?
+                        // The problem is that passing down the JSON blobs directly is a huge pain in the ass - to say the
+                        // least - but the alternatives are also pretty painful. What's the right thing to do here?
                     }
                 }
             } catch(final InstantiationException | IllegalAccessException e) {
@@ -139,16 +172,18 @@ public class PluginManager {
         return prefixes;
     }
     
-    public void handleMessage(final JSONObject data) {
+    public void tryExecCommand(final JSONObject data) {
         try {
-            // TODO: Temporary dev. block
             final String channelId = data.getString("channel_id");
+            // See https://github.com/discordapp/discord-api-docs/issues/582
+            // Note this isn't in the docs yet, but should be at some point (hopefully soon)
             final String guildId = data.getString("guild_id");
             final User user = cute.getCache().getUser(data.getJSONObject("author").getString("id"));
             if(user == null) {
                 logger.error("Got message from unknown (uncached) user {}!?", data.getJSONObject("author").getString("id"));
                 return;
             }
+            // TODO: Temporary dev. block
             if(!user.getId().equals("128316294742147072")) {
                 return;
             }
@@ -156,6 +191,18 @@ public class PluginManager {
             if(user.isBot()) {
                 return;
             }
+            // TODO: Need a check to block commands in DMs.
+            
+            // Collect cache data
+            final Guild guild = cute.getCache().getGuild(guildId);
+            final Channel channel = cute.getCache().getChannel(channelId);
+            final List<User> mentions = new ArrayList<>();
+            for(final Object o : data.getJSONArray("mentions")) {
+                final JSONObject j = (JSONObject) o;
+                // TODO: Build this from the JSON object instead of hitting the cache all the time?
+                mentions.add(cute.getCache().getUser(j.getString("id")));
+            }
+            
             // Parse prefixes
             String content = data.getString("content");
             String prefix = null;
@@ -169,6 +216,7 @@ public class PluginManager {
                     }
                 }
             }
+            // TODO: There's gotta be a way to refactor this out into smaller methods...
             if(found) {
                 content = content.substring(prefix.length()).trim();
                 if(content.isEmpty()) {
@@ -213,14 +261,6 @@ public class PluginManager {
                             return;
                         }
                     }
-    
-                    final Channel channel = cute.getCache().getChannel(channelId);
-                    final List<User> mentions = new ArrayList<>();
-                    for(final Object o : data.getJSONArray("mentions")) {
-                        final JSONObject j = (JSONObject) o;
-                        // TODO: Build this from the JSON object instead of hitting the cache all the time?
-                        mentions.add(cute.getCache().getUser(j.getString("id")));
-                    }
                     
                     long cost = 0L;
                     // Commands may require payment before running
@@ -237,9 +277,9 @@ public class PluginManager {
                                 maybePayment = args.get(0);
                             }
                         }
-    
+                        
                         final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr,
-                                cute.getCache().getGuild(channel.getGuildId()), channel, mentions, settings,
+                                guild, channel, mentions, settings,
                                 cute.getDatabase().getPlayer(user), 0L);
                         
                         final ImmutablePair<Boolean, Long> res = currencyHelper.handlePayment(paymentCtx,
@@ -256,7 +296,7 @@ public class PluginManager {
                     
                     final CommandContext ctx = new CommandContext(user, commandName,
                             args, argstr,
-                            cute.getCache().getGuild(channel.getGuildId()), channel, mentions, settings,
+                            guild, channel, mentions, settings,
                             cute.getDatabase().getPlayer(user), cost);
                     
                     try {
@@ -265,10 +305,47 @@ public class PluginManager {
                         e.printStackTrace();
                     }
                 }
+            } else {
+                // No prefix found, pass it down as an event
+                processEvent("MESSAGE_CREATE", new MessageCreateEvent(user, channel, guild, mentions,
+                        data.getString("content"), data.getBoolean("mention_everyone")));
             }
         } catch(final Throwable t) {
             logger.error("Error at high-level command processor:", t);
         }
+    }
+    
+    
+    // Kinds of events we could want to handle:
+    // - MESSAGE_CREATE         done
+    // - MESSAGE_UPDATE         ?
+    // - MESSAGE_DELETE         done
+    // - MESSAGE_DELETE_BULK    done
+    // - MESSAGE_REACTION_*     ?
+    //
+    // - GUILD_BAN_ADD
+    // - GUILD_BAN_REMOVE
+    //
+    // - GUILD_MEMBER_ADD       done
+    // - GUILD_MEMBER_REMOVE    done
+    // - GUILD_MEMBER_UPDATE    ?
+    // - USER_UPDATE?
+    
+    public <T extends BaseEvent> void processEvent(final String type, final T event) {
+        Optional.ofNullable(discordEventHandlers.get(type)).ifPresent(x -> x.forEach(h -> {
+            try {
+                h.getHandle().invoke(h.getHolder(), event);
+            } catch(final IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        }));
+    }
+    
+    @Value
+    public static final class EventHolder {
+        private String eventType;
+        private Method handle;
+        private Object holder;
     }
     
     @Value

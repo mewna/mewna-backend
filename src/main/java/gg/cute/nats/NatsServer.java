@@ -40,7 +40,7 @@ public class NatsServer {
             logger.info("Connecting to NATS with: {}", natsUrl);
             connectionFactory.setNatsConnection(Nats.connect(natsUrl));
             connection = connectionFactory.createConnection();
-            connection.subscribe("discord-event-queue", m -> {
+            connection.subscribe("backend-event-queue", m -> {
                 final String message = new String(m.getData());
                 try {
                     
@@ -48,19 +48,7 @@ public class NatsServer {
                     final JSONObject shard = o.getJSONObject("shard");
                     final SocketEvent event = new SocketEvent(o.getString("t"), o.getJSONObject("d"), o.getLong("ts"),
                             shard.getInt("id"), shard.getInt("limit"));
-                    pool.execute(() -> cute.getEventHandler().handle(event));
-                    /*
-                    final String source = o.getString("source");
-                    cute.getStatsDClient().incrementCounter("socketMessages", 1, "type:incoming", "source:" + source);
-                    try {
-                        final SocketContext ctx = converters.get(source).convert(o);
-                        if(ctx != null) {
-                            cute.getPluginManager().executeCommand(ctx);
-                        }
-                    } catch(NullPointerException e) {
-                        throw new IllegalStateException("No known converter for source: " + source, e);
-                    }
-                    */
+                    pool.execute(() -> cute.getEventManager().handle(event));
                 } catch(final Exception e) {
                     logger.error("Caught error while processing socket message:");
                     e.printStackTrace();
@@ -68,6 +56,15 @@ public class NatsServer {
             }, new SubscriptionOptions.Builder().durableName("cute-discord-incoming-durable").build());
         } catch(final IOException | InterruptedException e) {
             throw new RuntimeException(e);
+        }
+    }
+    
+    public <T> void pushEvent(final String type, final T data) {
+        final JSONObject event = new JSONObject().put("t", type).put("ts", System.currentTimeMillis()).put("d", data);
+        try {
+            getConnection().publish("backend-event-queue", event.toString().getBytes());
+        } catch(final IOException | InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }

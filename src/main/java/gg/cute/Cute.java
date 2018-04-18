@@ -2,7 +2,7 @@ package gg.cute;
 
 import gg.cute.cache.DiscordCache;
 import gg.cute.data.Database;
-import gg.cute.event.EventHandler;
+import gg.cute.event.EventManager;
 import gg.cute.jda.RestJDA;
 import gg.cute.nats.NatsServer;
 import gg.cute.plugin.PluginManager;
@@ -20,7 +20,7 @@ public final class Cute {
     private NatsServer nats;
     
     @Getter
-    private final EventHandler eventHandler = new EventHandler(this);
+    private final EventManager eventManager = new EventManager(this);
     
     @Getter
     private final PluginManager pluginManager = new PluginManager(this);
@@ -44,7 +44,7 @@ public final class Cute {
     }
     
     private void start() {
-        eventHandler.getCache().connect();
+        eventManager.getCache().connect();
         database.init();
         pluginManager.init();
         nats = new NatsServer(this);
@@ -53,6 +53,6 @@ public final class Cute {
     }
     
     public DiscordCache getCache() {
-        return eventHandler.getCache();
+        return eventManager.getCache();
     }
 }

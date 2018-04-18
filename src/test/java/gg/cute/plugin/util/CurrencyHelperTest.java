@@ -16,13 +16,14 @@ import static org.junit.Assert.assertEquals;
  */
 public class CurrencyHelperTest {
     @Test
-    public void checkPayment() {
+    public void testCheckPayment() {
         final CurrencyHelper base = new CurrencyHelper();
-        final Guild fakeGuild = new Guild("267500017260953601", "fake guild", null, "128316294742147072",
-                "us-east", 1234);
+        final Guild fakeGuild = new Guild("267500017260953601", "fake guild", null,
+                "128316294742147072", "us-east", 1234);
         final Map<String, Long> guildBalances = new HashMap<>();
         guildBalances.put(fakeGuild.getId(), 0L);
-        final Player fakePlayer = new Player("128316294742147072", guildBalances, null, null, 0L);
+        final Player fakePlayer = new Player("128316294742147072", guildBalances, null, null,
+                0L, 0L);
         
         // No input
         assertEquals(BAD_EMPTY, base.checkPayment(fakeGuild, fakePlayer, "", 0, 100).left);

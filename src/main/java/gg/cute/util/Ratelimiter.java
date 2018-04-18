@@ -15,6 +15,16 @@ public class Ratelimiter {
         this.cute = cute;
     }
     
+    /**
+     * Check if the id is ratelimited. If the id is NOT ratelimited, update it
+     * to the current time and allow it to happen.
+     *
+     * @param id   The ID to check against
+     * @param type The type of the ratelimit
+     * @param ms   How long the ratelimit should be, in milliseconds
+     *
+     * @return A (isRatelimited, timeLeft) tuple
+     */
     public ImmutablePair<Boolean, Long> checkUpdateRatelimit(final String id, final String type, final long ms) {
         final ImmutablePair<Boolean, Long> ratelimited = isRatelimited(id, type, ms);
         if(!ratelimited.left) {

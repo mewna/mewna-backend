@@ -5,7 +5,10 @@ import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
 import gg.cute.cache.entity.Guild;
 import gg.cute.plugin.CommandContext;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,11 +30,14 @@ public class Player {
     private Map<String, Long> guildBalances = new HashMap<>();
     private Map<String, Long> guildXp = new HashMap<>();
     private Map<String, Long> guildDailyTimes = new HashMap<>();
+    private long globalXp;
     private long petals;
     
     public static Player base(final String id) {
-        return new Player(id, new HashMap<>(), new HashMap<>(), new HashMap<>(), 0L);
+        return new Player(id, new HashMap<>(), new HashMap<>(), new HashMap<>(), 0L,0L);
     }
+    
+    // Daily
     
     public long getLastDaily(final Guild guild) {
         final String id = guild.getId();
@@ -47,6 +53,8 @@ public class Player {
         final String id = guild.getId();
         guildDailyTimes.put(id, System.currentTimeMillis());
     }
+    
+    // Balance
     
     public long getBalance(final Guild guild) {
         final String id = guild.getId();
@@ -71,5 +79,36 @@ public class Player {
         if(guildBalances.get(id) < 0L) {
             guildBalances.put(id, 0L);
         }
+    }
+    
+    // XP
+    
+    public long getXp(final Guild guild) {
+        final String id = guild.getId();
+        if(guildXp.containsKey(id)) {
+            return guildXp.get(id);
+        } else {
+            guildXp.put(id, 0L);
+            return 0L;
+        }
+    }
+    
+    public long getXp(final CommandContext ctx) {
+        return getXp(ctx.getGuild());
+    }
+    
+    public void incrementLocalXp(final String id, final long amount) {
+        guildXp.put(id, guildXp.getOrDefault(id, 0L) + amount);
+        if(guildXp.get(id) < 0L) {
+            guildXp.put(id, 0L);
+        }
+    }
+    
+    public void incrementLocalXp(final Guild guild, final long amount) {
+        incrementLocalXp(guild.getId(), amount);
+    }
+    
+    public void incrementGlobalXp(final long amount) {
+        globalXp += amount;
     }
 }

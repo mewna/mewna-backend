@@ -11,15 +11,16 @@ import lombok.Value;
  */
 @Value
 @Table("discord_settings")
-@Index({"id"})
+@Index("id")
 public class DiscordSettings {
     @PrimaryKey
     private String id;
     private String customPrefix;
     private String currencySymbol;
     private boolean tipsEnabled;
+    private boolean radioEnabled;
     
     public static DiscordSettings base(final String id) {
-        return new DiscordSettings(id, null, null, true);
+        return new DiscordSettings(id, null, null, true, true);
     }
 }

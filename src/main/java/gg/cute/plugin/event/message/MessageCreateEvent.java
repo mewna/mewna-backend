@@ -4,6 +4,7 @@ import gg.cute.cache.entity.Channel;
 import gg.cute.cache.entity.Guild;
 import gg.cute.cache.entity.User;
 import gg.cute.plugin.event.BaseEvent;
+import gg.cute.plugin.event.EventType;
 import lombok.Getter;
 
 import java.util.List;
@@ -27,7 +28,7 @@ public class MessageCreateEvent extends BaseEvent {
     
     public MessageCreateEvent(final User author, final Channel channel, final Guild guild,
                               final List<User> mentions, final String content, final boolean everyoneMentioned) {
-        super("MESSAGE_CREATE");
+        super(EventType.MESSAGE_CREATE);
         this.author = author;
         this.channel = channel;
         this.guild = guild;

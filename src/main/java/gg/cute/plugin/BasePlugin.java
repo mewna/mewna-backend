@@ -38,7 +38,7 @@ public class BasePlugin {
     }
     
     // TODO: Discord might get upset about API spam eventually I guess
-    protected final void send(Channel channel, EmbedBuilder embed) {
+    protected final void send(final Channel channel, final EmbedBuilder embed) {
         getRestJDA().sendMessage(channel.getId(), embed.build()).queue(null, failure -> {
             if(failure instanceof ErrorResponseException) {
                 if(((ErrorResponseException) failure).getErrorCode() == 50013) {
@@ -66,5 +66,8 @@ public class BasePlugin {
         e.getFields().forEach(f -> sb.append("**").append(f.getName()).append("**\n").append(f.getValue()).append('\n'));
         sb.append("\n(Please give me the \"Embed Links\" permission so that this will look nicer!)");
         return sb.toString();
+    }
+    
+    public void finishLoading() {
     }
 }

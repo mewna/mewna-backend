@@ -74,6 +74,11 @@ public class RestJDA {
     }
     
     @CheckReturnValue
+    public MessageAction sendMessage(final Channel channel, final MessageEmbed embed) {
+        return sendMessage(channel.getId(), new MessageBuilder().setEmbed(embed).build());
+    }
+    
+    @CheckReturnValue
     public MessageAction sendMessage(final String channelId, final MessageEmbed embed) {
         return sendMessage(channelId, new MessageBuilder().setEmbed(embed).build());
     }

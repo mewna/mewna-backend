@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
  * @author amy
  * @since 4/8/18.
  */
+@SuppressWarnings("unused")
 public class NatsServer {
     // TODO: Client ID needs to use container name; use Rancher metadata service
     private final StreamingConnectionFactory connectionFactory = new StreamingConnectionFactory("cute-nats", "cute-discord-backend");
@@ -40,29 +41,53 @@ public class NatsServer {
             logger.info("Connecting to NATS with: {}", natsUrl);
             connectionFactory.setNatsConnection(Nats.connect(natsUrl));
             connection = connectionFactory.createConnection();
-            connection.subscribe("backend-event-queue", m -> {
+            connection.subscribe("backend-event-queue", "backend-event-queue", m -> {
                 final String message = new String(m.getData());
                 try {
-                    
                     final JSONObject o = new JSONObject(message);
-                    final JSONObject shard = o.getJSONObject("shard");
-                    final SocketEvent event = new SocketEvent(o.getString("t"), o.getJSONObject("d"), o.getLong("ts"),
-                            shard.getInt("id"), shard.getInt("limit"));
+                    final SocketEvent event;
+                    if(o.has("shard") && !o.isNull("shard")) {
+                        final JSONObject shard = o.getJSONObject("shard");
+                        event = new SocketEvent(o.getString("t"), o.getJSONObject("d"), o.getLong("ts"),
+                                shard.getInt("id"), shard.getInt("limit"));
+                    } else {
+                        event = new SocketEvent(o.getString("t"), o.getJSONObject("d"), o.getLong("ts"), -1, -1);
+                    }
                     pool.execute(() -> cute.getEventManager().handle(event));
                 } catch(final Exception e) {
                     logger.error("Caught error while processing socket message:");
                     e.printStackTrace();
                 }
-            }, new SubscriptionOptions.Builder().durableName("cute-discord-incoming-durable").build());
+            }, new SubscriptionOptions.Builder().durableName("cute-backend-event-queue-durable").build());
+            connection.subscribe("backend-event-broadcast", m -> {
+                final String message = new String(m.getData());
+                logger.info("Got broadcast: {}", message);
+            });
         } catch(final IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
     
-    public <T> void pushEvent(final String type, final T data) {
+    public <T> void broadcastBackendEvent(final String type, final T data) {
+        pushEvent("backend-event-broadcast", type, data);
+    }
+    
+    public <T> void pushBackendEvent(final String type, final T data) {
+        pushEvent("backend-event-queue", type, data);
+    }
+    
+    public <T> void pushShardEvent(final String type, final T data) {
+        pushEvent("discord-event-queue", type, data);
+    }
+    
+    public <T> void pushAudioEvent(final String type, final T data) {
+        pushEvent("audio-event-queue", type, data);
+    }
+    
+    private <T> void pushEvent(final String queue, final String type, final T data) {
         final JSONObject event = new JSONObject().put("t", type).put("ts", System.currentTimeMillis()).put("d", data);
         try {
-            getConnection().publish("backend-event-queue", event.toString().getBytes());
+            getConnection().publish(queue, event.toString().getBytes());
         } catch(final IOException | InterruptedException e) {
             e.printStackTrace();
         }

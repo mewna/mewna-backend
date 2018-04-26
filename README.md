@@ -26,3 +26,25 @@ Events pushed into NATS should be structured like this:
 ```
 
 Note that the `shard` field is OPTIONAL, and is used to signal which Discord shard the event came from.
+
+## Websocket API
+
+Websocket API messages are formatted as follows:
+
+```JSON
+{
+  "op": 1,
+  "t": "event type (may not be provided, depending on the op)",
+  "d": {
+    "op data": "goes here"
+  },
+  "ts": 1234567890
+}
+```
+
+WS opcodes:
+
+| id | name      |
+|--- | ----------|
+|  0 | IDENTIFY  |
+|  1 | HEARTBEAT |

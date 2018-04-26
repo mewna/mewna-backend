@@ -150,11 +150,10 @@ public class PluginManager {
                             discordEventHandlers.put(event.value(), new HashSet<>());
                         }
                         discordEventHandlers.get(event.value()).add(new EventHolder(event.value(), m, plugin));
-                        
-                        // TODO: How are we going to pass event data down nicely?
-                        // The problem is that passing down the JSON blobs directly is a huge pain in the ass - to say the
-                        // least - but the alternatives are also pretty painful. What's the right thing to do here?
                     }
+                }
+                if(plugin instanceof BasePlugin) {
+                    ((BasePlugin) plugin).finishLoading();
                 }
             } catch(final InstantiationException | IllegalAccessException e) {
                 e.printStackTrace();
@@ -314,22 +313,6 @@ public class PluginManager {
             logger.error("Error at high-level command processor:", t);
         }
     }
-    
-    
-    // Kinds of events we could want to handle:
-    // - MESSAGE_CREATE         done
-    // - MESSAGE_UPDATE         ?
-    // - MESSAGE_DELETE         done
-    // - MESSAGE_DELETE_BULK    done
-    // - MESSAGE_REACTION_*     ?
-    //
-    // - GUILD_BAN_ADD
-    // - GUILD_BAN_REMOVE
-    //
-    // - GUILD_MEMBER_ADD       done
-    // - GUILD_MEMBER_REMOVE    done
-    // - GUILD_MEMBER_UPDATE    ?
-    // - USER_UPDATE?
     
     public <T extends BaseEvent> void processEvent(final String type, final T event) {
         Optional.ofNullable(discordEventHandlers.get(type)).ifPresent(x -> x.forEach(h -> {

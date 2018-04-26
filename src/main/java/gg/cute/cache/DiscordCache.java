@@ -4,6 +4,7 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.mapping.MappingManager;
+import gg.cute.Cute;
 import gg.cute.cache.entity.*;
 import gg.cute.cache.entity.Channel.ChannelBuilder;
 import gg.cute.cache.entity.Guild.GuildBuilder;
@@ -12,6 +13,7 @@ import gg.cute.cache.entity.Role.RoleBuilder;
 import gg.cute.cache.entity.User.UserBuilder;
 import lombok.Getter;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,15 +32,19 @@ import java.util.Set;
  */
 @SuppressWarnings("unused")
 public class DiscordCache {
+    private static final String SELF_VOICE_STATES = "self-voice-states";
+    private static final String USER_VOICE_STATES = "user-voice-states";
     @Getter
     private final Cluster cluster;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Cute cute;
     @Getter
     private Session session;
     @Getter
     private MappingManager mappingManager;
     
-    public DiscordCache() {
+    public DiscordCache(final Cute cute) {
+        this.cute = cute;
         cluster = Cluster.builder().addContactPoint(System.getenv("CASSANDRA_HOST")).build();
     }
     
@@ -150,7 +156,7 @@ public class DiscordCache {
         } else if(old != null) {
             guild.memberCount(old.getMemberCount());
         }
-        // Member objects
+
         mappingManager.mapper(Guild.class).save(guild.build());
         logger.debug("Updated guild {}", id);
     }
@@ -326,5 +332,58 @@ public class DiscordCache {
     
     public void deleteRole(final String id) {
         mappingManager.mapper(Role.class).delete(id);
+    }
+    
+    public void cacheVoiceState(final JSONObject data) {
+        final String userId = data.getString("user_id");
+        final String channelId = data.has("channel_id") && !data.isNull("channel_id") ? data.getString("channel_id") : null;
+        final String guildId;
+        if(data.has("guild_id") && !data.isNull("guild_id")) {
+            guildId = data.getString("guild_id");
+        } else {
+            guildId = channelId != null ? getChannel(channelId).getGuildId() : null;
+        }
+        if(userId.equalsIgnoreCase(System.getenv("CLIENT_ID"))) {
+            // Cache self voice state
+            if(guildId != null) {
+                cute.getDatabase().redis(c -> c.hset(SELF_VOICE_STATES, guildId, data.toString()));
+            }
+        } else {
+            // Cache user voice state
+            // TODO: What about bots?
+            cute.getDatabase().redis(c -> c.hset(USER_VOICE_STATES, userId, data.toString()));
+        }
+    }
+    
+    public VoiceState getSelfVoiceState(final String guildId) {
+        final VoiceState[] state = {null};
+        cute.getDatabase().redis(c -> {
+            try {
+                final String res = c.hget(SELF_VOICE_STATES, guildId);
+                final JSONObject data = new JSONObject(res);
+                state[0] = new VoiceState(getGuild(data.getString("guild_id")),
+                        getChannel(data.getString("channel_id")),
+                        getUser(data.getString("user_id")));
+            } catch(final JSONException | NullPointerException e) {
+                state[0] = null;
+            }
+        });
+        return state[0];
+    }
+    
+    public VoiceState getVoiceState(final String userId) {
+        final VoiceState[] state = {null};
+        cute.getDatabase().redis(c -> {
+            try {
+                final String res = c.hget(USER_VOICE_STATES, userId);
+                final JSONObject data = new JSONObject(res);
+                state[0] = new VoiceState(getGuild(data.getString("guild_id")),
+                        getChannel(data.getString("channel_id")),
+                        getUser(data.getString("user_id")));
+            } catch(final JSONException | NullPointerException e) {
+                state[0] = null;
+            }
+        });
+        return state[0];
     }
 }

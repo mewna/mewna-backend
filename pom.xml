@@ -16,7 +16,9 @@
         <javax.inject.version>1</javax.inject.version>
         <commons.lang.version>3.7</commons.lang.version>
         <commons.collections.version>LATEST</commons.collections.version>
+        <commons.text.version>1.2</commons.text.version>
         <jedis.version>2.9.0</jedis.version>
+        <spark.version>2.7.2</spark.version>
     </properties>
 
     <repositories>
@@ -38,6 +40,13 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.16.18</version>
+        </dependency>
+
+        <!-- SparkJava -->
+        <dependency>
+            <groupId>com.sparkjava</groupId>
+            <artifactId>spark-core</artifactId>
+            <version>${spark.version}</version>
         </dependency>
 
         <!-- JDA -->
@@ -168,6 +177,25 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
             <version>${commons.collections.version}</version>
+            <classifier>javadoc</classifier>
+        </dependency>
+
+        <!-- Apache Commons Text -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>${commons.text.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>${commons.text.version}</version>
+            <classifier>sources</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>${commons.text.version}</version>
             <classifier>javadoc</classifier>
         </dependency>
 

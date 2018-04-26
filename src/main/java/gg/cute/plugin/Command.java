@@ -16,7 +16,7 @@ public @interface Command {
     
     String desc();
     
-    String usage();
+    String[] usage();
     
     String[] examples();
     

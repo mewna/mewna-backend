@@ -2,12 +2,16 @@ package gg.cute.event;
 
 import gg.cute.Cute;
 import gg.cute.cache.DiscordCache;
+import gg.cute.cache.entity.Channel;
 import gg.cute.cache.entity.Guild;
+import gg.cute.cache.entity.User;
 import gg.cute.nats.SocketEvent;
+import gg.cute.plugin.event.audio.AudioTrackEvent;
 import gg.cute.plugin.event.guild.member.GuildMemberAddEvent;
 import gg.cute.plugin.event.guild.member.GuildMemberRemoveEvent;
 import gg.cute.plugin.event.message.MessageDeleteBulkEvent;
 import gg.cute.plugin.event.message.MessageDeleteEvent;
+import gg.cute.plugin.impl.audio.AudioTrackInfo;
 import lombok.Getter;
 import net.dv8tion.jda.core.entities.MessageType;
 import org.json.JSONArray;
@@ -19,6 +23,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 
 import static gg.cute.plugin.event.EventType.*;
+import static gg.cute.plugin.event.audio.AudioTrackEvent.TrackMode;
 
 /**
  * @author amy
@@ -32,12 +37,13 @@ public class EventManager {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     
     @Getter
-    private final DiscordCache cache = new DiscordCache();
+    private final DiscordCache cache;
     
     private final Map<String, BiConsumer<SocketEvent, JSONObject>> handlers = new HashMap<>();
     
     public EventManager(final Cute cute) {
         this.cute = cute;
+        cache = new DiscordCache(cute);
         
         // Channels
         handlers.put(CHANNEL_CREATE, (event, data) -> {
@@ -69,6 +75,15 @@ public class EventManager {
                 cache.cacheUser(((JSONObject) r).getJSONObject("user"));
                 cache.cacheMember(id, (JSONObject) r);
             });
+            if(data.has("voice_states") && !data.isNull("voice_states")) {
+                final JSONArray states = data.getJSONArray("voice_states");
+                for(final Object o : states) {
+                    final JSONObject state = (JSONObject) o;
+                    state.put("guild_id", id);
+                    // TODO: Bulk-cache in redis transactions
+                    cache.cacheVoiceState(state);
+                }
+            }
         });
         handlers.put(GUILD_DELETE, (event, data) -> {
             if(data.has("unavailable")) {
@@ -128,8 +143,9 @@ public class EventManager {
         
         // Voice
         handlers.put(VOICE_SERVER_UPDATE, (event, data) -> {
-            // TODO: Handle voice...
+            // Not needed
         });
+        handlers.put(VOICE_STATE_UPDATE, (event, data) -> cache.cacheVoiceState(data));
         
         // Messages
         handlers.put(MESSAGE_CREATE, (event, data) -> {
@@ -173,6 +189,32 @@ public class EventManager {
             // TODO: How to model this?
         });
         
+        // Audio
+        handlers.put(AUDIO_TRACK_START, (event, data) -> {
+            logger.debug("Got audio event {} with data {}", event.getType(), data);
+            cute.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_START, data));
+        });
+        handlers.put(AUDIO_TRACK_STOP, (event, data) -> {
+            logger.debug("Got audio event {} with data {}", event.getType(), data);
+            cute.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_STOP, data));
+        });
+        handlers.put(AUDIO_TRACK_PAUSE, (event, data) -> {
+            logger.debug("Got audio event {} with data {}", event.getType(), data);
+            cute.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_PAUSE, data));
+        });
+        handlers.put(AUDIO_TRACK_QUEUE, (event, data) -> {
+            logger.debug("Got audio event {} with data {}", event.getType(), data);
+            cute.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_QUEUE, data));
+        });
+        handlers.put(AUDIO_TRACK_INVALID, (event, data) -> {
+            logger.debug("Got audio event {} with data {}", event.getType(), data);
+            cute.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_INVALID, data));
+        });
+        handlers.put(AUDIO_QUEUE_END, (event, data) -> {
+            logger.debug("Got audio event {} with data {}", event.getType(), data);
+            cute.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.QUEUE_END, data));
+        });
+        
         // We don't really care about these
         handlers.put(GUILD_SYNC, (event, data) -> {
         });
@@ -192,8 +234,19 @@ public class EventManager {
         });
         handlers.put(TYPING_START, (event, data) -> {
         });
-        handlers.put(VOICE_STATE_UPDATE, (event, data) -> {
-        });
+    }
+    
+    private AudioTrackEvent createAudioEvent(final TrackMode mode, final JSONObject data) {
+        final JSONObject ctx = data.getJSONObject("ctx");
+        final Guild guild = cache.getGuild(ctx.getString("guild"));
+        final Channel channel = cache.getChannel(ctx.getString("channel"));
+        final User user = cache.getUser(ctx.getString("userId"));
+        if(data.has("info") && !data.isNull("info")) {
+            final AudioTrackInfo info = AudioTrackInfo.fromJson(data.getJSONObject("info"));
+            return new AudioTrackEvent(mode, guild, channel, user, info);
+        } else {
+            return new AudioTrackEvent(mode, guild, channel, user, null);
+        }
     }
     
     public void handle(final SocketEvent event) {

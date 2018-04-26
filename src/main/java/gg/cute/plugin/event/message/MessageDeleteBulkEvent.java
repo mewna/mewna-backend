@@ -2,6 +2,7 @@ package gg.cute.plugin.event.message;
 
 import gg.cute.cache.entity.Channel;
 import gg.cute.plugin.event.BaseEvent;
+import gg.cute.plugin.event.EventType;
 import lombok.Getter;
 
 import java.util.List;
@@ -16,7 +17,7 @@ public class MessageDeleteBulkEvent extends BaseEvent {
     private final List<String> messageIds;
     
     public MessageDeleteBulkEvent(final Channel channel, final List<String> messageIds) {
-        super("MESSAGE_DELETE_BULK");
+        super(EventType.MESSAGE_DELETE_BULK);
         this.channel = channel;
         this.messageIds = messageIds;
     }

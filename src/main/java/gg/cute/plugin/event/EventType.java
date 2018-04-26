@@ -42,5 +42,13 @@ public interface EventType {
     String TYPING_START                 = "TYPING_START";
     String VOICE_STATE_UPDATE           = "VOICE_STATE_UPDATE";
     
+    // Audio server events
+    String AUDIO_TRACK_START    = "AUDIO_TRACK_START";
+    String AUDIO_TRACK_STOP     = "AUDIO_TRACK_STOP";
+    String AUDIO_TRACK_PAUSE    = "AUDIO_TRACK_PAUSE";
+    String AUDIO_TRACK_QUEUE    = "AUDIO_TRACK_QUEUE";
+    String AUDIO_TRACK_INVALID  = "AUDIO_TRACK_INVALID";
+    String AUDIO_QUEUE_END      = "AUDIO_QUEUE_END";
+    
     // @formatter:on
 }

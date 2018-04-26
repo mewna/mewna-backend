@@ -8,6 +8,7 @@ import gg.cute.plugin.Command;
 import gg.cute.plugin.CommandContext;
 import gg.cute.plugin.Plugin;
 import gg.cute.plugin.event.Event;
+import gg.cute.plugin.event.EventType;
 import gg.cute.plugin.event.message.MessageCreateEvent;
 import net.dv8tion.jda.core.MessageBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -55,7 +56,7 @@ public class PluginSocial extends BasePlugin {
         return Math.max(0, level - 1);
     }
     
-    @Event("MESSAGE_CREATE")
+    @Event(EventType.MESSAGE_CREATE)
     public void handleChatMessage(final MessageCreateEvent event) {
         final User author = event.getAuthor();
         final Player player = getDatabase().getPlayer(author);

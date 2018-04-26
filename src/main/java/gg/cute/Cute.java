@@ -17,24 +17,18 @@ import org.slf4j.LoggerFactory;
  */
 public final class Cute {
     @Getter
-    private NatsServer nats;
-    
-    @Getter
     private final EventManager eventManager = new EventManager(this);
-    
     @Getter
     private final PluginManager pluginManager = new PluginManager(this);
-    
     @Getter
     private final RestJDA restJDA = new RestJDA(System.getenv("TOKEN"));
-    
     @Getter
     private final Database database = new Database(this);
-    
     @Getter
     private final Ratelimiter ratelimiter = new Ratelimiter(this);
-    
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    @Getter
+    private NatsServer nats;
     
     private Cute() {
     }

@@ -67,7 +67,4 @@ public class BasePlugin {
         sb.append("\n(Please give me the \"Embed Links\" permission so that this will look nicer!)");
         return sb.toString();
     }
-    
-    public void finishLoading() {
-    }
 }

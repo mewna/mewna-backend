@@ -152,9 +152,6 @@ public class PluginManager {
                         discordEventHandlers.get(event.value()).add(new EventHolder(event.value(), m, plugin));
                     }
                 }
-                if(plugin instanceof BasePlugin) {
-                    ((BasePlugin) plugin).finishLoading();
-                }
             } catch(final InstantiationException | IllegalAccessException e) {
                 e.printStackTrace();
             }

@@ -18,6 +18,7 @@
         <commons.collections.version>LATEST</commons.collections.version>
         <commons.text.version>1.2</commons.text.version>
         <jedis.version>2.9.0</jedis.version>
+        <spark.version>2.7.2</spark.version>
     </properties>
 
     <repositories>
@@ -234,6 +235,13 @@
             <artifactId>jedis</artifactId>
             <version>${jedis.version}</version>
             <classifier>javadoc</classifier>
+        </dependency>
+
+        <!-- SparkJava -->
+        <dependency>
+            <groupId>com.sparkjava</groupId>
+            <artifactId>spark-core</artifactId>
+            <version>${spark.version}</version>
         </dependency>
 
         <!-- JUnit -->

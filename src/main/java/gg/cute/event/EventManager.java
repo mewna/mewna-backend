@@ -132,8 +132,6 @@ public class EventManager {
         // Roles
         handlers.put(GUILD_ROLE_CREATE, (event, data) -> cache.cacheRole(data));
         handlers.put(GUILD_ROLE_DELETE, (event, data) -> {
-            // data.role.id
-            System.out.println("G_R_D: " + data);
             cache.deleteRole(data.getString("role_id"));
         });
         handlers.put(GUILD_ROLE_UPDATE, (event, data) -> cache.cacheRole(data));

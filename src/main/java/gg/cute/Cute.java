@@ -8,6 +8,7 @@ import gg.cute.nats.NatsServer;
 import gg.cute.plugin.PluginManager;
 import gg.cute.util.Ratelimiter;
 import lombok.Getter;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,8 +60,15 @@ public final class Cute {
         path("/cache", () -> {
             get("/user/:id", (req, res) -> new JSONObject(getCache().getUser(req.params(":id"))));
             get("/guild/:id", (req, res) -> new JSONObject(getCache().getGuild(req.params(":id"))));
+            get("/guild/:id/channels", (req, res) -> new JSONArray(getCache().getGuildChannels(req.params(":id"))));
+            get("/guild/:id/roles", (req, res) -> new JSONArray(getCache().getGuildRoles(req.params(":id"))));
             get("/channel/:id", (req, res) -> new JSONObject(getCache().getChannel(req.params(":id"))));
             get("/role/:id", (req, res) -> new JSONObject(getCache().getRole(req.params(":id"))));
+        });
+        get("/commands", (req, res) -> new JSONArray(pluginManager.getCommandMetadata()));
+        path("/data", () -> {
+            get("/guild/:id", (req, res) -> new JSONObject(database.getGuildSettings(req.params(":id"))));
+            get("/player/:id", (req, res) -> new JSONObject(database.getPlayer(req.params(":id"))));
         });
     }
     

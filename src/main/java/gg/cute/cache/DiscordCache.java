@@ -79,7 +79,7 @@ public class DiscordCache {
                 "color INT," +
                 "guildId TEXT" +
                 ");");
-        session.execute("CREATE INDEX IF NOT EXISTS ON cute.roles (name);");
+        session.execute("CREATE INDEX IF NOT EXISTS ON cute.roles (guildId);");
         // Users
         session.execute("CREATE TABLE IF NOT EXISTS cute.users (" +
                 "id TEXT PRIMARY KEY," +
@@ -263,6 +263,12 @@ public class DiscordCache {
         return mappingManager.mapper(Channel.class).get(id);
     }
     
+    public List<Channel> getGuildChannels(final String id) {
+        final ResultSet rs = session.execute("SELECT * FROM cute.channels WHERE guildId = '" + id + "';");
+        final List<Channel> results = new ArrayList<>(mappingManager.mapper(Channel.class).map(rs).all());
+        return results;
+    }
+    
     public void deleteChannel(final String id) {
         mappingManager.mapper(Channel.class).delete(id);
     }
@@ -330,6 +336,12 @@ public class DiscordCache {
         return mappingManager.mapper(Role.class).get(id);
     }
     
+    public List<Role> getGuildRoles(final String id) {
+        final ResultSet rs = session.execute("SELECT * FROM cute.roles WHERE guildId = '" + id + "';");
+        final List<Role> results = new ArrayList<>(mappingManager.mapper(Role.class).map(rs).all());
+        return results;
+    }
+    
     public void deleteRole(final String id) {
         mappingManager.mapper(Role.class).delete(id);
     }
@@ -385,5 +397,9 @@ public class DiscordCache {
             }
         });
         return state[0];
+    }
+    
+    public void deleteSelfVoiceState(final String guildId) {
+        cute.getDatabase().redis(c -> c.hdel(SELF_VOICE_STATES, guildId));
     }
 }

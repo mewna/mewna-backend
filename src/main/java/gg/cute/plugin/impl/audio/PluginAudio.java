@@ -83,13 +83,25 @@ public class PluginAudio extends BasePlugin {
                 }
                 case "l":
                 case "leave": {
+                    if(!ctx.getArgs().isEmpty()) {
+                        final String arg = ctx.getArgs().get(0);
+                        if(arg.equalsIgnoreCase("-f") || arg.equalsIgnoreCase("--force")) {
+                            getLogger().info("Forcing leave -> guild voice {}", ctx.getGuild().getId());
+                            getCute().getCache().deleteSelfVoiceState(ctx.getGuild().getId());
+                            // Tell audio server to disconnect, which will then tell shards to leave
+                            getCute().getNats().pushAudioEvent("AUDIO_DISCONNECT", new JSONObject()
+                                    .put("guild_id", ctx.getGuild().getId()));
+                            return;
+                        }
+                    }
                     final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
                     if(check == VoiceCheck.USER_NOT_IN_VOICE) {
                         getRestJDA().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
                     } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
                         getRestJDA().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
                     } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-                        getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel!").queue();
+                        getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel! If this isn't correct, " +
+                                "run this command again, but put `--force` at the end").queue();
                     } else {
                         final VoiceState state = getCute().getCache().getSelfVoiceState(ctx.getGuild().getId());
                         getLogger().info("Attempting leave -> voice channel {}#{}", ctx.getGuild().getId(),
@@ -119,7 +131,9 @@ public class PluginAudio extends BasePlugin {
                     }
                     break;
                 }
+                case "s":
                 case "p":
+                case "skip":
                 case "play": {
                     final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
                     if(check == VoiceCheck.USER_NOT_IN_VOICE) {

@@ -14,6 +14,7 @@ import gg.cute.plugin.metadata.Payment;
 import gg.cute.plugin.metadata.Ratelimit;
 import gg.cute.plugin.util.CurrencyHelper;
 import gg.cute.util.Time;
+import gg.cute.util.UserAgentInterceptor;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import lombok.Getter;
 import lombok.Value;
@@ -23,6 +24,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -34,7 +36,7 @@ import java.util.function.Function;
  * @author amy
  * @since 4/8/18.
  */
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "OverlyCoupledClass"})
 public class PluginManager {
     private static final List<String> PREFIXES;
     
@@ -50,7 +52,11 @@ public class PluginManager {
     private final Cute cute;
     private final CurrencyHelper currencyHelper;
     @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
-    private final OkHttpClient okHttpClient = new OkHttpClient.Builder().build();
+    private final OkHttpClient okHttpClient = new OkHttpClient.Builder()
+            .addInterceptor(new UserAgentInterceptor("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36"))
+            .build();
+    @Getter
+    private final Collection<CommandMetadata> commandMetadata = new ArrayList<>();
     
     /**
      * Event handlers for Discord events. Things like cache are done before the
@@ -95,13 +101,15 @@ public class PluginManager {
         
         while(injectable != null && !Objects.equals(injectable, Object.class)) {
             for(final Field f : injectable.getDeclaredFields()) {
-                if(injectionClasses.containsKey(f.getType())) {
-                    f.setAccessible(true);
-                    try {
-                        f.set(obj, injectionClasses.get(f.getType()).apply(obj.getClass()));
-                        logger.debug("Injected into {}#{}", obj.getClass().getName(), f.getName());
-                    } catch(final IllegalAccessException e) {
-                        logger.error("Coouldn't inject {}#{}: {}", obj.getClass().getName(), f.getName(), e);
+                if(f.isAnnotationPresent(Inject.class)) {
+                    if(injectionClasses.containsKey(f.getType())) {
+                        f.setAccessible(true);
+                        try {
+                            f.set(obj, injectionClasses.get(f.getType()).apply(obj.getClass()));
+                            logger.debug("Injected into {}#{}", obj.getClass().getName(), f.getName());
+                        } catch(final IllegalAccessException e) {
+                            logger.error("Coouldn't inject {}#{}: {}", obj.getClass().getName(), f.getName(), e);
+                        }
                     }
                 }
             }
@@ -132,7 +140,7 @@ public class PluginManager {
                             continue;
                         }
                         final Command cmd = m.getDeclaredAnnotation(Command.class);
-                        
+                        // Load commands
                         for(final String s : cmd.names()) {
                             commands.put(s.toLowerCase(), new CommandWrapper(s.toLowerCase(),
                                     cmd.aliased() ? cmd.names()[0].toLowerCase() : s.toLowerCase(), cmd.names(),
@@ -142,6 +150,17 @@ public class PluginManager {
                                     cmd.owner(), plugin, m));
                             logger.info("Loaded plugin command '{}' for plugin '{}' ({})", s,
                                     p.value(), c.getName());
+                        }
+                        // Load metadata
+                        if(cmd.aliased()) {
+                            final List<String> tmp = new ArrayList<>(Arrays.asList(cmd.names()));
+                            final String name = tmp.remove(0);
+                            final String[] aliases = tmp.toArray(new String[0]);
+                            commandMetadata.add(new CommandMetadata(name, cmd.desc(), aliases, cmd.usage(), cmd.examples()));
+                        } else {
+                            for(final String name : cmd.names()) {
+                                commandMetadata.add(new CommandMetadata(name, cmd.desc(), new String[0], cmd.usage(), cmd.examples()));
+                            }
                         }
                     } else if(m.isAnnotationPresent(Event.class)) {
                         // Map event handlers to handle various Discord events or w/e
@@ -339,5 +358,14 @@ public class PluginManager {
         private boolean owner;
         private Object plugin;
         private Method method;
+    }
+    
+    @Value
+    public static final class CommandMetadata {
+        private String name;
+        private String desc;
+        private String[] aliases;
+        private String[] usage;
+        private String[] examples;
     }
 }

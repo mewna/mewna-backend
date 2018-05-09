@@ -1,6 +1,6 @@
 package com.mewna.event;
 
-import com.mewna.Cute;
+import com.mewna.Mewna;
 import com.mewna.cache.DiscordCache;
 import com.mewna.cache.entity.Channel;
 import com.mewna.cache.entity.Guild;
@@ -32,7 +32,7 @@ import static com.mewna.plugin.event.audio.AudioTrackEvent.TrackMode;
 @SuppressWarnings("unused")
 public class EventManager {
     @Getter
-    private final Cute cute;
+    private final Mewna mewna;
     
     private final Logger logger = LoggerFactory.getLogger(getClass());
     
@@ -41,9 +41,9 @@ public class EventManager {
     
     private final Map<String, BiConsumer<SocketEvent, JSONObject>> handlers = new HashMap<>();
     
-    public EventManager(final Cute cute) {
-        this.cute = cute;
-        cache = new DiscordCache(cute);
+    public EventManager(final Mewna mewna) {
+        this.mewna = mewna;
+        cache = new DiscordCache(mewna);
         
         // Channels
         handlers.put(CHANNEL_CREATE, (event, data) -> {
@@ -106,14 +106,14 @@ public class EventManager {
             cache.cacheMember(data.getString("guild_id"), data);
             final Guild guild = cache.getGuild(data.getString("guild_id"));
             cache.getMappingManager().mapper(Guild.class).save(guild.toBuilder().memberCount(guild.getMemberCount() + 1).build());
-            cute.getPluginManager().processEvent(event.getType(),
+            mewna.getPluginManager().processEvent(event.getType(),
                     new GuildMemberAddEvent(guild, cache.getMember(guild, cache.getUser(user.getString("id")))));
         });
         handlers.put(GUILD_MEMBER_REMOVE, (event, data) -> {
             final Guild guild = cache.getGuild(data.getString("guild_id"));
             cache.deleteMember(data.getString("guild_id"), data.getJSONObject("user").getString("id"));
             cache.getMappingManager().mapper(Guild.class).save(guild.toBuilder().memberCount(guild.getMemberCount() - 1).build());
-            cute.getPluginManager().processEvent(event.getType(), new GuildMemberRemoveEvent(guild,
+            mewna.getPluginManager().processEvent(event.getType(), new GuildMemberRemoveEvent(guild,
                     cache.getUser(data.getJSONObject("user").getString("id"))));
         });
         handlers.put(GUILD_MEMBER_UPDATE, (event, data) -> {
@@ -168,11 +168,11 @@ public class EventManager {
                 return;
             }
             // This will pass down to the event handler, so we don't need to worry about it here
-            cute.getPluginManager().tryExecCommand(data);
+            mewna.getPluginManager().tryExecCommand(data);
         });
         handlers.put(MESSAGE_DELETE, (event, data) -> {
             // TODO: Would have to cache messages...
-            cute.getPluginManager().processEvent(event.getType(), new MessageDeleteEvent(data.getString("id"),
+            mewna.getPluginManager().processEvent(event.getType(), new MessageDeleteEvent(data.getString("id"),
                     cache.getChannel(data.getString("channel_id"))));
         });
         handlers.put(MESSAGE_DELETE_BULK, (event, data) -> {
@@ -180,7 +180,7 @@ public class EventManager {
             final JSONArray jsonArray = data.getJSONArray("ids");
             final List<String> list = new ArrayList<>();
             jsonArray.forEach(e -> list.add((String) e));
-            cute.getPluginManager().processEvent(event.getType(),
+            mewna.getPluginManager().processEvent(event.getType(),
                     new MessageDeleteBulkEvent(cache.getChannel(data.getString("channel_id")), list));
         });
         handlers.put(MESSAGE_UPDATE, (event, data) -> {
@@ -190,27 +190,27 @@ public class EventManager {
         // Audio
         handlers.put(AUDIO_TRACK_START, (event, data) -> {
             logger.debug("Got audio event {} with data {}", event.getType(), data);
-            cute.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_START, data));
+            mewna.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_START, data));
         });
         handlers.put(AUDIO_TRACK_STOP, (event, data) -> {
             logger.debug("Got audio event {} with data {}", event.getType(), data);
-            cute.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_STOP, data));
+            mewna.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_STOP, data));
         });
         handlers.put(AUDIO_TRACK_PAUSE, (event, data) -> {
             logger.debug("Got audio event {} with data {}", event.getType(), data);
-            cute.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_PAUSE, data));
+            mewna.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_PAUSE, data));
         });
         handlers.put(AUDIO_TRACK_QUEUE, (event, data) -> {
             logger.debug("Got audio event {} with data {}", event.getType(), data);
-            cute.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_QUEUE, data));
+            mewna.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_QUEUE, data));
         });
         handlers.put(AUDIO_TRACK_INVALID, (event, data) -> {
             logger.debug("Got audio event {} with data {}", event.getType(), data);
-            cute.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_INVALID, data));
+            mewna.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_INVALID, data));
         });
         handlers.put(AUDIO_QUEUE_END, (event, data) -> {
             logger.debug("Got audio event {} with data {}", event.getType(), data);
-            cute.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.QUEUE_END, data));
+            mewna.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.QUEUE_END, data));
         });
         
         // We don't really care about these

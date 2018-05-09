@@ -21,7 +21,7 @@ import static spark.Spark.*;
  * @author amy
  * @since 4/8/18.
  */
-public final class Cute {
+public final class Mewna {
     @Getter
     private final EventManager eventManager = new EventManager(this);
     @Getter
@@ -36,15 +36,15 @@ public final class Cute {
     @Getter
     private NatsServer nats;
     
-    private Cute() {
+    private Mewna() {
     }
     
     public static void main(final String[] args) {
-        new Cute().start();
+        new Mewna().start();
     }
     
     private void start() {
-        logger.info("Starting Cute backend...");
+        logger.info("Starting Mewna backend...");
         eventManager.getCache().connect();
         database.init();
         pluginManager.init();

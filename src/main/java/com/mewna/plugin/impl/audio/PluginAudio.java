@@ -68,13 +68,13 @@ public class PluginAudio extends BasePlugin {
                     } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE || check == VoiceCheck.SELF_AND_USER_IN_SAME_VOICE) {
                         getRestJDA().sendMessage(ctx.getChannel(), "I'm already in a voice channel!").queue();
                     } else {
-                        final VoiceState state = getCute().getCache().getVoiceState(ctx.getUser().getId());
+                        final VoiceState state = this.getMewna().getCache().getVoiceState(ctx.getUser().getId());
                         getRestJDA().sendMessage(ctx.getChannel(), "Connecting to voice channel #"
                                 + ctx.getChannel().getName()).queue();
                         getLogger().info("Attempting join -> voice channel {}#{}", ctx.getGuild().getId(),
                                 state.getChannel().getId());
                         // Tell shards to join, which will then tell audio server to connect
-                        getCute().getNats().pushShardEvent("AUDIO_CONNECT", new JSONObject()
+                        this.getMewna().getNats().pushShardEvent("AUDIO_CONNECT", new JSONObject()
                                 .put("guild_id", ctx.getGuild().getId())
                                 .put("channel_id", state.getChannel().getId()));
                     }
@@ -86,9 +86,9 @@ public class PluginAudio extends BasePlugin {
                         final String arg = ctx.getArgs().get(0);
                         if(arg.equalsIgnoreCase("-f") || arg.equalsIgnoreCase("--force")) {
                             getLogger().info("Forcing leave -> guild voice {}", ctx.getGuild().getId());
-                            getCute().getCache().deleteSelfVoiceState(ctx.getGuild().getId());
+                            this.getMewna().getCache().deleteSelfVoiceState(ctx.getGuild().getId());
                             // Tell audio server to disconnect, which will then tell shards to leave
-                            getCute().getNats().pushAudioEvent("AUDIO_DISCONNECT", new JSONObject()
+                            this.getMewna().getNats().pushAudioEvent("AUDIO_DISCONNECT", new JSONObject()
                                     .put("guild_id", ctx.getGuild().getId()));
                             return;
                         }
@@ -102,11 +102,11 @@ public class PluginAudio extends BasePlugin {
                         getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel! If this isn't correct, " +
                                 "run this command again, but put `--force` at the end").queue();
                     } else {
-                        final VoiceState state = getCute().getCache().getSelfVoiceState(ctx.getGuild().getId());
+                        final VoiceState state = this.getMewna().getCache().getSelfVoiceState(ctx.getGuild().getId());
                         getLogger().info("Attempting leave -> voice channel {}#{}", ctx.getGuild().getId(),
                                 state.getChannel().getId());
                         // Tell audio server to disconnect, which will then tell shards to leave
-                        getCute().getNats().pushAudioEvent("AUDIO_DISCONNECT", new JSONObject()
+                        this.getMewna().getNats().pushAudioEvent("AUDIO_DISCONNECT", new JSONObject()
                                 .put("guild_id", ctx.getGuild().getId()));
                     }
                     break;
@@ -124,7 +124,7 @@ public class PluginAudio extends BasePlugin {
                         if(ctx.getArgs().isEmpty()) {
                             getRestJDA().sendMessage(ctx.getChannel(), "You need to give me something to queue!").queue();
                         } else {
-                            getCute().getNats().pushAudioEvent("AUDIO_QUEUE", new JSONObject()
+                            this.getMewna().getNats().pushAudioEvent("AUDIO_QUEUE", new JSONObject()
                                     .put("ctx", ctxToAudioCtx(ctx)).put("track", String.join(" ", ctx.getArgs())));
                         }
                     }
@@ -142,7 +142,7 @@ public class PluginAudio extends BasePlugin {
                     } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
                         getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel!").queue();
                     } else {
-                        getCute().getNats().pushAudioEvent("AUDIO_PLAY", new JSONObject()
+                        this.getMewna().getNats().pushAudioEvent("AUDIO_PLAY", new JSONObject()
                                 .put("ctx", ctxToAudioCtx(ctx)).put("track", String.join(" ", ctx.getArgs())));
                     }
                     break;
@@ -158,8 +158,8 @@ public class PluginAudio extends BasePlugin {
     }
     
     private VoiceCheck checkState(final Guild guild, final User user) {
-        final VoiceState selfState = getCute().getCache().getSelfVoiceState(guild.getId());
-        final VoiceState userState = getCute().getCache().getVoiceState(user.getId());
+        final VoiceState selfState = this.getMewna().getCache().getSelfVoiceState(guild.getId());
+        final VoiceState userState = this.getMewna().getCache().getVoiceState(user.getId());
         if(userState == null || userState.getChannel() == null) {
             return VoiceCheck.USER_NOT_IN_VOICE;
         }

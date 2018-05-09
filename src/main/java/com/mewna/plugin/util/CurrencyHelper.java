@@ -1,6 +1,6 @@
 package com.mewna.plugin.util;
 
-import com.mewna.Cute;
+import com.mewna.Mewna;
 import com.mewna.cache.entity.Guild;
 import com.mewna.data.GuildSettings;
 import com.mewna.data.Player;
@@ -18,7 +18,7 @@ import static com.mewna.plugin.util.CurrencyHelper.PaymentResult.*;
 public final class CurrencyHelper {
     private static final String CURRENCY_SYMBOL = ":white_flower:";
     @Inject
-    private Cute cute;
+    private Mewna mewna;
     
     @SuppressWarnings("WeakerAccess")
     public final ImmutablePair<Boolean, Long> handlePayment(final CommandContext ctx, final String maybeAmount, final long min, final long max) {
@@ -26,35 +26,35 @@ public final class CurrencyHelper {
         final String symbol = getCurrencySymbol(ctx);
         switch(check.left) {
             case BAD_EMPTY: {
-                cute.getRestJDA().sendMessage(ctx.getChannel(), "You can't pay nothing!").queue();
+                mewna.getRestJDA().sendMessage(ctx.getChannel(), "You can't pay nothing!").queue();
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_NOT_NUM: {
-                cute.getRestJDA().sendMessage(ctx.getChannel(), String.format("`%s` isn't a number!", maybeAmount)).queue();
+                mewna.getRestJDA().sendMessage(ctx.getChannel(), String.format("`%s` isn't a number!", maybeAmount)).queue();
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_POOR_NO_BAL: {
-                cute.getRestJDA().sendMessage(ctx.getChannel(), "You don't have any money!").queue();
+                mewna.getRestJDA().sendMessage(ctx.getChannel(), "You don't have any money!").queue();
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_POOR: {
-                cute.getRestJDA().sendMessage(ctx.getChannel(), String.format("You tried to spend %s%s, but you only have %s%s!",
+                mewna.getRestJDA().sendMessage(ctx.getChannel(), String.format("You tried to spend %s%s, but you only have %s%s!",
                         maybeAmount, symbol, ctx.getPlayer().getBalance(ctx.getGuild()), symbol)).queue();
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_CHEAP: {
-                cute.getRestJDA().sendMessage(ctx.getChannel(), String.format("You tried to spend %s%s, but you need to spend at least %s%s!",
+                mewna.getRestJDA().sendMessage(ctx.getChannel(), String.format("You tried to spend %s%s, but you need to spend at least %s%s!",
                         maybeAmount, symbol, min, symbol)).queue();
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_MUCH: {
-                cute.getRestJDA().sendMessage(ctx.getChannel(), String.format("You tried to spend %s%s, but you can only spend up to %s%s!",
+                mewna.getRestJDA().sendMessage(ctx.getChannel(), String.format("You tried to spend %s%s, but you can only spend up to %s%s!",
                         maybeAmount, symbol, max, symbol)).queue();
                 return ImmutablePair.of(false, -1L);
             }
             case OK: {
                 ctx.getPlayer().incrementBalance(ctx.getGuild(), -check.right);
-                cute.getDatabase().savePlayer(ctx.getPlayer());
+                mewna.getDatabase().savePlayer(ctx.getPlayer());
                 return ImmutablePair.of(true, check.right);
             }
             default: {

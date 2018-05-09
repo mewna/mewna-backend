@@ -1,7 +1,7 @@
 package com.mewna.plugin;
 
 import com.google.common.collect.ImmutableMap;
-import com.mewna.Cute;
+import com.mewna.Mewna;
 import com.mewna.cache.entity.Channel;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
@@ -49,7 +49,7 @@ public class PluginManager {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Map<Class<?>, Function<Class<?>, Object>> injectionClasses;
     @Getter
-    private final Cute cute;
+    private final Mewna mewna;
     private final CurrencyHelper currencyHelper;
     @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
     private final OkHttpClient okHttpClient = new OkHttpClient.Builder()
@@ -76,14 +76,14 @@ public class PluginManager {
      */
     private final Map<String, HashSet<EventHolder>> discordEventHandlers = new HashMap<>();
     
-    public PluginManager(final Cute cute) {
-        this.cute = cute;
+    public PluginManager(final Mewna mewna) {
+        this.mewna = mewna;
         currencyHelper = new CurrencyHelper();
         
         injectionClasses = ImmutableMap.<Class<?>, Function<Class<?>, Object>>builder()
-                .put(Cute.class, __ -> this.cute)
+                .put(Mewna.class, __ -> this.mewna)
                 .put(Logger.class, LoggerFactory::getLogger)
-                .put(Database.class, __ -> this.cute.getDatabase())
+                .put(Database.class, __ -> this.mewna.getDatabase())
                 .put(Random.class, __ -> new Random())
                 .put(CurrencyHelper.class, __ -> currencyHelper)
                 .put(OkHttpClient.class, __ -> okHttpClient)
@@ -193,7 +193,7 @@ public class PluginManager {
             // See https://github.com/discordapp/discord-api-docs/issues/582
             // Note this isn't in the docs yet, but should be at some point (hopefully soon)
             final String guildId = data.getString("guild_id");
-            final User user = cute.getCache().getUser(data.getJSONObject("author").getString("id"));
+            final User user = mewna.getCache().getUser(data.getJSONObject("author").getString("id"));
             if(user == null) {
                 logger.error("Got message from unknown (uncached) user {}!?", data.getJSONObject("author").getString("id"));
                 return;
@@ -209,20 +209,20 @@ public class PluginManager {
             // TODO: Need a check to block commands in DMs.
             
             // Collect cache data
-            final Guild guild = cute.getCache().getGuild(guildId);
-            final Channel channel = cute.getCache().getChannel(channelId);
+            final Guild guild = mewna.getCache().getGuild(guildId);
+            final Channel channel = mewna.getCache().getChannel(channelId);
             final List<User> mentions = new ArrayList<>();
             for(final Object o : data.getJSONArray("mentions")) {
                 final JSONObject j = (JSONObject) o;
                 // TODO: Build this from the JSON object instead of hitting the cache all the time?
-                mentions.add(cute.getCache().getUser(j.getString("id")));
+                mentions.add(mewna.getCache().getUser(j.getString("id")));
             }
             
             // Parse prefixes
             String content = data.getString("content");
             String prefix = null;
             boolean found = false;
-            final GuildSettings settings = cute.getDatabase().getGuildSettings(guildId);
+            final GuildSettings settings = mewna.getDatabase().getGuildSettings(guildId);
             for(final String p : getAllPrefixes(settings)) {
                 if(p != null && !p.isEmpty()) {
                     if(content.toLowerCase().startsWith(p.toLowerCase())) {
@@ -266,11 +266,11 @@ public class PluginManager {
                                 break;
                         }
                         
-                        final ImmutablePair<Boolean, Long> check = cute.getRatelimiter().checkUpdateRatelimit(user.getId(),
+                        final ImmutablePair<Boolean, Long> check = mewna.getRatelimiter().checkUpdateRatelimit(user.getId(),
                                 baseName + ':' + ratelimitKey,
                                 TimeUnit.SECONDS.toMillis(cmd.getRatelimit().time()));
                         if(check.left) {
-                            cute.getRestJDA().sendMessage(channelId,
+                            mewna.getRestJDA().sendMessage(channelId,
                                     String.format("You're using that command too fast! Try again in **%s**.",
                                             Time.toHumanReadableDuration(check.right))).queue();
                             return;
@@ -295,7 +295,7 @@ public class PluginManager {
                         
                         final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr,
                                 guild, channel, mentions, settings,
-                                cute.getDatabase().getPlayer(user), 0L);
+                                mewna.getDatabase().getPlayer(user), 0L);
                         
                         final ImmutablePair<Boolean, Long> res = currencyHelper.handlePayment(paymentCtx,
                                 maybePayment, cmd.getPayment().min(),
@@ -312,7 +312,7 @@ public class PluginManager {
                     final CommandContext ctx = new CommandContext(user, commandName,
                             args, argstr,
                             guild, channel, mentions, settings,
-                            cute.getDatabase().getPlayer(user), cost);
+                            mewna.getDatabase().getPlayer(user), cost);
                     
                     try {
                         cmd.getMethod().invoke(cmd.getPlugin(), ctx);

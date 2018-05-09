@@ -10,7 +10,6 @@ import com.mewna.plugin.Plugin;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.message.MessageCreateEvent;
-import net.dv8tion.jda.core.MessageBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.util.concurrent.TimeUnit;
@@ -64,10 +63,10 @@ public class PluginSocial extends BasePlugin {
         getLogger().trace("Handling chat message for player {} in {}", author.getId(), guild.getId());
         
         // Calc. cooldown
-        final ImmutablePair<Boolean, Long> localRes = getCute().getRatelimiter()
+        final ImmutablePair<Boolean, Long> localRes = this.getMewna().getRatelimiter()
                 .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-local:" + guild.getId(),
                         TimeUnit.MINUTES.toMillis(1));
-        final ImmutablePair<Boolean, Long> globalRes = getCute().getRatelimiter()
+        final ImmutablePair<Boolean, Long> globalRes = this.getMewna().getRatelimiter()
                 .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-global", TimeUnit.MINUTES.toMillis(1));
         
         if(!localRes.left) {

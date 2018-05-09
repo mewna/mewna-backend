@@ -1,7 +1,7 @@
 package com.mewna.data;
 
+import com.mewna.Mewna;
 import gg.amy.pgorm.PgStore;
-import com.mewna.Cute;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
 import lombok.Getter;
@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class Database {
     @Getter
-    private final Cute cute;
+    private final Mewna mewna;
     @Getter
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private boolean init;
@@ -32,8 +32,8 @@ public class Database {
     
     private JedisPool jedisPool;
     
-    public Database(final Cute cute) {
-        this.cute = cute;
+    public Database(final Mewna mewna) {
+        this.mewna = mewna;
     }
     
     public void init() {

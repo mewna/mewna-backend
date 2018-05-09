@@ -4,7 +4,7 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.mapping.MappingManager;
-import com.mewna.Cute;
+import com.mewna.Mewna;
 import com.mewna.cache.entity.*;
 import com.mewna.cache.entity.Channel.ChannelBuilder;
 import com.mewna.cache.entity.Guild.GuildBuilder;
@@ -37,14 +37,14 @@ public class DiscordCache {
     @Getter
     private final Cluster cluster;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Cute cute;
+    private final Mewna mewna;
     @Getter
     private Session session;
     @Getter
     private MappingManager mappingManager;
     
-    public DiscordCache(final Cute cute) {
-        this.cute = cute;
+    public DiscordCache(final Mewna mewna) {
+        this.mewna = mewna;
         cluster = Cluster.builder().addContactPoint(System.getenv("CASSANDRA_HOST")).build();
     }
     
@@ -358,18 +358,18 @@ public class DiscordCache {
         if(userId.equalsIgnoreCase(System.getenv("CLIENT_ID"))) {
             // Cache self voice state
             if(guildId != null) {
-                cute.getDatabase().redis(c -> c.hset(SELF_VOICE_STATES, guildId, data.toString()));
+                mewna.getDatabase().redis(c -> c.hset(SELF_VOICE_STATES, guildId, data.toString()));
             }
         } else {
             // Cache user voice state
             // TODO: What about bots?
-            cute.getDatabase().redis(c -> c.hset(USER_VOICE_STATES, userId, data.toString()));
+            mewna.getDatabase().redis(c -> c.hset(USER_VOICE_STATES, userId, data.toString()));
         }
     }
     
     public VoiceState getSelfVoiceState(final String guildId) {
         final VoiceState[] state = {null};
-        cute.getDatabase().redis(c -> {
+        mewna.getDatabase().redis(c -> {
             try {
                 final String res = c.hget(SELF_VOICE_STATES, guildId);
                 final JSONObject data = new JSONObject(res);
@@ -385,7 +385,7 @@ public class DiscordCache {
     
     public VoiceState getVoiceState(final String userId) {
         final VoiceState[] state = {null};
-        cute.getDatabase().redis(c -> {
+        mewna.getDatabase().redis(c -> {
             try {
                 final String res = c.hget(USER_VOICE_STATES, userId);
                 final JSONObject data = new JSONObject(res);
@@ -400,6 +400,6 @@ public class DiscordCache {
     }
     
     public void deleteSelfVoiceState(final String guildId) {
-        cute.getDatabase().redis(c -> c.hdel(SELF_VOICE_STATES, guildId));
+        mewna.getDatabase().redis(c -> c.hdel(SELF_VOICE_STATES, guildId));
     }
 }

@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>gg.cute</groupId>
-    <artifactId>cute-discord</artifactId>
+    <groupId>gg.mewna</groupId>
+    <artifactId>mewna-discord</artifactId>
     <version>0.0.1</version>
 
     <properties>
@@ -295,7 +295,7 @@
                     <!-- See http://stackoverflow.com/a/6773868 -->
                     <archive>
                         <manifest>
-                            <mainClass>gg.cute.Cute</mainClass>
+                            <mainClass>com.mewna.Mewna</mainClass>
                             <addClasspath>true</addClasspath>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>

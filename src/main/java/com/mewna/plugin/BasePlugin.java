@@ -1,6 +1,6 @@
 package com.mewna.plugin;
 
-import com.mewna.Cute;
+import com.mewna.Mewna;
 import com.mewna.cache.entity.Channel;
 import com.mewna.data.Database;
 import com.mewna.jda.RestJDA;
@@ -25,7 +25,7 @@ public class BasePlugin {
     private Logger logger;
     @Inject
     @Getter(AccessLevel.PROTECTED)
-    private Cute cute;
+    private Mewna mewna;
     @Inject
     @Getter(AccessLevel.PROTECTED)
     private Database database;
@@ -34,7 +34,7 @@ public class BasePlugin {
     private Random random;
     
     protected final RestJDA getRestJDA() {
-        return getCute().getRestJDA();
+        return this.getMewna().getRestJDA();
     }
     
     // TODO: Discord might get upset about API spam eventually I guess

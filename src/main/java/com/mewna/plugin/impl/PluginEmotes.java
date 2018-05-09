@@ -54,7 +54,7 @@ public class PluginEmotes extends BasePlugin {
                 action = "hit by an unknown action";
                 break;
         }
-        getCute().getRestJDA().sendMessage(ctx.getChannel().getId(), String.format("%s, you were %s by %s!",
+        this.getMewna().getRestJDA().sendMessage(ctx.getChannel().getId(), String.format("%s, you were %s by %s!",
                 ctx.getArgstr().replaceAll("@everyone", "very funny")
                         .replaceAll("@here", "nice try"), action, ctx.getUser().getName())).queue();
     }

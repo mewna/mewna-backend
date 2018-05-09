@@ -1,6 +1,6 @@
 package com.mewna.util;
 
-import com.mewna.Cute;
+import com.mewna.Mewna;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 /**
@@ -9,10 +9,10 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
  */
 @SuppressWarnings("unused")
 public class Ratelimiter {
-    private final Cute cute;
+    private final Mewna mewna;
     
-    public Ratelimiter(final Cute cute) {
-        this.cute = cute;
+    public Ratelimiter(final Mewna mewna) {
+        this.mewna = mewna;
     }
     
     /**
@@ -28,7 +28,7 @@ public class Ratelimiter {
     public ImmutablePair<Boolean, Long> checkUpdateRatelimit(final String id, final String type, final long ms) {
         final ImmutablePair<Boolean, Long> ratelimited = isRatelimited(id, type, ms);
         if(!ratelimited.left) {
-            cute.getDatabase().redis(j -> {
+            mewna.getDatabase().redis(j -> {
                 final String key = id + ':' + type + ":ratelimit";
                 j.set(key, String.valueOf(System.currentTimeMillis()));
             });
@@ -40,7 +40,7 @@ public class Ratelimiter {
     private ImmutablePair<Boolean, Long> isRatelimited(final String id, final String type, final long ms) {
         final ImmutablePair[] pair = {null};
         
-        cute.getDatabase().redis(j -> {
+        mewna.getDatabase().redis(j -> {
             final String key = id + ':' + type + ":ratelimit";
             if(j.exists(key)) {
                 final String v = j.get(key);

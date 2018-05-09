@@ -1,6 +1,6 @@
 package com.mewna.nats;
 
-import com.mewna.Cute;
+import com.mewna.Mewna;
 import io.nats.client.Nats;
 import io.nats.streaming.StreamingConnection;
 import io.nats.streaming.StreamingConnectionFactory;
@@ -23,15 +23,15 @@ public class NatsServer {
     // TODO: Client ID needs to use container name; use Rancher metadata service
     private final StreamingConnectionFactory connectionFactory = new StreamingConnectionFactory("mewna-nats", "mewna-discord-backend");
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Cute cute;
+    private final Mewna mewna;
     
     private final ExecutorService pool = Executors.newCachedThreadPool();
     
     @Getter
     private StreamingConnection connection;
     
-    public NatsServer(final Cute cute) {
-        this.cute = cute;
+    public NatsServer(final Mewna mewna) {
+        this.mewna = mewna;
     }
     
     @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
@@ -53,7 +53,7 @@ public class NatsServer {
                     } else {
                         event = new SocketEvent(o.getString("t"), o.getJSONObject("d"), o.getLong("ts"), -1, -1);
                     }
-                    pool.execute(() -> cute.getEventManager().handle(event));
+                    pool.execute(() -> mewna.getEventManager().handle(event));
                 } catch(final Exception e) {
                     logger.error("Caught error while processing socket message:");
                     e.printStackTrace();

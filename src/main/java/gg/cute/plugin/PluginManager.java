@@ -6,7 +6,7 @@ import gg.cute.cache.entity.Channel;
 import gg.cute.cache.entity.Guild;
 import gg.cute.cache.entity.User;
 import gg.cute.data.Database;
-import gg.cute.data.DiscordSettings;
+import gg.cute.data.GuildSettings;
 import gg.cute.plugin.event.BaseEvent;
 import gg.cute.plugin.event.Event;
 import gg.cute.plugin.event.message.MessageCreateEvent;
@@ -178,7 +178,7 @@ public class PluginManager {
     }
     
     @SuppressWarnings("TypeMayBeWeakened")
-    private List<String> getAllPrefixes(final DiscordSettings guildSettings) {
+    private List<String> getAllPrefixes(final GuildSettings guildSettings) {
         final List<String> prefixes = new ArrayList<>(PREFIXES);
         final String custom = guildSettings.getCustomPrefix();
         if(custom != null && !custom.isEmpty()) {
@@ -222,7 +222,7 @@ public class PluginManager {
             String content = data.getString("content");
             String prefix = null;
             boolean found = false;
-            final DiscordSettings settings = cute.getDatabase().getGuildSettings(guildId);
+            final GuildSettings settings = cute.getDatabase().getGuildSettings(guildId);
             for(final String p : getAllPrefixes(settings)) {
                 if(p != null && !p.isEmpty()) {
                     if(content.toLowerCase().startsWith(p.toLowerCase())) {

@@ -2,7 +2,7 @@ package gg.cute.plugin.util;
 
 import gg.cute.Cute;
 import gg.cute.cache.entity.Guild;
-import gg.cute.data.DiscordSettings;
+import gg.cute.data.GuildSettings;
 import gg.cute.data.Player;
 import gg.cute.plugin.CommandContext;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -95,7 +95,7 @@ public final class CurrencyHelper {
     }
     
     public final String getCurrencySymbol(final CommandContext ctx) {
-        final DiscordSettings settings = ctx.getSettings();
+        final GuildSettings settings = ctx.getSettings();
         final String c = settings.getCurrencySymbol();
         return c == null || c.isEmpty() ? CURRENCY_SYMBOL : c;
     }

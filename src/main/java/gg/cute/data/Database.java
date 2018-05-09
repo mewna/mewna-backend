@@ -52,7 +52,7 @@ public class Database {
         store = PgStore.fromEnv();
         store.connect();
         
-        premap(DiscordSettings.class, Player.class);
+        premap(GuildSettings.class, Player.class);
     }
     
     private void premap(final Class<?>... clz) {
@@ -62,16 +62,16 @@ public class Database {
         }
     }
     
-    public DiscordSettings getGuildSettings(final Guild src) {
+    public GuildSettings getGuildSettings(final Guild src) {
         return getGuildSettings(src.getId());
     }
     
-    public DiscordSettings getGuildSettings(final String id) {
-        return store.mapSync(DiscordSettings.class).load(id).orElse(DiscordSettings.base(id));
+    public GuildSettings getGuildSettings(final String id) {
+        return store.mapSync(GuildSettings.class).load(id).orElse(GuildSettings.base(id));
     }
     
-    public void saveGuildSettings(final DiscordSettings settings) {
-        store.mapSync(DiscordSettings.class).save(settings);
+    public void saveGuildSettings(final GuildSettings settings) {
+        store.mapSync(GuildSettings.class).save(settings);
     }
     
     public Player getPlayer(final User src) {

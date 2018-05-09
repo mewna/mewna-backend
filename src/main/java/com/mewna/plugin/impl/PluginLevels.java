@@ -18,9 +18,9 @@ import java.util.concurrent.TimeUnit;
  * @author amy
  * @since 4/16/18.
  */
-@Plugin("social")
+@Plugin("levels")
 @SuppressWarnings("unused")
-public class PluginSocial extends BasePlugin {
+public class PluginLevels extends BasePlugin {
     static boolean isLevelUp(final long oldXp, final long xp) {
         return xpToLevel(oldXp) < xpToLevel(xp);
     }

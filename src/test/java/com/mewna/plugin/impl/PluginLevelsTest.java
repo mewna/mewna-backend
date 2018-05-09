@@ -3,13 +3,13 @@ package com.mewna.plugin.impl;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import static com.mewna.plugin.impl.PluginSocial.*;
+import static com.mewna.plugin.impl.PluginLevels.*;
 
 /**
  * @author amy
  * @since 4/17/18.
  */
-public class PluginSocialTest {
+public class PluginLevelsTest {
     @Test
     public void testLevelToXp() {
         assertEquals(0, levelToXp(0));

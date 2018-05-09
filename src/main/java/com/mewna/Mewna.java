@@ -68,6 +68,8 @@ public final class Mewna {
         get("/commands", (req, res) -> new JSONArray(pluginManager.getCommandMetadata()));
         path("/data", () -> {
             get("/guild/:id", (req, res) -> new JSONObject(database.getGuildSettings(req.params(":id"))));
+            // TODO
+            post("/guild/:id", (req, res) -> new JSONObject(database.getGuildSettings(req.params(":id"))));
             get("/player/:id", (req, res) -> new JSONObject(database.getPlayer(req.params(":id"))));
         });
     }

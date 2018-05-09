@@ -21,7 +21,7 @@ public class PluginUtility extends BasePlugin {
                 .addField("Bot invite", "https://amy.chat/invite", false)
                 .addField("Support server", "https://amy.chat/support", false)
                 .addField("", "This command: `amy!help`, `a.help`, or `a:help`", false);
-        this.getMewna().getRestJDA().sendMessage(ctx.getChannel().getId(), builder.build()).queue(null, failure -> {
+        getMewna().getRestJDA().sendMessage(ctx.getChannel().getId(), builder.build()).queue(null, failure -> {
             if(failure instanceof ErrorResponseException) {
                 //noinspection StatementWithEmptyBody
                 if(((ErrorResponseException) failure).getErrorCode() == 50013) {
@@ -34,6 +34,6 @@ public class PluginUtility extends BasePlugin {
     
     @Command(names = "invite", desc = "Get the invite link.", usage = "invite", examples = "invite")
     public void invite(final CommandContext ctx) {
-        this.getMewna().getRestJDA().sendMessage(ctx.getChannel().getId(), "Click here: <https://amy.chat/invite>").queue();
+        getMewna().getRestJDA().sendMessage(ctx.getChannel().getId(), "Click here: <https://amy.chat/invite>").queue();
     }
 }

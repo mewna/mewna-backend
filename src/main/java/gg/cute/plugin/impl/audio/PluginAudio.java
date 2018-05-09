@@ -50,8 +50,7 @@ public class PluginAudio extends BasePlugin {
     public void handleQueueEnd(final AudioTrackEvent event) {
         final Channel channel = event.getChannel();
         final EmbedBuilder builder = new EmbedBuilder();
-        builder.setTitle(Emotes.YES + " Queue ended")
-                .addField("Radio?", "" + getDatabase().getGuildSettings(event.getGuild()).isRadioEnabled(), true);
+        builder.setTitle(Emotes.YES + " Queue ended");
         getRestJDA().sendMessage(channel, builder.build()).queue();
     }
     

@@ -6,6 +6,7 @@ import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.Plugin;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
+import org.jtwig.JtwigTemplate;
 
 /**
  * @author amy
@@ -30,7 +31,9 @@ public class PluginUtility extends BasePlugin {
                 }
             }
         });
+        JtwigTemplate.inlineTemplate("");
     }
+    
     
     @Command(names = "invite", desc = "Get the invite link.", usage = "invite", examples = "invite")
     public void invite(final CommandContext ctx) {

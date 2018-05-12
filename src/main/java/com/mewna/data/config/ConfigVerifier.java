@@ -1,14 +1,13 @@
 package com.mewna.data.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.mewna.data.config.Constraints.VALUE_NOT_NULL;
@@ -20,8 +19,14 @@ import static com.mewna.data.config.Constraints.VALUE_NOT_NULL;
 @SuppressWarnings("unused")
 public class ConfigVerifier {
     private final Map<Class<?>, Map<Field, Config>> constraints = new ConcurrentHashMap<>();
+    private final ObjectMapper mapper = new ObjectMapper();
     
     public <T> Map<String, List<String>> verify(final Class<T> c, final JSONObject data) {
+        try {
+            mapper.readValue(data.toString(), c);
+        } catch(Exception e) {
+            return ImmutableMap.of("__error", Collections.singletonList("invalid data"));
+        }
         if(!constraints.containsKey(c)) {
             // Map it
             constraints.put(c, new ConcurrentHashMap<>());

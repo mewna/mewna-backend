@@ -166,7 +166,7 @@ public class EventManager {
                 return;
             }
             // This will pass down to the event handler, so we don't need to worry about it here
-            mewna.getPluginManager().tryExecCommand(data);
+            mewna.getCommandManager().tryExecCommand(data);
         });
         handlers.put(MESSAGE_DELETE, (event, data) -> {
             // TODO: Would have to cache messages...

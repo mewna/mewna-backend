@@ -5,6 +5,7 @@ import com.mewna.data.Database;
 import com.mewna.event.EventManager;
 import com.mewna.jda.RestJDA;
 import com.mewna.nats.NatsServer;
+import com.mewna.plugin.CommandManager;
 import com.mewna.plugin.PluginManager;
 import com.mewna.util.Ratelimiter;
 import lombok.Getter;
@@ -26,6 +27,8 @@ public final class Mewna {
     private final EventManager eventManager = new EventManager(this);
     @Getter
     private final PluginManager pluginManager = new PluginManager(this);
+    @Getter
+    private final CommandManager commandManager = new CommandManager(this);
     @Getter
     private final RestJDA restJDA = new RestJDA(System.getenv("TOKEN"));
     @Getter
@@ -65,7 +68,7 @@ public final class Mewna {
             get("/channel/:id", (req, res) -> new JSONObject(getCache().getChannel(req.params(":id"))));
             get("/role/:id", (req, res) -> new JSONObject(getCache().getRole(req.params(":id"))));
         });
-        get("/commands", (req, res) -> new JSONArray(pluginManager.getCommandMetadata()));
+        get("/commands", (req, res) -> new JSONArray(commandManager.getCommandMetadata()));
         path("/data", () -> {
             path("/guild", () -> {
                 get("/:id/config", (req, res) -> {
@@ -74,6 +77,10 @@ public final class Mewna {
                 post("/:id/config", (req, res) -> {
                     throw new IllegalStateException("UNIMPLEMENTED");
                 });
+            });
+            path("/plugins", () -> {
+                // TODO: More shit goes here
+                get("/metadata", (req, res) -> new JSONArray(pluginManager.getPluginMetadata()));
             });
             get("/player/:id", (req, res) -> new JSONObject(database.getPlayer(req.params(":id"))));
         });

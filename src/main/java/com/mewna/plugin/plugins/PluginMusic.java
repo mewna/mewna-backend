@@ -54,101 +54,111 @@ public class PluginMusic extends BasePlugin {
         getRestJDA().sendMessage(channel, builder.build()).queue();
     }
     
-    @Command(names = {"music", "m"}, desc = "Do all things music", usage = {"music join", "music leave", "music np"},
-            examples = {"music join", "music leave", "music queue darude sandstorm", "music np"})
-    public void music(final CommandContext ctx) {
+    @Command(names = "join", desc = "Bring Mewna into a voice channel with you.", usage = "join", examples = "join")
+    public void join(final CommandContext ctx) {
+        final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
+        if(check == VoiceCheck.USER_NOT_IN_VOICE) {
+            getRestJDA().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
+        } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE || check == VoiceCheck.SELF_AND_USER_IN_SAME_VOICE) {
+            getRestJDA().sendMessage(ctx.getChannel(), "I'm already in a voice channel!").queue();
+        } else {
+            final VoiceState state = getMewna().getCache().getVoiceState(ctx.getUser().getId());
+            getRestJDA().sendMessage(ctx.getChannel(), "Connecting to voice channel #"
+                    + ctx.getChannel().getName()).queue();
+            getLogger().info("Attempting join -> voice channel {}#{}", ctx.getGuild().getId(),
+                    state.getChannel().getId());
+            // Tell shards to join, which will then tell audio server to connect
+            getMewna().getNats().pushShardEvent("AUDIO_CONNECT", new JSONObject()
+                    .put("guild_id", ctx.getGuild().getId())
+                    .put("channel_id", state.getChannel().getId()));
+        }
+    }
+    
+    @Command(names = "leave", desc = "Make Mewna leave the voice channel she's in.", usage = "leave [-f|--force]",
+            examples = {"leave -f", "leave --force"})
+    public void leave(final CommandContext ctx) {
         if(!ctx.getArgs().isEmpty()) {
-            final String sub = ctx.getArgs().remove(0);
-            switch(sub.toLowerCase()) {
-                case "j":
-                case "join": {
-                    final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
-                    if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-                        getRestJDA().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
-                    } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE || check == VoiceCheck.SELF_AND_USER_IN_SAME_VOICE) {
-                        getRestJDA().sendMessage(ctx.getChannel(), "I'm already in a voice channel!").queue();
-                    } else {
-                        final VoiceState state = getMewna().getCache().getVoiceState(ctx.getUser().getId());
-                        getRestJDA().sendMessage(ctx.getChannel(), "Connecting to voice channel #"
-                                + ctx.getChannel().getName()).queue();
-                        getLogger().info("Attempting join -> voice channel {}#{}", ctx.getGuild().getId(),
-                                state.getChannel().getId());
-                        // Tell shards to join, which will then tell audio server to connect
-                        getMewna().getNats().pushShardEvent("AUDIO_CONNECT", new JSONObject()
-                                .put("guild_id", ctx.getGuild().getId())
-                                .put("channel_id", state.getChannel().getId()));
-                    }
-                    break;
-                }
-                case "l":
-                case "leave": {
-                    if(!ctx.getArgs().isEmpty()) {
-                        final String arg = ctx.getArgs().get(0);
-                        if(arg.equalsIgnoreCase("-f") || arg.equalsIgnoreCase("--force")) {
-                            getLogger().info("Forcing leave -> guild voice {}", ctx.getGuild().getId());
-                            getMewna().getCache().deleteSelfVoiceState(ctx.getGuild().getId());
-                            // Tell audio server to disconnect, which will then tell shards to leave
-                            getMewna().getNats().pushAudioEvent("AUDIO_DISCONNECT", new JSONObject()
-                                    .put("guild_id", ctx.getGuild().getId()));
-                            return;
-                        }
-                    }
-                    final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
-                    if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-                        getRestJDA().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
-                    } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-                        getRestJDA().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
-                    } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-                        getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel! If this isn't correct, " +
-                                "run this command again, but put `--force` at the end").queue();
-                    } else {
-                        final VoiceState state = getMewna().getCache().getSelfVoiceState(ctx.getGuild().getId());
-                        getLogger().info("Attempting leave -> voice channel {}#{}", ctx.getGuild().getId(),
-                                state.getChannel().getId());
-                        // Tell audio server to disconnect, which will then tell shards to leave
-                        getMewna().getNats().pushAudioEvent("AUDIO_DISCONNECT", new JSONObject()
-                                .put("guild_id", ctx.getGuild().getId()));
-                    }
-                    break;
-                }
-                case "q":
-                case "queue": {
-                    final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
-                    if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-                        getRestJDA().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
-                    } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-                        getRestJDA().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
-                    } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-                        getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel!").queue();
-                    } else {
-                        if(ctx.getArgs().isEmpty()) {
-                            getRestJDA().sendMessage(ctx.getChannel(), "You need to give me something to queue!").queue();
-                        } else {
-                            getMewna().getNats().pushAudioEvent("AUDIO_QUEUE", new JSONObject()
-                                    .put("ctx", ctxToAudioCtx(ctx)).put("track", String.join(" ", ctx.getArgs())));
-                        }
-                    }
-                    break;
-                }
-                case "s":
-                case "p":
-                case "skip":
-                case "play": {
-                    final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
-                    if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-                        getRestJDA().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
-                    } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-                        getRestJDA().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
-                    } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-                        getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel!").queue();
-                    } else {
-                        getMewna().getNats().pushAudioEvent("AUDIO_PLAY", new JSONObject()
-                                .put("ctx", ctxToAudioCtx(ctx)).put("track", String.join(" ", ctx.getArgs())));
-                    }
-                    break;
-                }
+            final String arg = ctx.getArgs().get(0);
+            if(arg.equalsIgnoreCase("-f") || arg.equalsIgnoreCase("--force")) {
+                getLogger().info("Forcing leave -> guild voice {}", ctx.getGuild().getId());
+                getMewna().getCache().deleteSelfVoiceState(ctx.getGuild().getId());
+                // Tell audio server to disconnect, which will then tell shards to leave
+                getMewna().getNats().pushAudioEvent("AUDIO_DISCONNECT", new JSONObject()
+                        .put("guild_id", ctx.getGuild().getId()));
+                return;
             }
         }
+        final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
+        if(check == VoiceCheck.USER_NOT_IN_VOICE) {
+            getRestJDA().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
+        } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
+            getRestJDA().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
+        } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
+            getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel! If this isn't correct, " +
+                    "run this command again, but put `--force` at the end").queue();
+        } else {
+            final VoiceState state = getMewna().getCache().getSelfVoiceState(ctx.getGuild().getId());
+            getLogger().info("Attempting leave -> voice channel {}#{}", ctx.getGuild().getId(),
+                    state.getChannel().getId());
+            // Tell audio server to disconnect, which will then tell shards to leave
+            getMewna().getNats().pushAudioEvent("AUDIO_DISCONNECT", new JSONObject()
+                    .put("guild_id", ctx.getGuild().getId()));
+        }
+    }
+    
+    @Command(names = {"queue", "q"}, desc = "Queue up a song for Mewna to play.", usage = "queue <song>",
+            examples = {"q rick astley", "queue darude sandstorm"})
+    public void queue(final CommandContext ctx) {
+        final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
+        if(check == VoiceCheck.USER_NOT_IN_VOICE) {
+            getRestJDA().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
+        } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
+            getRestJDA().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
+        } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
+            getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel!").queue();
+        } else {
+            if(ctx.getArgs().isEmpty()) {
+                getRestJDA().sendMessage(ctx.getChannel(), "You need to give me something to queue!").queue();
+            } else {
+                getMewna().getNats().pushAudioEvent("AUDIO_QUEUE", new JSONObject()
+                        .put("ctx", ctxToAudioCtx(ctx)).put("track", String.join(" ", ctx.getArgs())));
+            }
+        }
+    }
+    
+    @Command(names = "skip", desc = "Skip the currently-playing song", usage = "skip", examples = "skip")
+    public void skip(final CommandContext ctx) {
+        final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
+        if(check == VoiceCheck.USER_NOT_IN_VOICE) {
+            getRestJDA().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
+        } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
+            getRestJDA().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
+        } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
+            getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel!").queue();
+        } else {
+            getMewna().getNats().pushAudioEvent("AUDIO_PLAY", new JSONObject()
+                    .put("ctx", ctxToAudioCtx(ctx)).put("track", String.join(" ", ctx.getArgs())));
+        }
+    }
+    
+    @Command(names = "play", desc = "Start playing the songs that have been queued up.", usage = "play", examples = "play")
+    public void play(final CommandContext ctx) {
+        final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
+        if(check == VoiceCheck.USER_NOT_IN_VOICE) {
+            getRestJDA().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
+        } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
+            getRestJDA().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
+        } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
+            getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel!").queue();
+        } else {
+            getMewna().getNats().pushAudioEvent("AUDIO_PLAY", new JSONObject()
+                    .put("ctx", ctxToAudioCtx(ctx)).put("track", String.join(" ", ctx.getArgs())));
+        }
+    }
+    
+    @Command(names = {"np", "nowplaying"}, desc = "Show the currently-playing song", usage = "np", examples = "np")
+    public void np(final CommandContext ctx) {
+        // TODO
     }
     
     private JSONObject ctxToAudioCtx(final CommandContext ctx) {

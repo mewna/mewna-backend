@@ -3,7 +3,6 @@ package com.mewna.plugin;
 import com.mewna.cache.entity.Channel;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
-import com.mewna.data.GuildSettings;
 import com.mewna.data.Player;
 import lombok.Value;
 
@@ -22,7 +21,6 @@ public class CommandContext {
     private Guild guild;
     private Channel channel;
     private List<User> mentions;
-    private GuildSettings settings;
     private Player player;
     private long cost;
     private String prefix;

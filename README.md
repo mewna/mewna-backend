@@ -1,6 +1,6 @@
 # mewna-discord
 
-A super-mewna Discord bot backend in Java
+A super-cute Discord bot backend in Java
 
 ## Deployment notes
 

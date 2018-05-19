@@ -1,9 +1,11 @@
 package com.mewna.data;
 
 import com.mewna.Mewna;
-import gg.amy.pgorm.PgStore;
-import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
+import com.mewna.plugin.Plugin;
+import gg.amy.pgorm.PgStore;
+import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
+import io.github.lukehutch.fastclasspathscanner.matchprocessor.ClassMatchProcessor;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +14,12 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Transaction;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -52,7 +60,41 @@ public class Database {
         store = PgStore.fromEnv();
         store.connect();
         
-        premap(GuildSettings.class, Player.class);
+        mapSettingsClasses();
+        
+        premap(Player.class);
+    }
+    
+    private void mapSettingsClasses() {
+        final List<Class<?>> classes = new ArrayList<>();
+        new FastClasspathScanner(Plugin.class.getPackage().getName()).matchAllStandardClasses(new ClassMatchProcessor() {
+            @Override
+            public void processMatch(final Class<?> cls) {
+                if(PluginSettings.class.isAssignableFrom(cls)) {
+                    boolean hasBase = false;
+                    for(final Method method : cls.getMethods()) {
+                        if(// @formatter:off
+                                // Verify name
+                                method.getName().equals("base")
+                                // Verify static
+                                && Modifier.isStatic(method.getModifiers())
+                                // Verify params
+                                && method.getParameterCount() == 1 && method.getParameterTypes()[0].equals(String.class)
+                            ) {
+                            // @formatter:on
+                            hasBase = true;
+                            break;
+                        }
+                    }
+                    if(hasBase) {
+                        classes.add(cls);
+                    } else {
+                        logger.error("Was asked to map settings class {}, but it has no base()?!");
+                    }
+                }
+            }
+        }).scan();
+        premap(classes.toArray(new Class[0]));
     }
     
     private void premap(final Class<?>... clz) {
@@ -62,16 +104,34 @@ public class Database {
         }
     }
     
-    public GuildSettings getGuildSettings(final Guild src) {
-        return getGuildSettings(src.getId());
+    private <T extends PluginSettings> Optional<T> getSettingsByType(final Class<T> type, final String id) {
+        return store.mapSync(type).load(id);
     }
     
-    public GuildSettings getGuildSettings(final String id) {
-        return store.mapSync(GuildSettings.class).load(id).orElse(GuildSettings.base(id));
+    public <T extends PluginSettings> T getOrBaseSettings(final Class<T> type, final String id) {
+        if(!store.isMappedSync(type) || !store.isMappedAsync(type)) {
+            throw new IllegalArgumentException("Attempted to get settings of type " + type.getName() + ", but it's not mapped!");
+        }
+        final Optional<T> maybeSettings = getSettingsByType(type, id);
+        if(maybeSettings.isPresent()) {
+            return maybeSettings.get();
+        } else {
+            // Base the settings and return
+            try {
+                @SuppressWarnings("unchecked")
+                final T base = (T) type.getMethod("base", String.class).invoke(null, id);
+                
+            } catch(final IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
     }
     
-    public void saveGuildSettings(final GuildSettings settings) {
-        store.mapSync(GuildSettings.class).save(settings);
+    public <T extends PluginSettings> void saveSettings(final String id, final T settings) {
+        // This is technically valid
+        //noinspection unchecked
+        store.mapSync((Class<T>) settings.getClass()).save(settings);
     }
     
     public Player getPlayer(final User src) {

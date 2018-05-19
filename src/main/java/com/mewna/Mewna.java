@@ -2,8 +2,6 @@ package com.mewna;
 
 import com.mewna.cache.DiscordCache;
 import com.mewna.data.Database;
-import com.mewna.data.GuildSettings;
-import com.mewna.data.config.ConfigVerifier;
 import com.mewna.event.EventManager;
 import com.mewna.jda.RestJDA;
 import com.mewna.nats.NatsServer;
@@ -15,8 +13,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static spark.Spark.*;
@@ -39,8 +35,6 @@ public final class Mewna {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     @Getter
     private NatsServer nats;
-    @Getter
-    private final ConfigVerifier configVerifier = new ConfigVerifier();
     
     private Mewna() {
     }
@@ -74,18 +68,11 @@ public final class Mewna {
         get("/commands", (req, res) -> new JSONArray(pluginManager.getCommandMetadata()));
         path("/data", () -> {
             path("/guild", () -> {
-                get("/:id/config", (req, res) -> new JSONObject(database.getGuildSettings(req.params(":id"))));
+                get("/:id/config", (req, res) -> {
+                    throw new IllegalStateException("UNIMPLEMENTED");
+                });
                 post("/:id/config", (req, res) -> {
-                    final JSONObject jsonObject = new JSONObject(res.body());
-                    final Map<String, List<String>> verify = configVerifier.verify(GuildSettings.class, jsonObject);
-                    if(verify.isEmpty()) {
-                        final GuildSettings config = database.getGuildSettings(req.params(":id"));
-                        final GuildSettings update = configVerifier.update(config, jsonObject);
-                        database.saveGuildSettings(update);
-                        return new JSONObject();
-                    } else {
-                        return new JSONObject(verify);
-                    }
+                    throw new IllegalStateException("UNIMPLEMENTED");
                 });
             });
             get("/player/:id", (req, res) -> new JSONObject(database.getPlayer(req.params(":id"))));

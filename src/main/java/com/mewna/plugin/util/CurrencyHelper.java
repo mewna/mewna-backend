@@ -2,9 +2,9 @@ package com.mewna.plugin.util;
 
 import com.mewna.Mewna;
 import com.mewna.cache.entity.Guild;
-import com.mewna.data.GuildSettings;
 import com.mewna.data.Player;
 import com.mewna.plugin.CommandContext;
+import com.mewna.plugin.plugins.settings.EconomySettings;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import javax.inject.Inject;
@@ -95,8 +95,7 @@ public final class CurrencyHelper {
     }
     
     public final String getCurrencySymbol(final CommandContext ctx) {
-        final GuildSettings settings = ctx.getSettings();
-        final String c = settings.getCurrencySymbol();
+        final String c = mewna.getDatabase().getOrBaseSettings(EconomySettings.class, ctx.getGuild().getId()).getCurrencySymbol();
         return c == null || c.isEmpty() ? CURRENCY_SYMBOL : c;
     }
     

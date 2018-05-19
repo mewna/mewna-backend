@@ -19,6 +19,7 @@
         <commons.text.version>1.2</commons.text.version>
         <jedis.version>2.9.0</jedis.version>
         <spark.version>2.7.2</spark.version>
+        <postgres.orm.version>5e4d4cd131</postgres.orm.version>
     </properties>
 
     <repositories>
@@ -215,7 +216,7 @@
         <dependency>
             <groupId>com.github.queer</groupId>
             <artifactId>async-postgres-jsonb-orm</artifactId>
-            <version>87ae9d59d5</version>
+            <version>${postgres.orm.version}</version>
         </dependency>
 
         <!-- Jedis -->

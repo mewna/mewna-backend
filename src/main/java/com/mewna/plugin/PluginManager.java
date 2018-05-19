@@ -6,7 +6,6 @@ import com.mewna.cache.entity.Channel;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
 import com.mewna.data.Database;
-import com.mewna.data.GuildSettings;
 import com.mewna.plugin.event.BaseEvent;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.event.message.MessageCreateEvent;
@@ -189,12 +188,9 @@ public class PluginManager {
     }
     
     @SuppressWarnings("TypeMayBeWeakened")
-    private List<String> getAllPrefixes(final GuildSettings guildSettings) {
+    private List<String> getAllPrefixes() {
         final List<String> prefixes = new ArrayList<>(PREFIXES);
-        final String custom = guildSettings.getCustomPrefix();
-        if(custom != null && !custom.isEmpty()) {
-            prefixes.add(custom);
-        }
+        // TODO: Restore custom prefix support?
         return prefixes;
     }
     
@@ -233,8 +229,7 @@ public class PluginManager {
             String content = data.getString("content");
             String prefix = null;
             boolean found = false;
-            final GuildSettings settings = mewna.getDatabase().getGuildSettings(guildId);
-            for(final String p : getAllPrefixes(settings)) {
+            for(final String p : getAllPrefixes()) {
                 if(p != null && !p.isEmpty()) {
                     if(content.toLowerCase().startsWith(p.toLowerCase())) {
                         prefix = p;
@@ -304,13 +299,11 @@ public class PluginManager {
                             }
                         }
                         
-                        final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr,
-                                guild, channel, mentions, settings,
-                                mewna.getDatabase().getPlayer(user), 0L, prefix);
+                        final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr, guild, channel,
+                                mentions, mewna.getDatabase().getPlayer(user), 0L, prefix);
                         
                         final ImmutablePair<Boolean, Long> res = currencyHelper.handlePayment(paymentCtx,
-                                maybePayment, cmd.getPayment().min(),
-                                cmd.getPayment().max());
+                                maybePayment, cmd.getPayment().min(), cmd.getPayment().max());
                         // If we can make the payment, set the cost and continue
                         // Otherwise, return early (the payment-handler sends error messages for us)
                         if(res.left) {
@@ -320,9 +313,7 @@ public class PluginManager {
                         }
                     }
                     
-                    final CommandContext ctx = new CommandContext(user, commandName,
-                            args, argstr,
-                            guild, channel, mentions, settings,
+                    final CommandContext ctx = new CommandContext(user, commandName, args, argstr, guild, channel, mentions,
                             mewna.getDatabase().getPlayer(user), cost, prefix);
                     
                     try {

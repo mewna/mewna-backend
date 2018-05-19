@@ -117,6 +117,50 @@ public class PluginManager {
         }
     }
     
+    private void loadCommandsFromMethod(final Object pluginInstance, final Plugin pluginAnnotation,
+                                        final Class<?> pluginClass, final Method m) {
+        if(m.getParameterCount() != 1) {
+            logger.warn("@Command method '{}' doesn't take a single parameter!", m.getName());
+            return;
+        }
+        if(!m.getParameterTypes()[0].equals(CommandContext.class)) {
+            logger.warn("@Command method '{}' doesn't take a single CommandContext parameter!", m.getName());
+            return;
+        }
+        final Command cmd = m.getDeclaredAnnotation(Command.class);
+        // Load commands
+        for(final String s : cmd.names()) {
+            commands.put(s.toLowerCase(), new CommandWrapper(s.toLowerCase(),
+                    cmd.aliased() ? cmd.names()[0].toLowerCase() : s.toLowerCase(), cmd.names(),
+                    m.getDeclaredAnnotation(Ratelimit.class),
+                    m.getDeclaredAnnotation(Payment.class),
+                    cmd.desc(),
+                    cmd.owner(), pluginInstance, m));
+            logger.info("Loaded plugin command '{}' for plugin '{}' ({})", s,
+                    pluginAnnotation.name(), pluginClass.getName());
+        }
+        // Load metadata
+        if(cmd.aliased()) {
+            final List<String> tmp = new ArrayList<>(Arrays.asList(cmd.names()));
+            final String name = tmp.remove(0);
+            final String[] aliases = tmp.toArray(new String[0]);
+            commandMetadata.add(new CommandMetadata(name, cmd.desc(), aliases, cmd.usage(), cmd.examples()));
+        } else {
+            for(final String name : cmd.names()) {
+                commandMetadata.add(new CommandMetadata(name, cmd.desc(), new String[0], cmd.usage(), cmd.examples()));
+            }
+        }
+    }
+    
+    private void loadEventHandler(final Object plugin, final Method m) {
+        // Map event handlers to handle various Discord events or w/e
+        final Event event = m.getDeclaredAnnotation(Event.class);
+        if(!discordEventHandlers.containsKey(event.value())) {
+            discordEventHandlers.put(event.value(), new HashSet<>());
+        }
+        discordEventHandlers.get(event.value()).add(new EventHolder(event.value(), m, plugin));
+    }
+    
     private void initPlugin(final Class<?> c) {
         if(loaded.contains(c)) {
             return;
@@ -124,55 +168,20 @@ public class PluginManager {
         loaded.add(c);
         if(c.isAnnotationPresent(Plugin.class)) {
             try {
-                final Plugin p = c.getDeclaredAnnotation(Plugin.class);
-                logger.info("Loading plugin {}: {}", p.name(), p.desc());
-                final Object plugin = c.newInstance();
-                inject(plugin);
+                final Plugin pluginAnnotation = c.getDeclaredAnnotation(Plugin.class);
+                logger.info("Loading plugin {}: {}", pluginAnnotation.name(), pluginAnnotation.desc());
+                final Object pluginInstance = c.newInstance();
+                inject(pluginInstance);
                 
                 for(final Method m : c.getDeclaredMethods()) {
                     m.setAccessible(true);
                     if(m.isAnnotationPresent(Command.class)) {
-                        if(m.getParameterCount() != 1) {
-                            logger.warn("@Command method '{}' doesn't take a single parameter!", m.getName());
-                            continue;
-                        }
-                        if(!m.getParameterTypes()[0].equals(CommandContext.class)) {
-                            logger.warn("@Command method '{}' doesn't take a single CommandContext parameter!", m.getName());
-                            continue;
-                        }
-                        final Command cmd = m.getDeclaredAnnotation(Command.class);
-                        // Load commands
-                        for(final String s : cmd.names()) {
-                            commands.put(s.toLowerCase(), new CommandWrapper(s.toLowerCase(),
-                                    cmd.aliased() ? cmd.names()[0].toLowerCase() : s.toLowerCase(), cmd.names(),
-                                    m.getDeclaredAnnotation(Ratelimit.class),
-                                    m.getDeclaredAnnotation(Payment.class),
-                                    cmd.desc(),
-                                    cmd.owner(), plugin, m));
-                            logger.info("Loaded plugin command '{}' for plugin '{}' ({})", s,
-                                    p.name(), c.getName());
-                        }
-                        // Load metadata
-                        if(cmd.aliased()) {
-                            final List<String> tmp = new ArrayList<>(Arrays.asList(cmd.names()));
-                            final String name = tmp.remove(0);
-                            final String[] aliases = tmp.toArray(new String[0]);
-                            commandMetadata.add(new CommandMetadata(name, cmd.desc(), aliases, cmd.usage(), cmd.examples()));
-                        } else {
-                            for(final String name : cmd.names()) {
-                                commandMetadata.add(new CommandMetadata(name, cmd.desc(), new String[0], cmd.usage(), cmd.examples()));
-                            }
-                        }
+                        loadCommandsFromMethod(pluginInstance, pluginAnnotation, c, m);
                     } else if(m.isAnnotationPresent(Event.class)) {
-                        // Map event handlers to handle various Discord events or w/e
-                        final Event event = m.getDeclaredAnnotation(Event.class);
-                        if(!discordEventHandlers.containsKey(event.value())) {
-                            discordEventHandlers.put(event.value(), new HashSet<>());
-                        }
-                        discordEventHandlers.get(event.value()).add(new EventHolder(event.value(), m, plugin));
+                        loadEventHandler(pluginInstance, m);
                     }
                 }
-                logger.info("Finished loading plugin {}: {}", p.name(), p.desc());
+                logger.info("Finished loading plugin {}: {}", pluginAnnotation.name(), pluginAnnotation.desc());
             } catch(final InstantiationException | IllegalAccessException e) {
                 e.printStackTrace();
             }

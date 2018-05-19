@@ -3,6 +3,8 @@ package com.mewna.data;
 import lombok.Value;
 
 /**
+ * Settings for an individual command
+ *
  * @author amy
  * @since 5/8/18.
  */

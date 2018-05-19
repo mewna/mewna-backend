@@ -20,6 +20,7 @@ import static com.mewna.data.config.Constraints.*;
 @Value
 @Table("discord_settings")
 @Index("id")
+@Deprecated
 public class GuildSettings {
     @PrimaryKey
     private String id;

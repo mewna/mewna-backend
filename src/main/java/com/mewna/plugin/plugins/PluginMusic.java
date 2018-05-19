@@ -170,7 +170,8 @@ public class PluginMusic extends BasePlugin {
     
     @Command(names = {"np", "nowplaying"}, desc = "Show the currently-playing song", usage = "np", examples = "np")
     public void np(final CommandContext ctx) {
-        // TODO
+        getMewna().getNats().pushAudioEvent("AUDIO_NOW_PLAYING", new JSONObject()
+                .put("ctx", ctxToAudioCtx(ctx)).put("track", String.join(" ", ctx.getArgs())));
     }
     
     private JSONObject ctxToAudioCtx(final CommandContext ctx) {

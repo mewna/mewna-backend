@@ -67,30 +67,27 @@ public class Database {
     
     private void mapSettingsClasses() {
         final List<Class<?>> classes = new ArrayList<>();
-        new FastClasspathScanner(Plugin.class.getPackage().getName()).matchAllStandardClasses(new ClassMatchProcessor() {
-            @Override
-            public void processMatch(final Class<?> cls) {
-                if(PluginSettings.class.isAssignableFrom(cls)) {
-                    boolean hasBase = false;
-                    for(final Method method : cls.getMethods()) {
-                        if(// @formatter:off
-                                // Verify name
-                                method.getName().equals("base")
-                                // Verify static
-                                && Modifier.isStatic(method.getModifiers())
-                                // Verify params
-                                && method.getParameterCount() == 1 && method.getParameterTypes()[0].equals(String.class)
-                            ) {
-                            // @formatter:on
-                            hasBase = true;
-                            break;
-                        }
+        new FastClasspathScanner(Plugin.class.getPackage().getName()).matchAllStandardClasses(cls -> {
+            if(PluginSettings.class.isAssignableFrom(cls)) {
+                boolean hasBase = false;
+                for(final Method method : cls.getMethods()) {
+                    if(// @formatter:off
+                            // Verify name
+                            method.getName().equals("base")
+                            // Verify static
+                            && Modifier.isStatic(method.getModifiers())
+                            // Verify params
+                            && method.getParameterCount() == 1 && method.getParameterTypes()[0].equals(String.class)
+                        ) {
+                        // @formatter:on
+                        hasBase = true;
+                        break;
                     }
-                    if(hasBase) {
-                        classes.add(cls);
-                    } else {
-                        logger.error("Was asked to map settings class {}, but it has no base()?!");
-                    }
+                }
+                if(hasBase) {
+                    classes.add(cls);
+                } else {
+                    logger.error("Was asked to map settings class {}, but it has no base()?!");
                 }
             }
         }).scan();
@@ -120,15 +117,15 @@ public class Database {
             try {
                 @SuppressWarnings("unchecked")
                 final T base = (T) type.getMethod("base", String.class).invoke(null, id);
-                
+                saveSettings(base);
+                return base;
             } catch(final IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
-            return null;
         }
     }
     
-    public <T extends PluginSettings> void saveSettings(final String id, final T settings) {
+    public <T extends PluginSettings> void saveSettings(final T settings) {
         // This is technically valid
         //noinspection unchecked
         store.mapSync((Class<T>) settings.getClass()).save(settings);

@@ -72,7 +72,8 @@ public class PluginMusic extends BasePlugin {
         if(check == VoiceCheck.USER_NOT_IN_VOICE) {
             getRestJDA().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
         } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE || check == VoiceCheck.SELF_AND_USER_IN_SAME_VOICE) {
-            getRestJDA().sendMessage(ctx.getChannel(), "I'm already in a voice channel!").queue();
+            getRestJDA().sendMessage(ctx.getChannel(), "I'm already in a voice channel! If this isn't right, try doing `"
+                    + ctx.getPrefix() + "leave --force`.").queue();
         } else {
             final VoiceState state = getMewna().getCache().getVoiceState(ctx.getUser().getId());
             getRestJDA().sendMessage(ctx.getChannel(), "Connecting to voice channel #"
@@ -106,8 +107,8 @@ public class PluginMusic extends BasePlugin {
         } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
             getRestJDA().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
         } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-            getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel! If this isn't correct, " +
-                    "run this command again, but put `--force` at the end").queue();
+            getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel! If this isn't right, try doing `"
+                    + ctx.getPrefix() + "leave --force`.").queue();
         } else {
             final VoiceState state = getMewna().getCache().getSelfVoiceState(ctx.getGuild().getId());
             getLogger().info("Attempting leave -> voice channel {}#{}", ctx.getGuild().getId(),

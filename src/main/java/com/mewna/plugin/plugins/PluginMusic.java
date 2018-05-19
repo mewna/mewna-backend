@@ -54,6 +54,18 @@ public class PluginMusic extends BasePlugin {
         getRestJDA().sendMessage(channel, builder.build()).queue();
     }
     
+    @Event(EventType.AUDIO_TRACK_NOW_PLAYING)
+    public void handleNowPlaying(final AudioTrackEvent event) {
+        final Channel channel = event.getChannel();
+        final EmbedBuilder builder = new EmbedBuilder();
+        builder.setTitle(Emotes.YES + " Now playing")
+                .addField("Title", event.getInfo().getTitle(), true)
+                .addBlankField(true)
+                .addField("Artist", event.getInfo().getAuthor(), true)
+                .addField("Length", Time.toHumanReadableDuration(event.getInfo().getLength()), true);
+        getRestJDA().sendMessage(channel, builder.build()).queue();
+    }
+    
     @Command(names = "join", desc = "Bring Mewna into a voice channel with you.", usage = "join", examples = "join")
     public void join(final CommandContext ctx) {
         final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());

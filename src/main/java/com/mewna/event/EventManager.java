@@ -210,6 +210,10 @@ public class EventManager {
             logger.debug("Got audio event {} with data {}", event.getType(), data);
             mewna.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.QUEUE_END, data));
         });
+        handlers.put(AUDIO_TRACK_NOW_PLAYING, (event, data) -> {
+            logger.debug("Got audio event {} with data {}", event.getType(), data);
+            mewna.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_NOW_PLAYING, data));
+        });
         
         // We don't really care about these
         handlers.put(GUILD_SYNC, (event, data) -> {

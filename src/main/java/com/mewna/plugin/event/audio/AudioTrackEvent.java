@@ -37,6 +37,7 @@ public class AudioTrackEvent extends BaseEvent {
         TRACK_QUEUE,
         TRACK_INVALID,
         TRACK_PAUSE,
+        TRACK_NOW_PLAYING,
         QUEUE_END,
     }
     

@@ -39,7 +39,7 @@ public class PluginManager {
     private final OkHttpClient okHttpClient = new OkHttpClient.Builder()
             .addInterceptor(new UserAgentInterceptor("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36"))
             .build();
-    
+    private final Map<Class<?>, ? super Object> pluginMap = new HashMap<>();
     @Getter
     private final Collection<PluginMetadata> pluginMetadata = new ArrayList<>();
     
@@ -132,6 +132,7 @@ public class PluginManager {
                     }
                 }
                 
+                pluginMap.put(c, pluginInstance);
                 if(pluginAnnotation.enabled()) {
                     pluginMetadata.add(new PluginMetadata(pluginAnnotation.name(), pluginAnnotation.desc()));
                 }
@@ -150,6 +151,11 @@ public class PluginManager {
                 e.printStackTrace();
             }
         }));
+    }
+    
+    @SuppressWarnings({"unused", "unchecked"})
+    public <T> T getPlugin(final Class<T> cls) {
+        return (T) pluginMap.get(cls);
     }
     
     @Value

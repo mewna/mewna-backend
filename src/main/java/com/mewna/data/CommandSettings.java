@@ -12,4 +12,8 @@ import lombok.Value;
 @SuppressWarnings("WeakerAccess")
 public class CommandSettings {
     private boolean enabled;
+    
+    public static CommandSettings base() {
+        return new CommandSettings(true);
+    }
 }

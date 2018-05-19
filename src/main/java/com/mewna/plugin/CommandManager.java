@@ -20,6 +20,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @author amy
@@ -82,6 +83,10 @@ public class CommandManager {
         final List<String> prefixes = new ArrayList<>(PREFIXES);
         // TODO: Restore custom prefix support?
         return prefixes;
+    }
+    
+    public <T> List<CommandWrapper> getCommandsForPlugin(final Class<T> pluginClass) {
+        return commands.values().stream().filter(e -> e.getPlugin().getClass().equals(pluginClass)).collect(Collectors.toList());
     }
     
     public void tryExecCommand(final JSONObject data) {

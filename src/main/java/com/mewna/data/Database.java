@@ -67,7 +67,7 @@ public class Database {
     private void mapSettingsClasses() {
         final List<Class<?>> classes = new ArrayList<>();
         new FastClasspathScanner(Plugin.class.getPackage().getName()).matchAllStandardClasses(cls -> {
-            if(PluginSettings.class.isAssignableFrom(cls)) {
+            if(PluginSettings.class.isAssignableFrom(cls) && !cls.equals(PluginSettings.class)) {
                 boolean hasBase = false;
                 for(final Method method : cls.getMethods()) {
                     if(// @formatter:off
@@ -86,7 +86,7 @@ public class Database {
                 if(hasBase) {
                     classes.add(cls);
                 } else {
-                    logger.error("Was asked to map settings class {}, but it has no base()?!");
+                    logger.error("Was asked to map settings class {}, but it has no base()?!", cls.getName());
                 }
             }
         }).scan();

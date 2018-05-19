@@ -23,6 +23,8 @@ import static spark.Spark.*;
  * @since 4/8/18.
  */
 public final class Mewna {
+    private static final Mewna INSTANCE = new Mewna();
+    
     @Getter
     private final EventManager eventManager = new EventManager(this);
     @Getter
@@ -43,7 +45,11 @@ public final class Mewna {
     }
     
     public static void main(final String[] args) {
-        new Mewna().start();
+        INSTANCE.start();
+    }
+    
+    public static Mewna getInstance() {
+        return INSTANCE;
     }
     
     private void start() {

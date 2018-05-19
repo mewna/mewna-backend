@@ -10,5 +10,15 @@ package com.mewna.data;
  * @author amy
  * @since 5/19/18.
  */
-public abstract class PluginSettings {
+
+import com.mewna.Mewna;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+public interface PluginSettings {
+    static <T> List<String> commandsOwnedByPlugin(Class<T> cls) {
+        return Mewna.getInstance().getCommandManager().getCommandsForPlugin(cls).stream().map(e -> e.getBaseName())
+                .distinct().collect(Collectors.toList());
+    }
 }

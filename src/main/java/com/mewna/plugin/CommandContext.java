@@ -25,4 +25,5 @@ public class CommandContext {
     private GuildSettings settings;
     private Player player;
     private long cost;
+    private String prefix;
 }

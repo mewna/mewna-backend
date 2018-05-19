@@ -306,7 +306,7 @@ public class PluginManager {
                         
                         final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr,
                                 guild, channel, mentions, settings,
-                                mewna.getDatabase().getPlayer(user), 0L);
+                                mewna.getDatabase().getPlayer(user), 0L, prefix);
                         
                         final ImmutablePair<Boolean, Long> res = currencyHelper.handlePayment(paymentCtx,
                                 maybePayment, cmd.getPayment().min(),
@@ -323,7 +323,7 @@ public class PluginManager {
                     final CommandContext ctx = new CommandContext(user, commandName,
                             args, argstr,
                             guild, channel, mentions, settings,
-                            mewna.getDatabase().getPlayer(user), cost);
+                            mewna.getDatabase().getPlayer(user), cost, prefix);
                     
                     try {
                         cmd.getMethod().invoke(cmd.getPlugin(), ctx);

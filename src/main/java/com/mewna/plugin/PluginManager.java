@@ -125,6 +125,7 @@ public class PluginManager {
         if(c.isAnnotationPresent(Plugin.class)) {
             try {
                 final Plugin p = c.getDeclaredAnnotation(Plugin.class);
+                logger.info("Loading plugin {}: {}", p.name(), p.desc());
                 final Object plugin = c.newInstance();
                 inject(plugin);
                 
@@ -149,7 +150,7 @@ public class PluginManager {
                                     cmd.desc(),
                                     cmd.owner(), plugin, m));
                             logger.info("Loaded plugin command '{}' for plugin '{}' ({})", s,
-                                    p.value(), c.getName());
+                                    p.name(), c.getName());
                         }
                         // Load metadata
                         if(cmd.aliased()) {
@@ -171,6 +172,7 @@ public class PluginManager {
                         discordEventHandlers.get(event.value()).add(new EventHolder(event.value(), m, plugin));
                     }
                 }
+                logger.info("Finished loading plugin {}: {}", p.name(), p.desc());
             } catch(final InstantiationException | IllegalAccessException e) {
                 e.printStackTrace();
             }

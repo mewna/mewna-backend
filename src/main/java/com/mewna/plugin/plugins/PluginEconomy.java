@@ -1,4 +1,4 @@
-package com.mewna.plugin.impl;
+package com.mewna.plugin.plugins;
 
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
@@ -21,17 +21,15 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static com.mewna.plugin.impl.PluginCurrency.ReelSymbol.*;
+import static com.mewna.plugin.plugins.PluginEconomy.ReelSymbol.*;
 
 /**
- * TODO: Make all the chances auto-adjusting on a per-user basis. These testing chance numbers aren't good...
- *
  * @author amy
- * @since 4/14/18.
+ * @since 5/19/18.
  */
-@Plugin("currency")
 @SuppressWarnings("unused")
-public class PluginCurrency extends BasePlugin {
+@Plugin(name = "Economy", desc = "Let people earn and spend money.")
+public class PluginEconomy extends BasePlugin {
     private static final long SLOTS_BASE_COST = 10;
     private static final long GAMBLE_BASE_COST = 25;
     private static final long HEIST_BASE_COST = 300;

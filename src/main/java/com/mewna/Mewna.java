@@ -73,18 +73,20 @@ public final class Mewna {
         });
         get("/commands", (req, res) -> new JSONArray(pluginManager.getCommandMetadata()));
         path("/data", () -> {
-            get("/guild/:id", (req, res) -> new JSONObject(database.getGuildSettings(req.params(":id"))));
-            post("/guild/:id", (req, res) -> {
-                final JSONObject jsonObject = new JSONObject(res.body());
-                final Map<String, List<String>> verify = configVerifier.verify(GuildSettings.class, jsonObject);
-                if(verify.isEmpty()) {
-                    final GuildSettings config = database.getGuildSettings(req.params(":id"));
-                    final GuildSettings update = configVerifier.update(config, jsonObject);
-                    database.saveGuildSettings(update);
-                    return new JSONObject();
-                } else {
-                    return new JSONObject(verify);
-                }
+            path("/guild", () -> {
+                get("/:id/config", (req, res) -> new JSONObject(database.getGuildSettings(req.params(":id"))));
+                post("/:id/config", (req, res) -> {
+                    final JSONObject jsonObject = new JSONObject(res.body());
+                    final Map<String, List<String>> verify = configVerifier.verify(GuildSettings.class, jsonObject);
+                    if(verify.isEmpty()) {
+                        final GuildSettings config = database.getGuildSettings(req.params(":id"));
+                        final GuildSettings update = configVerifier.update(config, jsonObject);
+                        database.saveGuildSettings(update);
+                        return new JSONObject();
+                    } else {
+                        return new JSONObject(verify);
+                    }
+                });
             });
             get("/player/:id", (req, res) -> new JSONObject(database.getPlayer(req.params(":id"))));
         });

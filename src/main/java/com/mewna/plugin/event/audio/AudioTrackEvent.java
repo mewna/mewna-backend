@@ -5,8 +5,9 @@ import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
 import com.mewna.plugin.event.BaseEvent;
 import com.mewna.plugin.event.EventType;
-import com.mewna.plugin.impl.audio.AudioTrackInfo;
 import lombok.Getter;
+import lombok.Value;
+import org.json.JSONObject;
 
 /**
  * @author amy
@@ -37,5 +38,20 @@ public class AudioTrackEvent extends BaseEvent {
         TRACK_INVALID,
         TRACK_PAUSE,
         QUEUE_END,
+    }
+    
+    @Value
+    public static class AudioTrackInfo {
+        private String identifier;
+        private String author;
+        private int length;
+        private boolean stream;
+        private String title;
+        private String uri;
+        
+        public static AudioTrackInfo fromJson(JSONObject o) {
+            return new AudioTrackInfo(o.getString("identifier"), o.getString("author"), o.getInt("length"),
+                    o.getBoolean("isStream"), o.getString("title"), o.getString("uri"));
+        }
     }
 }

@@ -7,11 +7,11 @@ import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
 import com.mewna.nats.SocketEvent;
 import com.mewna.plugin.event.audio.AudioTrackEvent;
+import com.mewna.plugin.event.audio.AudioTrackEvent.AudioTrackInfo;
 import com.mewna.plugin.event.guild.member.GuildMemberAddEvent;
 import com.mewna.plugin.event.guild.member.GuildMemberRemoveEvent;
 import com.mewna.plugin.event.message.MessageDeleteBulkEvent;
 import com.mewna.plugin.event.message.MessageDeleteEvent;
-import com.mewna.plugin.impl.audio.AudioTrackInfo;
 import lombok.Getter;
 import net.dv8tion.jda.core.entities.MessageType;
 import org.json.JSONArray;
@@ -131,9 +131,7 @@ public class EventManager {
         
         // Roles
         handlers.put(GUILD_ROLE_CREATE, (event, data) -> cache.cacheRole(data));
-        handlers.put(GUILD_ROLE_DELETE, (event, data) -> {
-            cache.deleteRole(data.getString("role_id"));
-        });
+        handlers.put(GUILD_ROLE_DELETE, (event, data) -> cache.deleteRole(data.getString("role_id")));
         handlers.put(GUILD_ROLE_UPDATE, (event, data) -> cache.cacheRole(data));
         
         // Users

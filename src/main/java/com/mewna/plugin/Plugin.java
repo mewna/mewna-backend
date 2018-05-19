@@ -12,5 +12,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Plugin {
-    String value();
+    String name();
+    
+    String desc();
+    
+    boolean enabled() default true;
 }

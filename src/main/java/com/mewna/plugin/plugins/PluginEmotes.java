@@ -1,4 +1,4 @@
-package com.mewna.plugin.impl;
+package com.mewna.plugin.plugins;
 
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Command;
@@ -7,9 +7,9 @@ import com.mewna.plugin.Plugin;
 
 /**
  * @author amy
- * @since 4/8/18.
+ * @since 5/19/18.
  */
-@Plugin("emotes")
+@Plugin(name = "Emotes", desc = "Fun little emotes for your server.")
 public class PluginEmotes extends BasePlugin {
     @Command(names = {"bap", "chew", "cookie", "hug", "lick", "nom", "poke", "prod", "shoot", "stab", "tickle"},
             desc = "Fun little emote commands. You need to mention someone to use them.", usage = "<command> <person>",

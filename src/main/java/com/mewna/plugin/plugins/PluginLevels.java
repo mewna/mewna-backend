@@ -1,4 +1,4 @@
-package com.mewna.plugin.impl;
+package com.mewna.plugin.plugins;
 
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
@@ -16,10 +16,10 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author amy
- * @since 4/16/18.
+ * @since 5/19/18.
  */
-@Plugin("levels")
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
+@Plugin(name = "Levels", desc = "Allow gaining xp and leveling up by chatting.")
 public class PluginLevels extends BasePlugin {
     static boolean isLevelUp(final long oldXp, final long xp) {
         return xpToLevel(oldXp) < xpToLevel(xp);
@@ -63,10 +63,10 @@ public class PluginLevels extends BasePlugin {
         getLogger().trace("Handling chat message for player {} in {}", author.getId(), guild.getId());
         
         // Calc. cooldown
-        final ImmutablePair<Boolean, Long> localRes = this.getMewna().getRatelimiter()
+        final ImmutablePair<Boolean, Long> localRes = getMewna().getRatelimiter()
                 .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-local:" + guild.getId(),
                         TimeUnit.MINUTES.toMillis(1));
-        final ImmutablePair<Boolean, Long> globalRes = this.getMewna().getRatelimiter()
+        final ImmutablePair<Boolean, Long> globalRes = getMewna().getRatelimiter()
                 .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-global", TimeUnit.MINUTES.toMillis(1));
         
         if(!localRes.left) {

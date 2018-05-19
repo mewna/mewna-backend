@@ -1,9 +1,9 @@
-package com.mewna.plugin.impl;
+package com.mewna.plugin.plugins;
 
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import static com.mewna.plugin.impl.PluginLevels.*;
+import static com.mewna.plugin.plugins.PluginLevels.*;
 
 /**
  * @author amy

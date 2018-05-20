@@ -93,7 +93,7 @@ public class PluginManager {
                             f.set(obj, injectionClasses.get(f.getType()).apply(obj.getClass()));
                             logger.debug("Injected into {}#{}", obj.getClass().getName(), f.getName());
                         } catch(final IllegalAccessException e) {
-                            logger.error("Coouldn't inject {}#{}: {}", obj.getClass().getName(), f.getName(), e);
+                            logger.error("Couldn't inject {}#{}: {}", obj.getClass().getName(), f.getName(), e);
                         }
                     }
                 }

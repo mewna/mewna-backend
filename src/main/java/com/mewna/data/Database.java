@@ -114,6 +114,7 @@ public class Database {
         } else {
             // Base the settings and return
             try {
+                // TODO: There *must* be a better way to express this...
                 @SuppressWarnings("unchecked")
                 final T base = (T) type.getMethod("base", String.class).invoke(null, id);
                 saveSettings(base);

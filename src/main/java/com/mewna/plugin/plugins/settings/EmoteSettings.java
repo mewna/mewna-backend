@@ -6,7 +6,11 @@ import com.mewna.plugin.plugins.PluginEmotes;
 import gg.amy.pgorm.annotations.Index;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.Value;
+import lombok.experimental.Accessors;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +19,10 @@ import java.util.Map;
  * @author amy
  * @since 5/19/18.
  */
-@Value
+@Getter
+@Setter
+@Accessors(chain = true)
+@Builder
 @Table("settings_emote")
 @Index("id")
 public class EmoteSettings implements PluginSettings {

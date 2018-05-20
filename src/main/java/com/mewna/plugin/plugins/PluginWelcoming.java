@@ -32,6 +32,7 @@ public class PluginWelcoming extends BasePlugin {
         for(final String key : jUser.keySet()) {
             data.put("user." + key, jUser.get(key).toString());
         }
+        data.put("user.mention", "<@" + user.getId() + '>');
         return Templater.fromMap(data);
     }
     

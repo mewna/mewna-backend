@@ -19,7 +19,7 @@ import java.util.Random;
  * @since 4/8/18.
  */
 @SuppressWarnings("unused")
-public class BasePlugin {
+public abstract class BasePlugin {
     @Inject
     @Getter(AccessLevel.PROTECTED)
     private Logger logger;

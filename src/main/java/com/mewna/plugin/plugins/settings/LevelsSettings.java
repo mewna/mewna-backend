@@ -26,7 +26,7 @@ import java.util.Set;
 @Builder
 @Table("settings_levels")
 @Index("id")
-public class LevelSettings implements PluginSettings {
+public class LevelsSettings implements PluginSettings {
     @PrimaryKey
     private final String id;
     private final Map<String, CommandSettings> commandSettings;
@@ -36,10 +36,10 @@ public class LevelSettings implements PluginSettings {
     private final String levelUpMessage;
     private Map<Integer, Set<String>> levelRoleRewards;
     
-    public static LevelSettings base(final String id) {
+    public static LevelsSettings base(final String id) {
         final Map<String, CommandSettings> settings = new HashMap<>();
         PluginSettings.commandsOwnedByPlugin(PluginLevels.class).forEach(e -> settings.put(e, CommandSettings.base()));
-        return new LevelSettings(id, settings, false, true, true,
+        return new LevelsSettings(id, settings, false, true, true,
                 "{user.name} leveled :up: to {level}! :tada:", new HashMap<>());
     }
 }

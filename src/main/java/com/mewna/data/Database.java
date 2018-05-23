@@ -16,9 +16,7 @@ import redis.clients.jedis.Transaction;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 
 /**
@@ -33,10 +31,10 @@ public class Database {
     private final Mewna mewna;
     @Getter
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Map<String, Class<? extends PluginSettings>> pluginSettingsByName = new HashMap<>();
     private boolean init;
     @Getter
     private PgStore store;
-    
     private JedisPool jedisPool;
     
     public Database(final Mewna mewna) {
@@ -85,12 +83,20 @@ public class Database {
                 }
                 if(hasBase) {
                     classes.add(cls);
+                    //noinspection unchecked
+                    pluginSettingsByName.put(cls.getSimpleName().toLowerCase().replace("settings", ""),
+                            (Class<? extends PluginSettings>) cls);
                 } else {
                     logger.error("Was asked to map settings class {}, but it has no base()?!", cls.getName());
                 }
             }
         }).scan();
         premap(classes.toArray(new Class[0]));
+    }
+    
+    @SuppressWarnings("unchecked")
+    public <T extends PluginSettings> Class<T> getSettingsClassByType(final String type) {
+        return (Class<T>) pluginSettingsByName.get(type);
     }
     
     private void premap(final Class<?>... clz) {
@@ -104,8 +110,16 @@ public class Database {
         return store.mapSync(type).load(id);
     }
     
+    public <T extends PluginSettings> T getOrBaseSettings(final String type, final String id) {
+        final Class<T> cls = getSettingsClassByType(type);
+        if(cls == null) {
+            throw new IllegalArgumentException("Type '" + type + "' not a valid settingClass.");
+        }
+        return getOrBaseSettings(cls, id);
+    }
+    
     public <T extends PluginSettings> T getOrBaseSettings(final Class<T> type, final String id) {
-        if(!store.isMappedSync(type) || !store.isMappedAsync(type)) {
+        if(!store.isMappedSync(type) && !store.isMappedAsync(type)) {
             throw new IllegalArgumentException("Attempted to get settings of type " + type.getName() + ", but it's not mapped!");
         }
         final Optional<T> maybeSettings = getSettingsByType(type, id);

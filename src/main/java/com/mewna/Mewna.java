@@ -2,6 +2,7 @@ package com.mewna;
 
 import com.mewna.cache.DiscordCache;
 import com.mewna.data.Database;
+import com.mewna.data.PluginSettings;
 import com.mewna.event.EventManager;
 import com.mewna.jda.RestJDA;
 import com.mewna.nats.NatsServer;
@@ -22,7 +23,9 @@ import static spark.Spark.*;
  * @author amy
  * @since 4/8/18.
  */
+@SuppressWarnings("Singleton")
 public final class Mewna {
+    @SuppressWarnings("StaticVariableOfConcreteClass")
     private static final Mewna INSTANCE = new Mewna();
     
     @Getter
@@ -48,6 +51,7 @@ public final class Mewna {
         INSTANCE.start();
     }
     
+    @SuppressWarnings("unused")
     public static Mewna getInstance() {
         return INSTANCE;
     }
@@ -74,16 +78,30 @@ public final class Mewna {
             get("/channel/:id", (req, res) -> new JSONObject(getCache().getChannel(req.params(":id"))));
             get("/role/:id", (req, res) -> new JSONObject(getCache().getRole(req.params(":id"))));
         });
-        get("/commands", (req, res) -> new JSONArray(commandManager.getCommandMetadata()));
         path("/data", () -> {
+    
+            //noinspection CodeBlock2Expr
             path("/guild", () -> {
-                get("/:id/config", (req, res) -> {
-                    throw new IllegalStateException("UNIMPLEMENTED");
-                });
-                post("/:id/config", (req, res) -> {
-                    throw new IllegalStateException("UNIMPLEMENTED");
+                //noinspection CodeBlock2Expr
+                path("/:id", () -> {
+                   path("/config", () -> {
+                       get("/:type", (req, res) -> {
+                           final PluginSettings settings = getDatabase().getOrBaseSettings(req.params(":type"), req.params(":id"));
+                           return new JSONObject(settings);
+                       });
+                       post("/:type", (req, res) -> {
+                           // TODO: Fetch old settings and use to validate, then save if it passes, otherwise return :fire:
+                           return "";
+                       });
+                   });
                 });
             });
+            
+            path("/commands", () -> {
+                // TODO: More shit goes here
+                get("/metadata", (req, res) -> new JSONArray(commandManager.getCommandMetadata()));
+            });
+            
             path("/plugins", () -> {
                 // TODO: More shit goes here
                 get("/metadata", (req, res) -> new JSONArray(pluginManager.getPluginMetadata()));
@@ -92,6 +110,7 @@ public final class Mewna {
         });
     }
     
+    @SuppressWarnings("WeakerAccess")
     public DiscordCache getCache() {
         return eventManager.getCache();
     }

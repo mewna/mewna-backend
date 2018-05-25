@@ -51,6 +51,7 @@ public class NatsServer {
                         event = new SocketEvent(o.getString("t"), o.getJSONObject("d"), o.getLong("ts"),
                                 shard.getInt("id"), shard.getInt("limit"));
                     } else {
+                        // If we have no shard data, fake it
                         event = new SocketEvent(o.getString("t"), o.getJSONObject("d"), o.getLong("ts"), -1, -1);
                     }
                     pool.execute(() -> mewna.getEventManager().handle(event));

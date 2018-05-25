@@ -10,7 +10,9 @@ import com.mewna.plugin.Plugin;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.message.MessageCreateEvent;
+import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.json.JSONObject;
 
 import java.util.concurrent.TimeUnit;
 
@@ -55,6 +57,11 @@ public class PluginLevels extends BasePlugin {
         return Math.max(0, level - 1);
     }
     
+    @Event(EventType.LEVEL_UP)
+    public void handleLevelUp(final LevelUpEvent event) {
+    
+    }
+    
     @Event(EventType.MESSAGE_CREATE)
     public void handleChatMessage(final MessageCreateEvent event) {
         final User author = event.getAuthor();
@@ -76,8 +83,10 @@ public class PluginLevels extends BasePlugin {
             getDatabase().savePlayer(player);
             getLogger().trace("Local XP: {} in {}: {} -> {}", author.getId(), guild.getId(), oldXp, oldXp + xp);
             if(isLevelUp(oldXp, oldXp + xp)) {
-                // TODO: Level-up notification
                 getLogger().debug("{} in {}: Level up to {}", author.getId(), guild.getId(), xpToLevel(oldXp + xp));
+                // Emit level-up event so we can process it
+                getMewna().getNats().pushBackendEvent(EventType.LEVEL_UP, new JSONObject().put("user", author.getId())
+                        .put("guild", guild.getId()));
             }
         }
         if(!globalRes.left) {

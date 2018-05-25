@@ -20,7 +20,7 @@ import org.json.JSONObject;
  * @author amy
  * @since 5/19/18.
  */
-@Plugin(name = "Music", desc = "Control the music played in your server.")
+@Plugin(name = "Music", desc = "Control the way music is played in your server.")
 public class PluginMusic extends BasePlugin {
     @Event(EventType.AUDIO_TRACK_QUEUE)
     public void handleTrackQueue(final AudioTrackEvent event) {

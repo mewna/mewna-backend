@@ -36,6 +36,22 @@ public class Ratelimiter {
         return ratelimited;
     }
     
+    public long getRatelimitTime(final String id, final String type, final long ms) {
+        final long[] res = {0};
+        mewna.getDatabase().redis(j -> {
+            final String key = id + ':' + type + ":ratelimit";
+            if(j.exists(key)) {
+                final String v = j.get(key);
+                try {
+                    final long last = Long.parseLong(v);
+                    final long now = System.currentTimeMillis();
+                    res[0] = last - now;
+                } catch(final Exception ignored) {}
+            }
+        });
+        return res[0];
+    }
+    
     @SuppressWarnings("unchecked")
     private ImmutablePair<Boolean, Long> isRatelimited(final String id, final String type, final long ms) {
         final ImmutablePair[] pair = {null};

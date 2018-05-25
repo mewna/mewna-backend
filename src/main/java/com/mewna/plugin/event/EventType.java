@@ -51,5 +51,8 @@ public interface EventType {
     String AUDIO_TRACK_NOW_PLAYING  = "AUDIO_TRACK_NOW_PLAYING";
     String AUDIO_QUEUE_END          = "AUDIO_QUEUE_END";
     
+    // Internal events
+    String LEVEL_UP = "LEVEL_UP";
+    
     // @formatter:on
 }

@@ -12,6 +12,7 @@ import com.mewna.plugin.event.guild.member.GuildMemberAddEvent;
 import com.mewna.plugin.event.guild.member.GuildMemberRemoveEvent;
 import com.mewna.plugin.event.message.MessageDeleteBulkEvent;
 import com.mewna.plugin.event.message.MessageDeleteEvent;
+import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import lombok.Getter;
 import net.dv8tion.jda.core.entities.MessageType;
 import org.json.JSONArray;
@@ -215,7 +216,18 @@ public class EventManager {
             mewna.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_NOW_PLAYING, data));
         });
         
-        // We don't really care about these
+        // Internal events
+        handlers.put(LEVEL_UP, (event, data) -> {
+            // Fetch user and guild
+            final Guild guild = cache.getGuild(data.getString("guild"));
+            final Channel channel = cache.getChannel(data.getString("channel"));
+            final User user = cache.getUser(data.getString("user"));
+            final long level = data.getLong("level");
+            final long xp = data.getLong("xp");
+            mewna.getPluginManager().processEvent(event.getType(), new LevelUpEvent(guild, channel, user, level, xp));
+        });
+        
+        // We don't really care about these Discord gateway events
         handlers.put(GUILD_SYNC, (event, data) -> {
         });
         handlers.put(GUILD_BAN_ADD, (event, data) -> {

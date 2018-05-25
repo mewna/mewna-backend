@@ -69,7 +69,9 @@ public class PluginLevels extends BasePlugin {
         for(final String key : jUser.keySet()) {
             data.put("user." + key, jUser.get(key).toString());
         }
-        data.put("user.mention", "<@" + user.getId() + '>');
+        data.put("user.mention", user.asMention());
+        data.put("level", event.getLevel() + "");
+        data.put("xp", event.getXp() + "");
         return Templater.fromMap(data);
     }
     
@@ -112,7 +114,7 @@ public class PluginLevels extends BasePlugin {
             final long xp = getXp(player);
             player.incrementLocalXp(guild, xp);
             getDatabase().savePlayer(player);
-            getLogger().debug("Local XP: {} in {}: {} -> {}", author.getId(), guild.getId(), oldXp, oldXp + xp);
+            getLogger().trace("Local XP: {} in {}: {} -> {}", author.getId(), guild.getId(), oldXp, oldXp + xp);
             if(isLevelUp(oldXp, oldXp + xp)) {
                 getLogger().debug("{} in {}: Level up to {}", author.getId(), guild.getId(), xpToLevel(oldXp + xp));
                 // Emit level-up event so we can process it
@@ -120,6 +122,10 @@ public class PluginLevels extends BasePlugin {
                         .put("guild", guild.getId()).put("level", xpToLevel(oldXp + xp)).put("xp", oldXp + xp)
                         .put("channel", event.getChannel().getId()));
             }
+        } else {
+            getLogger().trace("Local XP: {} in {} ratelimited ({}ms)", author.getId(), guild.getId(),
+                    getMewna().getRatelimiter().getRatelimitTime(author.getId(), "chat-xp-local:" + guild.getId(),
+                            TimeUnit.MINUTES.toMillis(1)));
         }
         if(!globalRes.left) {
             player.incrementGlobalXp(getXp(player));

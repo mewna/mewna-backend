@@ -10,9 +10,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author amy
@@ -34,5 +36,29 @@ public class EconomySettings implements PluginSettings {
         final Map<String, CommandSettings> settings = new HashMap<>();
         PluginSettings.commandsOwnedByPlugin(PluginEconomy.class).forEach(e -> settings.put(e, CommandSettings.base()));
         return new EconomySettings(id, settings, ":white_flower:");
+    }
+    
+    @Override
+    public boolean validate(final JSONObject data) {
+        for(final String key : data.keySet()) {
+            switch(key) {
+                case "currencySymbol": {
+                    final Optional<String> string = Optional.ofNullable(data.optString(key));
+                    if(string.isPresent()) {
+                        final String sym = string.get();
+                        if(sym.length() > 16) {
+                            return false;
+                        }
+                    } else {
+                        return false;
+                    }
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        }
+        return true;
     }
 }

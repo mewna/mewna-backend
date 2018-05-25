@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.Accessors;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,8 +32,21 @@ public class LoggingSettings implements PluginSettings {
     private final Map<String, CommandSettings> commandSettings;
     
     public static LoggingSettings base(final String id) {
-        Map<String, CommandSettings> settings = new HashMap<>();
+        final Map<String, CommandSettings> settings = new HashMap<>();
         PluginSettings.commandsOwnedByPlugin(PluginLogging.class).forEach(e -> settings.put(e, CommandSettings.base()));
         return new LoggingSettings(id, settings);
+    }
+    
+    @Override
+    public boolean validate(final JSONObject data) {
+        // TODO: someday this will be needed
+        for(final String key : data.keySet()) {
+            switch(key) {
+                default: {
+                    break;
+                }
+            }
+        }
+        return true;
     }
 }

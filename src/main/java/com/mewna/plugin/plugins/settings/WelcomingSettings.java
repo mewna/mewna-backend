@@ -10,9 +10,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author amy
@@ -25,6 +27,7 @@ import java.util.Map;
 @Table("settings_welcoming")
 @Index("id")
 public class WelcomingSettings implements PluginSettings {
+    private static final int DISCORD_MAX_MESSAGE_SIZE = 2000;
     @PrimaryKey
     private final String id;
     private final Map<String, CommandSettings> commandSettings;
@@ -41,5 +44,32 @@ public class WelcomingSettings implements PluginSettings {
         return new WelcomingSettings(id, settings, null, null, false,
                 "Hey {user.mention}, welcome to {server.name}!", false,
                 "Sorry to see you go, {user.name}...");
+    }
+    
+    @Override
+    public boolean validate(final JSONObject data) {
+        for(final String key : data.keySet()) {
+            switch(key) {
+                case "welcomeMessage":
+                case "goodbyeMessage": {
+                    final Optional<String> maybeData = Optional.ofNullable(data.optString(key));
+                    if(maybeData.isPresent()) {
+                        final String s = maybeData.get();
+                        if(s.isEmpty() || s.length() > DISCORD_MAX_MESSAGE_SIZE) {
+                            return false;
+                        }
+                        break;
+                    } else {
+                        // must have a message for these
+                        // if not wanted, just hit the toggle switch :V
+                        return false;
+                    }
+                }
+                default: {
+                    break;
+                }
+            }
+        }
+        return true;
     }
 }

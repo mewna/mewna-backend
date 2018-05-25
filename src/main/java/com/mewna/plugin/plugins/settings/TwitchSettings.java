@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.Accessors;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,5 +39,18 @@ public class TwitchSettings implements PluginSettings {
         final Map<String, CommandSettings> settings = new HashMap<>();
         PluginSettings.commandsOwnedByPlugin(PluginTwitch.class).forEach(e -> settings.put(e, CommandSettings.base()));
         return new TwitchSettings(id, settings, null, new HashSet<>());
+    }
+    
+    @Override
+    public boolean validate(final JSONObject data) {
+        // TODO
+        for(final String key : data.keySet()) {
+            switch(key) {
+                default: {
+                    break;
+                }
+            }
+        }
+        return true;
     }
 }

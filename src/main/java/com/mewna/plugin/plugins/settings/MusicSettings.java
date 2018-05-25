@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.Accessors;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,5 +35,10 @@ public class MusicSettings implements PluginSettings {
         final Map<String, CommandSettings> settings = new HashMap<>();
         PluginSettings.commandsOwnedByPlugin(PluginMusic.class).forEach(e -> settings.put(e, CommandSettings.base()));
         return new MusicSettings(id, settings);
+    }
+    
+    @Override
+    public boolean validate(final JSONObject data) {
+        return true;
     }
 }

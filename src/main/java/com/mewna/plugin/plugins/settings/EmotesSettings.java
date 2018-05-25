@@ -9,8 +9,8 @@ import gg.amy.pgorm.annotations.Table;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.Value;
 import lombok.experimental.Accessors;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,5 +34,10 @@ public class EmotesSettings implements PluginSettings {
         final Map<String, CommandSettings> settings = new HashMap<>();
         PluginSettings.commandsOwnedByPlugin(PluginEmotes.class).forEach(e -> settings.put(e, CommandSettings.base()));
         return new EmotesSettings(id, settings);
+    }
+    
+    @Override
+    public boolean validate(final JSONObject data) {
+        return true;
     }
 }

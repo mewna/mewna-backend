@@ -9,11 +9,12 @@ import gg.amy.pgorm.annotations.Table;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.Value;
 import lombok.experimental.Accessors;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -27,6 +28,7 @@ import java.util.Set;
 @Table("settings_levels")
 @Index("id")
 public class LevelsSettings implements PluginSettings {
+    private static final int DISCORD_MAX_MESSAGE_SIZE = 2000;
     @PrimaryKey
     private final String id;
     private final Map<String, CommandSettings> commandSettings;
@@ -41,5 +43,28 @@ public class LevelsSettings implements PluginSettings {
         PluginSettings.commandsOwnedByPlugin(PluginLevels.class).forEach(e -> settings.put(e, CommandSettings.base()));
         return new LevelsSettings(id, settings, false, true, true,
                 "{user.name} leveled :up: to {level}! :tada:", new HashMap<>());
+    }
+    
+    @Override
+    public boolean validate(final JSONObject data) {
+        for(final String key : data.keySet()) {
+            switch(key) {
+                case "levelUpMessage": {
+                    final Optional<String> maybeData = Optional.ofNullable(data.optString(key));
+                    if(maybeData.isPresent()) {
+                        final String s = maybeData.get();
+                        if(s.isEmpty() || s.length() > DISCORD_MAX_MESSAGE_SIZE) {
+                            return false;
+                        }
+                        break;
+                    }
+                    // Don't return false if no message, because some people may want cards only
+                }
+                default: {
+                    break;
+                }
+            }
+        }
+        return true;
     }
 }

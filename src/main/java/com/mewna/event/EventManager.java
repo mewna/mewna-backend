@@ -220,8 +220,11 @@ public class EventManager {
         handlers.put(LEVEL_UP, (event, data) -> {
             // Fetch user and guild
             final Guild guild = cache.getGuild(data.getString("guild"));
+            final Channel channel = cache.getChannel(data.getString("channel"));
             final User user = cache.getUser(data.getString("user"));
-            mewna.getPluginManager().processEvent(event.getType(), new LevelUpEvent(guild, user));
+            final long level = data.getLong("level");
+            final long xp = data.getLong("xp");
+            mewna.getPluginManager().processEvent(event.getType(), new LevelUpEvent(guild, channel, user, level, xp));
         });
         
         // We don't really care about these Discord gateway events

@@ -1,6 +1,7 @@
 package com.mewna.plugin.plugins.settings;
 
 import com.mewna.data.CommandSettings;
+import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.plugins.PluginWelcoming;
 import gg.amy.pgorm.annotations.Index;
@@ -10,6 +11,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -23,9 +25,10 @@ import java.util.Optional;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Builder
+@Builder(toBuilder = true)
 @Table("settings_welcoming")
 @Index("id")
+@SuppressWarnings("unused")
 public class WelcomingSettings implements PluginSettings {
     private static final int DISCORD_MAX_MESSAGE_SIZE = 2000;
     @PrimaryKey
@@ -47,7 +50,7 @@ public class WelcomingSettings implements PluginSettings {
     }
     
     @Override
-    public boolean validate(final JSONObject data) {
+    public boolean validateSettings(final JSONObject data) {
         for(final String key : data.keySet()) {
             switch(key) {
                 case "welcomeMessage":
@@ -71,5 +74,49 @@ public class WelcomingSettings implements PluginSettings {
             }
         }
         return true;
+    }
+    /*
+    messageChannel
+    joinRoleId
+    
+    enableWelcomeMessages
+    enableGoodbyeMessages
+    
+    welcomeMessage
+    goodbyeMessage
+    */
+    
+    @Override
+    public boolean updateSettings(final Database database, final JSONObject data) {
+        final WelcomingSettingsBuilder builder = toBuilder();
+        try {
+            String messageChannel = data.optString("messageChannel");
+            if(messageChannel != null && messageChannel.isEmpty()) {
+                // non-null but empty should be nulled so that things work right
+                messageChannel = null;
+            }
+            builder.messageChannel(messageChannel);
+            
+            String joinRoleId = data.optString("joinRoleId");
+            if(joinRoleId != null && joinRoleId.isEmpty()) {
+                // non-null but empty should be nulled so that things work right
+                joinRoleId = null;
+            }
+            builder.joinRoleId(joinRoleId);
+            builder.enableWelcomeMessages(data.optBoolean("enableWelcomeMessages", false));
+            builder.enableGoodbyeMessages(data.optBoolean("enableGoodbyeMessages", false));
+            // Trigger exception if not present
+            data.getString("welcomeMessage");
+            data.getString("goodbyeMessage");
+    
+            builder.welcomeMessage(data.getString("welcomeMessage"));
+            builder.goodbyeMessage(data.getString("goodbyeMessage"));
+            
+            builder.commandSettings(commandSettingsFromJson(data));
+            database.saveSettings(builder.build());
+            return true;
+        } catch(final Exception e) {
+            return false;
+        }
     }
 }

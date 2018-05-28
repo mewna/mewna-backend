@@ -1,15 +1,12 @@
 package com.mewna.data;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
 import com.mewna.plugin.CommandManager.CommandWrapper;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -52,9 +49,36 @@ public interface PluginSettings {
      *
      * @return {@code true} if the data is valid, {@code false} otherwise.
      */
-    boolean validate(JSONObject data);
+    boolean validateSettings(JSONObject data);
     
-    default boolean checkValidate(final JSONObject data) {
+    /**
+     * Actually updates the settings in the database. This may catch validation
+     * errors that {@link #validateSettings(JSONObject)} and {@link #validate(JSONObject)}
+     * did not catch, and will return false in that specific case.
+     * <p />
+     * This should be pure <b>IN THE CASE OF FAILURE ONLY</b>. Specifically,
+     * this method should <b>NOT</b> update anything in the database on
+     * failure; the database should only ever be updated if the data is 100%
+     * valid.
+     *
+     * @param database The database to update into. Passed here to as to avoid
+     *                 singleton abuse.
+     * @param data     The data to update and insert.
+     *
+     * @return {@code true} if the operation succeeded, {@code false} if some
+     * invalid data still made it through.
+     */
+    boolean updateSettings(Database database, JSONObject data);
+    
+    /**
+     * Actually does the validation. Will call {@link #validateSettings(JSONObject)}
+     * after validating {@code commandSettings}
+     *
+     * @param data The data to validate
+     *
+     * @return {@code true} if the data is valid, {@code false} otherwise.
+     */
+    default boolean validate(final JSONObject data) {
         // validate commandSettings
         if(data.has("commandSettings") && !data.isNull("commandSettings")) {
             final Optional<JSONObject> maybeSettings = Optional.ofNullable(data.optJSONObject("commandSettings"));
@@ -78,6 +102,27 @@ public interface PluginSettings {
             }
         }
         // delegate to implementing class if needed
-        return validate(data);
+        return validateSettings(data);
+    }
+    
+    default Map<String, CommandSettings> commandSettingsFromJson(final JSONObject data) {
+        try {
+            final Map<String, CommandSettings> commandSettings = new HashMap<>();
+    
+            if(data.has("commandSettings")) {
+                Optional.ofNullable(data.optJSONObject("commandSettings")).ifPresent(o -> {
+                    for(final String key : o.keySet()) {
+                        final Optional<JSONObject> maybeSettings = Optional.ofNullable(o.optJSONObject(key));
+                        maybeSettings.ifPresent(s -> {
+                            commandSettings.put(key, new CommandSettings(s.optBoolean("enabled", true)));
+                        });
+                    }
+                });
+            }
+    
+            return commandSettings;
+        } catch(final Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

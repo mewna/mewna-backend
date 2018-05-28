@@ -1,6 +1,7 @@
 package com.mewna.plugin.plugins.settings;
 
 import com.mewna.data.CommandSettings;
+import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.plugins.PluginMisc;
 import gg.amy.pgorm.annotations.Index;
@@ -23,9 +24,10 @@ import java.util.Map;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Builder
+@Builder(toBuilder = true)
 @Table("settings_misc")
 @Index("id")
+@SuppressWarnings("unused")
 public class MiscSettings implements PluginSettings {
     @PrimaryKey
     private final String id;
@@ -38,7 +40,15 @@ public class MiscSettings implements PluginSettings {
     }
     
     @Override
-    public boolean validate(final JSONObject data) {
+    public boolean validateSettings(final JSONObject data) {
+        return true;
+    }
+    
+    @Override
+    public boolean updateSettings(final Database database, final JSONObject data) {
+        final MiscSettingsBuilder builder = toBuilder();
+        builder.commandSettings(commandSettingsFromJson(data));
+        database.saveSettings(builder.build());
         return true;
     }
 }

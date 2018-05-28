@@ -1,6 +1,7 @@
 package com.mewna.plugin.plugins.settings;
 
 import com.mewna.data.CommandSettings;
+import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.plugins.PluginTwitch;
 import gg.amy.pgorm.annotations.Index;
@@ -25,9 +26,10 @@ import java.util.Set;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Builder
+@Builder(toBuilder = true)
 @Table("settings_twitch")
 @Index("id")
+@SuppressWarnings("unused")
 public class TwitchSettings implements PluginSettings {
     @PrimaryKey
     private final String id;
@@ -42,7 +44,7 @@ public class TwitchSettings implements PluginSettings {
     }
     
     @Override
-    public boolean validate(final JSONObject data) {
+    public boolean validateSettings(final JSONObject data) {
         // TODO
         for(final String key : data.keySet()) {
             switch(key) {
@@ -52,5 +54,10 @@ public class TwitchSettings implements PluginSettings {
             }
         }
         return true;
+    }
+    
+    @Override
+    public boolean updateSettings(final Database database, final JSONObject data) {
+        return false;
     }
 }

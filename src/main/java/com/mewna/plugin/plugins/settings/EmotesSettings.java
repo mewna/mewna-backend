@@ -1,6 +1,7 @@
 package com.mewna.plugin.plugins.settings;
 
 import com.mewna.data.CommandSettings;
+import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.plugins.PluginEmotes;
 import gg.amy.pgorm.annotations.Index;
@@ -37,7 +38,12 @@ public class EmotesSettings implements PluginSettings {
     }
     
     @Override
-    public boolean validate(final JSONObject data) {
+    public boolean validateSettings(final JSONObject data) {
         return true;
+    }
+    
+    @Override
+    public boolean updateSettings(final Database database, final JSONObject data) {
+        return false;
     }
 }

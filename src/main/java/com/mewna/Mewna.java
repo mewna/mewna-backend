@@ -1,5 +1,6 @@
 package com.mewna;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.cache.DiscordCache;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
@@ -27,6 +28,7 @@ import static spark.Spark.*;
 public final class Mewna {
     @SuppressWarnings("StaticVariableOfConcreteClass")
     private static final Mewna INSTANCE = new Mewna();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     
     @Getter
     private final EventManager eventManager = new EventManager(this);
@@ -87,8 +89,7 @@ public final class Mewna {
                    path("/config", () -> {
                        get("/:type", (req, res) -> {
                            final PluginSettings settings = getDatabase().getOrBaseSettings(req.params(":type"), req.params(":id"));
-                           // TODO: org.json is LAME and doesn't fill in null fields. replace with jackson
-                           return new JSONObject(settings);
+                           return MAPPER.writeValueAsString(settings);
                        });
                        post("/:type", (req, res) -> {
                            final JSONObject data = new JSONObject(req.body());

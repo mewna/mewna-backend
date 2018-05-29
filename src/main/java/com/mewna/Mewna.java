@@ -133,7 +133,12 @@ public final class Mewna {
                 // More shit goes here
                 //noinspection TypeMayBeWeakened
                 final JSONArray data = new JSONArray(pluginManager.getPluginMetadata());
-                data.forEach(e -> ((JSONObject) e).remove("settingsClass"));
+                data.forEach(e -> {
+                    // ;-;
+                    // TODO: Find better solution
+                    ((JSONObject) e).remove("settingsClass");
+                    ((JSONObject) e).remove("pluginClass");
+                });
                 get("/metadata", (req, res) -> data);
             });
             get("/player/:id", (req, res) -> new JSONObject(database.getPlayer(req.params(":id"))));

@@ -28,6 +28,8 @@ public interface PluginSettings {
                 .distinct().collect(Collectors.toList());
     }
     
+    Map<String, CommandSettings> getCommandSettings();
+    
     /**
      * Validate the JSON data (against current settings if needed) to make sure
      * that we didn't get passed bad data.

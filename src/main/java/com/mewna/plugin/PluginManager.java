@@ -137,7 +137,7 @@ public class PluginManager {
                 
                 pluginMap.put(c, pluginInstance);
                 if(pluginAnnotation.enabled()) {
-                    pluginMetadata.add(new PluginMetadata(pluginAnnotation.name(), pluginAnnotation.desc(), pluginAnnotation.settings()));
+                    pluginMetadata.add(new PluginMetadata(pluginAnnotation.name(), pluginAnnotation.desc(), c, pluginAnnotation.settings()));
                 }
                 logger.info("Finished loading plugin {}: {}", pluginAnnotation.name(), pluginAnnotation.desc());
             } catch(final InstantiationException | IllegalAccessException e) {
@@ -172,6 +172,7 @@ public class PluginManager {
     public static final class PluginMetadata {
         private String name;
         private String desc;
+        private Class<?> pluginClass;
         private Class<? extends PluginSettings> settingsClass;
     }
 }

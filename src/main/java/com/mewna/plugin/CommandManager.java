@@ -5,6 +5,9 @@ import com.mewna.cache.ChannelType;
 import com.mewna.cache.entity.Channel;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
+import com.mewna.data.CommandSettings;
+import com.mewna.data.PluginSettings;
+import com.mewna.plugin.PluginManager.PluginMetadata;
 import com.mewna.plugin.event.message.MessageCreateEvent;
 import com.mewna.plugin.metadata.Payment;
 import com.mewna.plugin.metadata.Ratelimit;
@@ -152,8 +155,18 @@ public class CommandManager {
                         return;
                     }
                     // Make sure it's not disabled
-                    mewna.getPluginManager().getPlugin(cmd.getPlugin().getClass());
-                    
+                    final Optional<PluginMetadata> first = mewna.getPluginManager().getPluginMetadata().stream()
+                            .filter(e -> e.getPluginClass().equals(cmd.getPlugin().getClass())).findFirst();
+                    if(first.isPresent()) {
+                        final Class<? extends PluginSettings> settingsClass = first.get().getSettingsClass();
+                        final PluginSettings settings = mewna.getDatabase().getOrBaseSettings(settingsClass, guild.getId());
+                        final Map<String, CommandSettings> commandSettings = settings.getCommandSettings();
+                        if(!commandSettings.get(cmd.getBaseName()).isEnabled()) {
+                            mewna.getRestJDA().sendMessage(channel, "Sorry, but that command is disabled here.").queue();
+                            return;
+                        }
+                    }
+    
                     if(cmd.getRatelimit() != null) {
                         final String baseName = cmd.getBaseName();
                         

@@ -81,41 +81,46 @@ public final class Mewna {
             get("/role/:id", (req, res) -> new JSONObject(getCache().getRole(req.params(":id"))));
         });
         path("/data", () -> {
-    
+            
             //noinspection CodeBlock2Expr
             path("/guild", () -> {
                 //noinspection CodeBlock2Expr
                 path("/:id", () -> {
-                   path("/config", () -> {
-                       get("/:type", (req, res) -> {
-                           final PluginSettings settings = getDatabase().getOrBaseSettings(req.params(":type"), req.params(":id"));
-                           return MAPPER.writeValueAsString(settings);
-                       });
-                       post("/:type", (req, res) -> {
-                           final JSONObject data = new JSONObject(req.body());
-                           final PluginSettings settings = getDatabase().getOrBaseSettings(req.params(":type"), req.params(":id"));
-                           if(settings.validate(data)) {
-                               try {
-                                   if(settings.updateSettings(getDatabase(), data)) {
-                                       // All good, update and return
-                                       return new JSONObject().put("status", "ok");
-                                   } else {
-                                       return new JSONObject().put("status", "error").put("error", "invalid config");
-                                   }
-                               } catch(final RuntimeException e) {
-                                   e.printStackTrace();
-                                   return new JSONObject().put("status", "error").put("error", "invalid config");
-                               } catch(final Exception e) {
-                                   logger.error("Caught unknown exception updating:");
-                                   e.printStackTrace();
-                                   return new JSONObject().put("status", "error").put("error", "very invalid config");
-                               }
-                           } else {
-                               // :fire: :blobcatfireeyes:, send back an error
-                               return new JSONObject().put("status", "error").put("error", "invalid config");
-                           }
-                       });
-                   });
+                    path("/config", () -> {
+                        get("/:type", (req, res) -> {
+                            final PluginSettings settings = getDatabase().getOrBaseSettings(req.params(":type"), req.params(":id"));
+                            return MAPPER.writeValueAsString(settings);
+                        });
+                        post("/:type", (req, res) -> {
+                            final JSONObject data = new JSONObject(req.body());
+                            final PluginSettings settings = getDatabase().getOrBaseSettings(req.params(":type"), req.params(":id"));
+                            if(settings.validate(data)) {
+                                try {
+                                    if(settings.updateSettings(getDatabase(), data)) {
+                                        // All good, update and return
+                                        logger.info("Updated {} settings for {}", req.params(":type"), req.params(":id"));
+                                        return new JSONObject().put("status", "ok");
+                                    } else {
+                                        logger.info("{} settings for {} failed updateSettings", req.params(":type"), req.params(":id"));
+                                        return new JSONObject().put("status", "error").put("error", "invalid config");
+                                    }
+                                } catch(final RuntimeException e) {
+                                    logger.error("{} settings for {} failed updateSettings expectedly", req.params(":type"), req.params(":id"));
+                                    e.printStackTrace();
+                                    return new JSONObject().put("status", "error").put("error", "invalid config");
+                                } catch(final Exception e) {
+                                    logger.error("{} settings for {} failed updateSettings unexpectedly", req.params(":type"), req.params(":id"));
+                                    logger.error("Caught unknown exception updating:");
+                                    e.printStackTrace();
+                                    return new JSONObject().put("status", "error").put("error", "very invalid config");
+                                }
+                            } else {
+                                logger.error("{} settings for {} failed validate", req.params(":type"), req.params(":id"));
+                                // :fire: :blobcatfireeyes:, send back an error
+                                return new JSONObject().put("status", "error").put("error", "invalid config");
+                            }
+                        });
+                    });
                 });
             });
             

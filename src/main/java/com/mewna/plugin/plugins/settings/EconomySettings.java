@@ -80,6 +80,7 @@ public class EconomySettings implements PluginSettings {
             database.saveSettings(builder.build());
             return true;
         } catch(final JSONException e) {
+            e.printStackTrace();
             return false;
         }
     }

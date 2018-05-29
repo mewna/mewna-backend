@@ -158,7 +158,7 @@ public class Database {
     }
     
     public void redis(final Consumer<Jedis> c) {
-        try(Jedis jedis = jedisPool.getResource()) {
+        try(final Jedis jedis = jedisPool.getResource()) {
             jedis.auth(System.getenv("REDIS_PASS"));
             c.accept(jedis);
         }

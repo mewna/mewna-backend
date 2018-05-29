@@ -1,5 +1,6 @@
 package com.mewna.plugin.plugins;
 
+import com.mewna.cache.entity.Guild;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Command;
 import com.mewna.plugin.CommandContext;
@@ -30,7 +31,6 @@ public class PluginMisc extends BasePlugin {
             final String cat = Objects.requireNonNull(client.newCall(new Request.Builder().get().url("https://aws.random.cat/meow").build())
                     .execute().body()).string();
             final JSONObject json = new JSONObject(cat); // meow
-            // TODO: Blah blah embeds lazy alesijkrcuthgfsn
             getRestJDA().sendMessage(ctx.getChannel(), new EmbedBuilder().setTitle("Cat").setImage(json.getString("file")).build()).queue();
         } catch(final IOException e) {
             getRestJDA().sendMessage(ctx.getChannel(), "Couldn't find cat :(").queue();
@@ -44,7 +44,6 @@ public class PluginMisc extends BasePlugin {
             final String dog = Objects.requireNonNull(client.newCall(new Request.Builder().get().url("https://random.dog/woof.json").build())
                     .execute().body()).string();
             final JSONObject json = new JSONObject(dog); // woof
-            // TODO: Blah blah embeds lazy alesijkrcuthgfsn
             getRestJDA().sendMessage(ctx.getChannel(), new EmbedBuilder().setTitle("Dog").setImage(json.getString("url")).build()).queue();
         } catch(final IOException e) {
             getRestJDA().sendMessage(ctx.getChannel(), "Couldn't find dog :(").queue();
@@ -60,7 +59,6 @@ public class PluginMisc extends BasePlugin {
             final String catgirl = Objects.requireNonNull(client.newCall(new Request.Builder().get().url("https://nekos.life/api/neko").build())
                     .execute().body()).string();
             final JSONObject json = new JSONObject(catgirl); // nya
-            // TODO: Blah blah embeds lazy alesijkrcuthgfsn
             getRestJDA().sendMessage(ctx.getChannel(), new EmbedBuilder().setTitle("Catgirl").setImage(json.getString("neko")).build()).queue();
         } catch(final IOException e) {
             getRestJDA().sendMessage(ctx.getChannel(), "Couldn't find catgirl :(").queue();
@@ -75,7 +73,8 @@ public class PluginMisc extends BasePlugin {
                 .addField("Bot invite", "https://amy.chat/invite", false)
                 .addField("Support server", "https://amy.chat/support", false)
                 .addField("", "This command: `amy!help`, `a.help`, or `a:help`", false);
-        getMewna().getRestJDA().sendMessage(ctx.getChannel().getId(), builder.build()).queue(null, failure -> {
+        // TODO: Actual permissions calculations...
+        getRestJDA().sendMessage(ctx.getChannel().getId(), builder.build()).queue(null, failure -> {
             if(failure instanceof ErrorResponseException) {
                 //noinspection StatementWithEmptyBody
                 if(((ErrorResponseException) failure).getErrorCode() == 50013) {
@@ -89,5 +88,19 @@ public class PluginMisc extends BasePlugin {
     @Command(names = "invite", desc = "Get the invite link.", usage = "invite", examples = "invite")
     public void invite(final CommandContext ctx) {
         getMewna().getRestJDA().sendMessage(ctx.getChannel().getId(), "Click here: <https://amy.chat/invite>").queue();
+    }
+    
+    @Command(names = "roleme", desc = "gimme a role D:<", usage = "roleme", examples = "roleme")
+    public void roleMe(final CommandContext ctx) {
+        final Guild guild = ctx.getGuild();
+        getRestJDA().addRoleToMember(guild, getCache().getMember(guild, ctx.getUser()), getCache().getRole("316427858727665664"))
+                .queue(__ -> getRestJDA().sendMessage(ctx.getChannel(), "Role added!").queue());
+    }
+    
+    @Command(names = "deroleme", desc = "take my role D:<", usage = "deroleme", examples = "deroleme")
+    public void deroleMe(final CommandContext ctx) {
+        final Guild guild = ctx.getGuild();
+        getRestJDA().removeRoleFromMember(guild, getCache().getMember(guild, ctx.getUser()), getCache().getRole("316427858727665664"))
+                .queue(__ -> getRestJDA().sendMessage(ctx.getChannel(), "Role removed!").queue());
     }
 }

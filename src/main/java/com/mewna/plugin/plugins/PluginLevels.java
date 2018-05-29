@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  * @since 5/19/18.
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-@Plugin(name = "Levels", desc = "Allow gaining xp and leveling up by chatting.")
+@Plugin(name = "Levels", desc = "Allow gaining xp and leveling up by chatting.", settings = LevelsSettings.class)
 public class PluginLevels extends BasePlugin {
     static boolean isLevelUp(final long oldXp, final long xp) {
         return xpToLevel(oldXp) < xpToLevel(xp);

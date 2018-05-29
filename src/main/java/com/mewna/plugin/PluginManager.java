@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.mewna.Mewna;
 import com.mewna.cache.DiscordCache;
 import com.mewna.data.Database;
+import com.mewna.data.PluginSettings;
 import com.mewna.plugin.event.BaseEvent;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.util.CurrencyHelper;
@@ -136,7 +137,7 @@ public class PluginManager {
                 
                 pluginMap.put(c, pluginInstance);
                 if(pluginAnnotation.enabled()) {
-                    pluginMetadata.add(new PluginMetadata(pluginAnnotation.name(), pluginAnnotation.desc()));
+                    pluginMetadata.add(new PluginMetadata(pluginAnnotation.name(), pluginAnnotation.desc(), pluginAnnotation.settings()));
                 }
                 logger.info("Finished loading plugin {}: {}", pluginAnnotation.name(), pluginAnnotation.desc());
             } catch(final InstantiationException | IllegalAccessException e) {
@@ -171,5 +172,6 @@ public class PluginManager {
     public static final class PluginMetadata {
         private String name;
         private String desc;
+        private Class<? extends PluginSettings> settingsClass;
     }
 }

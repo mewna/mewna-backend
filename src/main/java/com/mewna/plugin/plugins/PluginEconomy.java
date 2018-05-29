@@ -9,6 +9,7 @@ import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.Plugin;
 import com.mewna.plugin.metadata.Payment;
 import com.mewna.plugin.metadata.Ratelimit;
+import com.mewna.plugin.plugins.settings.EconomySettings;
 import com.mewna.plugin.util.CurrencyHelper;
 import com.mewna.util.Time;
 import lombok.ToString;
@@ -28,7 +29,7 @@ import static com.mewna.plugin.plugins.PluginEconomy.ReelSymbol.*;
  * @since 5/19/18.
  */
 @SuppressWarnings("unused")
-@Plugin(name = "Economy", desc = "Let people earn and spend money.")
+@Plugin(name = "Economy", desc = "Let people earn and spend money.", settings = EconomySettings.class)
 public class PluginEconomy extends BasePlugin {
     private static final long SLOTS_BASE_COST = 10;
     private static final long GAMBLE_BASE_COST = 25;

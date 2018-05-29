@@ -151,6 +151,8 @@ public class CommandManager {
                     if(cmd.isOwner() && !user.getId().equalsIgnoreCase("128316294742147072")) {
                         return;
                     }
+                    // Make sure it's not disabled
+                    mewna.getPluginManager().getPlugin(cmd.getPlugin().getClass());
                     
                     if(cmd.getRatelimit() != null) {
                         final String baseName = cmd.getBaseName();

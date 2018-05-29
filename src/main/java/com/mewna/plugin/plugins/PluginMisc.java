@@ -5,6 +5,7 @@ import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Command;
 import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.Plugin;
+import com.mewna.plugin.plugins.settings.MiscSettings;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import okhttp3.OkHttpClient;
@@ -19,7 +20,7 @@ import java.util.Objects;
  * @author amy
  * @since 5/19/18.
  */
-@Plugin(name = "Misc", desc = "Miscellaneous things, like kittens and puppies.")
+@Plugin(name = "Misc", desc = "Miscellaneous things, like kittens and puppies.", settings = MiscSettings.class)
 public class PluginMisc extends BasePlugin {
     @Inject
     private OkHttpClient client;

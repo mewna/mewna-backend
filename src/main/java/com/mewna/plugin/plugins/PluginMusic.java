@@ -11,6 +11,7 @@ import com.mewna.plugin.Plugin;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.audio.AudioTrackEvent;
+import com.mewna.plugin.plugins.settings.MusicSettings;
 import com.mewna.plugin.util.Emotes;
 import com.mewna.util.Time;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -20,7 +21,7 @@ import org.json.JSONObject;
  * @author amy
  * @since 5/19/18.
  */
-@Plugin(name = "Music", desc = "Control the way music is played in your server.")
+@Plugin(name = "Music", desc = "Control the way music is played in your server.", settings = MusicSettings.class)
 public class PluginMusic extends BasePlugin {
     @Event(EventType.AUDIO_TRACK_QUEUE)
     public void handleTrackQueue(final AudioTrackEvent event) {

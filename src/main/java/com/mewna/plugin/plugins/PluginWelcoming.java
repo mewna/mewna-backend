@@ -20,7 +20,7 @@ import java.util.Map;
  * @author amy
  * @since 5/19/18.
  */
-@Plugin(name = "Welcoming", desc = "Hello and goodbye to your server's members.")
+@Plugin(name = "Welcoming", desc = "Hello and goodbye to your server's members.", settings = WelcomingSettings.class)
 public class PluginWelcoming extends BasePlugin {
     private Templater map(final Guild guild, final User user) {
         final Map<String, String> data = new HashMap<>();

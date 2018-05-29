@@ -1,5 +1,7 @@
 package com.mewna.plugin;
 
+import com.mewna.data.PluginSettings;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -17,4 +19,6 @@ public @interface Plugin {
     String desc();
     
     boolean enabled() default true;
+    
+    Class<? extends PluginSettings> settings();
 }

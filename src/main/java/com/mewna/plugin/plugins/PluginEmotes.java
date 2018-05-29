@@ -4,12 +4,13 @@ import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Command;
 import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.Plugin;
+import com.mewna.plugin.plugins.settings.EmotesSettings;
 
 /**
  * @author amy
  * @since 5/19/18.
  */
-@Plugin(name = "Emotes", desc = "Fun little emotes for your server.")
+@Plugin(name = "Emotes", desc = "Fun little emotes for your server.", settings = EmotesSettings.class)
 public class PluginEmotes extends BasePlugin {
     @Command(names = {"bap", "chew", "cookie", "hug", "lick", "nom", "poke", "prod", "shoot", "stab", "tickle"},
             desc = "Fun little emote commands. You need to mention someone to use them.", usage = "<command> <person>",

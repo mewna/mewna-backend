@@ -2,6 +2,7 @@ package com.mewna.plugin;
 
 import com.google.common.collect.ImmutableMap;
 import com.mewna.Mewna;
+import com.mewna.cache.DiscordCache;
 import com.mewna.data.Database;
 import com.mewna.plugin.event.BaseEvent;
 import com.mewna.plugin.event.Event;
@@ -72,6 +73,7 @@ public class PluginManager {
                 .put(Random.class, __ -> new Random())
                 .put(CurrencyHelper.class, __ -> currencyHelper)
                 .put(OkHttpClient.class, __ -> okHttpClient)
+                .put(DiscordCache.class, __ -> this.mewna.getCache())
                 .build();
     }
     

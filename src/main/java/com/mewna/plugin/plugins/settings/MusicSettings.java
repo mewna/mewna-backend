@@ -1,6 +1,7 @@
 package com.mewna.plugin.plugins.settings;
 
 import com.mewna.data.CommandSettings;
+import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.plugins.PluginMusic;
 import gg.amy.pgorm.annotations.Index;
@@ -11,6 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.Accessors;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,9 +24,10 @@ import java.util.Map;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Builder
+@Builder(toBuilder = true)
 @Table("settings_music")
 @Index("id")
+@SuppressWarnings("unused")
 public class MusicSettings implements PluginSettings {
     @PrimaryKey
     private final String id;
@@ -34,5 +37,18 @@ public class MusicSettings implements PluginSettings {
         final Map<String, CommandSettings> settings = new HashMap<>();
         PluginSettings.commandsOwnedByPlugin(PluginMusic.class).forEach(e -> settings.put(e, CommandSettings.base()));
         return new MusicSettings(id, settings);
+    }
+    
+    @Override
+    public boolean validateSettings(final JSONObject data) {
+        return true;
+    }
+    
+    @Override
+    public boolean updateSettings(final Database database, final JSONObject data) {
+        final MusicSettingsBuilder builder = toBuilder();
+        builder.commandSettings(commandSettingsFromJson(data));
+        database.saveSettings(builder.build());
+        return true;
     }
 }

@@ -1,5 +1,6 @@
 package com.mewna;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.cache.DiscordCache;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
@@ -27,6 +28,7 @@ import static spark.Spark.*;
 public final class Mewna {
     @SuppressWarnings("StaticVariableOfConcreteClass")
     private static final Mewna INSTANCE = new Mewna();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     
     @Getter
     private final EventManager eventManager = new EventManager(this);
@@ -79,31 +81,56 @@ public final class Mewna {
             get("/role/:id", (req, res) -> new JSONObject(getCache().getRole(req.params(":id"))));
         });
         path("/data", () -> {
-    
+            
             //noinspection CodeBlock2Expr
             path("/guild", () -> {
                 //noinspection CodeBlock2Expr
                 path("/:id", () -> {
-                   path("/config", () -> {
-                       get("/:type", (req, res) -> {
-                           final PluginSettings settings = getDatabase().getOrBaseSettings(req.params(":type"), req.params(":id"));
-                           return new JSONObject(settings);
-                       });
-                       post("/:type", (req, res) -> {
-                           // TODO: Fetch old settings and use to validate, then save if it passes, otherwise return :fire:
-                           return "";
-                       });
-                   });
+                    path("/config", () -> {
+                        get("/:type", (req, res) -> {
+                            final PluginSettings settings = getDatabase().getOrBaseSettings(req.params(":type"), req.params(":id"));
+                            return MAPPER.writeValueAsString(settings);
+                        });
+                        post("/:type", (req, res) -> {
+                            final JSONObject data = new JSONObject(req.body());
+                            final PluginSettings settings = getDatabase().getOrBaseSettings(req.params(":type"), req.params(":id"));
+                            if(settings.validate(data)) {
+                                try {
+                                    if(settings.updateSettings(getDatabase(), data)) {
+                                        // All good, update and return
+                                        logger.info("Updated {} settings for {}", req.params(":type"), req.params(":id"));
+                                        return new JSONObject().put("status", "ok");
+                                    } else {
+                                        logger.info("{} settings for {} failed updateSettings", req.params(":type"), req.params(":id"));
+                                        return new JSONObject().put("status", "error").put("error", "invalid config");
+                                    }
+                                } catch(final RuntimeException e) {
+                                    logger.error("{} settings for {} failed updateSettings expectedly", req.params(":type"), req.params(":id"));
+                                    e.printStackTrace();
+                                    return new JSONObject().put("status", "error").put("error", "invalid config");
+                                } catch(final Exception e) {
+                                    logger.error("{} settings for {} failed updateSettings unexpectedly", req.params(":type"), req.params(":id"));
+                                    logger.error("Caught unknown exception updating:");
+                                    e.printStackTrace();
+                                    return new JSONObject().put("status", "error").put("error", "very invalid config");
+                                }
+                            } else {
+                                logger.error("{} settings for {} failed validate", req.params(":type"), req.params(":id"));
+                                // :fire: :blobcatfireeyes:, send back an error
+                                return new JSONObject().put("status", "error").put("error", "invalid config");
+                            }
+                        });
+                    });
                 });
             });
             
             path("/commands", () -> {
-                // TODO: More shit goes here
+                // More shit goes here
                 get("/metadata", (req, res) -> new JSONArray(commandManager.getCommandMetadata()));
             });
             
             path("/plugins", () -> {
-                // TODO: More shit goes here
+                // More shit goes here
                 get("/metadata", (req, res) -> new JSONArray(pluginManager.getPluginMetadata()));
             });
             get("/player/:id", (req, res) -> new JSONObject(database.getPlayer(req.params(":id"))));

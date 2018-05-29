@@ -130,7 +130,7 @@ public class PluginLevels extends BasePlugin {
         if(!globalRes.left) {
             player.incrementGlobalXp(getXp(player));
             getDatabase().savePlayer(player);
-            // TODO: Level-up notifications here?
+            // Level-up notifications here?
         }
     }
     

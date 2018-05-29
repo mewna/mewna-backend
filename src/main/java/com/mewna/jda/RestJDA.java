@@ -1,7 +1,11 @@
 package com.mewna.jda;
 
 import com.mewna.cache.entity.Channel;
+import com.mewna.cache.entity.Guild;
+import com.mewna.cache.entity.Member;
+import com.mewna.cache.entity.Role;
 import net.dv8tion.jda.core.AccountType;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageEmbed;
@@ -12,6 +16,7 @@ import net.dv8tion.jda.core.requests.Request;
 import net.dv8tion.jda.core.requests.Response;
 import net.dv8tion.jda.core.requests.RestAction;
 import net.dv8tion.jda.core.requests.Route.CompiledRoute;
+import net.dv8tion.jda.core.requests.Route.Guilds;
 import net.dv8tion.jda.core.requests.Route.Messages;
 import net.dv8tion.jda.core.requests.restaction.MessageAction;
 import net.dv8tion.jda.core.utils.Checks;
@@ -39,6 +44,21 @@ public class RestJDA {
         fakeJDA = new JDAImpl(AccountType.BOT, token, null, new OkHttpClient.Builder(), null,
                 false, false, false, false,
                 true, false, 2, 900, null);
+    }
+    
+    @CheckReturnValue
+    public RestAction<Void> addRoleToMember(final Guild guild, final Member member, final Role role) {
+        Checks.notNull(role, "role");
+        final CompiledRoute route = Guilds.ADD_MEMBER_ROLE.compile(guild.getId(), member.getId(), role.getId());
+        return new BasicRestAction<>(fakeJDA, route);
+    }
+    
+    @CheckReturnValue
+    public RestAction<Void> removeRoleFromMember(final Guild guild, final Member member, final Role role) {
+        Checks.notNull(role, "role");
+        final CompiledRoute route = Guilds.REMOVE_MEMBER_ROLE.compile(guild.getId(), member.getId(), role.getId());
+        
+        return new BasicRestAction<>(fakeJDA, route);
     }
     
     @CheckReturnValue
@@ -119,5 +139,20 @@ public class RestJDA {
                 }
             }
         };
+    }
+    
+    private final class BasicRestAction<T> extends RestAction<T> {
+        private BasicRestAction(final JDA api, final CompiledRoute route) {
+            super(api, route);
+        }
+        
+        @Override
+        protected void handleResponse(final Response response, final Request<T> request) {
+            if(response.isOk()) {
+                request.onSuccess(null);
+            } else {
+                request.onFailure(response);
+            }
+        }
     }
 }

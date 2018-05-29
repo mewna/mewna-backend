@@ -183,7 +183,7 @@ public class EventManager {
                     new MessageDeleteBulkEvent(cache.getChannel(data.getString("channel_id")), list));
         });
         handlers.put(MESSAGE_UPDATE, (event, data) -> {
-            // TODO: How to model this?
+            // How to model this?
         });
         
         // Audio

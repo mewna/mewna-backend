@@ -89,18 +89,4 @@ public class PluginMisc extends BasePlugin {
     public void invite(final CommandContext ctx) {
         getMewna().getRestJDA().sendMessage(ctx.getChannel().getId(), "Click here: <https://amy.chat/invite>").queue();
     }
-    
-    @Command(names = "roleme", desc = "gimme a role D:<", usage = "roleme", examples = "roleme")
-    public void roleMe(final CommandContext ctx) {
-        final Guild guild = ctx.getGuild();
-        getRestJDA().addRoleToMember(guild, getCache().getMember(guild, ctx.getUser()), getCache().getRole("316427858727665664"))
-                .queue(__ -> getRestJDA().sendMessage(ctx.getChannel(), "Role added!").queue());
-    }
-    
-    @Command(names = "deroleme", desc = "take my role D:<", usage = "deroleme", examples = "deroleme")
-    public void deroleMe(final CommandContext ctx) {
-        final Guild guild = ctx.getGuild();
-        getRestJDA().removeRoleFromMember(guild, getCache().getMember(guild, ctx.getUser()), getCache().getRole("316427858727665664"))
-                .queue(__ -> getRestJDA().sendMessage(ctx.getChannel(), "Role removed!").queue());
-    }
 }

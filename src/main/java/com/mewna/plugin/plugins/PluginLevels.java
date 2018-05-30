@@ -13,6 +13,7 @@ import com.mewna.plugin.event.message.MessageCreateEvent;
 import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
 import com.mewna.util.Templater;
+import net.dv8tion.jda.core.EmbedBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.json.JSONObject;
 
@@ -138,6 +139,31 @@ public class PluginLevels extends BasePlugin {
             examples = {"rank", "rank @someone"})
     public void rank(final CommandContext ctx) {
         // TODO: Exp-level calculations go here
+        final long xp;
+        final long level;
+        final String name;
+        final String discrim;
+        final String avatar;
+        if(ctx.getMentions().isEmpty()) {
+            xp = ctx.getPlayer().getXp(ctx.getGuild());
+            name = ctx.getUser().getName();
+            discrim = ctx.getUser().getDiscriminator();
+            avatar = ctx.getUser().getAvatar();
+        } else {
+            final User user = ctx.getMentions().get(0);
+            final Player player = getDatabase().getPlayer(user);
+            xp = player.getXp(ctx.getGuild());
+            name = user.getName();
+            discrim = user.getDiscriminator();
+            avatar = user.getAvatar();
+        }
+        level = xpToLevel(xp);
+        final EmbedBuilder builder = new EmbedBuilder().setTitle(String.format("%s#%s's rank", name, discrim))
+                .addField("Level", "Level " + level, true).addBlankField(true)
+                .addField("XP", xp + " / " + nextLevelXp(xp), true)
+                .addField("Avatar", avatar, false).addBlankField(true)
+                .addField("Rank", "TODO / TODO", true);
+        getRestJDA().sendMessage(ctx.getChannel(), builder.build()).queue();
     }
     
     @Command(names = {"leaderboards", "ranks", "levels", "leaderboard", "rankings"}, desc = "View the guild leaderboards.",

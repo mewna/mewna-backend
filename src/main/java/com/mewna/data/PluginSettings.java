@@ -115,9 +115,7 @@ public interface PluginSettings {
                 Optional.ofNullable(data.optJSONObject("commandSettings")).ifPresent(o -> {
                     for(final String key : o.keySet()) {
                         final Optional<JSONObject> maybeSettings = Optional.ofNullable(o.optJSONObject(key));
-                        maybeSettings.ifPresent(s -> {
-                            commandSettings.put(key, new CommandSettings(s.optBoolean("enabled", true)));
-                        });
+                        maybeSettings.ifPresent(s -> commandSettings.put(key, new CommandSettings(s.optBoolean("enabled", true))));
                     }
                 });
             }

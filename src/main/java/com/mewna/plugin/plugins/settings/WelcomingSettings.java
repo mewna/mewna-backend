@@ -75,17 +75,7 @@ public class WelcomingSettings implements PluginSettings {
         }
         return true;
     }
-    /*
-    messageChannel
-    joinRoleId
-    
-    enableWelcomeMessages
-    enableGoodbyeMessages
-    
-    welcomeMessage
-    goodbyeMessage
-    */
-    
+
     @Override
     public boolean updateSettings(final Database database, final JSONObject data) {
         final WelcomingSettingsBuilder builder = toBuilder();

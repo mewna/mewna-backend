@@ -338,8 +338,7 @@ public class DiscordCache {
     
     public List<Role> getGuildRoles(final String id) {
         final ResultSet rs = session.execute("SELECT * FROM mewna.roles WHERE guildId = '" + id + "';");
-        final List<Role> results = new ArrayList<>(mappingManager.mapper(Role.class).map(rs).all());
-        return results;
+        return new ArrayList<>(mappingManager.mapper(Role.class).map(rs).all());
     }
     
     public void deleteRole(final String id) {

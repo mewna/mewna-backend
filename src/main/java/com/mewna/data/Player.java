@@ -22,7 +22,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table("players")
-@Index("id")
+@Index({"id", "guildXp", "guildBalances"})
 @SuppressWarnings("unused")
 public class Player {
     @PrimaryKey

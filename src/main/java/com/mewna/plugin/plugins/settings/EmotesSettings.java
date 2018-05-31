@@ -23,7 +23,7 @@ import java.util.Map;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Builder
+@Builder(toBuilder = true)
 @Table("settings_emote")
 @Index("id")
 public class EmotesSettings implements PluginSettings {
@@ -44,6 +44,9 @@ public class EmotesSettings implements PluginSettings {
     
     @Override
     public boolean updateSettings(final Database database, final JSONObject data) {
-        return false;
+        final EmotesSettingsBuilder builder = toBuilder();
+        builder.commandSettings(commandSettingsFromJson(data));
+        database.saveSettings(builder.build());
+        return true;
     }
 }

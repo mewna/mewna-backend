@@ -2,6 +2,7 @@ package com.mewna.plugin.plugins;
 
 import com.mewna.cache.entity.Channel;
 import com.mewna.cache.entity.Guild;
+import com.mewna.cache.entity.Role;
 import com.mewna.cache.entity.User;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Plugin;
@@ -39,7 +40,8 @@ public class PluginWelcoming extends BasePlugin {
     @Event(EventType.GUILD_MEMBER_ADD)
     public void onUserJoin(final GuildMemberAddEvent event) {
         final Guild guild = event.getGuild();
-        final WelcomingSettings settings = getMewna().getDatabase().getOrBaseSettings(WelcomingSettings.class, guild.getId());
+        final String guildId = guild.getId();
+        final WelcomingSettings settings = getMewna().getDatabase().getOrBaseSettings(WelcomingSettings.class, guildId);
         if(settings.isEnableWelcomeMessages()) {
             final String messageChannel = settings.getMessageChannel();
             // Have to validate that the chosen channel exists
@@ -49,10 +51,22 @@ public class PluginWelcoming extends BasePlugin {
                     final Templater templater = map(event.getGuild(), getMewna().getCache().getUser(event.getMember().getId()));
                     getRestJDA().sendMessage(settings.getMessageChannel(), templater.render(settings.getWelcomeMessage())).queue();
                 } else {
-                    getLogger().warn("Welcoming messageChannel {} in {} no longer valid, nulling...", messageChannel, guild.getId());
+                    getLogger().warn("Welcoming messageChannel {} in {} no longer valid, nulling...", messageChannel, guildId);
                     settings.setMessageChannel(null);
                     getDatabase().saveSettings(settings);
                 }
+            }
+        }
+        final String roleId = settings.getJoinRoleId();
+        if(roleId != null && !roleId.isEmpty()) {
+            // Validate that it exists
+            final Role joinRole = getMewna().getCache().getRole(roleId);
+            if(joinRole != null) {
+                getRestJDA().addRoleToMember(guild, event.getMember(), joinRole).queue();
+            } else {
+                getLogger().warn("Welcoming joinRole {} in {} no longer valid, nulling...", roleId, guildId);
+                settings.setMessageChannel(null);
+                getDatabase().saveSettings(settings);
             }
         }
     }

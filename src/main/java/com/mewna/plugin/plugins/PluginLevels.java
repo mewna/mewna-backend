@@ -1,6 +1,7 @@
 package com.mewna.plugin.plugins;
 
 import com.mewna.cache.entity.Guild;
+import com.mewna.cache.entity.Member;
 import com.mewna.cache.entity.User;
 import com.mewna.data.Player;
 import com.mewna.plugin.BasePlugin;
@@ -19,8 +20,11 @@ import org.json.JSONObject;
 
 import java.sql.ResultSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @author amy
@@ -82,14 +86,49 @@ public class PluginLevels extends BasePlugin {
         final Guild guild = event.getGuild();
         final LevelsSettings settings = getMewna().getDatabase().getOrBaseSettings(LevelsSettings.class, guild.getId());
         if(settings.isLevelsEnabled()) {
+            final Member member = getCache().getMember(guild, event.getUser());
             if(settings.isLevelUpMessagesEnabled()) {
                 // TODO: Handle cards
                 // I guess worst-case we could CDN it and pretend instead of uploading to Discord
                 // but that's gross af
-                // TODO: Handle role rewards
+                if(settings.isRemovePreviousRoleRewards()) {
+                    removeAndAddRoleRewards(settings, guild, member, event.getLevel(), () -> sendLevelUpMessage(settings, event, member));
+                } else {
+                    addRoleRewards(settings, guild, member, event.getLevel(), () -> sendLevelUpMessage(settings, event, member));
+                }
+            }
+        }
+    }
+    
+    private void sendLevelUpMessage(final LevelsSettings settings, final LevelUpEvent event, final Member member) {
+        if(settings.isLevelsEnabled()) {
+            if(settings.isLevelUpMessagesEnabled()) {
                 final String message = map(event).render(settings.getLevelUpMessage());
                 getRestJDA().sendMessage(event.getChannel(), message).queue();
             }
+        }
+    }
+    
+    private void removeAndAddRoleRewards(final LevelsSettings settings, final Guild guild, final Member member,
+                                         final long level, final Runnable callback) {
+        // Check for roles at this level
+        final List<String> rewards = settings.getLevelRoleRewards().entrySet().stream()
+                .filter(e -> e.getValue() == level).map(Entry::getKey).collect(Collectors.toList());
+        if(!rewards.isEmpty()) {
+            // If we have some, remove lower roles then add in the rest
+            final List<String> removeRoles = settings.getLevelRoleRewards().entrySet().stream()
+                    .filter(e -> e.getValue() < level).map(Entry::getKey).collect(Collectors.toList());
+            getRestJDA().addAndRemoveManyRolesForMember(guild, member, rewards, removeRoles).queue(__ -> callback.run());
+        }
+    }
+    
+    private void addRoleRewards(final LevelsSettings settings, final Guild guild, final Member member, final long level,
+                                final Runnable callback) {
+        // Check for roles at this level
+        final List<String> rewards = settings.getLevelRoleRewards().entrySet().stream()
+                .filter(e -> e.getValue() == level).map(Entry::getKey).collect(Collectors.toList());
+        if(!rewards.isEmpty()) {
+            getRestJDA().addManyRolesToMember(guild, member, rewards.toArray(new String[0])).queue(__ -> callback.run());
         }
     }
     

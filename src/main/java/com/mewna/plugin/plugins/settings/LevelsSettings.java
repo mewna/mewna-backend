@@ -14,10 +14,7 @@ import lombok.experimental.Accessors;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author amy
@@ -38,14 +35,20 @@ public class LevelsSettings implements PluginSettings {
     private final boolean levelsEnabled;
     private final boolean levelUpMessagesEnabled;
     private final boolean levelUpCards;
+    private final boolean removePreviousRoleRewards;
     private final String levelUpMessage;
-    private Map<Integer, Set<String>> levelRoleRewards;
+    /**
+     * Maps role ids to levels. I know it could be done differently. It was
+     * done this way because doing a {@code Map<Long, Set<String>>} was SOMEHOW
+     * causing issues in the JS frontend part of things. idfk HOW, but it did.
+     */
+    private Map<String, Long> levelRoleRewards;
     
     public static LevelsSettings base(final String id) {
         final Map<String, CommandSettings> settings = new HashMap<>();
         PluginSettings.commandsOwnedByPlugin(PluginLevels.class).forEach(e -> settings.put(e, CommandSettings.base()));
         return new LevelsSettings(id, settings, false, true, true,
-                "{user.name} leveled :up: to {level}! :tada:", new HashMap<>());
+                false,"{user.name} leveled :up: to level {level}! :tada:", new HashMap<>());
     }
     
     @Override
@@ -85,8 +88,24 @@ public class LevelsSettings implements PluginSettings {
             builder.levelsEnabled(data.optBoolean("levelsEnabled", false));
             builder.levelUpMessagesEnabled(data.optBoolean("levelUpMessagesEnabled", false));
             builder.levelUpCards(data.optBoolean("levelUpCards", false));
-            // TODO: Role rewards go here
-    
+            builder.removePreviousRoleRewards(data.optBoolean("removePreviousRoleRewards", false));
+            
+            // Basically just copy the object into a map as-is, converting data types to make sure it works
+            final JSONObject rewards = data.getJSONObject("levelRoleRewards");
+            final Map<String, Long> roleRewards = new HashMap<>();
+            for(final String key : rewards.keySet()) {
+                roleRewards.put(key, rewards.getLong(key));
+            }
+            // Clean out empty levels
+            final Collection<String> remove = new ArrayList<>();
+            roleRewards.forEach((k, v) -> {
+                if(v == 0) {
+                    remove.add(k);
+                }
+            });
+            remove.forEach(roleRewards::remove);
+            builder.levelRoleRewards(roleRewards);
+            
             builder.commandSettings(commandSettingsFromJson(data));
             database.saveSettings(builder.build());
             return true;

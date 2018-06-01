@@ -77,7 +77,8 @@ public class DiscordCache {
                 "id TEXT PRIMARY KEY," +
                 "name TEXT," +
                 "color INT," +
-                "guildId TEXT" +
+                "guildId TEXT," +
+                "managed BOOLEAN" +
                 ");");
         session.execute("CREATE INDEX IF NOT EXISTS ON mewna.roles (guildId);");
         // Users
@@ -265,8 +266,7 @@ public class DiscordCache {
     
     public List<Channel> getGuildChannels(final String id) {
         final ResultSet rs = session.execute("SELECT * FROM mewna.channels WHERE guildId = '" + id + "';");
-        final List<Channel> results = new ArrayList<>(mappingManager.mapper(Channel.class).map(rs).all());
-        return results;
+        return new ArrayList<>(mappingManager.mapper(Channel.class).map(rs).all());
     }
     
     public void deleteChannel(final String id) {
@@ -327,6 +327,11 @@ public class DiscordCache {
             role.guildId(data.getString("guild_id"));
         } else if(old != null) {
             role.guildId(old.getGuildId());
+        }
+        if(data.has("managed")) {
+            role.managed(data.getBoolean("managed"));
+        } else if(old != null) {
+            role.managed(old.isManaged());
         }
         mappingManager.mapper(Role.class).save(role.build());
         logger.debug("Updated role {}", id);

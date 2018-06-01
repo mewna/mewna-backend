@@ -165,6 +165,8 @@ public class CommandManager {
                             mewna.getRestJDA().sendMessage(channel, "Sorry, but that command is disabled here.").queue();
                             return;
                         }
+                    } else {
+                        logger.warn("No plugin metadata for command {}!?", cmd.getBaseName());
                     }
     
                     if(cmd.getRatelimit() != null) {

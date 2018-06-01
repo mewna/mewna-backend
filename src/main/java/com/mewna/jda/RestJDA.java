@@ -1,5 +1,6 @@
 package com.mewna.jda;
 
+import com.mewna.Mewna;
 import com.mewna.cache.entity.Channel;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.Member;
@@ -21,11 +22,14 @@ import net.dv8tion.jda.core.requests.Route.Messages;
 import net.dv8tion.jda.core.requests.restaction.MessageAction;
 import net.dv8tion.jda.core.utils.Checks;
 import okhttp3.OkHttpClient;
+import org.json.JSONObject;
 
 import javax.annotation.CheckReturnValue;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Based off of Jagrosh's RestJDA for GiveawayBot.
@@ -62,6 +66,75 @@ public class RestJDA {
     }
     
     @CheckReturnValue
+    public RestAction<Void> addManyRolesToMember(final Guild guild, final Member member, final String... roles) {
+        Checks.notNull(guild, "guild");
+        Checks.notNull(member, "member");
+        Checks.notNull(roles, "null roles");
+        Checks.notEmpty(roles, "empty roles");
+        
+        final Set<String> finalRoles = Arrays.stream(roles).filter(e -> {
+            final Role role = Mewna.getInstance().getCache().getRole(e);
+            // Don't add @everyone or managed roles
+            return !role.getId().equalsIgnoreCase(guild.getId()) && !role.isManaged();
+        }).collect(Collectors.toSet());
+        if(member.getRoles() != null && !member.getRoles().isEmpty()) {
+            finalRoles.addAll(member.getRoles());
+        }
+        final CompiledRoute route = Guilds.MODIFY_MEMBER.compile(guild.getId(), member.getId());
+        final JSONObject body = new JSONObject().put("roles", finalRoles);
+        return new BasicRestAction<>(fakeJDA, route, body);
+    }
+    
+    @CheckReturnValue
+    public RestAction<Void> removeManyRolesFromMember(final Guild guild, final Member member, final String... roles) {
+        Checks.notNull(guild, "guild");
+        Checks.notNull(member, "member");
+        Checks.notNull(roles, "null roles");
+        Checks.notEmpty(roles, "empty roles");
+        
+        final Set<String> rolesToRemove = Arrays.stream(roles).filter(e -> {
+            final Role role = Mewna.getInstance().getCache().getRole(e);
+            // Don't remove @everyone or managed roles
+            return !role.getId().equalsIgnoreCase(guild.getId()) && !role.isManaged();
+        }).collect(Collectors.toSet());
+        final Set<String> memberRoles = new HashSet<>(member.getRoles());
+        memberRoles.removeAll(rolesToRemove);
+        final CompiledRoute route = Guilds.MODIFY_MEMBER.compile(guild.getId(), member.getId());
+        final JSONObject body = new JSONObject().put("roles", memberRoles);
+        return new BasicRestAction<>(fakeJDA, route, body);
+    }
+    
+    public RestAction<Void> addAndRemoveManyRolesForMember(final Guild guild, final Member member, List<String> rolesToAdd,
+                                                           List<String> rolesToRemove) {
+        Checks.notNull(guild, "guild");
+        Checks.notNull(member, "member");
+        Checks.notNull(rolesToAdd, "null add roles");
+        Checks.notNull(rolesToRemove, "null remove roles");
+        
+        rolesToAdd = rolesToAdd.stream().filter(e -> {
+            final Role role = Mewna.getInstance().getCache().getRole(e);
+            // Don't add @everyone or managed roles
+            return !role.getId().equalsIgnoreCase(guild.getId()) && !role.isManaged();
+        }).collect(Collectors.toList());
+        rolesToRemove = rolesToRemove.stream().filter(e -> {
+            final Role role = Mewna.getInstance().getCache().getRole(e);
+            // Don't remove @everyone or managed roles
+            return !role.getId().equalsIgnoreCase(guild.getId()) && !role.isManaged();
+        }).collect(Collectors.toList());
+        
+        final Set<String> finalRoles = new HashSet<>();
+        final List<String> memberRoles = member.getRoles();
+        if(memberRoles != null) {
+            finalRoles.addAll(memberRoles);
+        }
+        finalRoles.addAll(rolesToAdd);
+        finalRoles.removeAll(rolesToRemove);
+        final CompiledRoute route = Guilds.MODIFY_MEMBER.compile(guild.getId(), member.getId());
+        final JSONObject body = new JSONObject().put("roles", finalRoles);
+        return new BasicRestAction<>(fakeJDA, route, body);
+    }
+    
+    @CheckReturnValue
     public MessageAction editMessage(final long channelId, final long messageId, final Message newContent) {
         Checks.notNull(newContent, "message");
         final CompiledRoute route = Messages.EDIT_MESSAGE.compile(Long.toString(channelId), Long.toString(messageId));
@@ -69,18 +142,14 @@ public class RestJDA {
     }
     
     @CheckReturnValue
-    public MessageAction sendFile(final Channel channel, final File file, final String fileName, final Message message) {
+    public MessageAction sendFile(final Channel channel, final byte[] file, final String fileName, final Message message) {
         Checks.notNull(file, "data File");
         Checks.notNull(fileName, "fileName");
         final String channelId = channel.getId();
         
         final CompiledRoute route = Messages.SEND_MESSAGE.compile(channelId);
-        try {
-            return new MessageAction(fakeJDA, route, new TextChannelImpl(Long.parseLong(channelId), new GuildImpl(fakeJDA, 0)))
-                    .apply(message).addFile(new FileInputStream(file), fileName);
-        } catch(final FileNotFoundException e) {
-            throw new IllegalArgumentException(e);
-        }
+        return new MessageAction(fakeJDA, route, new TextChannelImpl(Long.parseLong(channelId), new GuildImpl(fakeJDA, 0)))
+                .apply(message).addFile(file, fileName);
     }
     
     @CheckReturnValue
@@ -144,6 +213,10 @@ public class RestJDA {
     private final class BasicRestAction<T> extends RestAction<T> {
         private BasicRestAction(final JDA api, final CompiledRoute route) {
             super(api, route);
+        }
+        
+        private BasicRestAction(final JDA api, final CompiledRoute route, final JSONObject body) {
+            super(api, route, body);
         }
         
         @Override

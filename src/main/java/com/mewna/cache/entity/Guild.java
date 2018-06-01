@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * TODO: Handle unavailable status...
+ *
  * @author amy
  * @since 4/8/18.
  */

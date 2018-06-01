@@ -2,6 +2,10 @@ package com.mewna;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.cache.DiscordCache;
+import com.mewna.cache.entity.Channel;
+import com.mewna.cache.entity.Guild;
+import com.mewna.cache.entity.Role;
+import com.mewna.cache.entity.User;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
 import com.mewna.event.EventManager;
@@ -16,6 +20,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Optional;
 
 import static spark.Spark.*;
@@ -73,12 +78,59 @@ public final class Mewna {
         logger.info("Starting API server...");
         port(Integer.parseInt(Optional.ofNullable(System.getenv("PORT")).orElse("80")));
         path("/cache", () -> {
-            get("/user/:id", (req, res) -> new JSONObject(getCache().getUser(req.params(":id"))));
-            get("/guild/:id", (req, res) -> new JSONObject(getCache().getGuild(req.params(":id"))));
-            get("/guild/:id/channels", (req, res) -> new JSONArray(getCache().getGuildChannels(req.params(":id"))));
-            get("/guild/:id/roles", (req, res) -> new JSONArray(getCache().getGuildRoles(req.params(":id"))));
-            get("/channel/:id", (req, res) -> new JSONObject(getCache().getChannel(req.params(":id"))));
-            get("/role/:id", (req, res) -> new JSONObject(getCache().getRole(req.params(":id"))));
+            get("/user/:id", (req, res) -> {
+                final User user = getCache().getUser(req.params(":id"));
+                if(user != null) {
+                    return new JSONObject(user);
+                } else {
+                    res.status(404);
+                    return new JSONObject();
+                }
+            });
+            get("/guild/:id", (req, res) -> {
+                final Guild guild = getCache().getGuild(req.params(":id"));
+                if(guild != null) {
+                    return new JSONObject(guild);
+                } else {
+                    res.status(404);
+                    return new JSONObject();
+                }
+            });
+            get("/guild/:id/channels", (req, res) -> {
+                final List<Channel> channels = getCache().getGuildChannels(req.params(":id"));
+                if(channels != null && !channels.isEmpty()) {
+                    return new JSONArray(channels);
+                } else {
+                    res.status(404);
+                    return new JSONArray();
+                }
+            });
+            get("/guild/:id/roles", (req, res) -> {
+                final List<Role> roles = getCache().getGuildRoles(req.params(":id"));
+                if(roles != null && !roles.isEmpty()) {
+                    return new JSONArray(roles);
+                } else {
+                    res.status(404);
+                    return new JSONArray();
+                }
+            });
+            get("/channel/:id", (req, res) -> {
+                final Channel channel = getCache().getChannel(req.params(":id"));
+                if(channel != null) {
+                    return new JSONObject(channel);
+                } else {
+                    res.status(404);
+                    return new JSONObject();
+                }
+            });
+            get("/role/:id", (req, res) -> {
+                final Role role = getCache().getRole(req.params(":id"));
+                if(role != null) {
+                    return new JSONObject(role);
+                } else {
+                    return new JSONObject();
+                }
+            });
         });
         path("/data", () -> {
             

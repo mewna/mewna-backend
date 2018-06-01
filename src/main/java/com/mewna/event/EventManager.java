@@ -170,12 +170,12 @@ public class EventManager {
             mewna.getCommandManager().tryExecCommand(data);
         });
         handlers.put(MESSAGE_DELETE, (event, data) -> {
-            // TODO: Would have to cache messages...
+            // Would have to cache messages...
             mewna.getPluginManager().processEvent(event.getType(), new MessageDeleteEvent(data.getString("id"),
                     cache.getChannel(data.getString("channel_id"))));
         });
         handlers.put(MESSAGE_DELETE_BULK, (event, data) -> {
-            // TODO: Would have to cache messages...
+            // Would have to cache messages...
             final JSONArray jsonArray = data.getJSONArray("ids");
             final List<String> list = new ArrayList<>();
             jsonArray.forEach(e -> list.add((String) e));

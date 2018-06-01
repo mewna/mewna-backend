@@ -61,6 +61,10 @@ public class RestJDA {
         return new BasicRestAction<>(fakeJDA, route);
     }
     
+    public RestAction<Void> addManyRolesToMember(final Guild guild, final Member member, final Role... roles) {
+    
+    }
+    
     @CheckReturnValue
     public MessageAction editMessage(final long channelId, final long messageId, final Message newContent) {
         Checks.notNull(newContent, "message");

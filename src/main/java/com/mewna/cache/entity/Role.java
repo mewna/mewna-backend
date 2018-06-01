@@ -20,4 +20,5 @@ public class Role {
     private String name;
     private int color;
     private String guildId;
+    private boolean managed;
 }

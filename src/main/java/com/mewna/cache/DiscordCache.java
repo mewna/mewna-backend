@@ -77,7 +77,8 @@ public class DiscordCache {
                 "id TEXT PRIMARY KEY," +
                 "name TEXT," +
                 "color INT," +
-                "guildId TEXT" +
+                "guildId TEXT," +
+                "managed BOOLEAN" +
                 ");");
         session.execute("CREATE INDEX IF NOT EXISTS ON mewna.roles (guildId);");
         // Users
@@ -326,6 +327,11 @@ public class DiscordCache {
             role.guildId(data.getString("guild_id"));
         } else if(old != null) {
             role.guildId(old.getGuildId());
+        }
+        if(data.has("managed")) {
+            role.managed(data.getBoolean("managed"));
+        } else if(old != null) {
+            role.managed(old.isManaged());
         }
         mappingManager.mapper(Role.class).save(role.build());
         logger.debug("Updated role {}", id);

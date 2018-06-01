@@ -161,10 +161,13 @@ public class CommandManager {
                         final Class<? extends PluginSettings> settingsClass = first.get().getSettingsClass();
                         final PluginSettings settings = mewna.getDatabase().getOrBaseSettings(settingsClass, guild.getId());
                         final Map<String, CommandSettings> commandSettings = settings.getCommandSettings();
+                        logger.info("Settings: {}", commandSettings.toString());
                         if(!commandSettings.get(cmd.getBaseName()).isEnabled()) {
                             mewna.getRestJDA().sendMessage(channel, "Sorry, but that command is disabled here.").queue();
                             return;
                         }
+                    } else {
+                        logger.warn("No plugin metadata for command {}!?", cmd.getBaseName());
                     }
     
                     if(cmd.getRatelimit() != null) {

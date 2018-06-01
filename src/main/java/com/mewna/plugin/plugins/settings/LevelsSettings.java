@@ -11,13 +11,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author amy
@@ -45,7 +43,7 @@ public class LevelsSettings implements PluginSettings {
         final Map<String, CommandSettings> settings = new HashMap<>();
         PluginSettings.commandsOwnedByPlugin(PluginLevels.class).forEach(e -> settings.put(e, CommandSettings.base()));
         return new LevelsSettings(id, settings, false, true, true,
-                "{user.name} leveled :up: to {level}! :tada:", new HashMap<>());
+                "{user.name} leveled :up: to level {level}! :tada:", new HashMap<>());
     }
     
     @Override
@@ -85,8 +83,28 @@ public class LevelsSettings implements PluginSettings {
             builder.levelsEnabled(data.optBoolean("levelsEnabled", false));
             builder.levelUpMessagesEnabled(data.optBoolean("levelUpMessagesEnabled", false));
             builder.levelUpCards(data.optBoolean("levelUpCards", false));
-            // TODO: Role rewards go here
-    
+            
+            // Basically just copy the object into a map as-is, converting data types to make sure it works
+            final JSONObject rewards = data.getJSONObject("levelRoleRewards");
+            final Map<Integer, Set<String>> roleRewards = new HashMap<>();
+            for(final String key : rewards.keySet()) {
+                final int level = Integer.parseInt(key);
+                if(!roleRewards.containsKey(level)) {
+                    roleRewards.put(level, new HashSet<>());
+                }
+                final JSONArray arr = rewards.getJSONArray(key);
+                arr.forEach(e -> roleRewards.get(level).add((String) e));
+            }
+            // Clean out empty levels
+            final Collection<Integer> remove = new ArrayList<>();
+            roleRewards.forEach((k, v) -> {
+                if(v.isEmpty()) {
+                    remove.add(k);
+                }
+            });
+            remove.forEach(roleRewards::remove);
+            builder.levelRoleRewards(roleRewards);
+            
             builder.commandSettings(commandSettingsFromJson(data));
             database.saveSettings(builder.build());
             return true;

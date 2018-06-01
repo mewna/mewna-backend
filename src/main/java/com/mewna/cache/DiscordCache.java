@@ -265,8 +265,7 @@ public class DiscordCache {
     
     public List<Channel> getGuildChannels(final String id) {
         final ResultSet rs = session.execute("SELECT * FROM mewna.channels WHERE guildId = '" + id + "';");
-        final List<Channel> results = new ArrayList<>(mappingManager.mapper(Channel.class).map(rs).all());
-        return results;
+        return new ArrayList<>(mappingManager.mapper(Channel.class).map(rs).all());
     }
     
     public void deleteChannel(final String id) {

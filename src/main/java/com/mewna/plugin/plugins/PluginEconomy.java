@@ -87,7 +87,6 @@ public class PluginEconomy extends BasePlugin {
     public void daily(final CommandContext ctx) {
         final Player player = ctx.getPlayer();
         final Guild guild = ctx.getGuild();
-        // TODO: Streaks
         final ZoneId zone = ZoneId.systemDefault();
         final LocalDateTime last = Instant.ofEpochMilli(player.getLastDaily()).atZone(zone).toLocalDateTime();
         final LocalDateTime now = LocalDateTime.now();
@@ -270,7 +269,8 @@ public class PluginEconomy extends BasePlugin {
         sb.append("And the winner is Wumpus **#").append(winningWumpus).append("**!\n\n");
         
         if(playerWumpus == winningWumpus) {
-            final long payout = ctx.getCost() * 5; // TODO: Might be high...?
+            // Winners get 3x payout
+            final long payout = ctx.getCost() * 3;
             ctx.getPlayer().incrementBalance(payout);
             getDatabase().savePlayer(ctx.getPlayer());
             sb.append("You bet on the right one! You win **").append(payout).append(helper.getCurrencySymbol(ctx))

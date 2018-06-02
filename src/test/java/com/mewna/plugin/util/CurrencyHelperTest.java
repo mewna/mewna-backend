@@ -1,11 +1,9 @@
 package com.mewna.plugin.util;
 
-import com.mewna.cache.entity.Guild;
 import com.mewna.data.Player;
 import org.junit.Test;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import static com.mewna.plugin.util.CurrencyHelper.PaymentResult.*;
 import static org.junit.Assert.assertEquals;
@@ -18,11 +16,7 @@ public class CurrencyHelperTest {
     @Test
     public void testCheckPayment() {
         final CurrencyHelper base = new CurrencyHelper();
-        final Guild fakeGuild = new Guild("267500017260953601", "fake guild", null,
-                "128316294742147072", "us-east", 1234);
-        final Map<String, Long> guildBalances = new HashMap<>();
-        guildBalances.put(fakeGuild.getId(), 0L);
-        final Player fakePlayer = new Player("128316294742147072", guildBalances, null, null,
+        final Player fakePlayer = new Player("128316294742147072", 0L, 0L, 0L, new HashMap<>(),
                 0L, 0L);
         
         // No input
@@ -37,7 +31,7 @@ public class CurrencyHelperTest {
         assertEquals(BAD_TOO_POOR_NO_BAL, base.checkPayment(fakePlayer, "1", 0, 100).left);
         
         // User doesn't have enough to cover the min charge
-        fakePlayer.getGuildBalances().put(fakeGuild.getId(), 5L);
+        fakePlayer.setBalance(5L);
         assertEquals(BAD_TOO_POOR, base.checkPayment(fakePlayer, "50", 6, 100).left);
         // User doesn't have enough to cover their own payment
         assertEquals(BAD_TOO_POOR, base.checkPayment(fakePlayer, "50", 1, 100).left);
@@ -46,7 +40,7 @@ public class CurrencyHelperTest {
         assertEquals(BAD_TOO_CHEAP, base.checkPayment(fakePlayer, "1", 2, 100).left);
         
         // User tried to pay too much
-        fakePlayer.getGuildBalances().put(fakeGuild.getId(), 1000L);
+        fakePlayer.setBalance(1000L);
         assertEquals(BAD_TOO_MUCH, base.checkPayment(fakePlayer, "1000", 1, 100).left);
         
         // All good!

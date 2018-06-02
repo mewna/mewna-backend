@@ -260,8 +260,8 @@ public class PluginEconomy extends BasePlugin {
             examples = {"gamble", "gamble 100"})
     public void gamble(final CommandContext ctx) {
         // TODO: Allow a way for a player to choose this
-        final int playerWumpus = getRandom().nextInt(GAMBLE_WUMPUS_COUNT);
-        final int winningWumpus = getRandom().nextInt(GAMBLE_WUMPUS_COUNT);
+        final int playerWumpus = getRandom().nextInt(GAMBLE_WUMPUS_COUNT) + 1;
+        final int winningWumpus = getRandom().nextInt(GAMBLE_WUMPUS_COUNT) + 1;
         
         final StringBuilder sb = new StringBuilder("You head off to the Wumpus Races to gamble your life away.");
         sb.append("You bet **").append(ctx.getCost()).append(helper.getCurrencySymbol(ctx)).append("** on Wumpus **#")

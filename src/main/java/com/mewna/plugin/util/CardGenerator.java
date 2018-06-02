@@ -62,7 +62,6 @@ public final class CardGenerator {
         g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
     }
     
-    @SuppressWarnings("unused")
     public static byte[] generateRankCard(final Guild guild, final User user, final Player player) { // lol
         final BufferedImage card = new BufferedImage(800, 200, BufferedImage.TYPE_INT_ARGB);
         // TODO: Custom backgrounds

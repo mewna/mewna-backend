@@ -121,9 +121,6 @@ public class PluginLevels extends BasePlugin {
         if(settings.isLevelsEnabled()) {
             final Member member = getCache().getMember(guild, event.getUser());
             if(settings.isLevelUpMessagesEnabled()) {
-                // TODO: Handle cards
-                // I guess worst-case we could CDN it and pretend instead of uploading to Discord
-                // but that's gross af
                 if(settings.isRemovePreviousRoleRewards()) {
                     removeAndAddRoleRewards(settings, guild, member, event.getLevel(), () -> sendLevelUpMessage(settings, event, member));
                 } else {
@@ -224,6 +221,12 @@ public class PluginLevels extends BasePlugin {
                     new MessageBuilder().append("**").append(ctx.getUser().getName()).append("**'s rank card").build())
                     .queue();
         });
+    }
+    
+    @Command(names = "profile", desc = "Check your profile card, or someone else's.", usage = "profile [@mention]",
+            examples = {"profile", "profile @someone"})
+    public void profile(final CommandContext ctx) {
+    
     }
     
     @Command(names = {"leaderboards", "ranks", "levels", "leaderboard", "rankings"}, desc = "View the guild leaderboards.",

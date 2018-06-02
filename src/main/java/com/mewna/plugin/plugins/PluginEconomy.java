@@ -49,13 +49,13 @@ public class PluginEconomy extends BasePlugin {
     public void balance(final CommandContext ctx) {
         if(ctx.getMentions().isEmpty()) {
             final Player player = ctx.getPlayer();
-            final long balance = player.getBalance(ctx);
+            final long balance = player.getBalance();
             getRestJDA().sendMessage(ctx.getChannel(),
                     String.format("**You** have **%s%s**.", balance, helper.getCurrencySymbol(ctx))).queue();
         } else {
             final User m = ctx.getMentions().get(0);
             final Player player = getDatabase().getPlayer(m);
-            final long balance = player.getBalance(ctx);
+            final long balance = player.getBalance();
             getRestJDA().sendMessage(ctx.getChannel(),
                     String.format("**%s** has **%s%s**.", m.getName(), balance, helper.getCurrencySymbol(ctx))).queue();
         }
@@ -76,7 +76,7 @@ public class PluginEconomy extends BasePlugin {
         final Player target = getDatabase().getPlayer(ctx.getMentions().get(0));
         final ImmutablePair<Boolean, Long> res = helper.handlePayment(ctx, ctx.getArgs().get(1), 1, Long.MAX_VALUE);
         if(res.left) {
-            target.incrementBalance(ctx.getGuild(), res.right);
+            target.incrementBalance(res.right);
             getDatabase().savePlayer(target);
             getRestJDA().sendMessage(ctx.getChannel(), String.format("**%s**, you sent **%s%s** to **%s**.",
                     ctx.getUser().getName(), res.right, helper.getCurrencySymbol(ctx), ctx.getMentions().get(0).getName())).queue();
@@ -89,7 +89,7 @@ public class PluginEconomy extends BasePlugin {
         final Guild guild = ctx.getGuild();
         // TODO: Streaks
         final ZoneId zone = ZoneId.systemDefault();
-        final LocalDateTime last = Instant.ofEpochMilli(player.getLastDaily(guild)).atZone(zone).toLocalDateTime();
+        final LocalDateTime last = Instant.ofEpochMilli(player.getLastDaily()).atZone(zone).toLocalDateTime();
         final LocalDateTime now = LocalDateTime.now();
         if(last.toLocalDate().plusDays(1).toEpochDay() > now.toLocalDate().toEpochDay()) {
             final long nextMillis = TimeUnit.SECONDS.toMillis(last.toLocalDate().plusDays(1).atStartOfDay(zone).toEpochSecond());
@@ -100,8 +100,8 @@ public class PluginEconomy extends BasePlugin {
             return;
         }
         
-        player.incrementBalance(guild, DAILY_BASE_REWARD);
-        player.updateLastDaily(guild);
+        player.incrementBalance(DAILY_BASE_REWARD);
+        player.updateLastDaily();
         getDatabase().savePlayer(player);
         getRestJDA().sendMessage(ctx.getChannel(), String.format("You collect your daily **%s%s**.", DAILY_BASE_REWARD,
                 helper.getCurrencySymbol(ctx))).queue();
@@ -159,7 +159,7 @@ public class PluginEconomy extends BasePlugin {
                 break;
             }
         }
-        ctx.getPlayer().incrementBalance(ctx.getGuild(), amount);
+        ctx.getPlayer().incrementBalance(amount);
         getDatabase().savePlayer(ctx.getPlayer());
         getRestJDA().sendMessage(ctx.getChannel().getId(), text).queue();
     }
@@ -173,7 +173,7 @@ public class PluginEconomy extends BasePlugin {
         if(chance < 125) {
             // win
             final long reward = HEIST_BASE_COST * 10;
-            ctx.getPlayer().incrementBalance(ctx.getGuild(), reward);
+            ctx.getPlayer().incrementBalance(reward);
             getDatabase().savePlayer(ctx.getPlayer());
             
             getRestJDA().sendMessage(ctx.getChannel(), String.format("You break into Fort Knick-Knacks and steal %s%s from inside.",
@@ -224,7 +224,7 @@ public class PluginEconomy extends BasePlugin {
             final long payout = roll[1][0].worth + payment;
             // TODO: Rare bonus chance like I always do
             
-            ctx.getPlayer().incrementBalance(ctx.getGuild(), payout);
+            ctx.getPlayer().incrementBalance(payout);
             getDatabase().savePlayer(ctx.getPlayer());
             
             //noinspection UnnecessarilyQualifiedStaticallyImportedElement
@@ -257,7 +257,7 @@ public class PluginEconomy extends BasePlugin {
         
         if(playerWumpus == winningWumpus) {
             final long payout = ctx.getCost() * 5; // TODO: Might be high...?
-            ctx.getPlayer().incrementBalance(ctx.getGuild(), payout);
+            ctx.getPlayer().incrementBalance(payout);
             getDatabase().savePlayer(ctx.getPlayer());
             sb.append("You bet on the right one! You win **").append(payout).append(helper.getCurrencySymbol(ctx))
                     .append("** for betting right!");

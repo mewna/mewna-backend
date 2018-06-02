@@ -1,7 +1,6 @@
 package com.mewna.plugin.util;
 
 import com.mewna.Mewna;
-import com.mewna.cache.entity.Guild;
 import com.mewna.data.Player;
 import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.plugins.settings.EconomySettings;
@@ -22,7 +21,7 @@ public final class CurrencyHelper {
     
     @SuppressWarnings("WeakerAccess")
     public final ImmutablePair<Boolean, Long> handlePayment(final CommandContext ctx, final String maybeAmount, final long min, final long max) {
-        final ImmutablePair<PaymentResult, Long> check = checkPayment(ctx.getGuild(), ctx.getPlayer(), maybeAmount, min, max);
+        final ImmutablePair<PaymentResult, Long> check = checkPayment(ctx.getPlayer(), maybeAmount, min, max);
         final String symbol = getCurrencySymbol(ctx);
         switch(check.left) {
             case BAD_EMPTY: {
@@ -39,7 +38,7 @@ public final class CurrencyHelper {
             }
             case BAD_TOO_POOR: {
                 mewna.getRestJDA().sendMessage(ctx.getChannel(), String.format("You tried to spend %s%s, but you only have %s%s!",
-                        maybeAmount, symbol, ctx.getPlayer().getBalance(ctx.getGuild()), symbol)).queue();
+                        maybeAmount, symbol, ctx.getPlayer().getBalance(), symbol)).queue();
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_CHEAP: {
@@ -53,7 +52,7 @@ public final class CurrencyHelper {
                 return ImmutablePair.of(false, -1L);
             }
             case OK: {
-                ctx.getPlayer().incrementBalance(ctx.getGuild(), -check.right);
+                ctx.getPlayer().incrementBalance(-check.right);
                 mewna.getDatabase().savePlayer(ctx.getPlayer());
                 return ImmutablePair.of(true, check.right);
             }
@@ -63,8 +62,9 @@ public final class CurrencyHelper {
         }
     }
     
-    public final ImmutablePair<PaymentResult, Long> checkPayment(final Guild guild, final Player player, final String maybeAmount, final long min, final long max) {
-        final long balance = player.getBalance(guild);
+    @SuppressWarnings("WeakerAccess")
+    public final ImmutablePair<PaymentResult, Long> checkPayment(final Player player, final String maybeAmount, final long min, final long max) {
+        final long balance = player.getBalance();
         final long payment;
         try {
             payment = Long.parseLong(maybeAmount);

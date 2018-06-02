@@ -27,57 +27,28 @@ import java.util.Map;
 public class Player {
     @PrimaryKey
     private String id;
-    private Map<String, Long> guildBalances = new HashMap<>();
+    private long balance;
+    private long lastDaily;
     private Map<String, Long> guildXp = new HashMap<>();
-    private Map<String, Long> guildDailyTimes = new HashMap<>();
     private long globalXp;
     private long points;
     
     public static Player base(final String id) {
-        return new Player(id, new HashMap<>(), new HashMap<>(), new HashMap<>(), 0L,0L);
+        return new Player(id, 0L, 0L, new HashMap<>(), 0L,0L);
     }
     
     // Daily
-    
-    public long getLastDaily(final Guild guild) {
-        final String id = guild.getId();
-        if(guildDailyTimes.containsKey(id)) {
-            return guildDailyTimes.get(id);
-        } else {
-            guildDailyTimes.put(id, 0L);
-            return 0L;
-        }
-    }
-    
-    public void updateLastDaily(final Guild guild) {
-        final String id = guild.getId();
-        guildDailyTimes.put(id, System.currentTimeMillis());
+
+    public void updateLastDaily() {
+        lastDaily = System.currentTimeMillis();
     }
     
     // Balance
-    
-    public long getBalance(final Guild guild) {
-        final String id = guild.getId();
-        if(guildBalances.containsKey(id)) {
-            return guildBalances.get(id);
-        } else {
-            guildBalances.put(id, 0L);
-            return 0L;
-        }
-    }
-    
-    public long getBalance(final CommandContext ctx) {
-        return getBalance(ctx.getGuild());
-    }
-    
-    public void incrementBalance(final Guild guild, final long amount) {
-        incrementBalance(guild.getId(), amount);
-    }
-    
-    public void incrementBalance(final String id, final long amount) {
-        guildBalances.put(id, guildBalances.getOrDefault(id, 0L) + amount);
-        if(guildBalances.get(id) < 0L) {
-            guildBalances.put(id, 0L);
+
+    public void incrementBalance(final long amount) {
+        balance += amount;
+        if(balance < 0L) {
+            balance = 0L;
         }
     }
     
@@ -97,6 +68,7 @@ public class Player {
         return getXp(ctx.getGuild());
     }
     
+    @SuppressWarnings("WeakerAccess")
     public void incrementLocalXp(final String id, final long amount) {
         guildXp.put(id, guildXp.getOrDefault(id, 0L) + amount);
         if(guildXp.get(id) < 0L) {

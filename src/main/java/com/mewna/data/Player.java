@@ -29,18 +29,27 @@ public class Player {
     private String id;
     private long balance;
     private long lastDaily;
+    private long dailyStreak;
     private Map<String, Long> guildXp = new HashMap<>();
     private long globalXp;
     private long points;
     
     public static Player base(final String id) {
-        return new Player(id, 0L, 0L, new HashMap<>(), 0L,0L);
+        return new Player(id, 0L, 0L, 0L, new HashMap<>(), 0L,0L);
     }
     
     // Daily
 
     public void updateLastDaily() {
         lastDaily = System.currentTimeMillis();
+    }
+    
+    public void incrementDailyStreak() {
+        dailyStreak += 1;
+    }
+    
+    public void resetDailyStreak() {
+        dailyStreak = 0;
     }
     
     // Balance

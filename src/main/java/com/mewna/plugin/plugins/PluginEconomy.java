@@ -91,6 +91,7 @@ public class PluginEconomy extends BasePlugin {
         final ZoneId zone = ZoneId.systemDefault();
         final LocalDateTime last = Instant.ofEpochMilli(player.getLastDaily()).atZone(zone).toLocalDateTime();
         final LocalDateTime now = LocalDateTime.now();
+        // Prevent doing too fast
         if(last.toLocalDate().plusDays(1).toEpochDay() > now.toLocalDate().toEpochDay()) {
             final long nextMillis = TimeUnit.SECONDS.toMillis(last.toLocalDate().plusDays(1).atStartOfDay(zone).toEpochSecond());
             final long nowMillis = TimeUnit.SECONDS.toMillis(now.toEpochSecond(zone.getRules().getOffset(now)));
@@ -99,12 +100,25 @@ public class PluginEconomy extends BasePlugin {
                             Time.toHumanReadableDuration(nextMillis - nowMillis))).queue();
             return;
         }
+        final boolean streak;
+        // check streak
+        streak = last.toLocalDate().plusDays(2).toEpochDay() >= now.toLocalDate().toEpochDay();
+        if(streak) {
+            player.incrementDailyStreak();
+            final long bonus = 100 + 10 * (player.getDailyStreak() - 1);
+            player.incrementBalance(DAILY_BASE_REWARD + bonus);
+            getRestJDA().sendMessage(ctx.getChannel(), String.format("You collect your daily **%s%s**.\n\nStreak up! New streak: `%sx`.",
+                    DAILY_BASE_REWARD, helper.getCurrencySymbol(ctx), player.getDailyStreak())).queue();
+        } else {
+            player.resetDailyStreak();
+            player.incrementBalance(DAILY_BASE_REWARD);
+            getRestJDA().sendMessage(ctx.getChannel(), String.format("You collect your daily **%s%s**." +
+                            "\n\nIt's been more than 2 days since you last collected your %sdaily, so your streak has been reset.",
+                    DAILY_BASE_REWARD, helper.getCurrencySymbol(ctx), ctx.getPrefix())).queue();
+        }
         
-        player.incrementBalance(DAILY_BASE_REWARD);
         player.updateLastDaily();
         getDatabase().savePlayer(player);
-        getRestJDA().sendMessage(ctx.getChannel(), String.format("You collect your daily **%s%s**.", DAILY_BASE_REWARD,
-                helper.getCurrencySymbol(ctx))).queue();
     }
     
     @Ratelimit(time = 20)

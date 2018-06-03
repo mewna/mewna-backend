@@ -2,6 +2,9 @@
 # Official docker image.
 image: docker:latest
 
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
 services:
   - docker:dind
 

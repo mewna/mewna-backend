@@ -12,10 +12,13 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.impl.GuildImpl;
 import net.dv8tion.jda.core.entities.impl.JDAImpl;
+import net.dv8tion.jda.core.entities.impl.SelfUserImpl;
 import net.dv8tion.jda.core.entities.impl.TextChannelImpl;
 import net.dv8tion.jda.core.requests.Request;
 import net.dv8tion.jda.core.requests.Response;
 import net.dv8tion.jda.core.requests.RestAction;
+import net.dv8tion.jda.core.requests.Route;
+import net.dv8tion.jda.core.requests.Route.Channels;
 import net.dv8tion.jda.core.requests.Route.CompiledRoute;
 import net.dv8tion.jda.core.requests.Route.Guilds;
 import net.dv8tion.jda.core.requests.Route.Messages;
@@ -48,6 +51,13 @@ public class RestJDA {
         fakeJDA = new JDAImpl(AccountType.BOT, token, null, new OkHttpClient.Builder(), null,
                 false, false, false, false,
                 true, false, 2, 900, null);
+        // Allow us to deal with upload size restrictions
+        fakeJDA.setSelfUser(new SelfUserImpl(Long.parseLong(System.getenv("CLIENT_ID")), fakeJDA));
+    }
+    
+    public RestAction<Void> sendTyping(final Channel channel) {
+        final CompiledRoute route = Channels.SEND_TYPING.compile(channel.getId());
+        return new BasicRestAction<>(fakeJDA, route);
     }
     
     @CheckReturnValue

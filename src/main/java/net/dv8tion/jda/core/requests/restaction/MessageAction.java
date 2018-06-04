@@ -347,7 +347,7 @@ public class MessageAction extends RestAction<Message> implements Appendable {
         Checks.notNull(data, "Data");
         Checks.notBlank(name, "Name");
         checkFileAmount();
-        checkPermission(Permission.MESSAGE_ATTACH_FILES);
+        //checkPermission(Permission.MESSAGE_ATTACH_FILES);
         files.put(name, data);
         return this;
     }

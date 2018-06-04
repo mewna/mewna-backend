@@ -31,8 +31,7 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings({"unused", "FieldCanBeLocal", "MismatchedQueryAndUpdateOfCollection", "WeakerAccess"})
 public class CommandManager {
-    private static final List<String> PREFIXES = Arrays.asList(Optional.ofNullable(System.getenv("PREFIXES"))
-            .orElse("bmew.,bmew ,=").split(","));
+    private static final List<String> PREFIXES;
     
     private final Mewna mewna;
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -40,6 +39,13 @@ public class CommandManager {
     @Getter
     private final Collection<CommandMetadata> commandMetadata = new ArrayList<>();
     private final Map<String, CommandWrapper> commands = new HashMap<>();
+    
+    static {
+        PREFIXES = new ArrayList<>(Arrays.asList(Optional.ofNullable(System.getenv("PREFIXES"))
+                .orElse("bmew.,bmew ,=").split(",")));
+        PREFIXES.add("<@" + System.getenv("CLIENT_ID") + '>');
+        PREFIXES.add("<@!" + System.getenv("CLIENT_ID") + '>');
+    }
     
     public CommandManager(final Mewna mewna) {
         this.mewna = mewna;

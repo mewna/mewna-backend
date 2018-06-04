@@ -1,5 +1,6 @@
 package com.mewna.plugin.plugins;
 
+import com.mewna.Mewna;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.Member;
 import com.mewna.cache.entity.User;
@@ -13,8 +14,9 @@ import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.message.MessageCreateEvent;
 import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
+import com.mewna.plugin.util.CardGenerator;
 import com.mewna.util.Templater;
-import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.MessageBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.json.JSONObject;
 
@@ -33,15 +35,15 @@ import java.util.stream.Collectors;
 @SuppressWarnings({"unused", "WeakerAccess"})
 @Plugin(name = "Levels", desc = "Allow gaining xp and leveling up by chatting.", settings = LevelsSettings.class)
 public class PluginLevels extends BasePlugin {
-    static boolean isLevelUp(final long oldXp, final long xp) {
+    public static boolean isLevelUp(final long oldXp, final long xp) {
         return xpToLevel(oldXp) < xpToLevel(xp);
     }
     
-    static long levelToXp(final long level) {
+    public static long levelToXp(final long level) {
         return Math.max(0, 100 * level + 20 * (level - 1));
     }
     
-    static long fullLevelToXp(final long level) {
+    public static long fullLevelToXp(final long level) {
         long requiredXp = 0;
         for(int i = 1; i <= level; i++) {
             requiredXp += levelToXp(i);
@@ -49,11 +51,11 @@ public class PluginLevels extends BasePlugin {
         return requiredXp;
     }
     
-    static long nextLevelXp(final long xp) {
+    public static long nextLevelXp(final long xp) {
         return fullLevelToXp(xpToLevel(xp) + 1) - xp;
     }
     
-    static long xpToLevel(long xp) {
+    public static long xpToLevel(long xp) {
         long level = 0;
         while(xp >= levelToXp(level)) {
             xp -= levelToXp(level);
@@ -61,6 +63,54 @@ public class PluginLevels extends BasePlugin {
         }
         
         return Math.max(0, level - 1);
+    }
+    
+    public static int getAllRankedPlayersInGuild(final Guild guild) {
+        final int[] count = {0};
+        Mewna.getInstance().getDatabase().getStore().sql("SELECT COUNT(*) AS count FROM players WHERE data->'guildXp'->'" + guild.getId() + "' IS NOT NULL;", p -> {
+            final ResultSet resultSet = p.executeQuery();
+            if(resultSet.isBeforeFirst()) {
+                resultSet.next();
+            }
+            count[0] = resultSet.getInt("count");
+        });
+        return count[0];
+    }
+    
+    public static int getPlayerRankInGuild(final Guild guild, final User player) {
+        final int[] rank = {-1};
+        final String guildId = guild.getId();
+        final String playerId = player.getId();
+        Mewna.getInstance().getDatabase().getStore().sql("SELECT rank FROM (SELECT row_number() OVER () AS rank, data FROM players " +
+                "WHERE data->'guildXp'->'" + guildId + "' IS NOT NULL " +
+                "ORDER BY (data->'guildXp'->>'" + guildId + "')::integer DESC) AS _q " +
+                "WHERE data->>'id' = '" + playerId + "';", p -> {
+            final ResultSet resultSet = p.executeQuery();
+            if(resultSet.isBeforeFirst()) {
+                resultSet.next();
+                rank[0] = resultSet.getInt("rank");
+            } else {
+                rank[0] = 1;
+            }
+        });
+        return rank[0];
+    }
+    
+    public static int getPlayerRankGlobally(final User player) {
+        final int[] rank = {-1};
+        final String playerId = player.getId();
+        Mewna.getInstance().getDatabase().getStore().sql("SELECT rank FROM (SELECT row_number() OVER () AS rank, data FROM players " +
+                "ORDER BY (data->>'globalXp')::integer DESC) AS _q " +
+                "WHERE data->>'id' = '" + playerId + "';", p -> {
+            final ResultSet resultSet = p.executeQuery();
+            if(resultSet.isBeforeFirst()) {
+                resultSet.next();
+                rank[0] = resultSet.getInt("rank");
+            } else {
+                rank[0] = 1;
+            }
+        });
+        return rank[0];
     }
     
     private Templater map(final LevelUpEvent event) {
@@ -88,9 +138,6 @@ public class PluginLevels extends BasePlugin {
         if(settings.isLevelsEnabled()) {
             final Member member = getCache().getMember(guild, event.getUser());
             if(settings.isLevelUpMessagesEnabled()) {
-                // TODO: Handle cards
-                // I guess worst-case we could CDN it and pretend instead of uploading to Discord
-                // but that's gross af
                 if(settings.isRemovePreviousRoleRewards()) {
                     removeAndAddRoleRewards(settings, guild, member, event.getLevel(), () -> sendLevelUpMessage(settings, event, member));
                 } else {
@@ -184,32 +231,26 @@ public class PluginLevels extends BasePlugin {
             getRestJDA().sendMessage(ctx.getChannel(), "Levels are not enabled in this server.").queue();
             return;
         }
-        final long xp;
-        final long level;
-        final String name;
-        final String discrim;
-        final String avatar;
-        if(ctx.getMentions().isEmpty()) {
-            xp = ctx.getPlayer().getXp(guild);
-            name = ctx.getUser().getName();
-            discrim = ctx.getUser().getDiscriminator();
-            avatar = ctx.getUser().getAvatarURL();
-        } else {
-            final User user = ctx.getMentions().get(0);
-            final Player player = getDatabase().getPlayer(user);
-            xp = player.getXp(guild);
-            name = user.getName();
-            discrim = user.getDiscriminator();
-            avatar = user.getAvatarURL();
-        }
-        level = xpToLevel(xp);
-        final EmbedBuilder builder = new EmbedBuilder().setTitle(String.format("%s#%s's rank", name, discrim))
-                .addField("Level", "Level " + level, true).addBlankField(true)
-                .addField("XP", xp + " / " + (fullLevelToXp(xpToLevel(xp)) + levelToXp(xpToLevel(xp) + 1)) + " (" + nextLevelXp(xp) + "xp left)", true)
-                .addField("Rank", getPlayerRankInGuild(guild, ctx.getUser()) + " / "
-                        + getAllRankedPlayersInGuild(guild), true)
-                .setThumbnail(avatar);
-        getRestJDA().sendMessage(ctx.getChannel(), builder.build()).queue();
+        
+        // TODO: Support mentions...
+        getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
+            final byte[] cardBytes = CardGenerator.generateRankCard(ctx.getGuild(), ctx.getUser(), ctx.getPlayer());
+            getRestJDA().sendFile(ctx.getChannel(), cardBytes, "rank.png",
+                    new MessageBuilder().append("**").append(ctx.getUser().getName()).append("**'s rank card").build())
+                    .queue();
+        });
+    }
+    
+    @Command(names = "profile", desc = "Check your profile card, or someone else's.", usage = "profile [@mention]",
+            examples = {"profile", "profile @someone"})
+    public void profile(final CommandContext ctx) {
+        // TODO: Support mentions...
+        getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
+            final byte[] cardBytes = CardGenerator.generateProfileCard(ctx.getUser(), ctx.getPlayer());
+            getRestJDA().sendFile(ctx.getChannel(), cardBytes, "profile.png",
+                    new MessageBuilder().append("**").append(ctx.getUser().getName()).append("**'s profile card").build())
+                    .queue();
+        });
     }
     
     @Command(names = {"leaderboards", "ranks", "levels", "leaderboard", "rankings"}, desc = "View the guild leaderboards.",
@@ -222,37 +263,6 @@ public class PluginLevels extends BasePlugin {
             return;
         }
         getRestJDA().sendMessage(ctx.getChannel(), "https://amy.chat/leaderboards/" + guild.getId()).queue();
-    }
-    
-    private int getAllRankedPlayersInGuild(final Guild guild) {
-        final int[] count = {0};
-        getDatabase().getStore().sql("SELECT COUNT(*) AS count FROM players WHERE data->'guildXp'->'" + guild.getId() + "' IS NOT NULL;", p -> {
-            final ResultSet resultSet = p.executeQuery();
-            if(resultSet.isBeforeFirst()) {
-                resultSet.next();
-            }
-            count[0] = resultSet.getInt("count");
-        });
-        return count[0];
-    }
-    
-    private int getPlayerRankInGuild(final Guild guild, final User player) {
-        final int[] rank = {-1};
-        final String guildId = guild.getId();
-        final String playerId = player.getId();
-        getDatabase().getStore().sql("SELECT rank FROM (SELECT row_number() OVER () AS rank, data FROM players " +
-                "WHERE data->'guildXp'->'" + guildId + "' IS NOT NULL " +
-                "ORDER BY (data->'guildXp'->>'" + guildId + "')::integer DESC) AS _q " +
-                "WHERE data->>'id' = '" + playerId + "';", p -> {
-            final ResultSet resultSet = p.executeQuery();
-            if(resultSet.isBeforeFirst()) {
-                resultSet.next();
-                rank[0] = resultSet.getInt("rank");
-            } else {
-                rank[0] = 1;
-            }
-        });
-        return rank[0];
     }
     
     private long getXp(final Player player) {

@@ -34,7 +34,6 @@ public class LevelsSettings implements PluginSettings {
     private final Map<String, CommandSettings> commandSettings;
     private final boolean levelsEnabled;
     private final boolean levelUpMessagesEnabled;
-    private final boolean levelUpCards;
     private final boolean removePreviousRoleRewards;
     private final String levelUpMessage;
     /**
@@ -48,7 +47,7 @@ public class LevelsSettings implements PluginSettings {
         final Map<String, CommandSettings> settings = new HashMap<>();
         PluginSettings.commandsOwnedByPlugin(PluginLevels.class).forEach(e -> settings.put(e, CommandSettings.base()));
         return new LevelsSettings(id, settings, false, true, true,
-                false,"{user.name} leveled :up: to level {level}! :tada:", new HashMap<>());
+                "{user.name} leveled :up: to level {level}! :tada:", new HashMap<>());
     }
     
     @Override
@@ -87,7 +86,6 @@ public class LevelsSettings implements PluginSettings {
             builder.levelUpMessage(levelUpMessage);
             builder.levelsEnabled(data.optBoolean("levelsEnabled", false));
             builder.levelUpMessagesEnabled(data.optBoolean("levelUpMessagesEnabled", false));
-            builder.levelUpCards(data.optBoolean("levelUpCards", false));
             builder.removePreviousRoleRewards(data.optBoolean("removePreviousRoleRewards", false));
             
             // Basically just copy the object into a map as-is, converting data types to make sure it works

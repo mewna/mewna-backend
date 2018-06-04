@@ -37,10 +37,11 @@ public class Player {
     private long globalXp;
     private long points;
     private String aboutText;
+    private String customBackground;
     
     public static Player base(final String id) {
         return new Player(id, 0L, 0L, 0L, new HashMap<>(), 0L, 0L,
-                /*"A mysterious stranger."*/ LOREM_IPSUM);
+                /*"A mysterious stranger."*/ LOREM_IPSUM, "/backgrounds/default/plasma");
     }
     
     // Daily

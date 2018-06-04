@@ -11,6 +11,7 @@ import com.mewna.cache.entity.Guild.GuildBuilder;
 import com.mewna.cache.entity.Member.MemberBuilder;
 import com.mewna.cache.entity.Role.RoleBuilder;
 import com.mewna.cache.entity.User.UserBuilder;
+import com.mewna.plugin.util.TextureManager;
 import lombok.Getter;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -298,7 +299,11 @@ public class DiscordCache {
         if(data.has("avatar")) {
             if(!data.isNull("avatar")) {
                 user.avatar(data.getString("avatar"));
+                // expire the old one
+                TextureManager.expireAvatar(id);
             }
+            // We don't update avatar from the old one, because if it's not present it means that
+            // they deleted their avatar. Probably, at least.
         }
         mappingManager.mapper(User.class).save(user.build());
         logger.debug("Updated user {}", id);

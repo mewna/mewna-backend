@@ -4,36 +4,41 @@ import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
 import com.mewna.data.Player;
 import com.mewna.plugin.plugins.PluginLevels;
+import com.mewna.plugin.util.TextureManager.Background;
+import com.mewna.util.CacheUtil;
+import com.mewna.util.CacheUtil.CachedImage;
 import com.mewna.util.Numbers;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.font.TextAttribute;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.AttributedString;
 import java.util.*;
 import java.util.List;
 
 /**
  * Generates the cards for rank, level up, ...
+ * <p>
+ * TODO: Use redis to cache avatars so we can share the cache between multiple clients
  *
  * @author amy
  * @since 6/2/18.
  */
 @SuppressWarnings("WeakerAccess")
-public final class CardGenerator {
+public final class Renderer {
     // colours
     
     public static final String PRIMARY_COLOUR_STR = "0xdb325c";
     @SuppressWarnings("unused")
     public static final int PRIMARY_COLOUR = 0xdb325c;
-    private static final Color NINETY_PERCENT_OPAQUE_BLACK = new Color(0, 0, 0, 230);
-    private static final Color SIXTY_SEVEN_PERCENT_OPAQUE_BLACK = new Color(0, 0, 0, 171);
+    private static final Color NINETY_PERCENT_OPAQUE_BLACK = new Color(0, 0, 0, 180);
+    private static final Color SIXTY_SEVEN_PERCENT_OPAQUE_BLACK = new Color(0, 0, 0, 127);
     private static final Color PRIMARY_THEME_COLOUR = Color.decode(PRIMARY_COLOUR_STR);
     
     // fonts
@@ -54,7 +59,13 @@ public final class CardGenerator {
         ABOUT_ME_FONT = new Font("Droid Sans", Font.PLAIN, 24).deriveFont(FONT_SETTINGS);
     }
     
-    private CardGenerator() {
+    private Renderer() {
+    }
+    
+    private static CachedImage getBackground(final Player player) {
+        final Optional<Background> background = TextureManager.getBackground(player);
+        final Background bg = background.orElse(TextureManager.defaultBg);
+        return CacheUtil.getImageResource(bg.getPath());
     }
     
     private static void setRenderHints(final Graphics2D g2) {
@@ -96,8 +107,15 @@ public final class CardGenerator {
             final Graphics2D g2 = card.createGraphics();
             setRenderHints(g2);
             // Background
-            g2.setColor(PRIMARY_THEME_COLOUR);
-            g2.fillRect(0, 0, 600, 600);
+            final CachedImage bg = getBackground(player);
+            final AffineTransform transform = new AffineTransform();
+            // compute scale
+            // this is a square, so we scale the smallest dimension (height) to reach it
+            final int bgHeight = bg.getImage().getHeight();
+            final double scale = 1 / (bgHeight / 600D);
+            transform.scale(scale, scale);
+            final BufferedImageOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BICUBIC);
+            g2.drawImage(bg.getImage(), op, 0, 0);
             
             // Main card panel
             g2.setColor(NINETY_PERCENT_OPAQUE_BLACK);
@@ -109,7 +127,7 @@ public final class CardGenerator {
             g2.fillRect(234, 34, 132, 132);
             
             // Avatar
-            final BufferedImage avatar = downloadAvatar(user.getAvatarURL().replaceAll("gif", "png") + "?size=128");
+            final BufferedImage avatar = TextureManager.getCachedAvatar(user); // downloadAvatar(user.getAvatarURL().replaceAll("gif", "png") + "?size=128");
             g2.drawImage(avatar, 236, 36, 128, 128, null);
             
             // Username
@@ -137,7 +155,7 @@ public final class CardGenerator {
             final String globalLevel = Numbers.format(PluginLevels.xpToLevel(player.getGlobalXp()));
             final String globalLevelLabel = "GLOBAL LEVEL";
             final int globalLevelLabelWidth = statsFontSmallerMetrics.stringWidth(globalLevelLabel);
-    
+            
             final String globalRank = '#' + Numbers.format(PluginLevels.getPlayerRankGlobally(user));
             final String globalRankLabel = "GLOBAL RANK";
             final int globalRankLabelWidth = statsFontSmallerMetrics.stringWidth(globalRankLabel);
@@ -206,13 +224,19 @@ public final class CardGenerator {
     
     public static byte[] generateRankCard(final Guild guild, final User user, final Player player) { // lol
         final BufferedImage card = new BufferedImage(800, 200, BufferedImage.TYPE_INT_ARGB);
-        // TODO: Custom backgrounds
         try {
             final Graphics2D g2 = card.createGraphics();
             setRenderHints(g2);
             // Background
-            g2.setColor(PRIMARY_THEME_COLOUR);
-            g2.fillRect(0, 0, 800, 200);
+            final CachedImage bg = getBackground(player);
+            final AffineTransform transform = new AffineTransform();
+            // compute scale
+            // this is a 800x200 rect, so we scale the smallest dimension (width) to reach it
+            final int bgWidth = bg.getImage().getWidth();
+            final double scale = 1 / (bgWidth / 800D);
+            transform.scale(scale, scale);
+            final BufferedImageOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BICUBIC);
+            g2.drawImage(bg.getImage(), op, 0, 0);
             
             // Main card panel
             g2.setColor(NINETY_PERCENT_OPAQUE_BLACK);
@@ -224,7 +248,7 @@ public final class CardGenerator {
             g2.fillRect(34, 34, 132, 132);
             
             // Avatar
-            final BufferedImage avatar = downloadAvatar(user.getAvatarURL().replaceAll("gif", "png") + "?size=128");
+            final BufferedImage avatar = TextureManager.getCachedAvatar(user); // downloadAvatar(user.getAvatarURL().replaceAll("gif", "png") + "?size=128");
             g2.drawImage(avatar, 36, 36, 128, 128, null);
             
             // Username
@@ -301,7 +325,7 @@ public final class CardGenerator {
     }
     
     private static void drawCenteredString(final Graphics2D g2, final String text, final AttributedString renderable,
-                                           final Rectangle rect, final Font font) {
+                                           final Rectangle rect, @SuppressWarnings("SameParameterValue") final Font font) {
         final FontMetrics metrics = g2.getFontMetrics(font);
         final int x = rect.x + (rect.width - metrics.stringWidth(text)) / 2;
         final int y = rect.y + (rect.height - metrics.getHeight()) / 2 + metrics.getAscent();
@@ -309,24 +333,5 @@ public final class CardGenerator {
         renderable.addAttribute(TextAttribute.FONT, font);
         setRenderHints(g2);
         g2.drawString(renderable.getIterator(), x, y);
-    }
-    
-    private static BufferedImage downloadAvatar(final String avatarUrl) {
-        try {
-            final URL url = new URL(avatarUrl);
-            final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            // Default Java user agent gets blocked by Discord :(
-            connection.setRequestProperty(
-                    "User-Agent",
-                    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) " +
-                            "Chrome/55.0.2883.87 Safari/537.36");
-            final InputStream is = connection.getInputStream();
-            final BufferedImage avatar = ImageIO.read(is);
-            is.close();
-            connection.disconnect();
-            return avatar;
-        } catch(final IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

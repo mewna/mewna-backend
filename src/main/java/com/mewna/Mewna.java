@@ -13,6 +13,7 @@ import com.mewna.jda.RestJDA;
 import com.mewna.nats.NatsServer;
 import com.mewna.plugin.CommandManager;
 import com.mewna.plugin.PluginManager;
+import com.mewna.plugin.util.TextureManager;
 import com.mewna.util.Ratelimiter;
 import lombok.Getter;
 import org.json.JSONArray;
@@ -65,6 +66,7 @@ public final class Mewna {
     
     private void start() {
         logger.info("Starting Mewna backend...");
+        TextureManager.preload();
         eventManager.getCache().connect();
         database.init();
         pluginManager.init();

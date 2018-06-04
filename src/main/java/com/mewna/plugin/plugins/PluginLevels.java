@@ -14,7 +14,7 @@ import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.message.MessageCreateEvent;
 import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
-import com.mewna.plugin.util.CardGenerator;
+import com.mewna.plugin.util.Renderer;
 import com.mewna.util.Templater;
 import net.dv8tion.jda.core.MessageBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -234,7 +234,7 @@ public class PluginLevels extends BasePlugin {
         
         // TODO: Support mentions...
         getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
-            final byte[] cardBytes = CardGenerator.generateRankCard(ctx.getGuild(), ctx.getUser(), ctx.getPlayer());
+            final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), ctx.getUser(), ctx.getPlayer());
             getRestJDA().sendFile(ctx.getChannel(), cardBytes, "rank.png",
                     new MessageBuilder().append("**").append(ctx.getUser().getName()).append("**'s rank card").build())
                     .queue();
@@ -246,7 +246,7 @@ public class PluginLevels extends BasePlugin {
     public void profile(final CommandContext ctx) {
         // TODO: Support mentions...
         getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
-            final byte[] cardBytes = CardGenerator.generateProfileCard(ctx.getUser(), ctx.getPlayer());
+            final byte[] cardBytes = Renderer.generateProfileCard(ctx.getUser(), ctx.getPlayer());
             getRestJDA().sendFile(ctx.getChannel(), cardBytes, "profile.png",
                     new MessageBuilder().append("**").append(ctx.getUser().getName()).append("**'s profile card").build())
                     .queue();

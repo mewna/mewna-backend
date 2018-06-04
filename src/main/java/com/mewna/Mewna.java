@@ -178,9 +178,9 @@ public final class Mewna {
                 });
             });
             
-            path("backgrounds", () -> {
+            path("/backgrounds", () -> {
                 // More shit goes here
-                
+                get("/packs", (req, res) -> new JSONObject(TextureManager.getPacks()));
             });
             
             path("/commands", () -> {

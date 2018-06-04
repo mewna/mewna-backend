@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
  */
 @SuppressWarnings("unused")
 public class NatsServer {
-    // TODO: Client ID needs to use container name; use Rancher metadata service
+    // TODO: Client ID needs to use container name; use metadata service to fetch this
     private final StreamingConnectionFactory connectionFactory = new StreamingConnectionFactory("mewna-nats", "mewna-discord-backend");
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Mewna mewna;

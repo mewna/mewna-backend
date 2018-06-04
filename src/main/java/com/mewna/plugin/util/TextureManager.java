@@ -16,9 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
@@ -43,12 +41,18 @@ public final class TextureManager {
     private static boolean preloaded;
     private static final String AVATAR_CACHE_KEY = "cache:%s:avatar";
     
+    private static final Map<String, List<Background>> PACKS = new HashMap<>();
+    
     private TextureManager() {
     }
     
     @SuppressWarnings("WeakerAccess")
     public static Optional<Background> getBackground(final Player player) {
         return BACKGROUNDS.stream().filter(e -> e.path.equalsIgnoreCase(player.getCustomBackground() + ".png")).findFirst();
+    }
+    
+    public static Map<String, List<Background>> getPacks() {
+        return PACKS;
     }
     
     public static boolean backgroundExists(final String pack, final String name) {
@@ -88,6 +92,13 @@ public final class TextureManager {
                 LOGGER.info("Cached: {} (pack {}, name {})", CacheUtil.getImageResource(path).getPath(), bg.pack, bg.name);
             }
         });
+        BACKGROUNDS.forEach(bg -> {
+            if(!PACKS.containsKey(bg.pack)) {
+                PACKS.put(bg.pack, new ArrayList<>());
+            }
+            PACKS.get(bg.pack).add(bg);
+        });
+        LOGGER.info("Loaded packs: {}", PACKS.keySet());
     }
     
     private static void cacheAvatar(final User user) {

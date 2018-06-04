@@ -120,7 +120,7 @@ public class CommandManager {
             
             final Channel channel = mewna.getCache().getChannel(channelId);
             if(channel.getType() != ChannelType.GUILD_TEXT.getType()) {
-                // Ignore it if it's not a DM
+                // Ignore it if it's not a guild message
                 return;
             }
             

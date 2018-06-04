@@ -178,6 +178,11 @@ public final class Mewna {
                 });
             });
             
+            path("backgrounds", () -> {
+                // More shit goes here
+                
+            });
+            
             path("/commands", () -> {
                 // More shit goes here
                 get("/metadata", (req, res) -> new JSONArray(commandManager.getCommandMetadata()));

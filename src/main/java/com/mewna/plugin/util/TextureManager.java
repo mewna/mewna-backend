@@ -24,6 +24,13 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
 /**
+ * Manages textures. duh.
+ *
+ * Things like local image assets are stored locally, ie per-process so that we
+ * can easily roll updates without having to worry about expiring caches.
+ * Things like avatars are cached in redis, so that we can reduce memory usage
+ * and share a cache between all backend workers.
+ *
  * @author amy
  * @since 6/4/18.
  */
@@ -42,6 +49,10 @@ public final class TextureManager {
     @SuppressWarnings("WeakerAccess")
     public static Optional<Background> getBackground(final Player player) {
         return BACKGROUNDS.stream().filter(e -> e.path.equalsIgnoreCase(player.getCustomBackground() + ".png")).findFirst();
+    }
+    
+    public static boolean backgroundExists(final String pack, final String name) {
+        return BACKGROUNDS.stream().anyMatch(e -> e.name.equals(name) && e.pack.equals(pack));
     }
     
     private static void scan(@SuppressWarnings("SameParameterValue") final String path, final Consumer<JarEntry> callback) {

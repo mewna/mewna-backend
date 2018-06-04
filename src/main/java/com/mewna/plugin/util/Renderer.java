@@ -127,7 +127,7 @@ public final class Renderer {
             g2.fillRect(234, 34, 132, 132);
             
             // Avatar
-            final BufferedImage avatar = TextureManager.getCachedAvatar(user); // downloadAvatar(user.getAvatarURL().replaceAll("gif", "png") + "?size=128");
+            final BufferedImage avatar = TextureManager.getCachedAvatar(user);
             g2.drawImage(avatar, 236, 36, 128, 128, null);
             
             // Username
@@ -248,7 +248,7 @@ public final class Renderer {
             g2.fillRect(34, 34, 132, 132);
             
             // Avatar
-            final BufferedImage avatar = TextureManager.getCachedAvatar(user); // downloadAvatar(user.getAvatarURL().replaceAll("gif", "png") + "?size=128");
+            final BufferedImage avatar = TextureManager.getCachedAvatar(user);
             g2.drawImage(avatar, 36, 36, 128, 128, null);
             
             // Username

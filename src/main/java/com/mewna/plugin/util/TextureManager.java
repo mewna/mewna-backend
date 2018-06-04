@@ -80,8 +80,7 @@ public final class TextureManager {
     }
     
     private static void cacheAvatar(final User user) {
-        final String url = user.getAvatarURL().replaceAll("gif", "png");
-        final BufferedImage avatar = downloadAvatar(url);
+        final BufferedImage avatar = downloadAvatar(user.getAvatarURL().replaceAll("gif", "png") + "?size=128");
         try {
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(avatar, "png", baos);

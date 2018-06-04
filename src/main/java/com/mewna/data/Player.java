@@ -1,10 +1,10 @@
 package com.mewna.data;
 
+import com.mewna.cache.entity.Guild;
+import com.mewna.plugin.CommandContext;
 import gg.amy.pgorm.annotations.Index;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
-import com.mewna.cache.entity.Guild;
-import com.mewna.plugin.CommandContext;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,6 +25,9 @@ import java.util.Map;
 @Index({"id", "guildXp", "guildBalances"})
 @SuppressWarnings("unused")
 public class Player {
+    private static final String LOREM_IPSUM = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+            "Cras vehicula mi urna, nec tincidunt erat tincidunt eget. " +
+            "Maecenas pretium consectetur metus.";
     @PrimaryKey
     private String id;
     private long balance;
@@ -33,13 +36,15 @@ public class Player {
     private Map<String, Long> guildXp = new HashMap<>();
     private long globalXp;
     private long points;
+    private String aboutText;
     
     public static Player base(final String id) {
-        return new Player(id, 0L, 0L, 0L, new HashMap<>(), 0L,0L);
+        return new Player(id, 0L, 0L, 0L, new HashMap<>(), 0L, 0L,
+                /*"A mysterious stranger."*/ LOREM_IPSUM);
     }
     
     // Daily
-
+    
     public void updateLastDaily() {
         lastDaily = System.currentTimeMillis();
     }
@@ -53,7 +58,7 @@ public class Player {
     }
     
     // Balance
-
+    
     public void incrementBalance(final long amount) {
         balance += amount;
         if(balance < 0L) {
@@ -91,5 +96,11 @@ public class Player {
     
     public void incrementGlobalXp(final long amount) {
         globalXp += amount;
+    }
+    
+    // Scoring
+    
+    public long calculateScore() {
+        return 123_456_789;
     }
 }

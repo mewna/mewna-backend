@@ -96,6 +96,23 @@ public class PluginLevels extends BasePlugin {
         return rank[0];
     }
     
+    public static int getPlayerRankGlobally(final User player) {
+        final int[] rank = {-1};
+        final String playerId = player.getId();
+        Mewna.getInstance().getDatabase().getStore().sql("SELECT rank FROM (SELECT row_number() OVER () AS rank, data FROM players " +
+                "ORDER BY (data->>'globalXp')::integer DESC) AS _q " +
+                "WHERE data->>'id' = '" + playerId + "';", p -> {
+            final ResultSet resultSet = p.executeQuery();
+            if(resultSet.isBeforeFirst()) {
+                resultSet.next();
+                rank[0] = resultSet.getInt("rank");
+            } else {
+                rank[0] = 1;
+            }
+        });
+        return rank[0];
+    }
+    
     private Templater map(final LevelUpEvent event) {
         final Guild guild = event.getGuild();
         final User user = event.getUser();
@@ -215,6 +232,7 @@ public class PluginLevels extends BasePlugin {
             return;
         }
         
+        // TODO: Support mentions...
         getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
             final byte[] cardBytes = CardGenerator.generateRankCard(ctx.getGuild(), ctx.getUser(), ctx.getPlayer());
             getRestJDA().sendFile(ctx.getChannel(), cardBytes, "rank.png",
@@ -226,7 +244,13 @@ public class PluginLevels extends BasePlugin {
     @Command(names = "profile", desc = "Check your profile card, or someone else's.", usage = "profile [@mention]",
             examples = {"profile", "profile @someone"})
     public void profile(final CommandContext ctx) {
-    
+        // TODO: Support mentions...
+        getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
+            final byte[] cardBytes = CardGenerator.generateProfileCard(ctx.getUser(), ctx.getPlayer());
+            getRestJDA().sendFile(ctx.getChannel(), cardBytes, "profile.png",
+                    new MessageBuilder().append("**").append(ctx.getUser().getName()).append("**'s profile card").build())
+                    .queue();
+        });
     }
     
     @Command(names = {"leaderboards", "ranks", "levels", "leaderboard", "rankings"}, desc = "View the guild leaderboards.",

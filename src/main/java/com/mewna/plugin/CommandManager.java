@@ -41,8 +41,8 @@ public class CommandManager {
     private final Map<String, CommandWrapper> commands = new HashMap<>();
     
     static {
-        PREFIXES = Arrays.asList(Optional.ofNullable(System.getenv("PREFIXES"))
-                .orElse("bmew.,bmew ,=").split(","));
+        PREFIXES = new ArrayList<>(Arrays.asList(Optional.ofNullable(System.getenv("PREFIXES"))
+                .orElse("bmew.,bmew ,=").split(",")));
         PREFIXES.add("<@" + System.getenv("CLIENT_ID") + '>');
         PREFIXES.add("<@!" + System.getenv("CLIENT_ID") + '>');
     }

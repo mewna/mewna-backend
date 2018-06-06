@@ -10,6 +10,7 @@ import lombok.*;
 import org.json.JSONObject;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * @author amy
@@ -156,6 +157,12 @@ public class Player {
     // Scoring
     
     public long calculateScore() {
-        return 123_456_789;
+        long count = 4;
+        long avg = balance + points + globalXp + dailyStreak;
+        for(final Entry<String, Long> entry : guildXp.entrySet()) {
+            avg += entry.getValue();
+            ++count;
+        }
+        return avg / count;
     }
 }

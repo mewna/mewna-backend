@@ -156,7 +156,8 @@ public final class Renderer {
             final String globalLevelLabel = "GLOBAL LEVEL";
             final int globalLevelLabelWidth = statsFontSmallerMetrics.stringWidth(globalLevelLabel);
             
-            final String globalRank = '#' + Numbers.format(PluginLevels.getPlayerRankGlobally(user));
+            final int globalRankTmp = PluginLevels.getPlayerRankGlobally(user);
+            final String globalRank = globalRankTmp == -1 ? "UNRANKED" : '#' + Numbers.format(globalRankTmp);
             final String globalRankLabel = "GLOBAL RANK";
             final int globalRankLabelWidth = statsFontSmallerMetrics.stringWidth(globalRankLabel);
             
@@ -177,8 +178,12 @@ public final class Renderer {
             // 234, 423
             // Global rank
             final AttributedString rankString = new AttributedString(globalRank);
-            rankString.addAttribute(TextAttribute.FOREGROUND, Color.WHITE, 0, 1);
-            rankString.addAttribute(TextAttribute.FOREGROUND, PRIMARY_THEME_COLOUR, 1, globalRank.length());
+            if(globalRankTmp > 0) {
+                rankString.addAttribute(TextAttribute.FOREGROUND, Color.WHITE, 0, 1);
+                rankString.addAttribute(TextAttribute.FOREGROUND, PRIMARY_THEME_COLOUR, 1, globalRank.length());
+            } else {
+                rankString.addAttribute(TextAttribute.FOREGROUND, PRIMARY_THEME_COLOUR);
+            }
             drawCenteredString(g2, globalRank, rankString, new Rectangle(300 - allLabelSizes / 2, 423, allLabelSizes,
                     STATS_FONT.getSize()), STATS_FONT);
             drawCenteredString(g2, globalRankLabel, new Rectangle(300 - allLabelSizes / 2, 423, allLabelSizes,

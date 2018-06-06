@@ -107,7 +107,7 @@ public class PluginLevels extends BasePlugin {
                 resultSet.next();
                 rank[0] = resultSet.getInt("rank");
             } else {
-                rank[0] = 1;
+                rank[0] = -1;
             }
         });
         return rank[0];

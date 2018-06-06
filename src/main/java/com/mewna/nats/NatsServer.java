@@ -85,6 +85,10 @@ public class NatsServer {
         pushEvent("audio-event-queue", type, data);
     }
     
+    public <T> void pushTwitchEvent(final String type, final T data) {
+        pushEvent("twitch-event-queue", type, data);
+    }
+    
     private <T> void pushEvent(final String queue, final String type, final T data) {
         final JSONObject event = new JSONObject().put("t", type).put("ts", System.currentTimeMillis()).put("d", data);
         try {

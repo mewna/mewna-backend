@@ -135,7 +135,10 @@ public final class Mewna {
             });
         });
         path("/data", () -> {
-            
+            path("/player", () -> {
+                // More shit goes here
+                get("/:id", (req, res) -> new JSONObject(getDatabase().getPlayer(req.params(":id"))));
+            });
             //noinspection CodeBlock2Expr
             path("/guild", () -> {
                 //noinspection CodeBlock2Expr

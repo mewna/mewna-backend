@@ -103,10 +103,16 @@ public class CommandManager {
             final String channelId = data.getString("channel_id");
             // See https://github.com/discordapp/discord-api-docs/issues/582
             // Note this isn't in the docs yet, but should be at some point (hopefully soon)
-            final String guildId = data.getString("guild_id");
-            final User user = mewna.getCache().getUser(data.getJSONObject("author").getString("id"));
+            final String guildId = data.optString("guild_id");
+            final String userId = data.getJSONObject("author").getString("id");
+            if(guildId == null) {
+                logger.warn("Ignoring DM: user {}, channel {}, message {}, content {}", userId, channelId,
+                        data.getString("id"), data.getString("content"));
+                return;
+            }
+            final User user = mewna.getCache().getUser(userId);
             if(user == null) {
-                logger.error("Got message from unknown (uncached) user {}!?", data.getJSONObject("author").getString("id"));
+                logger.error("Got message from unknown (uncached) user {}!?", userId);
                 return;
             }
             // TODO: Temporary dev. block

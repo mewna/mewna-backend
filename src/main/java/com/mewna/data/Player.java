@@ -9,8 +9,7 @@ import gg.amy.pgorm.annotations.Table;
 import lombok.*;
 import org.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author amy
@@ -38,12 +37,14 @@ public class Player {
     private long points;
     private String aboutText;
     private String customBackground;
+    private List<String> ownedBackgroundPacks;
     
     public static final int MAX_ABOUT_TEXT_LENGTH = 150;
     
     public static Player base(final String id) {
         return new Player(id, 0L, 0L, 0L, new HashMap<>(), 0L, 0L,
-                /*"A mysterious stranger."*/ LOREM_IPSUM, "/backgrounds/default/plasma");
+                /*"A mysterious stranger."*/ LOREM_IPSUM, "/backgrounds/default/plasma",
+                new ArrayList<>(Collections.singletonList("default")));
     }
     
     // Configuration

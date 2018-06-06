@@ -173,9 +173,15 @@ public class CommandManager {
                         final Class<? extends PluginSettings> settingsClass = first.get().getSettingsClass();
                         final PluginSettings settings = mewna.getDatabase().getOrBaseSettings(settingsClass, guild.getId());
                         final Map<String, CommandSettings> commandSettings = settings.getCommandSettings();
-                        if(!commandSettings.get(cmd.getBaseName()).isEnabled()) {
-                            mewna.getRestJDA().sendMessage(channel, "Sorry, but that command is disabled here.").queue();
-                            return;
+                        if(commandSettings.containsKey(cmd.getBaseName())) {
+                            if(!commandSettings.get(cmd.getBaseName()).isEnabled()) {
+                                mewna.getRestJDA().sendMessage(channel, "Sorry, but that command is disabled here.").queue();
+                                return;
+                            }
+                        } else {
+                            logger.warn("Adding missing command {} to {} for {}", cmd.getBaseName(), settings.getClass().getSimpleName(), guild.getId());
+                            settings.getCommandSettings().put(cmd.getBaseName(), new CommandSettings(true));
+                            mewna.getDatabase().saveSettings(settings);
                         }
                     } else {
                         logger.warn("No plugin metadata for command {}!?", cmd.getBaseName());

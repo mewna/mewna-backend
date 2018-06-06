@@ -231,12 +231,20 @@ public class PluginLevels extends BasePlugin {
             getRestJDA().sendMessage(ctx.getChannel(), "Levels are not enabled in this server.").queue();
             return;
         }
+        final User user;
+        final Player player;
+        if(ctx.getMentions().isEmpty()) {
+            user = ctx.getUser();
+            player = ctx.getPlayer();
+        } else {
+            user = ctx.getMentions().get(0);
+            player = getDatabase().getPlayer(user);
+        }
         
-        // TODO: Support mentions...
         getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
-            final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), ctx.getUser(), ctx.getPlayer());
+            final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
             getRestJDA().sendFile(ctx.getChannel(), cardBytes, "rank.png",
-                    new MessageBuilder().append("**").append(ctx.getUser().getName()).append("**'s rank card").build())
+                    new MessageBuilder().append("**").append(user.getName()).append("**'s rank card").build())
                     .queue();
         });
     }
@@ -244,11 +252,20 @@ public class PluginLevels extends BasePlugin {
     @Command(names = "profile", desc = "Check your profile card, or someone else's.", usage = "profile [@mention]",
             examples = {"profile", "profile @someone"})
     public void profile(final CommandContext ctx) {
-        // TODO: Support mentions...
+        final User user;
+        final Player player;
+        if(ctx.getMentions().isEmpty()) {
+            user = ctx.getUser();
+            player = ctx.getPlayer();
+        } else {
+            user = ctx.getMentions().get(0);
+            player = getDatabase().getPlayer(user);
+        }
+        
         getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
-            final byte[] cardBytes = Renderer.generateProfileCard(ctx.getUser(), ctx.getPlayer());
+            final byte[] cardBytes = Renderer.generateProfileCard(user, player);
             getRestJDA().sendFile(ctx.getChannel(), cardBytes, "profile.png",
-                    new MessageBuilder().append("**").append(ctx.getUser().getName()).append("**'s profile card").build())
+                    new MessageBuilder().append("**").append(user.getName()).append("**'s profile card").build())
                     .queue();
         });
     }

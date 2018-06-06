@@ -270,6 +270,22 @@ public class PluginLevels extends BasePlugin {
         });
     }
     
+    @Command(names = "score", desc = "Check your score, or someone else's.", usage = "score [@mention]",
+            examples = {"score", "score @someone"})
+    public void score(final CommandContext ctx) {
+        final User user;
+        final Player player;
+        if(ctx.getMentions().isEmpty()) {
+            user = ctx.getUser();
+            player = ctx.getPlayer();
+        } else {
+            user = ctx.getMentions().get(0);
+            player = getDatabase().getPlayer(user);
+        }
+        
+        getRestJDA().sendMessage(ctx.getChannel(), String.format("**%s**'s score: **%s**", user.getName(), player.calculateScore())).queue();
+    }
+    
     @Command(names = {"leaderboards", "ranks", "levels", "leaderboard", "rankings"}, desc = "View the guild leaderboards.",
             usage = "leaderboards", examples = "leaderboards")
     public void ranks(final CommandContext ctx) {

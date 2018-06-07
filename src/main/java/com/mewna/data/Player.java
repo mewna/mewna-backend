@@ -157,12 +157,13 @@ public class Player {
     // Scoring
     
     public long calculateScore() {
-        long count = 4;
-        long avg = balance + points + globalXp + dailyStreak;
-        for(final Entry<String, Long> entry : guildXp.entrySet()) {
-            avg += entry.getValue();
+        int count = 0;
+        int guildXp = 0;
+        for(final Entry<String, Long> entry : this.guildXp.entrySet()) {
+            guildXp += entry.getValue();
             ++count;
         }
-        return avg / count;
+        final long avg = balance + points + globalXp + dailyStreak + guildXp;
+        return avg / 5;
     }
 }

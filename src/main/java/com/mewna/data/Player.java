@@ -91,11 +91,17 @@ public class Player {
     
     public void updateSettings(final Database database, final JSONObject data) {
         final PlayerBuilder builder = toBuilder();
+        int changes = 0;
         if(data.has("aboutText")) {
             builder.aboutText(data.getString("aboutText"));
+            ++changes;
         }
         if(data.has("customBackground")) {
             builder.customBackground("/backgrounds/" + data.getString("customBackground"));
+            ++changes;
+        }
+        if(changes > 0) {
+            database.savePlayer(builder.build());
         }
     }
     

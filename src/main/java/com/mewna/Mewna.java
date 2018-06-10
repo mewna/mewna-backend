@@ -143,13 +143,9 @@ public final class Mewna {
                     final JSONObject data = new JSONObject(req.body());
                     final Player player = getDatabase().getPlayer(req.params(":id"));
                     if(player.validateSettings(data)) {
-                        player.updateSettings(getDatabase(), data);
-                    }
-                    
-                    if(player.validateSettings(data)) {
                         try {
                             player.updateSettings(getDatabase(), data);
-                            logger.info("Updated player {} settings for {}", req.params(":id"));
+                            logger.info("Updated player {} settings", req.params(":id"));
                             // All good, update and return
                             
                             return new JSONObject().put("status", "ok");

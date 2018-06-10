@@ -122,6 +122,10 @@ public class PluginManager {
         if(c.isAnnotationPresent(Plugin.class) && BasePlugin.class.isAssignableFrom(c)) {
             try {
                 final Plugin pluginAnnotation = c.getDeclaredAnnotation(Plugin.class);
+                if(!pluginAnnotation.enabled()) {
+                    logger.warn("Not loading disabled plugin {}: {}", pluginAnnotation.name(), pluginAnnotation.desc());
+                    return;
+                }
                 logger.info("Loading plugin {}: {}", pluginAnnotation.name(), pluginAnnotation.desc());
                 final Object pluginInstance = c.newInstance();
                 inject(pluginInstance);

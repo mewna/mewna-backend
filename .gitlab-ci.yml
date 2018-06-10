@@ -43,7 +43,7 @@ before_script:
   ## We do it like this so that we don't run into meme SSH issues
   ##
   - git submodule sync --recursive
-  - git submodule update --init --recursive
+  - git submodule update --init --recursive --remote
 
 #variables:
 #  GIT_SUBMODULE_STRATEGY: recursive

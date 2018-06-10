@@ -103,10 +103,16 @@ public class CommandManager {
             final String channelId = data.getString("channel_id");
             // See https://github.com/discordapp/discord-api-docs/issues/582
             // Note this isn't in the docs yet, but should be at some point (hopefully soon)
-            final String guildId = data.getString("guild_id");
-            final User user = mewna.getCache().getUser(data.getJSONObject("author").getString("id"));
+            final String guildId = data.optString("guild_id");
+            final String userId = data.getJSONObject("author").getString("id");
+            if(guildId == null) {
+                logger.warn("Ignoring DM: user {}, channel {}, message {}, content {}", userId, channelId,
+                        data.getString("id"), data.getString("content"));
+                return;
+            }
+            final User user = mewna.getCache().getUser(userId);
             if(user == null) {
-                logger.error("Got message from unknown (uncached) user {}!?", data.getJSONObject("author").getString("id"));
+                logger.error("Got message from unknown (uncached) user {}!?", userId);
                 return;
             }
             // TODO: Temporary dev. block
@@ -120,7 +126,7 @@ public class CommandManager {
             
             final Channel channel = mewna.getCache().getChannel(channelId);
             if(channel.getType() != ChannelType.GUILD_TEXT.getType()) {
-                // Ignore it if it's not a DM
+                // Ignore it if it's not a guild message
                 return;
             }
             
@@ -167,9 +173,15 @@ public class CommandManager {
                         final Class<? extends PluginSettings> settingsClass = first.get().getSettingsClass();
                         final PluginSettings settings = mewna.getDatabase().getOrBaseSettings(settingsClass, guild.getId());
                         final Map<String, CommandSettings> commandSettings = settings.getCommandSettings();
-                        if(!commandSettings.get(cmd.getBaseName()).isEnabled()) {
-                            mewna.getRestJDA().sendMessage(channel, "Sorry, but that command is disabled here.").queue();
-                            return;
+                        if(commandSettings.containsKey(cmd.getBaseName())) {
+                            if(!commandSettings.get(cmd.getBaseName()).isEnabled()) {
+                                mewna.getRestJDA().sendMessage(channel, "Sorry, but that command is disabled here.").queue();
+                                return;
+                            }
+                        } else {
+                            logger.warn("Adding missing command {} to {} for {}", cmd.getBaseName(), settings.getClass().getSimpleName(), guild.getId());
+                            settings.getCommandSettings().put(cmd.getBaseName(), new CommandSettings(true));
+                            mewna.getDatabase().saveSettings(settings);
                         }
                     } else {
                         logger.warn("No plugin metadata for command {}!?", cmd.getBaseName());

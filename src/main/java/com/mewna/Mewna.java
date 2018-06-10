@@ -7,12 +7,14 @@ import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.Role;
 import com.mewna.cache.entity.User;
 import com.mewna.data.Database;
+import com.mewna.data.Player;
 import com.mewna.data.PluginSettings;
 import com.mewna.event.EventManager;
 import com.mewna.jda.RestJDA;
 import com.mewna.nats.NatsServer;
 import com.mewna.plugin.CommandManager;
 import com.mewna.plugin.PluginManager;
+import com.mewna.plugin.util.TextureManager;
 import com.mewna.util.Ratelimiter;
 import lombok.Getter;
 import org.json.JSONArray;
@@ -65,6 +67,7 @@ public final class Mewna {
     
     private void start() {
         logger.info("Starting Mewna backend...");
+        TextureManager.preload();
         eventManager.getCache().connect();
         database.init();
         pluginManager.init();
@@ -133,7 +136,40 @@ public final class Mewna {
             });
         });
         path("/data", () -> {
-            
+            path("/player", () -> {
+                // More shit goes here
+                get("/:id", (req, res) -> new JSONObject(getDatabase().getPlayer(req.params(":id"))));
+                post("/:id", (req, res) -> {
+                    final JSONObject data = new JSONObject(req.body());
+                    final Player player = getDatabase().getPlayer(req.params(":id"));
+                    if(player.validateSettings(data)) {
+                        player.updateSettings(getDatabase(), data);
+                    }
+                    
+                    if(player.validateSettings(data)) {
+                        try {
+                            player.updateSettings(getDatabase(), data);
+                            logger.info("Updated player {} settings for {}", req.params(":id"));
+                            // All good, update and return
+                            
+                            return new JSONObject().put("status", "ok");
+                        } catch(final RuntimeException e) {
+                            logger.error("Player settings for {} failed updateSettings expectedly", req.params(":id"));
+                            e.printStackTrace();
+                            return new JSONObject().put("status", "error").put("error", "invalid config");
+                        } catch(final Exception e) {
+                            logger.error("Player settings for {} failed updateSettings unexpectedly", req.params(":id"));
+                            logger.error("Caught unknown exception updating:");
+                            e.printStackTrace();
+                            return new JSONObject().put("status", "error").put("error", "very invalid config");
+                        }
+                    } else {
+                        logger.error("Player settings for {} failed validate", req.params(":id"));
+                        // :fire: :blobcatfireeyes:, send back an error
+                        return new JSONObject().put("status", "error").put("error", "invalid config");
+                    }
+                });
+            });
             //noinspection CodeBlock2Expr
             path("/guild", () -> {
                 //noinspection CodeBlock2Expr
@@ -174,6 +210,11 @@ public final class Mewna {
                         });
                     });
                 });
+            });
+            
+            path("/backgrounds", () -> {
+                // More shit goes here
+                get("/packs", (req, res) -> new JSONObject(TextureManager.getPacks()));
             });
             
             path("/commands", () -> {

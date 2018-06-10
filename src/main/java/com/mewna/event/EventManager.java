@@ -146,7 +146,7 @@ public class EventManager {
         
         // Messages
         handlers.put(MESSAGE_CREATE, (event, data) -> {
-            // If it's a webhook ID, **or** it's not a default message, ignore it.
+            // If it's a webhook ID, **or** it's not a DEFAULT message, ignore it.
             // Possible message types:
             //
             // TYPE                     ID
@@ -159,10 +159,6 @@ public class EventManager {
             // CHANNEL_ICON_CHANGE      5
             // CHANNEL_PINNED_MESSAGE   6
             // GUILD_MEMBER_JOIN        7
-            //
-            // Note: Ignoring system messages here (non-type-0 messages) is important!
-            // Without ignoring them, there may be race conditions (like the message coming before we can finish caching the
-            // user) which will cause :fire: to happen,
             if(!data.isNull("webhook_id") || data.getInt("type") != MessageType.DEFAULT.getId()) {
                 return;
             }

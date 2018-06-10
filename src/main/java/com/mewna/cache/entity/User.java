@@ -23,6 +23,7 @@ public class User {
     private String avatar;
     private boolean bot;
     
+    @Transient
     public String asMention() {
         return "<@" + id + '>';
     }

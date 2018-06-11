@@ -16,6 +16,7 @@ import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
 import com.mewna.plugin.util.Renderer;
 import com.mewna.util.Templater;
+import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.json.JSONObject;
@@ -243,8 +244,15 @@ public class PluginLevels extends BasePlugin {
         
         getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
             final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
+    
+            final String profileUrl = System.getenv("DOMAIN") + "/profile/" + user.getId();
+            final EmbedBuilder builder = new EmbedBuilder()
+                    .setTitle("**" + user.getName() + "**'s rank card", "https://localhost.localdomain/")
+                    .setImage("attachment://rank.png")
+                    .setColor(Renderer.PRIMARY_COLOUR)
+                    .setDescription(String.format("[View full profile](%s)", profileUrl));
             getRestJDA().sendFile(ctx.getChannel(), cardBytes, "rank.png",
-                    new MessageBuilder().append("**").append(user.getName()).append("**'s rank card").build())
+                    new MessageBuilder().setEmbed(builder.build()).build())
                     .queue();
         });
     }
@@ -264,8 +272,14 @@ public class PluginLevels extends BasePlugin {
         
         getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
             final byte[] cardBytes = Renderer.generateProfileCard(user, player);
+            final String profileUrl = System.getenv("DOMAIN") + "/profile/" + user.getId();
+            final EmbedBuilder builder = new EmbedBuilder()
+                    .setTitle("**" + user.getName() + "**'s profile card", "https://localhost.localdomain/")
+                    .setImage("attachment://profile.png")
+                    .setColor(Renderer.PRIMARY_COLOUR)
+                    .setDescription(String.format("[View full profile](%s)", profileUrl));
             getRestJDA().sendFile(ctx.getChannel(), cardBytes, "profile.png",
-                    new MessageBuilder().append("**").append(user.getName()).append("**'s profile card").build())
+                    new MessageBuilder().setEmbed(builder.build()).build())
                     .queue();
         });
     }
@@ -295,6 +309,7 @@ public class PluginLevels extends BasePlugin {
             getRestJDA().sendMessage(ctx.getChannel(), "Levels are not enabled in this server.").queue();
             return;
         }
+        // TODO
         getRestJDA().sendMessage(ctx.getChannel(), "https://amy.chat/leaderboards/" + guild.getId()).queue();
     }
     

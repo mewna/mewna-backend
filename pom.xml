@@ -9,7 +9,7 @@
     <version>0.0.1</version>
 
     <properties>
-        <jda.version>3.6.0_354</jda.version>
+        <jda.version>3.6.0_375</jda.version>
         <nats.version>0.5.0</nats.version>
         <cassandra.version>3.5.0</cassandra.version>
         <fcps.version>LATEST</fcps.version>

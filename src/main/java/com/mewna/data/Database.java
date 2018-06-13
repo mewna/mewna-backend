@@ -16,6 +16,7 @@ import redis.clients.jedis.Transaction;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.sql.ResultSet;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -60,7 +61,15 @@ public class Database {
         mapSettingsClasses();
         
         premap(Player.class);
+        
+        // Webhooks table is created manually, because it doesn't need to be JSON:b:
+        store.sql("CREATE TABLE discord_webhooks (channel TEXT PRIMARY KEY NOT NULL UNIQUE, guild TEXT NOT NULL, " +
+                "id TEXT NOT NULL, secret TEXT NOT NULL)");
     }
+    
+    //////////////
+    // Internal //
+    //////////////
     
     private void mapSettingsClasses() {
         final List<Class<?>> classes = new ArrayList<>();
@@ -94,16 +103,61 @@ public class Database {
         premap(classes.toArray(new Class[0]));
     }
     
-    @SuppressWarnings("unchecked")
-    public <T extends PluginSettings> Class<T> getSettingsClassByType(final String type) {
-        return (Class<T>) pluginSettingsByName.get(type);
-    }
-    
     private void premap(final Class<?>... clz) {
         for(final Class<?> c : clz) {
             logger.info("Premapping class: " + c.getName());
             store.mapSync(c);
         }
+    }
+    
+    //////////////
+    // Webhooks //
+    //////////////
+    
+    private final class OptionalHolder<T> {
+        @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+        private Optional<T> value;
+        
+        private OptionalHolder() {
+            value = Optional.empty();
+        }
+        
+        private void setValue(final T data) {
+            value = Optional.ofNullable(data);
+        }
+    }
+    
+    public Optional<Webhook> getWebhook(final String channelId) {
+        final OptionalHolder<Webhook> holder = new OptionalHolder<>();
+        store.sql("SELECT * FROM discord_webhooks WHERE channel = ?;", p -> {
+            p.setString(1, channelId);
+            final ResultSet resultSet = p.executeQuery();
+            if(resultSet.isBeforeFirst()) {
+                resultSet.next();
+                final String channel = resultSet.getString("channel");
+                final String guild = resultSet.getString("guild");
+                final String id = resultSet.getString("id");
+                final String secret = resultSet.getString("secret");
+                holder.setValue(new Webhook(channel, guild, id, secret));
+            }
+        });
+        return holder.value;
+    }
+    
+    public void deleteWebhook(final String channel) {
+        store.sql("DELETE FROM discord_webhooks WHERE channel = ?;", p -> {
+            p.setString(1, channel);
+            p.execute();
+        });
+    }
+    
+    //////////////
+    // Settings //
+    //////////////
+    
+    @SuppressWarnings("unchecked")
+    public <T extends PluginSettings> Class<T> getSettingsClassByType(final String type) {
+        return (Class<T>) pluginSettingsByName.get(type);
     }
     
     private <T extends PluginSettings> Optional<T> getSettingsByType(final Class<T> type, final String id) {
@@ -145,12 +199,20 @@ public class Database {
         store.mapSync((Class<T>) settings.getClass()).save(settings);
     }
     
+    /////////////
+    // Players //
+    /////////////
+    
     public Player getPlayer(final User src) {
         return getPlayer(src.getId());
     }
     
     public Player getPlayer(final String id) {
-        return store.mapSync(Player.class).load(id).orElse(Player.base(id));
+        return store.mapSync(Player.class).load(id).orElseGet(() -> {
+            final Player base = Player.base(id);
+            savePlayer(base);
+            return base;
+        });
     }
     
     public void savePlayer(final Player player) {

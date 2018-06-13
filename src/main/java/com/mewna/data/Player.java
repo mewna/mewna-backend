@@ -44,7 +44,7 @@ public class Player {
     
     public static Player base(final String id) {
         return new Player(id, 0L, 0L, 0L, new HashMap<>(), 0L, 0L,
-                /*"A mysterious stranger."*/ LOREM_IPSUM, "/backgrounds/default/plasma",
+                "A mysterious stranger.", "/backgrounds/default/plasma",
                 new ArrayList<>(Collections.singletonList("default")));
     }
     

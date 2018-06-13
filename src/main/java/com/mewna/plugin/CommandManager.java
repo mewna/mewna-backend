@@ -110,16 +110,12 @@ public class CommandManager {
                         data.getString("id"), data.getString("content"));
                 return;
             }
+            
             final User user = mewna.getCache().getUser(userId);
             if(user == null) {
                 logger.error("Got message from unknown (uncached) user {}!?", userId);
                 return;
             }
-            // TODO: Temporary dev. block
-            if(!user.getId().equals("128316294742147072")) {
-                return;
-            }
-            
             if(user.isBot()) {
                 return;
             }
@@ -129,7 +125,7 @@ public class CommandManager {
                 // Ignore it if it's not a guild message
                 return;
             }
-            
+    
             // Collect cache data
             final Guild guild = mewna.getCache().getGuild(guildId);
             final List<User> mentions = new ArrayList<>();
@@ -137,6 +133,11 @@ public class CommandManager {
                 final JSONObject j = (JSONObject) o;
                 // TODO: Build this from the JSON object instead of hitting the cache all the time?
                 mentions.add(mewna.getCache().getUser(j.getString("id")));
+            }
+            
+            // TODO: Temporary dev. block
+            if(!user.getId().equals("128316294742147072")) {
+                return;
             }
             
             // Parse prefixes

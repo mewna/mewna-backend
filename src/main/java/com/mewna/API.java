@@ -7,6 +7,7 @@ import com.mewna.cache.entity.Role;
 import com.mewna.cache.entity.User;
 import com.mewna.data.Player;
 import com.mewna.data.PluginSettings;
+import com.mewna.data.Webhook;
 import com.mewna.plugin.plugins.PluginLevels;
 import com.mewna.plugin.util.TextureManager;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static spark.Spark.*;
 
@@ -202,6 +204,24 @@ class API {
                             }
                         });
                         return new JSONArray(results);
+                    });
+                    get("/webhooks", (req, res) -> new JSONArray(mewna.getDatabase().getAllWebhooks(req.params(":id")).stream().map(e -> {
+                        final JSONObject j = new JSONObject(e);
+                        j.remove("secret");
+                        return j;
+                    }).collect(Collectors.toList())));
+                    get("/webhooks/:channel_id", (req, res) -> {
+                        final String channel = req.params(":channel_id");
+                        final Optional<Webhook> webhook = mewna.getDatabase().getWebhook(channel);
+                        final JSONObject hook = webhook.map(JSONObject::new).orElseGet(JSONObject::new);
+                        if(hook.has("secret")) {
+                            hook.remove("secret");
+                        }
+                        return hook;
+                    });
+                    post("/webhooks/add", (req, res) -> {
+                        mewna.getDatabase().addWebhook(Webhook.fromJson(new JSONObject(req.body())));
+                        return new JSONObject();
                     });
                 });
             });

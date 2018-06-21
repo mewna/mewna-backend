@@ -1,5 +1,9 @@
 package com.mewna.event;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.mewna.Mewna;
 import com.mewna.cache.DiscordCache;
 import com.mewna.cache.entity.Channel;
@@ -13,6 +17,7 @@ import com.mewna.plugin.event.guild.member.GuildMemberRemoveEvent;
 import com.mewna.plugin.event.message.MessageDeleteBulkEvent;
 import com.mewna.plugin.event.message.MessageDeleteEvent;
 import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
+import com.mewna.plugin.event.plugin.twitch.*;
 import lombok.Getter;
 import net.dv8tion.jda.core.entities.MessageType;
 import org.json.JSONArray;
@@ -20,26 +25,34 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.function.BiConsumer;
 
 import static com.mewna.plugin.event.EventType.*;
 import static com.mewna.plugin.event.audio.AudioTrackEvent.TrackMode;
 
+// TODO: Probably should consider refactoring this out into smaller modules...
 /**
  * @author amy
  * @since 4/8/18.
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "OverlyCoupledClass"})
 public class EventManager {
+    private static final ObjectMapper MAPPER;
+    
+    static {
+        MAPPER = new ObjectMapper();
+        MAPPER.registerModule(new JavaTimeModule())
+                .registerModule(new ParameterNamesModule())
+                .registerModule(new Jdk8Module());
+    }
+    
     @Getter
     private final Mewna mewna;
-    
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    
     @Getter
     private final DiscordCache cache;
-    
     private final Map<String, BiConsumer<SocketEvent, JSONObject>> handlers = new HashMap<>();
     
     public EventManager(final Mewna mewna) {
@@ -221,6 +234,38 @@ public class EventManager {
             final long level = data.getLong("level");
             final long xp = data.getLong("xp");
             mewna.getPluginManager().processEvent(event.getType(), new LevelUpEvent(guild, channel, user, level, xp));
+        });
+        
+        // Twitch events
+        handlers.put(TWITCH_FOLLOWER, (event, data) -> {
+            final String from = data.getJSONObject("from").toString();
+            final String to = data.getJSONObject("to").toString();
+            try {
+                final TwitchStreamer fromStreamer = MAPPER.readValue(from, TwitchStreamer.class);
+                final TwitchStreamer toStreamer = MAPPER.readValue(to, TwitchStreamer.class);
+                mewna.getPluginManager().processEvent(event.getType(), new TwitchFollowerEvent(fromStreamer, toStreamer));
+            } catch(final IOException e) {
+                e.printStackTrace();
+            }
+        });
+        handlers.put(TWITCH_STREAM_START, (event, data) -> {
+            final String streamerDataString = data.getJSONObject("streamer").toString();
+            final String streamDataString = data.getJSONObject("streamData").toString();
+            try {
+                final TwitchStreamer streamer = MAPPER.readValue(streamerDataString, TwitchStreamer.class);
+                final TwitchStreamData streamData = MAPPER.readValue(streamDataString, TwitchStreamData.class);
+                mewna.getPluginManager().processEvent(event.getType(), new TwitchStreamStartEvent(streamer, streamData));
+            } catch(final IOException e) {
+                e.printStackTrace();
+            }
+        });
+        handlers.put(TWITCH_STREAM_END, (event, data) -> {
+            try {
+                final TwitchStreamer streamer = MAPPER.readValue(data.getJSONObject("streamer").toString(), TwitchStreamer.class);
+                mewna.getPluginManager().processEvent(event.getType(), new TwitchStreamEndEvent(streamer));
+            } catch(final IOException e) {
+                e.printStackTrace();
+            }
         });
         
         // We don't really care about these Discord gateway events

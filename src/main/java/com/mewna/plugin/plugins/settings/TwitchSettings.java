@@ -7,17 +7,13 @@ import com.mewna.plugin.plugins.PluginTwitch;
 import gg.amy.pgorm.annotations.Index;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.Value;
+import lombok.*;
 import lombok.experimental.Accessors;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * @author amy
@@ -35,19 +31,50 @@ public class TwitchSettings implements PluginSettings {
     private final String id;
     private final Map<String, CommandSettings> commandSettings;
     private String twitchWebhookChannel;
-    private Set<String> twitchStreamers;
+    /**
+     * Twitch streamers are "partnered" on a per-Discord basis, because ex. a
+     * streamer may have their own server and/or a server with friends and/or
+     * etc
+     */
+    private Set<String> partneredStreamers;
+    
+    private List<TwitchStreamerConfig> twitchStreamers;
     
     public static TwitchSettings base(final String id) {
         final Map<String, CommandSettings> settings = new HashMap<>();
         PluginSettings.commandsOwnedByPlugin(PluginTwitch.class).forEach(e -> settings.put(e, CommandSettings.base()));
-        return new TwitchSettings(id, settings, null, new HashSet<>());
+        return new TwitchSettings(id, settings, null, new HashSet<>(), new ArrayList<>());
     }
     
     @Override
     public boolean validateSettings(final JSONObject data) {
-        // TODO
         for(final String key : data.keySet()) {
             switch(key) {
+                case "twitchWebhookChannel": {
+                    final String id = data.optString(key, null);
+                    if(id != null) {
+                        if(!id.matches("\\d{16,21}")) {
+                            return false;
+                        }
+                    }
+                    break;
+                }
+                case "twitchStreamers": {
+                    final JSONArray streamers = data.optJSONArray(key);
+                    if(streamers == null) {
+                        return false;
+                    }
+                    for(final Object o : streamers) {
+                        final JSONObject streamer = (JSONObject) o;
+                        try {
+                            // If this fails, it's bad JSON or some shit, so reject it
+                            MAPPER.readValue(streamer.toString(), TwitchStreamerConfig.class);
+                        } catch(final IOException e) {
+                            return false;
+                        }
+                    }
+                    break;
+                }
                 default: {
                     break;
                 }
@@ -58,6 +85,40 @@ public class TwitchSettings implements PluginSettings {
     
     @Override
     public boolean updateSettings(final Database database, final JSONObject data) {
-        return false;
+        final TwitchSettingsBuilder builder = toBuilder();
+        if(data.optString("twitchWebhookChannel") != null) {
+            if(!data.isNull("twitchWebhookChannel")) {
+                builder.twitchWebhookChannel(data.getString("twitchWebhookChannel"));
+            }
+        }
+        final JSONArray streamersJson = data.getJSONArray("twitchStreamers");
+        final List<TwitchStreamerConfig> streamers = new ArrayList<>();
+        for(final Object o : streamersJson) {
+            final JSONObject streamer = (JSONObject) o;
+            try {
+                // If this fails, it's bad JSON or some shit, but it shouldn't have passed the validation steps anyway
+                final TwitchStreamerConfig twitchStreamer = MAPPER.readValue(streamer.toString(), TwitchStreamerConfig.class);
+                streamers.add(twitchStreamer);
+            } catch(final IOException e) {
+                return false;
+            }
+        }
+        builder.twitchStreamers(streamers);
+        database.saveSettings(builder.build());
+        return true;
+    }
+    
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @SuppressWarnings("WeakerAccess")
+    public static class TwitchStreamerConfig {
+        private String id;
+        private boolean streamStartMessagesEnabled;
+        private String streamStartMessage;
+        private boolean streamEndMessagesEnabled;
+        private String streamEndMessage;
+        private boolean followMessagesEnabled;
+        private String followMessage;
     }
 }

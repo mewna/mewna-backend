@@ -82,7 +82,7 @@ public final class TextureManager {
         }
         preloaded = true;
         scan("backgrounds", e -> {
-            if(!e.isDirectory() && e.getName().toLowerCase().endsWith(".png")) {
+            if(!e.isDirectory() && e.getName().toLowerCase().endsWith(".png") && !e.getName().contains("thumbs")) {
                 final String path = '/' + e.getName();
                 final Background bg = new Background(path);
                 BACKGROUNDS.add(bg);

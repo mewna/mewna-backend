@@ -172,9 +172,9 @@ public class PluginLevels extends BasePlugin {
     
     private void addRoleRewards(final LevelsSettings settings, final Guild guild, final Member member, final long level,
                                 final Runnable callback) {
-        // Check for roles at this level
+        // Check for roles at or below this level
         final List<String> rewards = settings.getLevelRoleRewards().entrySet().stream()
-                .filter(e -> e.getValue() == level).map(Entry::getKey).collect(Collectors.toList());
+                .filter(e -> e.getValue() <= level).map(Entry::getKey).collect(Collectors.toList());
         if(!rewards.isEmpty()) {
             getRestJDA().addManyRolesToMember(guild, member, rewards.toArray(new String[0])).queue(__ -> callback.run());
         }

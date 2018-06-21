@@ -54,5 +54,10 @@ public interface EventType {
     // Internal events
     String LEVEL_UP = "LEVEL_UP";
     
+    // Telepathy events
+    String TWITCH_STREAM_START = "TWITCH_STREAM_START";
+    String TWITCH_STREAM_END = "TWITCH_STREAM_END";
+    String TWITCH_FOLLOWER = "TWITCH_FOLLOWER";
+    
     // @formatter:on
 }

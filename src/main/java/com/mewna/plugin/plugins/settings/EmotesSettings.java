@@ -4,7 +4,7 @@ import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.plugins.PluginEmotes;
-import gg.amy.pgorm.annotations.Index;
+import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
 import lombok.Builder;
@@ -25,7 +25,7 @@ import java.util.Map;
 @Accessors(chain = true)
 @Builder(toBuilder = true)
 @Table("settings_emote")
-@Index("id")
+@GIndex("id")
 public class EmotesSettings implements PluginSettings {
     @PrimaryKey
     private final String id;

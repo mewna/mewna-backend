@@ -4,7 +4,7 @@ import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.plugins.PluginEconomy;
-import gg.amy.pgorm.annotations.Index;
+import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
 import lombok.Builder;
@@ -27,7 +27,7 @@ import java.util.Optional;
 @Accessors(chain = true)
 @Builder(toBuilder = true)
 @Table("settings_economy")
-@Index("id")
+@GIndex("id")
 @SuppressWarnings("unused")
 public class EconomySettings implements PluginSettings {
     @PrimaryKey

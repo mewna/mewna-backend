@@ -4,13 +4,12 @@ import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.plugins.PluginMusic;
-import gg.amy.pgorm.annotations.Index;
+import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.Value;
 import lombok.experimental.Accessors;
 import org.json.JSONObject;
 
@@ -26,7 +25,7 @@ import java.util.Map;
 @Accessors(chain = true)
 @Builder(toBuilder = true)
 @Table("settings_music")
-@Index("id")
+@GIndex("id")
 @SuppressWarnings("unused")
 public class MusicSettings implements PluginSettings {
     @PrimaryKey

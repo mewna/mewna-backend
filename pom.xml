@@ -19,7 +19,7 @@
         <commons.text.version>1.2</commons.text.version>
         <jedis.version>2.9.0</jedis.version>
         <spark.version>2.7.2</spark.version>
-        <postgres.orm.version>281e075acb</postgres.orm.version>
+        <postgres.orm.version>d5c6ae044e</postgres.orm.version>
         <jackson.version>2.9.2</jackson.version>
     </properties>
 

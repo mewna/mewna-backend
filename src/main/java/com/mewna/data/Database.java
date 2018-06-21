@@ -168,8 +168,8 @@ public class Database {
     }
     
     //////////////
-    //////////////
     // Settings //
+    //////////////
     
     @SuppressWarnings("unchecked")
     public <T extends PluginSettings> Class<T> getSettingsClassByType(final String type) {

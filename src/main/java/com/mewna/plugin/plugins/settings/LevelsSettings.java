@@ -4,7 +4,7 @@ import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.plugins.PluginLevels;
-import gg.amy.pgorm.annotations.Index;
+import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
 import lombok.Builder;
@@ -25,7 +25,7 @@ import java.util.*;
 @Accessors(chain = true)
 @Builder(toBuilder = true)
 @Table("settings_levels")
-@Index("id")
+@GIndex("id")
 @SuppressWarnings("unused")
 public class LevelsSettings implements PluginSettings {
     private static final int DISCORD_MAX_MESSAGE_SIZE = 2000;

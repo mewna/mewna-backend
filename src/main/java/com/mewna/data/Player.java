@@ -3,7 +3,8 @@ package com.mewna.data;
 import com.mewna.cache.entity.Guild;
 import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.util.TextureManager;
-import gg.amy.pgorm.annotations.Index;
+import gg.amy.pgorm.annotations.BtreeIndex;
+import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
 import lombok.*;
@@ -22,9 +23,10 @@ import java.util.Map.Entry;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table("players")
-@Index({"id", "guildXp", "guildBalances"})
+@GIndex({"id", "guildXp", "ownedBackgroundPacks"})
 @SuppressWarnings("unused")
 public class Player {
+    public static final int MAX_ABOUT_TEXT_LENGTH = 150;
     private static final String LOREM_IPSUM = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
             "Cras vehicula mi urna, nec tincidunt erat tincidunt eget. " +
             "Maecenas pretium consectetur metus.";
@@ -39,8 +41,6 @@ public class Player {
     private String aboutText;
     private String customBackground;
     private List<String> ownedBackgroundPacks;
-    
-    public static final int MAX_ABOUT_TEXT_LENGTH = 150;
     
     public static Player base(final String id) {
         return new Player(id, 0L, 0L, 0L, new HashMap<>(), 0L, 0L,

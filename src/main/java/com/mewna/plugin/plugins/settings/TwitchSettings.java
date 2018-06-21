@@ -4,7 +4,7 @@ import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.plugins.PluginTwitch;
-import gg.amy.pgorm.annotations.Index;
+import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
 import lombok.*;
@@ -24,7 +24,7 @@ import java.util.*;
 @Accessors(chain = true)
 @Builder(toBuilder = true)
 @Table("settings_twitch")
-@Index("id")
+@GIndex({"id", "partneredStreamers", "twitchStreamers"})
 @SuppressWarnings("unused")
 public class TwitchSettings implements PluginSettings {
     @PrimaryKey

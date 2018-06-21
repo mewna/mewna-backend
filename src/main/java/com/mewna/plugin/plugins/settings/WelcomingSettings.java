@@ -4,14 +4,13 @@ import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.plugins.PluginWelcoming;
-import gg.amy.pgorm.annotations.Index;
+import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -27,7 +26,7 @@ import java.util.Optional;
 @Accessors(chain = true)
 @Builder(toBuilder = true)
 @Table("settings_welcoming")
-@Index("id")
+@GIndex("id")
 @SuppressWarnings("unused")
 public class WelcomingSettings implements PluginSettings {
     private static final int DISCORD_MAX_MESSAGE_SIZE = 2000;
@@ -75,7 +74,7 @@ public class WelcomingSettings implements PluginSettings {
         }
         return true;
     }
-
+    
     @Override
     public boolean updateSettings(final Database database, final JSONObject data) {
         final WelcomingSettingsBuilder builder = toBuilder();
@@ -98,7 +97,7 @@ public class WelcomingSettings implements PluginSettings {
             // Trigger exception if not present
             data.getString("welcomeMessage");
             data.getString("goodbyeMessage");
-    
+            
             builder.welcomeMessage(data.getString("welcomeMessage"));
             builder.goodbyeMessage(data.getString("goodbyeMessage"));
             

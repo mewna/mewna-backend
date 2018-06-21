@@ -1,6 +1,5 @@
 package com.mewna.plugin.event.plugin.twitch;
 
-import com.mewna.plugin.event.BaseEvent;
 import com.mewna.plugin.event.EventType;
 import lombok.Getter;
 
@@ -9,7 +8,7 @@ import lombok.Getter;
  * @since 6/20/18.
  */
 @Getter
-public class TwitchStreamStartEvent extends BaseEvent {
+public class TwitchStreamStartEvent extends TwitchStreamerEvent {
     private final TwitchStreamer streamer;
     private final TwitchStreamData streamData;
     

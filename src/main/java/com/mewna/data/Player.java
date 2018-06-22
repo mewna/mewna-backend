@@ -169,8 +169,9 @@ public class Player {
             guildXp += entry.getValue();
             ++count;
         }
+        final long avgXp = count == 0 ? 0 : guildXp / count;
         //noinspection UnnecessaryParentheses
-        final long avg = balance + points + globalXp + dailyStreak + (guildXp / count);
+        final long avg = balance + points + globalXp + dailyStreak + avgXp;
         return avg / 5;
     }
 }

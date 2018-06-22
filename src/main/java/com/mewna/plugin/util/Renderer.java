@@ -205,7 +205,7 @@ public final class Renderer {
             final long currentLevelXp = PluginLevels.fullLevelToXp(userLevel);
             final long nextLevelXp = PluginLevels.fullLevelToXp(nextLevel);
             final long xpNeeded = PluginLevels.nextLevelXp(userXp);
-            final long nextXpTotal = nextLevelXp - currentLevelXp - xpNeeded;
+            final long nextXpTotal = nextLevelXp - xpNeeded;
             g2.setColor(SIXTY_SEVEN_PERCENT_OPAQUE_BLACK);
             g2.fillRect(32, 519, 536, 35);
             // calc. bar size
@@ -296,7 +296,7 @@ public final class Renderer {
             final long currentLevelXp = PluginLevels.fullLevelToXp(userLevel);
             final long nextLevelXp = PluginLevels.fullLevelToXp(nextLevel);
             final long xpNeeded = PluginLevels.nextLevelXp(userXp);
-            final long nextXpTotal = nextLevelXp - currentLevelXp - xpNeeded;
+            final long nextXpTotal = nextLevelXp - xpNeeded;
             g2.setColor(SIXTY_SEVEN_PERCENT_OPAQUE_BLACK);
             g2.fillRect(188, 123, 566, 42);
             // calc. bar size

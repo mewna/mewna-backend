@@ -137,6 +137,8 @@ public class CommandManager {
             
             // TODO: Temporary dev. block
             if(!user.getId().equals("128316294742147072")) {
+                mewna.getPluginManager().processEvent("MESSAGE_CREATE", new MessageCreateEvent(user, channel, guild, mentions,
+                        data.getString("content"), data.getBoolean("mention_everyone")));
                 return;
             }
             

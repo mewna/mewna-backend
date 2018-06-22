@@ -16,6 +16,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
@@ -178,27 +179,31 @@ class API {
                             if(resultSet.isBeforeFirst()) {
                                 int counter = 1;
                                 while(resultSet.next()) {
-                                    final JSONObject data = new JSONObject(resultSet.getString("data"));
-                                    final User user = mewna.getCache().getUser(data.getString("id"));
-                                    final long userXp = data.getJSONObject("guildXp").getLong(id);
-                                    final long userLevel = PluginLevels.xpToLevel(userXp);
-                                    final long nextLevel = userLevel + 1;
-                                    final long playerRank = counter;
-                                    final long currentLevelXp = PluginLevels.fullLevelToXp(userLevel);
-                                    final long nextLevelXp = PluginLevels.fullLevelToXp(nextLevel);
-                                    final long xpNeeded = PluginLevels.nextLevelXp(userXp);
-                                    results.add(new JSONObject()
-                                            .put("name", user.getName())
-                                            .put("discrim", user.getDiscriminator())
-                                            .put("avatar", user.getAvatarURL())
-                                            .put("userXp", userXp)
-                                            .put("userLevel", userLevel)
-                                            .put("nextLevel", nextLevel)
-                                            .put("playerRank", playerRank)
-                                            .put("currentLevelXp", currentLevelXp)
-                                            .put("xpNeeded", xpNeeded)
-                                            .put("nextLevelXp", nextLevelXp)
-                                    );
+                                    try {
+                                        final Player player = MAPPER.readValue(resultSet.getString("data"), Player.class);
+                                        final User user = mewna.getCache().getUser(player.getId());
+                                        final long userXp = player.getXp(id);
+                                        final long userLevel = PluginLevels.xpToLevel(userXp);
+                                        final long nextLevel = userLevel + 1;
+                                        final long currentLevelXp = PluginLevels.fullLevelToXp(userLevel);
+                                        final long nextLevelXp = PluginLevels.fullLevelToXp(nextLevel);
+                                        final long xpNeeded = PluginLevels.nextLevelXp(userXp);
+                                        results.add(new JSONObject()
+                                                .put("name", user.getName())
+                                                .put("discrim", user.getDiscriminator())
+                                                .put("avatar", user.getAvatarURL())
+                                                .put("userXp", userXp)
+                                                .put("userLevel", userLevel)
+                                                .put("nextLevel", nextLevel)
+                                                .put("playerRank", (long) counter)
+                                                .put("currentLevelXp", currentLevelXp)
+                                                .put("xpNeeded", xpNeeded)
+                                                .put("nextLevelXp", nextLevelXp)
+                                                .put("customBackground", player.getCustomBackground())
+                                        );
+                                    } catch(final IOException e) {
+                                        e.printStackTrace();
+                                    }
                                     ++counter;
                                 }
                             }

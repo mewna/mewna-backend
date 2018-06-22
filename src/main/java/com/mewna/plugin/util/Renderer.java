@@ -202,7 +202,6 @@ public final class Renderer {
             final long userXp = player.getGlobalXp();
             final long userLevel = PluginLevels.xpToLevel(userXp);
             final long nextLevel = userLevel + 1;
-            final long currentLevelXp = PluginLevels.fullLevelToXp(userLevel);
             final long nextLevelXp = PluginLevels.fullLevelToXp(nextLevel);
             final long xpNeeded = PluginLevels.nextLevelXp(userXp);
             final long nextXpTotal = nextLevelXp - xpNeeded;
@@ -293,7 +292,6 @@ public final class Renderer {
             g2.drawString(playerRankText, 187 + lvlWidth + playerLevelWidth + rankWidth, 113); // 123456
             
             // XP bar
-            final long currentLevelXp = PluginLevels.fullLevelToXp(userLevel);
             final long nextLevelXp = PluginLevels.fullLevelToXp(nextLevel);
             final long xpNeeded = PluginLevels.nextLevelXp(userXp);
             final long nextXpTotal = nextLevelXp - xpNeeded;

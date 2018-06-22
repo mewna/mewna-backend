@@ -3,7 +3,6 @@ package com.mewna.data;
 import com.mewna.cache.entity.Guild;
 import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.util.TextureManager;
-import gg.amy.pgorm.annotations.BtreeIndex;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
@@ -130,14 +129,17 @@ public class Player {
     
     // XP
     
-    public long getXp(final Guild guild) {
-        final String id = guild.getId();
+    public long getXp(final String id) {
         if(guildXp.containsKey(id)) {
             return guildXp.get(id);
         } else {
             guildXp.put(id, 0L);
             return 0L;
         }
+    }
+    
+    public long getXp(final Guild guild) {
+        return getXp(guild.getId());
     }
     
     public long getXp(final CommandContext ctx) {

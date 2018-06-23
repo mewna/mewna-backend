@@ -59,7 +59,6 @@ public class PluginManager {
      * Note that we don't have to worry about thread-safety (per se) on this
      * field since it's only ever written once at boot. <p />
      * <p>
-     * TODO: Consider going as far as making command-handling itself a plugin?
      */
     private final Map<String, HashSet<EventHolder>> discordEventHandlers = new HashMap<>();
     

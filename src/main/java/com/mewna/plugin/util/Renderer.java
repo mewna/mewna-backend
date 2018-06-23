@@ -24,8 +24,6 @@ import java.util.List;
 
 /**
  * Generates the cards for rank, level up, ...
- * <p>
- * TODO: Use redis to cache avatars so we can share the cache between multiple clients
  *
  * @author amy
  * @since 6/2/18.
@@ -102,7 +100,6 @@ public final class Renderer {
     
     public static byte[] generateProfileCard(final User user, final Player player) {
         final BufferedImage card = new BufferedImage(600, 600, BufferedImage.TYPE_INT_ARGB);
-        // TODO: Custom backgrounds
         try {
             final Graphics2D g2 = card.createGraphics();
             setRenderHints(g2);

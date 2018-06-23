@@ -309,8 +309,7 @@ public class PluginLevels extends BasePlugin {
             getRestJDA().sendMessage(ctx.getChannel(), "Levels are not enabled in this server.").queue();
             return;
         }
-        // TODO
-        getRestJDA().sendMessage(ctx.getChannel(), "https://amy.chat/leaderboards/" + guild.getId()).queue();
+        getRestJDA().sendMessage(ctx.getChannel(), System.getenv("DOMAIN") + "/discord/leaderboards/" + guild.getId()).queue();
     }
     
     private long getXp(final Player player) {

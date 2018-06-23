@@ -53,8 +53,6 @@ public class PluginMisc extends BasePlugin {
     
     @Command(names = "catgirl", desc = "Get a random (SFW) catgirl picture.", usage = "catgirl", examples = "catgirl")
     public void catgirl(final CommandContext ctx) {
-        // TODO: Consider "real" NSFW variant? probably not, but...
-        
         try {
             @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
             final String catgirl = Objects.requireNonNull(client.newCall(new Request.Builder().get().url("https://nekos.life/api/neko").build())
@@ -68,26 +66,12 @@ public class PluginMisc extends BasePlugin {
     
     @Command(names = {"help", "?"}, desc = "Get links to helpful information.", usage = "help", examples = "help")
     public void help(final CommandContext ctx) {
+        // TODO: Redo this...
         final EmbedBuilder builder = new EmbedBuilder();
-        builder.setTitle("amybot help")
-                .addField("Command listing", "https://amy.chat/commands", false)
+        builder.setTitle("Mewna help")
                 .addField("Bot invite", "https://amy.chat/invite", false)
-                .addField("Support server", "https://amy.chat/support", false)
+                .addField("Support server", "https://discord.gg/UwdDN6r", false)
                 .addField("", "This command: `amy!help`, `a.help`, or `a:help`", false);
-        // TODO: Actual permissions calculations...
-        getRestJDA().sendMessage(ctx.getChannel().getId(), builder.build()).queue(null, failure -> {
-            if(failure instanceof ErrorResponseException) {
-                //noinspection StatementWithEmptyBody
-                if(((ErrorResponseException) failure).getErrorCode() == 50013) {
-                    // TODO: We're missing a perm, do something about it
-                    // TODO: Really should extract all this logic out somewhere else as a helper
-                }
-            }
-        });
-    }
-    
-    @Command(names = "invite", desc = "Get the invite link.", usage = "invite", examples = "invite")
-    public void invite(final CommandContext ctx) {
-        getMewna().getRestJDA().sendMessage(ctx.getChannel().getId(), "Click here: <https://amy.chat/invite>").queue();
+        getRestJDA().sendMessage(ctx.getChannel().getId(), builder.build()).queue();
     }
 }

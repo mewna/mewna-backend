@@ -61,7 +61,6 @@ public class EventManager {
         
         // Channels
         handlers.put(CHANNEL_CREATE, (event, data) -> {
-            // TODO: DMs always send a MESSAGE_CREATE *and* a CHANNEL_CREATE - we need to be prepared for both of those.
             cache.cacheChannel(data);
         });
         handlers.put(CHANNEL_DELETE, (event, data) -> cache.deleteChannel(data.getString("id")));
@@ -109,7 +108,6 @@ public class EventManager {
         handlers.put(GUILD_UPDATE, (event, data) -> cache.cacheGuild(data));
         
         // Emotes
-        // TODO: Do I REALLY care?
         handlers.put(GUILD_EMOJIS_UPDATE, (event, data) -> {
         });
         

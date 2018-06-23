@@ -199,7 +199,7 @@ public class Database {
         } else {
             // Base the settings and return
             try {
-                // TODO: There *must* be a better way to express this...
+                // TODO: Shouldn't do this, just use default field values on instantiation. Jackson should do the right thing.
                 @SuppressWarnings("unchecked")
                 final T base = (T) type.getMethod("base", String.class).invoke(null, id);
                 saveSettings(base);

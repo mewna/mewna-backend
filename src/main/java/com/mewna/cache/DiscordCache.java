@@ -371,7 +371,6 @@ public class DiscordCache {
             }
         } else {
             // Cache user voice state
-            // TODO: What about bots?
             mewna.getDatabase().redis(c -> c.hset(USER_VOICE_STATES, userId, data.toString()));
         }
     }

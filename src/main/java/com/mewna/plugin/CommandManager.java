@@ -44,8 +44,6 @@ public class CommandManager {
     static {
         PREFIXES = new ArrayList<>(Arrays.asList(Optional.ofNullable(System.getenv("PREFIXES"))
                 .orElse("bmew.,bmew ,=").split(",")));
-        PREFIXES.add("<@" + System.getenv("CLIENT_ID") + '>');
-        PREFIXES.add("<@!" + System.getenv("CLIENT_ID") + '>');
     }
     
     public CommandManager(final Mewna mewna) {
@@ -90,11 +88,15 @@ public class CommandManager {
     @SuppressWarnings("TypeMayBeWeakened")
     private List<String> getAllPrefixes(final Guild guild) {
         //noinspection UnnecessaryLocalVariable
-        final List<String> prefixes = new ArrayList<>(PREFIXES);
+        final List<String> prefixes = new ArrayList<>();
         final BehaviourSettings settings = mewna.getDatabase().getOrBaseSettings(BehaviourSettings.class, guild.getId());
         if(settings.getPrefix() != null && !settings.getPrefix().isEmpty() && settings.getPrefix().length() <= 16) {
             prefixes.add(settings.getPrefix());
+        } else {
+            prefixes.addAll(PREFIXES);
         }
+        prefixes.add("<@" + System.getenv("CLIENT_ID") + '>');
+        prefixes.add("<@!" + System.getenv("CLIENT_ID") + '>');
         return prefixes;
     }
     

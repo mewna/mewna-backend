@@ -11,6 +11,7 @@ import com.mewna.plugin.PluginManager.PluginMetadata;
 import com.mewna.plugin.event.message.MessageCreateEvent;
 import com.mewna.plugin.metadata.Payment;
 import com.mewna.plugin.metadata.Ratelimit;
+import com.mewna.plugin.plugins.settings.BehaviourSettings;
 import com.mewna.util.Time;
 import lombok.Getter;
 import lombok.Value;
@@ -43,8 +44,6 @@ public class CommandManager {
     static {
         PREFIXES = new ArrayList<>(Arrays.asList(Optional.ofNullable(System.getenv("PREFIXES"))
                 .orElse("bmew.,bmew ,=").split(",")));
-        PREFIXES.add("<@" + System.getenv("CLIENT_ID") + '>');
-        PREFIXES.add("<@!" + System.getenv("CLIENT_ID") + '>');
     }
     
     public CommandManager(final Mewna mewna) {
@@ -87,10 +86,17 @@ public class CommandManager {
     }
     
     @SuppressWarnings("TypeMayBeWeakened")
-    private List<String> getAllPrefixes() {
+    private List<String> getAllPrefixes(final Guild guild) {
         //noinspection UnnecessaryLocalVariable
-        final List<String> prefixes = new ArrayList<>(PREFIXES);
-        // TODO: Restore custom prefix support?
+        final List<String> prefixes = new ArrayList<>();
+        final BehaviourSettings settings = mewna.getDatabase().getOrBaseSettings(BehaviourSettings.class, guild.getId());
+        if(settings.getPrefix() != null && !settings.getPrefix().isEmpty() && settings.getPrefix().length() <= 16) {
+            prefixes.add(settings.getPrefix());
+        } else {
+            prefixes.addAll(PREFIXES);
+        }
+        prefixes.add("<@" + System.getenv("CLIENT_ID") + '>');
+        prefixes.add("<@!" + System.getenv("CLIENT_ID") + '>');
         return prefixes;
     }
     
@@ -146,7 +152,7 @@ public class CommandManager {
             String content = data.getString("content");
             String prefix = null;
             boolean found = false;
-            for(final String p : getAllPrefixes()) {
+            for(final String p : getAllPrefixes(guild)) {
                 if(p != null && !p.isEmpty()) {
                     if(content.toLowerCase().startsWith(p.toLowerCase())) {
                         prefix = p;

@@ -118,7 +118,7 @@ public class PluginManager {
             return;
         }
         loaded.add(c);
-        if(c.isAnnotationPresent(Plugin.class) && BasePlugin.class.isAssignableFrom(c)) {
+        if(c.isAnnotationPresent(Plugin.class)) {
             try {
                 final Plugin pluginAnnotation = c.getDeclaredAnnotation(Plugin.class);
                 if(!pluginAnnotation.enabled()) {

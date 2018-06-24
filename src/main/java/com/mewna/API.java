@@ -106,7 +106,9 @@ class API {
                 
                 path("/links", () -> {
                     path("/discord", () -> {
-                        get("/:id", (req, res) -> mewna.getAccountManager().checkDiscordLinkedAccountExists(req.params(":id")));
+                        get("/:id", (req, res) -> {
+                            return mewna.getAccountManager().checkDiscordLinkedAccountExists(req.params(":id"));
+                        });
                     });
                 });
             });

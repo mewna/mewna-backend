@@ -32,11 +32,7 @@ public class AccountManager {
     
     public String checkDiscordLinkedAccountExists(final String id) {
         final Optional<Account> account = getAccountByLinkedDiscord(id);
-        if(account.isPresent()) {
-            return account.get().getId();
-        } else {
-            return id;
-        }
+        return account.map(Account::getId).orElse("null");
     }
     
     public void createOrUpdateUser(final String json) {
@@ -44,7 +40,7 @@ public class AccountManager {
         if(!data.has("id")) {
             data.put("id", getNewSnowflake());
         }
-        
+    
         try {
             final Account account = MAPPER.readValue(data.toString(), Account.class);
             mewna.getDatabase().saveAccount(account);
@@ -57,7 +53,8 @@ public class AccountManager {
     public String getNewSnowflake() {
         try {
             @SuppressWarnings("ConstantConditions")
-            final String snowflake = client.newCall(new Request.Builder().build()).execute().body().string();
+            final String snowflake = client.newCall(new Request.Builder().get().url(System.getenv("SNOWFLAKE_GENERATOR") + '/')
+                    .build()).execute().body().string();
             return snowflake;
         } catch(final IOException e) {
             throw new RuntimeException(e);

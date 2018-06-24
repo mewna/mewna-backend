@@ -247,10 +247,11 @@ public class PluginLevels extends BasePlugin {
     
             final String profileUrl = System.getenv("DOMAIN") + "/profile/" + user.getId();
             final EmbedBuilder builder = new EmbedBuilder()
-                    .setTitle("**" + user.getName() + "**'s rank card", "https://localhost.localdomain/")
+                    .setTitle("**" + user.getName() + "**'s rank card", null)
                     .setImage("attachment://rank.png")
                     .setColor(Renderer.PRIMARY_COLOUR)
-                    .setDescription(String.format("[View full profile](%s)", profileUrl));
+                    .setDescription(String.format("[View full profile](%s)", profileUrl))
+                    .setFooter("You can change your background on your profile.", null);
             getRestJDA().sendFile(ctx.getChannel(), cardBytes, "rank.png",
                     new MessageBuilder().setEmbed(builder.build()).build())
                     .queue();
@@ -274,10 +275,11 @@ public class PluginLevels extends BasePlugin {
             final byte[] cardBytes = Renderer.generateProfileCard(user, player);
             final String profileUrl = System.getenv("DOMAIN") + "/profile/" + user.getId();
             final EmbedBuilder builder = new EmbedBuilder()
-                    .setTitle("**" + user.getName() + "**'s profile card", "https://localhost.localdomain/")
+                    .setTitle("**" + user.getName() + "**'s profile card", null)
                     .setImage("attachment://profile.png")
                     .setColor(Renderer.PRIMARY_COLOUR)
-                    .setDescription(String.format("[View full profile](%s)", profileUrl));
+                    .setDescription(String.format("[View full profile](%s)", profileUrl))
+                    .setFooter("You can change your background on your profile.", null);
             getRestJDA().sendFile(ctx.getChannel(), cardBytes, "profile.png",
                     new MessageBuilder().setEmbed(builder.build()).build())
                     .queue();

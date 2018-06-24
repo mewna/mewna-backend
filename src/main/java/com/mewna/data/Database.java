@@ -1,6 +1,8 @@
 package com.mewna.data;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
+import com.mewna.accounts.Account;
 import com.mewna.cache.entity.User;
 import com.mewna.plugin.Plugin;
 import gg.amy.pgorm.PgStore;
@@ -13,6 +15,7 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Transaction;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -28,6 +31,8 @@ import java.util.function.Consumer;
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class Database {
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    
     @Getter
     private final Mewna mewna;
     @Getter
@@ -60,7 +65,7 @@ public class Database {
         
         mapSettingsClasses();
         
-        premap(Player.class);
+        premap(Player.class, Account.class);
         
         // Webhooks table is created manually, because it doesn't need to be JSON:b:
         store.sql("CREATE TABLE IF NOT EXISTS discord_webhooks (channel TEXT PRIMARY KEY NOT NULL UNIQUE, guild TEXT NOT NULL, " +
@@ -262,5 +267,38 @@ public class Database {
         private void setValue(final T data) {
             value = Optional.ofNullable(data);
         }
+    }
+    
+    
+    //////////////
+    // Accounts //
+    //////////////
+    
+    public Optional<Account> getAccountById(final String id) {
+        return store.mapSync(Account.class).load(id);
+    }
+    
+    public Optional<Account> getAccountByDiscordId(final String id) {
+        final OptionalHolder<Account> holder = new OptionalHolder<>();
+        
+        store.sql("SELECT data FROM accounts WHERE data->>'discordAccountId' = ?;", p -> {
+            p.setString(1, id);
+            final ResultSet resultSet = p.executeQuery();
+            if(resultSet.isBeforeFirst()) {
+                resultSet.next();
+                final String data = resultSet.getString("data");
+                try {
+                    holder.setValue(MAPPER.readValue(data, Account.class));
+                } catch(final IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+        
+        return holder.value;
+    }
+    
+    public void saveAccount(final Account account) {
+        store.mapSync(Account.class).save(account);
     }
 }

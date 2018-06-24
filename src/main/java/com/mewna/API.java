@@ -35,6 +35,7 @@ class API {
     private final Mewna mewna;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     
+    @SuppressWarnings("CodeBlock2Expr")
     void start() {
         logger.info("Starting API server...");
         port(Integer.parseInt(Optional.ofNullable(System.getenv("PORT")).orElse("80")));
@@ -94,6 +95,21 @@ class API {
             });
         });
         path("/data", () -> {
+            path("/account", () -> {
+                get("/:id", (req, res) -> {
+                    return new JSONObject(mewna.getDatabase().getAccountById(req.params(":id")));
+                });
+                post("/update", (req, res) -> {
+                    mewna.getAccountManager().createOrUpdateUser(req.body());
+                    return new JSONObject();
+                });
+                
+                path("/links", () -> {
+                    path("/discord", () -> {
+                        get("/:id", (req, res) -> mewna.getAccountManager().checkDiscordLinkedAccountExists(req.params(":id")));
+                    });
+                });
+            });
             path("/player", () -> {
                 // More shit goes here
                 get("/:id", (req, res) -> new JSONObject(mewna.getDatabase().getPlayer(req.params(":id"))));
@@ -124,9 +140,7 @@ class API {
                     }
                 });
             });
-            //noinspection CodeBlock2Expr
             path("/guild", () -> {
-                //noinspection CodeBlock2Expr
                 path("/:id", () -> {
                     path("/config", () -> {
                         get("/:type", (req, res) -> {

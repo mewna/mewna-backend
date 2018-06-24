@@ -1,5 +1,6 @@
 package com.mewna;
 
+import com.mewna.accounts.AccountManager;
 import com.mewna.cache.DiscordCache;
 import com.mewna.data.Database;
 import com.mewna.event.EventManager;
@@ -37,6 +38,9 @@ public final class Mewna {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     @Getter
     private NatsServer nats;
+    
+    @Getter
+    private final AccountManager accountManager = new AccountManager(this);
     
     private Mewna() {
     }

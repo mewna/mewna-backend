@@ -196,7 +196,7 @@ public class PluginLevels extends BasePlugin {
                 .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-local:" + guild.getId(),
                         TimeUnit.MINUTES.toMillis(1));
         final ImmutablePair<Boolean, Long> globalRes = getMewna().getRatelimiter()
-                .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-global", TimeUnit.MINUTES.toMillis(1));
+                .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-global", TimeUnit.MINUTES.toMillis(10));
         
         if(!localRes.left) {
             final long oldXp = player.getXp(guild);

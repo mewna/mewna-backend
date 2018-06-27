@@ -3,6 +3,7 @@ package com.mewna.data;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
 import com.mewna.accounts.Account;
+import com.mewna.accounts.timeline.TimelinePost;
 import com.mewna.cache.entity.User;
 import com.mewna.plugin.Plugin;
 import gg.amy.pgorm.PgStore;
@@ -65,7 +66,7 @@ public class Database {
         
         mapSettingsClasses();
         
-        premap(Player.class, Account.class);
+        premap(Player.class, Account.class, TimelinePost.class);
         
         // Webhooks table is created manually, because it doesn't need to be JSON:b:
         store.sql("CREATE TABLE IF NOT EXISTS discord_webhooks (channel TEXT PRIMARY KEY NOT NULL UNIQUE, guild TEXT NOT NULL, " +
@@ -300,5 +301,9 @@ public class Database {
     
     public void saveAccount(final Account account) {
         store.mapSync(Account.class).save(account);
+    }
+    
+    public void savePost(final TimelinePost post) {
+        store.mapSync(TimelinePost.class).save(post);
     }
 }

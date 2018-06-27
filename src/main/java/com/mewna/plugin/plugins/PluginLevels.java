@@ -12,6 +12,8 @@ import com.mewna.plugin.Plugin;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.message.MessageCreateEvent;
+import com.mewna.plugin.event.plugin.behaviour.UserEvent;
+import com.mewna.plugin.event.plugin.behaviour.UserEvent.UserEventType;
 import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
 import com.mewna.plugin.util.Renderer;
@@ -217,9 +219,30 @@ public class PluginLevels extends BasePlugin {
                             TimeUnit.MINUTES.toMillis(1)));
         }
         if(!globalRes.left) {
+            final long oldXp = player.getGlobalXp();
+            final long xp = getXp(player);
             player.incrementGlobalXp(getXp(player));
             getDatabase().savePlayer(player);
             // Level-up notifications here?
+            if(isLevelUp(oldXp, oldXp + xp)) {
+                // TODO: Emit user event
+                final long level = xpToLevel(oldXp + xp);
+                // lol
+                switch((int) level) {
+                    case 10:
+                    case 25:
+                    case 50:
+                    case 100: {
+                        getMewna().getPluginManager().processEvent(EventType.USER_EVENT,
+                                new UserEvent(UserEventType.GLOBAL_LEVEL, player,
+                                        new JSONObject().put("level", level)));
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+            }
         }
     }
     

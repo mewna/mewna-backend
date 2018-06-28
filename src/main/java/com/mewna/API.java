@@ -1,6 +1,7 @@
 package com.mewna;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mewna.accounts.Account;
 import com.mewna.cache.entity.Channel;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.Role;
@@ -96,8 +97,24 @@ class API {
         });
         path("/data", () -> {
             path("/account", () -> {
-                get("/:id", (req, res) -> {
-                    return new JSONObject(mewna.getDatabase().getAccountById(req.params(":id")));
+                path("/:id", () -> {
+                    get("/", (req, res) -> {
+                        return new JSONObject(mewna.getDatabase().getAccountById(req.params(":id")));
+                    });
+                    get("/profile", (req, res) -> {
+                        // TODO: Merge accounts and profiles together here
+                        // TODO: Strip sensitive data like email
+    
+                        final Optional<Account> maybeAccount = mewna.getAccountManager().getAccountById(req.params(":id"));
+                        if(maybeAccount.isPresent()) {
+                            final Account account = maybeAccount.get();
+                            // TODO: This won't always exist!
+                            final String discordAccountId = account.getDiscordAccountId();
+                            return new JSONObject();
+                        } else {
+                            return new JSONObject().put("error", "no account");
+                        }
+                    });
                 });
                 post("/update", (req, res) -> {
                     mewna.getAccountManager().createOrUpdateUser(req.body());

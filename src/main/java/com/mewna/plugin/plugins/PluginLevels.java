@@ -1,6 +1,7 @@
 package com.mewna.plugin.plugins;
 
 import com.mewna.Mewna;
+import com.mewna.accounts.Account;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.Member;
 import com.mewna.cache.entity.User;
@@ -87,9 +88,9 @@ public class PluginLevels extends BasePlugin {
         Mewna.getInstance().getDatabase().getStore().sql("SELECT rank FROM (SELECT row_number() OVER (" +
                 "ORDER BY (data->'guildXp'->>'" + guildId + "')::integer DESC" +
                 ") AS rank, data FROM players " +
-                "WHERE data->'guildXp'->'" + guildId + "' IS NOT NULL "/* +
-                "ORDER BY (data->'guildXp'->>'" + guildId + "')::integer DESC) AS _q " +
-                "WHERE data->>'id' = '" + playerId + "';"*/, p -> {
+                "WHERE data->'guildXp'->'" + guildId + "' IS NOT NULL "+
+                /*"ORDER BY (data->'guildXp'->>'" + guildId + "')::integer DESC*/") AS _q " +
+                "WHERE data->>'id' = '" + playerId + "';", p -> {
             final ResultSet resultSet = p.executeQuery();
             if(resultSet.isBeforeFirst()) {
                 resultSet.next();
@@ -268,9 +269,14 @@ public class PluginLevels extends BasePlugin {
         }
         
         getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
-            final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
+            // lol
+            // we do everything possible to guarantee that this should be safe
+            // without doing a check here
+            //noinspection ConstantConditions
+            final Account account = getDatabase().getAccountByDiscordId(user.getId()).get();
+            final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.getId();
     
-            final String profileUrl = System.getenv("DOMAIN") + "/profile/" + user.getId();
+            final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
             final EmbedBuilder builder = new EmbedBuilder()
                     .setTitle("**" + user.getName() + "**'s rank card", null)
                     .setImage("attachment://rank.png")
@@ -297,8 +303,14 @@ public class PluginLevels extends BasePlugin {
         }
         
         getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
+            // lol
+            // we do everything possible to guarantee that this should be safe
+            // without doing a check here
+            //noinspection ConstantConditions
+            final Account account = getDatabase().getAccountByDiscordId(user.getId()).get();
+            final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.getId();
+            
             final byte[] cardBytes = Renderer.generateProfileCard(user, player);
-            final String profileUrl = System.getenv("DOMAIN") + "/profile/" + user.getId();
             final EmbedBuilder builder = new EmbedBuilder()
                     .setTitle("**" + user.getName() + "**'s profile card", null)
                     .setImage("attachment://profile.png")

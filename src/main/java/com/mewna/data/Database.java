@@ -9,6 +9,7 @@ import com.mewna.plugin.Plugin;
 import gg.amy.pgorm.PgStore;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import lombok.Getter;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -234,6 +235,15 @@ public class Database {
         return store.mapSync(Player.class).load(id).orElseGet(() -> {
             final Player base = Player.base(id);
             savePlayer(base);
+            // If we don't have a player, then we also need to create an account for them
+            final User user = mewna.getCache().getUser(id);
+            final JSONObject data = new JSONObject()
+                    .put("email", "")
+                    .put("username", "")
+                    .put("displayName", user.getName())
+                    .put("discordAccountId", id)
+                    .put("avatar", user.getAvatarURL());
+            mewna.getAccountManager().createOrUpdateUser(data.toString());
             return base;
         });
     }

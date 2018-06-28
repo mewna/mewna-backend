@@ -84,10 +84,12 @@ public class PluginLevels extends BasePlugin {
         final int[] rank = {-1};
         final String guildId = guild.getId();
         final String playerId = player.getId();
-        Mewna.getInstance().getDatabase().getStore().sql("SELECT rank FROM (SELECT row_number() OVER () AS rank, data FROM players " +
-                "WHERE data->'guildXp'->'" + guildId + "' IS NOT NULL " +
+        Mewna.getInstance().getDatabase().getStore().sql("SELECT rank FROM (SELECT row_number() OVER (" +
+                "ORDER BY (data->'guildXp'->>'" + guildId + "')::integer DESC" +
+                ") AS rank, data FROM players " +
+                "WHERE data->'guildXp'->'" + guildId + "' IS NOT NULL "/* +
                 "ORDER BY (data->'guildXp'->>'" + guildId + "')::integer DESC) AS _q " +
-                "WHERE data->>'id' = '" + playerId + "';", p -> {
+                "WHERE data->>'id' = '" + playerId + "';"*/, p -> {
             final ResultSet resultSet = p.executeQuery();
             if(resultSet.isBeforeFirst()) {
                 resultSet.next();

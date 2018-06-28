@@ -3,15 +3,19 @@ package com.mewna.accounts;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
-import lombok.Value;
+import lombok.*;
 
 /**
  * @author amy
  * @since 6/23/18.
  */
-@Value
+@Getter
+@Setter
+@AllArgsConstructor
+@RequiredArgsConstructor
 @Table("accounts")
 @GIndex({"id", "email", "username", "discordAccountId"})
+@Builder(toBuilder = true)
 public class Account {
     @PrimaryKey
     private String id;
@@ -21,3 +25,4 @@ public class Account {
     private String discordAccountId;
     private String avatar;
 }
+

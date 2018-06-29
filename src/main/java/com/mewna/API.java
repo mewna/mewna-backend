@@ -102,22 +102,36 @@ class API {
                         return new JSONObject(mewna.getDatabase().getAccountById(req.params(":id")));
                     });
                     get("/profile", (req, res) -> {
-                        // TODO: Merge accounts and profiles together here
-                        // TODO: Strip sensitive data like email
-    
                         final Optional<Account> maybeAccount = mewna.getAccountManager().getAccountById(req.params(":id"));
                         if(maybeAccount.isPresent()) {
                             final Account account = maybeAccount.get();
                             // TODO: This won't always exist!
                             final String discordAccountId = account.getDiscordAccountId();
-                            return new JSONObject();
+                            final JSONObject data = new JSONObject();
+                            if(discordAccountId != null && !discordAccountId.isEmpty()) {
+                                final Optional<Player> maybePlayer = mewna.getDatabase().getOptionalPlayer(discordAccountId);
+                                maybePlayer.ifPresent(player -> data.put("player", new JSONObject(player)));
+                            }
+                            data.put("id", account.getId())
+                                    .put("username", account.getId())
+                                    .put("displayName", account.getDisplayName())
+                                    .put("avatar", account.getAvatar())
+                                    .put("aboutText", account.getAboutText())
+                                    .put("customBackground", account.getCustomBackground())
+                                    .put("ownedBackgroundPacks", account.getOwnedBackgroundPacks())
+                            ;
+                            return data;
                         } else {
                             return new JSONObject().put("error", "no account");
                         }
                     });
                 });
                 post("/update", (req, res) -> {
-                    mewna.getAccountManager().createOrUpdateUser(req.body());
+                    mewna.getAccountManager().updateAccountSettings(new JSONObject(req.body()));
+                    return new JSONObject();
+                });
+                post("/update/oauth", (req, res) -> {
+                    mewna.getAccountManager().createOrUpdateDiscordOAuthLinkedAccount(new JSONObject(req.body()));
                     return new JSONObject();
                 });
                 
@@ -127,36 +141,6 @@ class API {
                             return mewna.getAccountManager().checkDiscordLinkedAccountExists(req.params(":id"));
                         });
                     });
-                });
-            });
-            path("/player", () -> {
-                // More shit goes here
-                get("/:id", (req, res) -> new JSONObject(mewna.getDatabase().getPlayer(req.params(":id"))));
-                post("/:id", (req, res) -> {
-                    final JSONObject data = new JSONObject(req.body());
-                    final Player player = mewna.getDatabase().getPlayer(req.params(":id"));
-                    if(player.validateSettings(data)) {
-                        try {
-                            player.updateSettings(mewna.getDatabase(), data);
-                            logger.info("Updated player {} settings", req.params(":id"));
-                            // All good, update and return
-                            
-                            return new JSONObject().put("status", "ok");
-                        } catch(final RuntimeException e) {
-                            logger.error("Player settings for {} failed updateSettings expectedly", req.params(":id"));
-                            e.printStackTrace();
-                            return new JSONObject().put("status", "error").put("error", "invalid config");
-                        } catch(final Exception e) {
-                            logger.error("Player settings for {} failed updateSettings unexpectedly", req.params(":id"));
-                            logger.error("Caught unknown exception updating:");
-                            e.printStackTrace();
-                            return new JSONObject().put("status", "error").put("error", "very invalid config");
-                        }
-                    } else {
-                        logger.error("Player settings for {} failed validate", req.params(":id"));
-                        // :fire: :blobcatfireeyes:, send back an error
-                        return new JSONObject().put("status", "error").put("error", "invalid config");
-                    }
                 });
             });
             path("/guild", () -> {
@@ -232,7 +216,7 @@ class API {
                                                 .put("currentLevelXp", currentLevelXp)
                                                 .put("xpNeeded", xpNeeded)
                                                 .put("nextLevelXp", nextLevelXp)
-                                                .put("customBackground", player.getCustomBackground())
+                                                .put("customBackground", player.getAccount().getCustomBackground())
                                         );
                                     } catch(final IOException e) {
                                         e.printStackTrace();

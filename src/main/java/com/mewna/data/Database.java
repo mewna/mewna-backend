@@ -9,7 +9,6 @@ import com.mewna.plugin.Plugin;
 import gg.amy.pgorm.PgStore;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import lombok.Getter;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -231,19 +230,30 @@ public class Database {
     // Players //
     /////////////
     
+    /**
+     * {@link #getPlayer(String)} will create a new player of one does not
+     * exist. This is not always the correct thing to do, so we give a way to
+     * just directly get an {@code Optional<Player>} instead of creating a new
+     * one and returning that. This method is mainly useful for read-only
+     * operations.
+     *
+     * @param id The player id to search for
+     *
+     * @return An {@link Optional} that might contain a {@link Player}.
+     */
+    public Optional<Player> getOptionalPlayer(final String id) {
+        return store.mapSync(Player.class).load(id);
+    }
+    
     public Player getPlayer(final String id) {
-        return store.mapSync(Player.class).load(id).orElseGet(() -> {
+        return getOptionalPlayer(id).orElseGet(() -> {
             final Player base = Player.base(id);
             savePlayer(base);
             // If we don't have a player, then we also need to create an account for them
-            final User user = mewna.getCache().getUser(id);
-            final JSONObject data = new JSONObject()
-                    .put("email", "")
-                    .put("username", "")
-                    .put("displayName", user.getName())
-                    .put("discordAccountId", id)
-                    .put("avatar", user.getAvatarURL());
-            mewna.getAccountManager().createOrUpdateUser(data.toString());
+            if(!mewna.getAccountManager().getAccountByLinkedDiscord(id).isPresent()) {
+                final User user = mewna.getCache().getUser(id);
+                mewna.getAccountManager().createNewDiscordLinkedAccount(base, user);
+            }
             return base;
         });
     }
@@ -267,27 +277,13 @@ public class Database {
         });
     }
     
-    private final class OptionalHolder<T> {
-        @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-        private Optional<T> value;
-        
-        private OptionalHolder() {
-            value = Optional.empty();
-        }
-        
-        private void setValue(final T data) {
-            value = Optional.ofNullable(data);
-        }
+    public Optional<Account> getAccountById(final String id) {
+        return store.mapSync(Account.class).load(id);
     }
-    
     
     //////////////
     // Accounts //
     //////////////
-    
-    public Optional<Account> getAccountById(final String id) {
-        return store.mapSync(Account.class).load(id);
-    }
     
     public Optional<Account> getAccountByDiscordId(final String id) {
         final OptionalHolder<Account> holder = new OptionalHolder<>();
@@ -315,5 +311,18 @@ public class Database {
     
     public void savePost(final TimelinePost post) {
         store.mapSync(TimelinePost.class).save(post);
+    }
+    
+    private final class OptionalHolder<T> {
+        @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+        private Optional<T> value;
+        
+        private OptionalHolder() {
+            value = Optional.empty();
+        }
+        
+        private void setValue(final T data) {
+            value = Optional.ofNullable(data);
+        }
     }
 }

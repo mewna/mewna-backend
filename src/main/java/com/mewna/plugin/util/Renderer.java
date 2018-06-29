@@ -139,7 +139,7 @@ public final class Renderer {
             final FontMetrics aboutMeFontMetrics = g2.getFontMetrics(ABOUT_ME_FONT);
             // 32, 268
             // 536x122
-            final List<String> wrap = wrap(player.getAboutText(), aboutMeFontMetrics, 536);
+            final List<String> wrap = wrap(player.getAccount().getAboutText(), aboutMeFontMetrics, 536);
             int y = 268;
             for(final String line : wrap) {
                 g2.drawString(line, 32, y + ABOUT_ME_FONT.getSize());

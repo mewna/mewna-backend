@@ -3,11 +3,14 @@ package com.mewna.accounts;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
 import com.mewna.accounts.Account.AccountBuilder;
+import com.mewna.cache.entity.User;
+import com.mewna.data.Player;
 import com.mewna.plugin.util.Snowflakes;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Optional;
 
 /**
@@ -19,6 +22,7 @@ import java.util.Optional;
 public class AccountManager {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private final Mewna mewna;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     
     public Optional<Account> getAccountById(final String id) {
         return mewna.getDatabase().getAccountById(id);
@@ -33,58 +37,75 @@ public class AccountManager {
         return account.map(Account::getId).orElse("null");
     }
     
-    public void createOrUpdateUser(final String json) {
-        final JSONObject data = new JSONObject(json);
-        if(!data.has("id")) {
-            data.put("id", Snowflakes.getNewSnowflake());
-        }
+    public void createNewDiscordLinkedAccount(final Player player, final User user) {
+        final String snowflake = Snowflakes.getNewSnowflake();
+        final Account account = new Account(snowflake);
         
-        try {
-            final Optional<Account> maybeAccount = mewna.getDatabase().getAccountById(data.getString("id"));
-            final Account account = MAPPER.readValue(data.toString(), Account.class);
-            if(!maybeAccount.isPresent()) {
-                // No existing account, just update directly
-                mewna.getDatabase().saveAccount(account);
-            } else {
-                // It claims there's no check for presence before .get(), but it's literally right above this
-                //noinspection ConstantConditions
-                final AccountBuilder builder = maybeAccount.map(Account::toBuilder).get();
-                // Existing account, merge
-                if(data.has("email")) {
-                    final String email = data.optString("email");
-                    if(email != null && !email.trim().isEmpty()) {
-                        builder.email(email);
-                    }
-                }
-                if(data.has("username")) {
-                    final String username = data.optString("username");
-                    if(username != null && !username.trim().isEmpty()) {
-                        builder.username(username);
-                    }
-                }
-                if(data.has("displayName")) {
-                    final String displayName = data.optString("displayName");
-                    if(displayName != null && !displayName.trim().isEmpty()) {
-                        builder.displayName(displayName);
-                    }
-                }
-                if(data.has("discordAccountId")) {
-                    final String discordAccountId = data.optString("discordAccountId");
-                    if(discordAccountId != null && !discordAccountId.trim().isEmpty()) {
-                        builder.discordAccountId(discordAccountId);
-                    }
-                }
-                if(data.has("avatar")) {
-                    final String avatar = data.optString("avatar");
-                    if(avatar != null && !avatar.trim().isEmpty()) {
-                        builder.avatar(avatar);
-                    }
-                }
-                mewna.getDatabase().saveAccount(builder.build());
+        account.setDiscordAccountId(user.getId());
+        account.setDisplayName(user.getName());
+        account.setAvatar(user.getAvatarURL());
+        
+        mewna.getDatabase().saveAccount(account);
+    }
+    
+    public void createOrUpdateDiscordOAuthLinkedAccount(final JSONObject data) {
+        final String id = data.has("id") ? data.getString("id") : Snowflakes.getNewSnowflake();
+        final AccountBuilder builder = mewna.getDatabase().getAccountById(id).map(Account::toBuilder)
+                // We do this to get the default values so that we don't have to do extra work here later.
+                .orElseGet(() -> new Account(id).toBuilder());
+        builder.id(id);
+        
+        if(data.has("username") && !data.isNull("username")) {
+            final String username = data.optString("username");
+            if(username != null && !username.isEmpty()) {
+                builder.username(username);
             }
-            
-        } catch(final IOException e) {
-            throw new RuntimeException(e);
+        }
+        if(data.has("email") && !data.isNull("email")) {
+            final String email = data.optString("email");
+            if(email != null && !email.isEmpty()) {
+                builder.email(email);
+            }
+        }
+        if(data.has("displayName") && !data.isNull("displayName")) {
+            final String displayName = data.optString("displayName");
+            if(displayName != null && !displayName.isEmpty()) {
+                builder.displayName(displayName);
+            }
+        }
+        if(data.has("avatar") && !data.isNull("avatar")) {
+            final String avatar = data.optString("avatar");
+            if(avatar != null && !avatar.isEmpty()) {
+                builder.avatar(avatar);
+            }
+        }
+        if(data.has("discordAccountId") && !data.isNull("discordAccountId")) {
+            final String discordAccountId = data.optString("discordAccountId");
+            if(discordAccountId != null && !discordAccountId.isEmpty()) {
+                builder.discordAccountId(discordAccountId);
+            }
+        }
+        mewna.getDatabase().saveAccount(builder.build());
+    }
+    
+    public void updateAccountSettings(final JSONObject data) {
+        // TODO: Find account and etc
+        final String id = data.optString("id");
+        if(id != null && !id.isEmpty()) {
+            final Optional<Account> maybeAccount = mewna.getDatabase().getAccountById(id);
+            if(maybeAccount.isPresent()) {
+                final Account account = maybeAccount.get();
+                if(account.validateSettings(data)) {
+                    account.updateSettings(mewna.getDatabase(), data);
+                    logger.info("Updated account {}", id);
+                } else {
+                    logger.warn("Can't update account {}: Failed validateSettings, data {}", id, data);
+                }
+            } else {
+                logger.warn("Can't update account {}: Doesn't exist", id);
+            }
+        } else {
+            logger.warn("No id with account payload: {}", data);
         }
     }
 }

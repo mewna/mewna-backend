@@ -1,6 +1,7 @@
 package com.mewna.plugin.plugins;
 
 import com.mewna.Mewna;
+import com.mewna.accounts.Account;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.Member;
 import com.mewna.cache.entity.User;
@@ -12,6 +13,8 @@ import com.mewna.plugin.Plugin;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.message.MessageCreateEvent;
+import com.mewna.plugin.event.plugin.behaviour.PlayerEvent;
+import com.mewna.plugin.event.plugin.behaviour.SystemUserEventType;
 import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
 import com.mewna.plugin.util.Renderer;
@@ -82,9 +85,11 @@ public class PluginLevels extends BasePlugin {
         final int[] rank = {-1};
         final String guildId = guild.getId();
         final String playerId = player.getId();
-        Mewna.getInstance().getDatabase().getStore().sql("SELECT rank FROM (SELECT row_number() OVER () AS rank, data FROM players " +
-                "WHERE data->'guildXp'->'" + guildId + "' IS NOT NULL " +
-                "ORDER BY (data->'guildXp'->>'" + guildId + "')::integer DESC) AS _q " +
+        Mewna.getInstance().getDatabase().getStore().sql("SELECT rank FROM (SELECT row_number() OVER (" +
+                "ORDER BY (data->'guildXp'->>'" + guildId + "')::integer DESC" +
+                ") AS rank, data FROM players " +
+                "WHERE data->'guildXp'->'" + guildId + "' IS NOT NULL "+
+                /*"ORDER BY (data->'guildXp'->>'" + guildId + "')::integer DESC*/") AS _q " +
                 "WHERE data->>'id' = '" + playerId + "';", p -> {
             final ResultSet resultSet = p.executeQuery();
             if(resultSet.isBeforeFirst()) {
@@ -196,7 +201,7 @@ public class PluginLevels extends BasePlugin {
                 .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-local:" + guild.getId(),
                         TimeUnit.MINUTES.toMillis(1));
         final ImmutablePair<Boolean, Long> globalRes = getMewna().getRatelimiter()
-                .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-global", TimeUnit.MINUTES.toMillis(1));
+                .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-global", TimeUnit.MINUTES.toMillis(10));
         
         if(!localRes.left) {
             final long oldXp = player.getXp(guild);
@@ -217,9 +222,30 @@ public class PluginLevels extends BasePlugin {
                             TimeUnit.MINUTES.toMillis(1)));
         }
         if(!globalRes.left) {
+            final long oldXp = player.getGlobalXp();
+            final long xp = getXp(player);
             player.incrementGlobalXp(getXp(player));
             getDatabase().savePlayer(player);
             // Level-up notifications here?
+            if(isLevelUp(oldXp, oldXp + xp)) {
+                // TODO: Emit user event
+                final long level = xpToLevel(oldXp + xp);
+                // lol
+                switch((int) level) {
+                    case 10:
+                    case 25:
+                    case 50:
+                    case 100: {
+                        getMewna().getPluginManager().processEvent(EventType.PLAYER_EVENT,
+                                new PlayerEvent(SystemUserEventType.GLOBAL_LEVEL, player,
+                                        new JSONObject().put("level", level)));
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+            }
         }
     }
     
@@ -243,9 +269,14 @@ public class PluginLevels extends BasePlugin {
         }
         
         getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
-            final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
+            // lol
+            // we do everything possible to guarantee that this should be safe
+            // without doing a check here
+            //noinspection ConstantConditions
+            final Account account = getDatabase().getAccountByDiscordId(user.getId()).get();
+            final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.getId();
     
-            final String profileUrl = System.getenv("DOMAIN") + "/profile/" + user.getId();
+            final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
             final EmbedBuilder builder = new EmbedBuilder()
                     .setTitle("**" + user.getName() + "**'s rank card", null)
                     .setImage("attachment://rank.png")
@@ -272,8 +303,14 @@ public class PluginLevels extends BasePlugin {
         }
         
         getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
+            // lol
+            // we do everything possible to guarantee that this should be safe
+            // without doing a check here
+            //noinspection ConstantConditions
+            final Account account = getDatabase().getAccountByDiscordId(user.getId()).get();
+            final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.getId();
+            
             final byte[] cardBytes = Renderer.generateProfileCard(user, player);
-            final String profileUrl = System.getenv("DOMAIN") + "/profile/" + user.getId();
             final EmbedBuilder builder = new EmbedBuilder()
                     .setTitle("**" + user.getName() + "**'s profile card", null)
                     .setImage("attachment://profile.png")

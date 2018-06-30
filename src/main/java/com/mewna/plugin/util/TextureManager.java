@@ -48,7 +48,7 @@ public final class TextureManager {
     
     @SuppressWarnings("WeakerAccess")
     public static Optional<Background> getBackground(final Player player) {
-        return BACKGROUNDS.stream().filter(e -> e.path.equalsIgnoreCase(player.getCustomBackground() + ".png")).findFirst();
+        return BACKGROUNDS.stream().filter(e -> e.path.equalsIgnoreCase(player.getAccount().getCustomBackground() + ".png")).findFirst();
     }
     
     public static Map<String, List<Background>> getPacks() {

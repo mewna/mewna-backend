@@ -3,6 +3,7 @@ package com.mewna.data;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
 import com.mewna.accounts.Account;
+import com.mewna.accounts.timeline.TimelinePost;
 import com.mewna.cache.entity.User;
 import com.mewna.plugin.Plugin;
 import gg.amy.pgorm.PgStore;
@@ -65,7 +66,7 @@ public class Database {
         
         mapSettingsClasses();
         
-        premap(Player.class, Account.class);
+        premap(Player.class, Account.class, TimelinePost.class);
         
         // Webhooks table is created manually, because it doesn't need to be JSON:b:
         store.sql("CREATE TABLE IF NOT EXISTS discord_webhooks (channel TEXT PRIMARY KEY NOT NULL UNIQUE, guild TEXT NOT NULL, " +
@@ -229,10 +230,30 @@ public class Database {
     // Players //
     /////////////
     
+    /**
+     * {@link #getPlayer(String)} will create a new player of one does not
+     * exist. This is not always the correct thing to do, so we give a way to
+     * just directly get an {@code Optional<Player>} instead of creating a new
+     * one and returning that. This method is mainly useful for read-only
+     * operations.
+     *
+     * @param id The player id to search for
+     *
+     * @return An {@link Optional} that might contain a {@link Player}.
+     */
+    public Optional<Player> getOptionalPlayer(final String id) {
+        return store.mapSync(Player.class).load(id);
+    }
+    
     public Player getPlayer(final String id) {
-        return store.mapSync(Player.class).load(id).orElseGet(() -> {
+        return getOptionalPlayer(id).orElseGet(() -> {
             final Player base = Player.base(id);
             savePlayer(base);
+            // If we don't have a player, then we also need to create an account for them
+            if(!mewna.getAccountManager().getAccountByLinkedDiscord(id).isPresent()) {
+                final User user = mewna.getCache().getUser(id);
+                mewna.getAccountManager().createNewDiscordLinkedAccount(base, user);
+            }
             return base;
         });
     }
@@ -256,32 +277,18 @@ public class Database {
         });
     }
     
-    private final class OptionalHolder<T> {
-        @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-        private Optional<T> value;
-        
-        private OptionalHolder() {
-            value = Optional.empty();
-        }
-        
-        private void setValue(final T data) {
-            value = Optional.ofNullable(data);
-        }
+    public Optional<Account> getAccountById(final String id) {
+        return store.mapSync(Account.class).load(id);
     }
-    
     
     //////////////
     // Accounts //
     //////////////
     
-    public Optional<Account> getAccountById(final String id) {
-        return store.mapSync(Account.class).load(id);
-    }
-    
     public Optional<Account> getAccountByDiscordId(final String id) {
         final OptionalHolder<Account> holder = new OptionalHolder<>();
         
-        store.sql("SELECT data FROM accounts WHERE data->>'discordAccountId' = ?;", p -> {
+        store.sql("SELECT data FROM " + store.mapSync(Account.class).getTableName() + " WHERE data->>'discordAccountId' = ?;", p -> {
             p.setString(1, id);
             final ResultSet resultSet = p.executeQuery();
             if(resultSet.isBeforeFirst()) {
@@ -300,5 +307,58 @@ public class Database {
     
     public void saveAccount(final Account account) {
         store.mapSync(Account.class).save(account);
+    }
+    
+    public void savePost(final TimelinePost post) {
+        store.mapSync(TimelinePost.class).save(post);
+    }
+    
+    public List<TimelinePost> getLast100TimelinePosts(final String id) {
+        final List<TimelinePost> posts = new ArrayList<>();
+        store.sql("SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName() + " WHERE data->>'author' = ? ORDER BY id DESC LIMIT 100;", q -> {
+            q.setString(1, id);
+            final ResultSet resultSet = q.executeQuery();
+            while(resultSet.next()) {
+                final String data = resultSet.getString("data");
+                try {
+                    posts.add(MAPPER.readValue(data, TimelinePost.class));
+                } catch(final IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        
+        return posts;
+    }
+    
+    public List<TimelinePost> getAllTimelinePosts(final String id) {
+        final List<TimelinePost> posts = new ArrayList<>();
+        store.sql("SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName() + " WHERE data->>'author' = ? ORDER BY id DESC;", q -> {
+            q.setString(1, id);
+            final ResultSet resultSet = q.executeQuery();
+            while(resultSet.next()) {
+                final String data = resultSet.getString("data");
+                try {
+                    posts.add(MAPPER.readValue(data, TimelinePost.class));
+                } catch(final IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        
+        return posts;
+    }
+    
+    private final class OptionalHolder<T> {
+        @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+        private Optional<T> value;
+        
+        private OptionalHolder() {
+            value = Optional.empty();
+        }
+        
+        private void setValue(final T data) {
+            value = Optional.ofNullable(data);
+        }
     }
 }

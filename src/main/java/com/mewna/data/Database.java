@@ -288,7 +288,7 @@ public class Database {
     public Optional<Account> getAccountByDiscordId(final String id) {
         final OptionalHolder<Account> holder = new OptionalHolder<>();
         
-        store.sql("SELECT data FROM accounts WHERE data->>'discordAccountId' = ?;", p -> {
+        store.sql("SELECT data FROM " + store.mapSync(Account.class).getTableName() + " WHERE data->>'discordAccountId' = ?;", p -> {
             p.setString(1, id);
             final ResultSet resultSet = p.executeQuery();
             if(resultSet.isBeforeFirst()) {
@@ -311,6 +311,42 @@ public class Database {
     
     public void savePost(final TimelinePost post) {
         store.mapSync(TimelinePost.class).save(post);
+    }
+    
+    public List<TimelinePost> getLast100TimelinePosts(final String id) {
+        final List<TimelinePost> posts = new ArrayList<>();
+        store.sql("SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName() + " WHERE data->>'author' = ? ORDER BY id DESC LIMIT 100;", q -> {
+            q.setString(1, id);
+            final ResultSet resultSet = q.executeQuery();
+            while(resultSet.next()) {
+                final String data = resultSet.getString("data");
+                try {
+                    posts.add(MAPPER.readValue(data, TimelinePost.class));
+                } catch(final IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        
+        return posts;
+    }
+    
+    public List<TimelinePost> getAllTimelinePosts(final String id) {
+        final List<TimelinePost> posts = new ArrayList<>();
+        store.sql("SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName() + " WHERE data->>'author' = ? ORDER BY id DESC;", q -> {
+            q.setString(1, id);
+            final ResultSet resultSet = q.executeQuery();
+            while(resultSet.next()) {
+                final String data = resultSet.getString("data");
+                try {
+                    posts.add(MAPPER.readValue(data, TimelinePost.class));
+                } catch(final IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        
+        return posts;
     }
     
     private final class OptionalHolder<T> {

@@ -125,6 +125,12 @@ class API {
                             return new JSONObject().put("error", "no account");
                         }
                     });
+                    get("/posts/all", (req, res) -> {
+                        return new JSONArray(mewna.getDatabase().getAllTimelinePosts(req.params(":id")));
+                    });
+                    get("/posts", (req, res) -> {
+                        return new JSONArray(mewna.getDatabase().getLast100TimelinePosts(req.params(":id")));
+                    });
                 });
                 post("/update", (req, res) -> {
                     mewna.getAccountManager().updateAccountSettings(new JSONObject(req.body()));

@@ -5,10 +5,14 @@ import com.mewna.Mewna;
 import com.mewna.accounts.Account;
 import com.mewna.cache.entity.Guild;
 import com.mewna.plugin.CommandContext;
+import com.mewna.plugin.event.EventType;
+import com.mewna.plugin.event.plugin.behaviour.PlayerEvent;
+import com.mewna.plugin.event.plugin.behaviour.SystemUserEventType;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
 import lombok.*;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -60,6 +64,15 @@ public class Player {
     // Balance
     
     public void incrementBalance(final long amount) {
+        if(balance < 100_000L && balance + amount > 100_000L) {
+            Mewna.getInstance().getPluginManager().processEvent(EventType.PLAYER_EVENT,
+                    new PlayerEvent(SystemUserEventType.MONEY, this,
+                            new JSONObject().put("balance", 100_000L)));
+        } if(balance < 1_000_000L && balance + amount > 1_000_000L) {
+            Mewna.getInstance().getPluginManager().processEvent(EventType.PLAYER_EVENT,
+                    new PlayerEvent(SystemUserEventType.MONEY, this,
+                            new JSONObject().put("balance", 1_000_000L)));
+        }
         balance += amount;
         if(balance < 0L) {
             balance = 0L;

@@ -3,6 +3,7 @@ package com.mewna.accounts;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
 import com.mewna.accounts.Account.AccountBuilder;
+import com.mewna.accounts.timeline.TimelinePost;
 import com.mewna.cache.entity.User;
 import com.mewna.data.Player;
 import com.mewna.plugin.util.Snowflakes;
@@ -11,6 +12,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -107,5 +109,9 @@ public class AccountManager {
         } else {
             logger.warn("No id with account payload: {}", data);
         }
+    }
+    
+    public List<TimelinePost> getAllPosts(final String id) {
+        return mewna.getDatabase().getAllTimelinePosts(id);
     }
 }

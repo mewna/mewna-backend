@@ -1,6 +1,10 @@
 package com.mewna.accounts;
 
+import com.mewna.Mewna;
 import com.mewna.data.Database;
+import com.mewna.plugin.event.EventType;
+import com.mewna.plugin.event.plugin.behaviour.AccountEvent;
+import com.mewna.plugin.event.plugin.behaviour.SystemUserEventType;
 import com.mewna.plugin.util.TextureManager;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
@@ -41,6 +45,7 @@ public class Account {
     private String customBackground = "/backgrounds/default/plasma";
     private List<String> ownedBackgroundPacks = new ArrayList<>(Collections.singletonList("default"));
     
+    @SuppressWarnings("WeakerAccess")
     public Account(final String id) {
         this.id = id;
     }
@@ -86,10 +91,20 @@ public class Account {
         final AccountBuilder builder = database.getAccountById(id).map(Account::toBuilder).orElse(builder());
         int changes = 0;
         if(data.has("aboutText")) {
+            if(!builder.aboutText.equals(data.getString("aboutText"))) {
+                Mewna.getInstance().getPluginManager().processEvent(EventType.PLAYER_EVENT,
+                        new AccountEvent(SystemUserEventType.MONEY, this,
+                                new JSONObject().put("balance", 1_000_000L)));
+            }
             builder.aboutText(data.getString("aboutText"));
             ++changes;
         }
         if(data.has("customBackground")) {
+            if(!builder.customBackground.equals("/backgrounds/" + data.getString("customBackground"))) {
+                Mewna.getInstance().getPluginManager().processEvent(EventType.PLAYER_EVENT,
+                        new AccountEvent(SystemUserEventType.MONEY, this,
+                                new JSONObject().put("balance", 1_000_000L)));
+            }
             builder.customBackground("/backgrounds/" + data.getString("customBackground"));
             ++changes;
         }

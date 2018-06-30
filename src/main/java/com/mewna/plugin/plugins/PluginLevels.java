@@ -13,8 +13,8 @@ import com.mewna.plugin.Plugin;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.message.MessageCreateEvent;
-import com.mewna.plugin.event.plugin.behaviour.UserEvent;
-import com.mewna.plugin.event.plugin.behaviour.UserEvent.UserEventType;
+import com.mewna.plugin.event.plugin.behaviour.PlayerEvent;
+import com.mewna.plugin.event.plugin.behaviour.SystemUserEventType;
 import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
 import com.mewna.plugin.util.Renderer;
@@ -236,8 +236,8 @@ public class PluginLevels extends BasePlugin {
                     case 25:
                     case 50:
                     case 100: {
-                        getMewna().getPluginManager().processEvent(EventType.USER_EVENT,
-                                new UserEvent(UserEventType.GLOBAL_LEVEL, player,
+                        getMewna().getPluginManager().processEvent(EventType.PLAYER_EVENT,
+                                new PlayerEvent(SystemUserEventType.GLOBAL_LEVEL, player,
                                         new JSONObject().put("level", level)));
                         break;
                     }

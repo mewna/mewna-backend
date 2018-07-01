@@ -21,6 +21,7 @@
         <spark.version>2.7.2</spark.version>
         <postgres.orm.version>1dcc398cb3</postgres.orm.version>
         <jackson.version>2.9.2</jackson.version>
+        <paypal.version>1.14.0</paypal.version>
     </properties>
 
     <repositories>
@@ -246,6 +247,7 @@
             <version>${spark.version}</version>
         </dependency>
 
+        <!-- Jackson -->
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-parameter-names</artifactId>
@@ -260,6 +262,25 @@
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
             <version>${jackson.version}</version>
+        </dependency>
+
+        <!-- Paypal -->
+        <dependency>
+            <groupId>com.paypal.sdk</groupId>
+            <artifactId>rest-api-sdk</artifactId>
+            <version>${paypal.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.paypal.sdk</groupId>
+            <artifactId>rest-api-sdk</artifactId>
+            <version>${paypal.version}</version>
+            <classifier>sources</classifier>
+        </dependency>
+        <dependency>
+            <groupId>com.paypal.sdk</groupId>
+            <artifactId>rest-api-sdk</artifactId>
+            <version>${paypal.version}</version>
+            <classifier>javadoc</classifier>
         </dependency>
 
         <!-- JUnit -->

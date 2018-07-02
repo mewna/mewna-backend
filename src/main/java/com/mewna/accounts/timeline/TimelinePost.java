@@ -39,7 +39,6 @@ public class TimelinePost {
      */
     private final boolean system;
     
-    // TODO: Just read below this...
     // tfw no unions feels bad man
     // So we only SOMETIMES want this to be text. When it's a `system` post, we
     // want this to be proper structured JSON that doesn't get serialized to a
@@ -53,7 +52,6 @@ public class TimelinePost {
                         : new PostContent(text, null));
     }
     
-    // TODO: Make test data based on this
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor

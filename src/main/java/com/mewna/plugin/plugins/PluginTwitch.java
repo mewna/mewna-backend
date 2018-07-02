@@ -14,6 +14,7 @@ import com.mewna.plugin.event.plugin.twitch.TwitchStreamStartEvent;
 import com.mewna.plugin.event.plugin.twitch.TwitchStreamerEvent;
 import com.mewna.plugin.plugins.settings.TwitchSettings;
 import com.mewna.plugin.plugins.settings.TwitchSettings.TwitchStreamerConfig;
+import net.dv8tion.jda.core.exceptions.HttpException;
 import net.dv8tion.jda.webhook.WebhookClient;
 import net.dv8tion.jda.webhook.WebhookClientBuilder;
 
@@ -104,18 +105,33 @@ public class PluginTwitch extends BasePlugin {
                                                             .build());
                                             
                                             // TODO: Templating
-                                            switch(mode) {
-                                                case "stream-start": {
-                                                    client.send(streamerConfig.getStreamStartMessage());
-                                                    break;
+                                            try {
+                                                switch(mode) {
+                                                    case "stream-start": {
+                                                        client.send(streamerConfig.getStreamStartMessage());
+                                                        break;
+                                                    }
+                                                    case "stream-end": {
+                                                        client.send(streamerConfig.getStreamEndMessage());
+                                                        break;
+                                                    }
+                                                    case "follow": {
+                                                        client.send(streamerConfig.getFollowMessage());
+                                                        break;
+                                                    }
                                                 }
-                                                case "stream-end": {
-                                                    client.send(streamerConfig.getStreamEndMessage());
-                                                    break;
-                                                }
-                                                case "follow": {
-                                                    client.send(streamerConfig.getFollowMessage());
-                                                    break;
+                                            } catch(final HttpException e) {
+                                                // I cannot believe I have to do this.
+                                                final String message = e.getMessage();
+                                                // Extracts HTTP response code from the error message, because APPARENTLY
+                                                // it's not necessary to expose it here...
+                                                final String code = message
+                                                        .replace("Request returned failure ", "")
+                                                        .trim().split(" ", 2)[0];
+                                                if(code.equalsIgnoreCase("404")) {
+                                                    // Bad hook, delet
+                                                    getLogger().warn("Deleting bad webhook {} on {}", webhook.getId(), webhook.getChannel());
+                                                    getDatabase().deleteWebhook(webhook.getChannel());
                                                 }
                                             }
                                         } catch(final ExecutionException e) {

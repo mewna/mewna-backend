@@ -66,12 +66,11 @@ public class PluginMisc extends BasePlugin {
     
     @Command(names = {"help", "?"}, desc = "Get links to helpful information.", usage = "help", examples = "help")
     public void help(final CommandContext ctx) {
-        // TODO: Redo this...
         final EmbedBuilder builder = new EmbedBuilder();
         builder.setTitle("Mewna help")
-                .addField("Bot invite", "https://amy.chat/invite", false)
+                .addField("Dashboard", System.getenv("DOMAIN"), false)
                 .addField("Support server", "https://discord.gg/UwdDN6r", false)
-                .addField("", "This command: `amy!help`, `a.help`, or `a:help`", false);
+                ;
         getRestJDA().sendMessage(ctx.getChannel().getId(), builder.build()).queue();
     }
 }

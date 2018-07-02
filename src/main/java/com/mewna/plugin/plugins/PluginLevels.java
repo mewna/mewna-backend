@@ -228,7 +228,6 @@ public class PluginLevels extends BasePlugin {
             getDatabase().savePlayer(player);
             // Level-up notifications here?
             if(isLevelUp(oldXp, oldXp + xp)) {
-                // TODO: Emit user event
                 final long level = xpToLevel(oldXp + xp);
                 // lol
                 switch((int) level) {

@@ -3,8 +3,6 @@ package com.mewna.plugin.plugins;
 import com.mewna.accounts.Account;
 import com.mewna.accounts.timeline.TimelinePost;
 import com.mewna.plugin.BasePlugin;
-import com.mewna.plugin.Command;
-import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.Plugin;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.event.EventType;
@@ -13,10 +11,6 @@ import com.mewna.plugin.event.plugin.behaviour.PlayerEvent;
 import com.mewna.plugin.event.plugin.behaviour.SystemUserEventType;
 import com.mewna.plugin.plugins.settings.BehaviourSettings;
 import org.json.JSONObject;
-
-import java.util.Optional;
-
-import static com.mewna.plugin.event.plugin.behaviour.SystemUserEventType.*;
 
 /**
  * @author amy
@@ -67,6 +61,7 @@ public class PluginBehaviour extends BasePlugin {
     // The data show in here is the data expected to be sent in the events.
     // When creating the events for these, we should pay extra attention
     // to these.
+    /*
     @Command(names = "postme", desc = "dot", usage = {}, examples = {})
     public void postMe(final CommandContext ctx) throws InterruptedException {
         final String playerId = ctx.getPlayer().getId();
@@ -123,4 +118,5 @@ public class PluginBehaviour extends BasePlugin {
         }
         getRestJDA().sendMessage(ctx.getChannel(), "Posting 6/6").queue();
     }
+    */
 }

@@ -91,7 +91,6 @@ public class AccountManager {
     }
     
     public void updateAccountSettings(final JSONObject data) {
-        // TODO: Find account and etc
         final String id = data.optString("id");
         if(id != null && !id.isEmpty()) {
             final Optional<Account> maybeAccount = mewna.getDatabase().getAccountById(id);

@@ -77,9 +77,12 @@ public class Account {
             }
             final String pack = split[0];
             final String name = split[1];
-            // I like this being explicit. I find it easier to reason about.
-            //noinspection RedundantIfStatement
             if(!TextureManager.backgroundExists(pack, name)) {
+                return false;
+            }
+            // I like this being explicit - it feels easier to reason about
+            //noinspection RedundantIfStatement
+            if(!ownedBackgroundPacks.contains(pack)) {
                 return false;
             }
         }
@@ -92,7 +95,7 @@ public class Account {
         int changes = 0;
         if(data.has("aboutText")) {
             if(!builder.aboutText.equals(data.getString("aboutText"))) {
-                Mewna.getInstance().getPluginManager().processEvent(EventType.PLAYER_EVENT,
+                Mewna.getInstance().getPluginManager().processEvent(EventType.ACCOUNT_EVENT,
                         new AccountEvent(SystemUserEventType.MONEY, this,
                                 new JSONObject().put("balance", 1_000_000L)));
             }
@@ -101,9 +104,9 @@ public class Account {
         }
         if(data.has("customBackground")) {
             if(!builder.customBackground.equals("/backgrounds/" + data.getString("customBackground"))) {
-                Mewna.getInstance().getPluginManager().processEvent(EventType.PLAYER_EVENT,
-                        new AccountEvent(SystemUserEventType.MONEY, this,
-                                new JSONObject().put("balance", 1_000_000L)));
+                Mewna.getInstance().getPluginManager().processEvent(EventType.ACCOUNT_EVENT,
+                        new AccountEvent(SystemUserEventType.BACKGROUND, this,
+                                new JSONObject().put("bg", "/backgrounds/" + data.getString("customBackground"))));
             }
             builder.customBackground("/backgrounds/" + data.getString("customBackground"));
             ++changes;

@@ -259,6 +259,27 @@ class API {
                 get("/packs", (req, res) -> new JSONObject(TextureManager.getPacks()));
             });
             
+            path("/store", () -> {
+                path("/checkout", () -> {
+                    post("/start", (req, res) -> {
+                        final JSONObject body = new JSONObject(req.body());
+                        return mewna.getPaypalHandler().startPayment(
+                                body.getString("userId"),
+                                body.getString("sku")
+                        );
+                    });
+                    post("/confirm", (req, res) -> {
+                        final JSONObject body = new JSONObject(req.body());
+                        return mewna.getPaypalHandler().finishPayment(
+                                body.getString("userId"),
+                                body.getString("paymentId"),
+                                body.getString("payerId")
+                        );
+                    });
+                });
+                get("/manifest", (req, res) -> new JSONArray(mewna.getPaypalHandler().getSkus()));
+            });
+            
             path("/commands", () -> {
                 // More shit goes here
                 get("/metadata", (req, res) -> new JSONArray(mewna.getCommandManager().getCommandMetadata()));

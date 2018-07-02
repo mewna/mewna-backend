@@ -129,6 +129,7 @@ public class Player {
     }
     
     // TODO: Caching
+    // TODO: This is kinda dumb tbqh
     @JsonIgnore
     public Account getAccount() {
         //noinspection ConstantConditions

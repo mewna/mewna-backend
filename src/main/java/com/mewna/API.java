@@ -188,14 +188,25 @@ class API {
                     });
                     get("/levels", (req, res) -> {
                         final String id = req.params(":id");
+                        // This makes me feel better about not using a prepared query
                         if(!id.matches("\\d{17,20}")) {
                             return new JSONObject();
                         }
                         // This is gonna be ugly
                         final List<JSONObject> results = new ArrayList<>();
+                        /*
                         final String query = String.format("SELECT data FROM players WHERE data->'guildXp'->'%s' IS NOT NULL " +
                                 "AND (data->'guildXp'->>'%s')::integer > 0 " +
                                 "ORDER BY data->'guildXp'->'%s' DESC LIMIT 100;", id, id, id);
+                                */
+                        final String query = String.format(
+                                "SELECT jsonb_pretty(players.data) AS player, jsonb_pretty(accounts.data) AS account FROM players\n" +
+                                "    JOIN accounts ON accounts.data->>'discordAccountId' = players.id\n" +
+                                "    WHERE players.data->'guildXp'->'%s' IS NOT NULL\n" +
+                                "        AND (players.data->'guildXp'->>'%s')::integer > 0\n" +
+                                "    ORDER BY (players.data->'guildXp'->>'%s')::integer DESC LIMIT 100;",
+                                id, id, id
+                        );
                         mewna.getDatabase().getStore().sql(query, p -> {
                             //noinspection Convert2MethodRef
                             final ResultSet resultSet = p.executeQuery();
@@ -203,7 +214,9 @@ class API {
                                 int counter = 1;
                                 while(resultSet.next()) {
                                     try {
-                                        final Player player = MAPPER.readValue(resultSet.getString("data"), Player.class);
+                                        final Player player = MAPPER.readValue(resultSet.getString("player"), Player.class);
+                                        final Account account = MAPPER.readValue(resultSet.getString("account"), Account.class);
+                                        
                                         final User user = mewna.getCache().getUser(player.getId());
                                         final long userXp = player.getXp(id);
                                         final long userLevel = PluginLevels.xpToLevel(userXp);
@@ -211,6 +224,7 @@ class API {
                                         final long currentLevelXp = PluginLevels.fullLevelToXp(userLevel);
                                         final long nextLevelXp = PluginLevels.fullLevelToXp(nextLevel);
                                         final long xpNeeded = PluginLevels.nextLevelXp(userXp);
+                                        
                                         results.add(new JSONObject()
                                                 .put("name", user.getName())
                                                 .put("discrim", user.getDiscriminator())
@@ -222,7 +236,8 @@ class API {
                                                 .put("currentLevelXp", currentLevelXp)
                                                 .put("xpNeeded", xpNeeded)
                                                 .put("nextLevelXp", nextLevelXp)
-                                                .put("customBackground", player.getAccount().getCustomBackground())
+                                                .put("customBackground", account.getCustomBackground())
+                                                .put("accountId", account.getId())
                                         );
                                     } catch(final IOException e) {
                                         e.printStackTrace();

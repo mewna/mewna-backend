@@ -14,14 +14,13 @@ import com.mewna.plugin.event.plugin.twitch.TwitchStreamStartEvent;
 import com.mewna.plugin.event.plugin.twitch.TwitchStreamerEvent;
 import com.mewna.plugin.plugins.settings.TwitchSettings;
 import com.mewna.plugin.plugins.settings.TwitchSettings.TwitchStreamerConfig;
+import com.mewna.util.Templater;
 import net.dv8tion.jda.core.exceptions.HttpException;
 import net.dv8tion.jda.webhook.WebhookClient;
 import net.dv8tion.jda.webhook.WebhookClientBuilder;
 
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -61,9 +60,30 @@ public class PluginTwitch extends BasePlugin {
         handleHook(event, "stream-follow");
     }
     
+    private Templater map(final TwitchStreamerEvent event) {
+        final Map<String, String> data = new HashMap<>();
+        
+        data.put("link", "https://twitch.tv/" + event.getStreamer().getLogin());
+        data.put("streamer.name", event.getStreamer().getDisplayName());
+        if(event instanceof TwitchStreamStartEvent) {
+            final TwitchStreamStartEvent e = (TwitchStreamStartEvent) event;
+            data.put("stream.viewers", String.valueOf(e.getStreamData().getViewerCount()));
+            data.put("stream.title", e.getStreamData().getTitle());
+        } else if(event instanceof TwitchStreamEndEvent) {
+            @SuppressWarnings("unused")
+            final TwitchStreamEndEvent e = (TwitchStreamEndEvent) event;
+        } else if(event instanceof TwitchFollowerEvent) {
+            final TwitchFollowerEvent e = (TwitchFollowerEvent) event;
+            data.put("follower.name", e.getFrom().getDisplayName());
+        }
+        
+        return Templater.fromMap(data);
+    }
+    
     private void handleHook(final TwitchStreamerEvent event, final String mode) {
         // TODO: Detect when nobody subscribes to stream up OR down for unsubbing
         final String streamerId = event.getStreamer().getId();
+        // Oh god...
         getMewna().getDatabase().getStore().sql("SELECT id FROM settings_twitch " +
                 "WHERE data->'twitchStreamers' @> '[{\"id\": \"" + streamerId + "\"}]';", p -> {
             final ResultSet resultSet = p.executeQuery();
@@ -104,19 +124,19 @@ public class PluginTwitch extends BasePlugin {
                                                     () -> new WebhookClientBuilder(Long.parseLong(webhook.getId()), webhook.getSecret())
                                                             .build());
                                             
-                                            // TODO: Templating
+                                            final Templater templater = map(event);
                                             try {
                                                 switch(mode) {
                                                     case "stream-start": {
-                                                        client.send(streamerConfig.getStreamStartMessage());
+                                                        client.send(templater.render(streamerConfig.getStreamStartMessage()));
                                                         break;
                                                     }
                                                     case "stream-end": {
-                                                        client.send(streamerConfig.getStreamEndMessage());
+                                                        client.send(templater.render(streamerConfig.getStreamEndMessage()));
                                                         break;
                                                     }
                                                     case "follow": {
-                                                        client.send(streamerConfig.getFollowMessage());
+                                                        client.send(templater.render(streamerConfig.getFollowMessage()));
                                                         break;
                                                     }
                                                 }

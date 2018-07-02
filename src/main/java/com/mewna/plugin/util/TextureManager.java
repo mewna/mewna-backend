@@ -5,6 +5,7 @@ import com.mewna.cache.entity.User;
 import com.mewna.data.Player;
 import com.mewna.util.CacheUtil;
 import lombok.Getter;
+import net.dv8tion.jda.core.utils.IOUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +24,7 @@ import java.util.jar.JarInputStream;
 
 /**
  * Manages textures. duh.
- *
+ * <p>
  * Things like local image assets are stored locally, ie per-process so that we
  * can easily roll updates without having to worry about expiring caches.
  * Things like avatars are cached in redis, so that we can reduce memory usage
@@ -36,12 +37,11 @@ public final class TextureManager {
     @SuppressWarnings("TypeMayBeWeakened")
     private static final List<Background> BACKGROUNDS = new ArrayList<>();
     private static final Logger LOGGER = LoggerFactory.getLogger(TextureManager.class);
+    private static final String AVATAR_CACHE_KEY = "cache:%s:avatar";
+    private static final Map<String, List<Background>> PACKS = new HashMap<>();
     @SuppressWarnings({"StaticVariableOfConcreteClass", "WeakerAccess", "PublicField"})
     public static Background defaultBg;
     private static boolean preloaded;
-    private static final String AVATAR_CACHE_KEY = "cache:%s:avatar";
-    
-    private static final Map<String, List<Background>> PACKS = new HashMap<>();
     
     private TextureManager() {
     }
@@ -76,7 +76,7 @@ public final class TextureManager {
         }
     }
     
-    public static void preload() {
+    public static void preload(final Mewna mewna) {
         if(preloaded) {
             return;
         }
@@ -92,6 +92,12 @@ public final class TextureManager {
                 LOGGER.info("Cached: {} (pack {}, name {})", CacheUtil.getImageResource(path).getPath(), bg.pack, bg.name);
             }
         });
+        try(final InputStream is = CacheUtil.class.getResourceAsStream("/backgrounds/manifest.json")) {
+            final String json = new String(IOUtil.readFully(is));
+            mewna.getPaypalHandler().loadBackgroundManifest(json);
+        } catch(final IOException e) {
+            throw new RuntimeException(e);
+        }
         BACKGROUNDS.forEach(bg -> {
             if(!PACKS.containsKey(bg.pack)) {
                 PACKS.put(bg.pack, new ArrayList<>());

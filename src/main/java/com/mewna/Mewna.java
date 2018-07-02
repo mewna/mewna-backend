@@ -6,6 +6,7 @@ import com.mewna.data.Database;
 import com.mewna.event.EventManager;
 import com.mewna.jda.RestJDA;
 import com.mewna.nats.NatsServer;
+import com.mewna.paypal.PaypalHandler;
 import com.mewna.plugin.CommandManager;
 import com.mewna.plugin.PluginManager;
 import com.mewna.plugin.util.TextureManager;
@@ -42,6 +43,9 @@ public final class Mewna {
     @Getter
     private final AccountManager accountManager = new AccountManager(this);
     
+    @Getter
+    private final PaypalHandler paypalHandler = new PaypalHandler(this);
+    
     private Mewna() {
     }
     
@@ -56,7 +60,7 @@ public final class Mewna {
     
     private void start() {
         logger.info("Starting Mewna backend...");
-        TextureManager.preload();
+        TextureManager.preload(this);
         eventManager.getCache().connect();
         database.init();
         pluginManager.init();

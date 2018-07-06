@@ -1,13 +1,11 @@
 package com.mewna.plugin.plugins;
 
-import com.mewna.cache.entity.Guild;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Command;
 import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.Plugin;
 import com.mewna.plugin.plugins.settings.MiscSettings;
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.json.JSONObject;
@@ -70,7 +68,8 @@ public class PluginMisc extends BasePlugin {
         builder.setTitle("Mewna help")
                 .addField("Dashboard", System.getenv("DOMAIN"), false)
                 .addField("Support server", "https://discord.gg/UwdDN6r", false)
-                ;
+                .addField("", "Everything can be enabled / disabled in the dashboard.", false)
+        ;
         getRestJDA().sendMessage(ctx.getChannel().getId(), builder.build()).queue();
     }
 }

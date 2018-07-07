@@ -158,7 +158,7 @@ public class DiscordCache {
         } else if(old != null) {
             guild.memberCount(old.getMemberCount());
         }
-
+        
         mappingManager.mapper(Guild.class).save(guild.build());
         logger.debug("Updated guild {}", id);
     }
@@ -297,13 +297,11 @@ public class DiscordCache {
             user.bot(false);
         }
         if(data.has("avatar")) {
-            if(!data.isNull("avatar")) {
-                user.avatar(data.getString("avatar"));
-                // expire the old one
-                TextureManager.expireAvatar(id);
-            }
+            // expire the old one
+            TextureManager.expireAvatar(id);
+            user.avatar(data.optString("avatar"));
             // We don't update avatar from the old one, because if it's not present it means that
-            // they deleted their avatar. Probably, at least.
+            // they deleted their avatar. Probably.
         }
         mappingManager.mapper(User.class).save(user.build());
         logger.debug("Updated user {}", id);

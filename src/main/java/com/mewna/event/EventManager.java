@@ -33,6 +33,7 @@ import static com.mewna.plugin.event.EventType.*;
 import static com.mewna.plugin.event.audio.AudioTrackEvent.TrackMode;
 
 // TODO: Probably should consider refactoring this out into smaller modules...
+
 /**
  * @author amy
  * @since 4/8/18.
@@ -60,9 +61,7 @@ public class EventManager {
         cache = new DiscordCache(mewna);
         
         // Channels
-        handlers.put(CHANNEL_CREATE, (event, data) -> {
-            cache.cacheChannel(data);
-        });
+        handlers.put(CHANNEL_CREATE, (event, data) -> cache.cacheChannel(data));
         handlers.put(CHANNEL_DELETE, (event, data) -> cache.deleteChannel(data.getString("id")));
         handlers.put(CHANNEL_UPDATE, (event, data) -> cache.cacheChannel(data));
         
@@ -148,6 +147,7 @@ public class EventManager {
         
         // Users
         handlers.put(USER_UPDATE, (event, data) -> cache.cacheUser(data));
+        handlers.put(PRESENCE_UPDATE, (event, data) -> cache.cacheUser(data.getJSONObject("user")));
         
         // Voice
         handlers.put(VOICE_SERVER_UPDATE, (event, data) -> {
@@ -279,8 +279,6 @@ public class EventManager {
         });
         handlers.put(MESSAGE_REACTION_REMOVE_ALL, (event, data) -> {
         });
-        handlers.put(PRESENCE_UPDATE, (event, data) -> {
-        });
         handlers.put(READY, (event, data) -> {
         });
         handlers.put(TYPING_START, (event, data) -> {
@@ -301,6 +299,10 @@ public class EventManager {
     }
     
     public void handle(final SocketEvent event) {
-        Optional.ofNullable(handlers.get(event.getType())).ifPresent(e -> e.accept(event, event.getData()));
+        try {
+            Optional.ofNullable(handlers.get(event.getType())).ifPresent(e -> e.accept(event, event.getData()));
+        } catch(final Exception e) {
+            e.printStackTrace();
+        }
     }
 }

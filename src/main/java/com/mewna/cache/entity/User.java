@@ -30,7 +30,7 @@ public class User {
     
     @Transient
     public String getAvatarURL() {
-        if(avatar != null) {
+        if(avatar != null && !avatar.trim().isEmpty()) {
             final String extension;
             if(avatar.startsWith("a_")) {
                 extension = "gif";

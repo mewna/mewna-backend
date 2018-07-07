@@ -200,7 +200,7 @@ class API {
                                 "ORDER BY data->'guildXp'->'%s' DESC LIMIT 100;", id, id, id);
                                 */
                         final String query = String.format(
-                                "SELECT jsonb_pretty(players.data) AS player, jsonb_pretty(accounts.data) AS account FROM players\n" +
+                                "SELECT players.data AS player, accounts.data AS account FROM players\n" +
                                 "    JOIN accounts ON accounts.data->>'discordAccountId' = players.id\n" +
                                 "    WHERE players.data->'guildXp'->'%s' IS NOT NULL\n" +
                                 "        AND (players.data->'guildXp'->>'%s')::integer > 0\n" +

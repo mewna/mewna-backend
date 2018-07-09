@@ -21,4 +21,6 @@ public @interface Plugin {
     boolean enabled() default true;
     
     Class<? extends PluginSettings> settings();
+    
+    boolean owner() default false;
 }

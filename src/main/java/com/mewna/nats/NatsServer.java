@@ -94,7 +94,9 @@ public class NatsServer {
     private <T> void pushEvent(final String queue, final String type, final T data) {
         final JSONObject event = new JSONObject().put("t", type).put("ts", System.currentTimeMillis()).put("d", data);
         try {
-            getConnection().publish(queue, event.toString().getBytes());
+            if(getConnection() != null) {
+                getConnection().publish(queue, event.toString().getBytes());
+            }
         } catch(final IOException | InterruptedException e) {
             e.printStackTrace();
         }

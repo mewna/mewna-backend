@@ -18,6 +18,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.AttributedString;
 import java.util.*;
 import java.util.List;
@@ -51,10 +52,41 @@ public final class Renderer {
     static {
         FONT_SETTINGS.put(TextAttribute.KERNING, TextAttribute.KERNING_ON);
         
+        try {
+            try(final InputStream stream = Renderer.class.getResourceAsStream("/fonts/YanoneKaffeesatz-Regular.otf")) {
+                final Font yanone = Font.createFont(Font.TRUETYPE_FONT, stream);
+                final Map<TextAttribute, Object> settings = new HashMap<>(FONT_SETTINGS);
+                settings.put(TextAttribute.SIZE, 42);
+                USERNAME_FONT = yanone.deriveFont(settings);
+            }
+            try(final InputStream stream = Renderer.class.getResourceAsStream("/fonts/DroidSans.ttf")) {
+                final Font droid = Font.createFont(Font.TRUETYPE_FONT, stream);
+                {
+                    final Map<TextAttribute, Object> settings = new HashMap<>(FONT_SETTINGS);
+                    settings.put(TextAttribute.SIZE, 32);
+                    STATS_FONT = droid.deriveFont(settings);
+                }
+                {
+                    final Map<TextAttribute, Object> settings = new HashMap<>(FONT_SETTINGS);
+                    settings.put(TextAttribute.SIZE, 30);
+                    STATS_FONT_SMALLER = droid.deriveFont(settings);
+                }
+                {
+                    final Map<TextAttribute, Object> settings = new HashMap<>(FONT_SETTINGS);
+                    settings.put(TextAttribute.SIZE, 24);
+                    ABOUT_ME_FONT = droid.deriveFont(settings);
+                }
+            }
+        } catch(final FontFormatException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    
+        /*
         USERNAME_FONT = new Font("Yanone Kaffeesatz", Font.PLAIN, 42).deriveFont(FONT_SETTINGS);
         STATS_FONT = new Font("Droid Sans", Font.PLAIN, 32).deriveFont(FONT_SETTINGS);
         STATS_FONT_SMALLER = new Font("Droid Sans", Font.PLAIN, 30).deriveFont(FONT_SETTINGS);
         ABOUT_ME_FONT = new Font("Droid Sans", Font.PLAIN, 24).deriveFont(FONT_SETTINGS);
+        */
     }
     
     private Renderer() {

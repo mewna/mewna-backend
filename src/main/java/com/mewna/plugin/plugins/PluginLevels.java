@@ -267,6 +267,11 @@ public class PluginLevels extends BasePlugin {
             player = getDatabase().getPlayer(user);
         }
         
+        if(user.isBot()) {
+            getRestJDA().sendMessage(ctx.getChannel(), "Bots can't have levels!").queue();
+            return;
+        }
+        
         getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
             // lol
             // we do everything possible to guarantee that this should be safe
@@ -299,6 +304,11 @@ public class PluginLevels extends BasePlugin {
         } else {
             user = ctx.getMentions().get(0);
             player = getDatabase().getPlayer(user);
+        }
+    
+        if(user.isBot()) {
+            getRestJDA().sendMessage(ctx.getChannel(), "Bots can't have profiles!").queue();
+            return;
         }
         
         getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {

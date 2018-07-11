@@ -300,8 +300,8 @@ public class DiscordCache {
             // expire the old one
             TextureManager.expireAvatar(id);
             user.avatar(data.optString("avatar"));
-            // We don't update avatar from the old one, because if it's not present it means that
-            // they deleted their avatar. Probably.
+        } else if(old != null) {
+            user.avatar(old.getAvatar());
         }
         mappingManager.mapper(User.class).save(user.build());
         logger.debug("Updated user {}", id);

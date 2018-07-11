@@ -33,18 +33,18 @@ import java.util.stream.Collectors;
 @SuppressWarnings({"unused", "FieldCanBeLocal", "MismatchedQueryAndUpdateOfCollection", "WeakerAccess"})
 public class CommandManager {
     private static final List<String> PREFIXES;
-    
-    private final Mewna mewna;
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-    
-    @Getter
-    private final Collection<CommandMetadata> commandMetadata = new ArrayList<>();
-    private final Map<String, CommandWrapper> commands = new HashMap<>();
-    
+    private static final String CLIENT_ID = System.getenv("CLIENT_ID");
+
     static {
         PREFIXES = new ArrayList<>(Arrays.asList(Optional.ofNullable(System.getenv("PREFIXES"))
                 .orElse("bmew.,bmew ,=").split(",")));
     }
+    
+    private final Mewna mewna;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    @Getter
+    private final Collection<CommandMetadata> commandMetadata = new ArrayList<>();
+    private final Map<String, CommandWrapper> commands = new HashMap<>();
     
     public CommandManager(final Mewna mewna) {
         this.mewna = mewna;
@@ -95,8 +95,8 @@ public class CommandManager {
         } else {
             prefixes.addAll(PREFIXES);
         }
-        prefixes.add("<@" + System.getenv("CLIENT_ID") + '>');
-        prefixes.add("<@!" + System.getenv("CLIENT_ID") + '>');
+        prefixes.add("<@" + CLIENT_ID + '>');
+        prefixes.add("<@!" + CLIENT_ID + '>');
         return prefixes;
     }
     
@@ -131,7 +131,7 @@ public class CommandManager {
                 // Ignore it if it's not a guild message
                 return;
             }
-    
+            
             // Collect cache data
             final Guild guild = mewna.getCache().getGuild(guildId);
             final List<User> mentions = new ArrayList<>();
@@ -162,6 +162,11 @@ public class CommandManager {
             }
             // TODO: There's gotta be a way to refactor this out into smaller methods...
             if(found) {
+                final boolean mentionPrefix = prefix.equals("<@" + CLIENT_ID + '>')
+                        || prefix.equals("<@!" + CLIENT_ID + '>');
+                if(mentionPrefix) {
+                    mentions.removeIf(u -> u.getId().equalsIgnoreCase(CLIENT_ID));
+                }
                 content = content.substring(prefix.length()).trim();
                 if(content.isEmpty()) {
                     return;
@@ -195,7 +200,7 @@ public class CommandManager {
                     } else {
                         logger.warn("No plugin metadata for command {}!?", cmd.getBaseName());
                     }
-    
+                    
                     if(cmd.getRatelimit() != null) {
                         final String baseName = cmd.getBaseName();
                         

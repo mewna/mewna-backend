@@ -101,7 +101,8 @@ public class TwitchSettings implements PluginSettings {
                 final TwitchStreamerConfig twitchStreamer = MAPPER.readValue(streamer.toString(), TwitchStreamerConfig.class);
                 if(twitchStreamer.isStreamStartMessagesEnabled() || twitchStreamer.isStreamEndMessagesEnabled()) {
                     // Sub to up/down messages
-                    Mewna.getInstance().getNats().pushTwitchEvent("TWITCH_SUBSCRIBE", new JSONObject());
+                    Mewna.getInstance().getNats().pushTwitchEvent("TWITCH_SUBSCRIBE", new JSONObject()
+                            .put("id", twitchStreamer.getId()).put("topic", "streams"));
                 }
                 if(twitchStreamer.isFollowMessagesEnabled()) {
                     // This is **very intentionally** done like this

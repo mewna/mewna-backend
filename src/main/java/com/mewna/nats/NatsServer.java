@@ -96,6 +96,8 @@ public class NatsServer {
         try {
             if(getConnection() != null) {
                 getConnection().publish(queue, event.toString().getBytes());
+            } else {
+                logger.warn("getConnection() returned null!?");
             }
         } catch(final IOException | InterruptedException e) {
             e.printStackTrace();

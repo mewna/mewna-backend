@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -21,7 +22,8 @@ import java.util.concurrent.Executors;
 @SuppressWarnings("unused")
 public class NatsServer {
     // TODO: Client ID needs to use container name; use metadata service to fetch this
-    private final StreamingConnectionFactory connectionFactory = new StreamingConnectionFactory("mewna-nats", "mewna-discord-backend");
+    private final StreamingConnectionFactory connectionFactory = new StreamingConnectionFactory("mewna-nats",
+            "mewna-discord-backend-" + UUID.randomUUID().toString().replace("-", "_"));
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Mewna mewna;
     

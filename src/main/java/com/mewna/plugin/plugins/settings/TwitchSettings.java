@@ -1,5 +1,6 @@
 package com.mewna.plugin.plugins.settings;
 
+import com.mewna.Mewna;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
@@ -98,6 +99,20 @@ public class TwitchSettings implements PluginSettings {
             try {
                 // If this fails, it's bad JSON or some shit, but it shouldn't have passed the validation steps anyway
                 final TwitchStreamerConfig twitchStreamer = MAPPER.readValue(streamer.toString(), TwitchStreamerConfig.class);
+                if(twitchStreamer.isStreamStartMessagesEnabled() || twitchStreamer.isStreamEndMessagesEnabled()) {
+                    // Sub to up/down messages
+                    Mewna.getInstance().getNats().pushTwitchEvent("TWITCH_SUBSCRIBE", new JSONObject());
+                }
+                if(twitchStreamer.isFollowMessagesEnabled()) {
+                    // This is **very intentionally** done like this
+                    // Later on, this will be used, but for now, we
+                    // wanna make sure that people can't try to sneek it in
+                    if(false) {
+                        // Sub to follow messages
+                    } else {
+                        twitchStreamer.followMessagesEnabled = false;
+                    }
+                }
                 streamers.add(twitchStreamer);
             } catch(final IOException e) {
                 return false;

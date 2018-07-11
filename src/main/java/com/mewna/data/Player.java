@@ -64,11 +64,11 @@ public class Player {
     // Balance
     
     public void incrementBalance(final long amount) {
-        if(balance < 100_000L && balance + amount > 100_000L) {
+        if(balance < 100_000L && balance + amount >= 100_000L) {
             Mewna.getInstance().getPluginManager().processEvent(EventType.PLAYER_EVENT,
                     new PlayerEvent(SystemUserEventType.MONEY, this,
                             new JSONObject().put("balance", 100_000L)));
-        } if(balance < 1_000_000L && balance + amount > 1_000_000L) {
+        } if(balance < 1_000_000L && balance + amount >= 1_000_000L) {
             Mewna.getInstance().getPluginManager().processEvent(EventType.PLAYER_EVENT,
                     new PlayerEvent(SystemUserEventType.MONEY, this,
                             new JSONObject().put("balance", 1_000_000L)));

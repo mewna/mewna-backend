@@ -231,7 +231,7 @@ public class Database {
     /////////////
     
     /**
-     * {@link #getPlayer(String)} will create a new player of one does not
+     * {@link #getPlayer(String)} will create a new player if one does not
      * exist. This is not always the correct thing to do, so we give a way to
      * just directly get an {@code Optional<Player>} instead of creating a new
      * one and returning that. This method is mainly useful for read-only
@@ -252,7 +252,11 @@ public class Database {
             // If we don't have a player, then we also need to create an account for them
             if(!mewna.getAccountManager().getAccountByLinkedDiscord(id).isPresent()) {
                 final User user = mewna.getCache().getUser(id);
-                mewna.getAccountManager().createNewDiscordLinkedAccount(base, user);
+                if(user != null) {
+                    mewna.getAccountManager().createNewDiscordLinkedAccount(base, user);
+                } else {
+                    throw new IllegalStateException("Couldn't create account for " + id + ": Missing in cache!?");
+                }
             }
             return base;
         });

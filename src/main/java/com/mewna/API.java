@@ -12,8 +12,6 @@ import com.mewna.data.Webhook;
 import com.mewna.plugin.plugins.PluginLevels;
 import com.mewna.plugin.util.TextureManager;
 import lombok.RequiredArgsConstructor;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;

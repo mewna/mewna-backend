@@ -141,11 +141,12 @@ public class CommandManager {
                 mentions.add(mewna.getCache().getUser(j.getString("id")));
             }
             
-            // TODO: Temporary dev. block
-            if(!user.getId().equals("128316294742147072")) {
-                mewna.getPluginManager().processEvent("MESSAGE_CREATE", new MessageCreateEvent(user, channel, guild, mentions,
-                        data.getString("content"), data.getBoolean("mention_everyone")));
-                return;
+            if(System.getenv("DEBUG") != null) {
+                if(!user.getId().equals("128316294742147072")) {
+                    mewna.getPluginManager().processEvent("MESSAGE_CREATE", new MessageCreateEvent(user, channel, guild, mentions,
+                            data.getString("content"), data.getBoolean("mention_everyone")));
+                    return;
+                }
             }
             
             // Parse prefixes

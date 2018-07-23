@@ -68,8 +68,6 @@ public class PaypalHandler {
             final Payer payer = new Payer().setPaymentMethod("paypal");
             
             final RedirectUrls redirectUrls = new RedirectUrls().setCancelUrl(DOMAIN).setReturnUrl(REDIR + "?userId=" + userId);
-            logger.info("Redirect URL: {}", redirectUrls.getReturnUrl());
-            logger.info("  Cancel URL: {}", redirectUrls.getCancelUrl());
             final Details details = new Details().setShipping("0").setTax("0").setSubtotal(paymentAmount);
             final Item paymentItem = new Item().setName("Mewna").setCurrency("USD").setPrice(paymentAmount).setQuantity("1").setSku(skuId);
             final ItemList itemList = new ItemList().setItems(new ArrayList<>(Collections.singletonList(paymentItem)));

@@ -12,6 +12,8 @@ import com.mewna.data.Webhook;
 import com.mewna.plugin.plugins.PluginLevels;
 import com.mewna.plugin.util.TextureManager;
 import lombok.RequiredArgsConstructor;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -35,8 +37,11 @@ class API {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private final Mewna mewna;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
+    private final OkHttpClient client = new OkHttpClient.Builder().build();
+    private final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     
-    @SuppressWarnings("CodeBlock2Expr")
+    @SuppressWarnings({"CodeBlock2Expr", "UnnecessarilyQualifiedInnerClassAccess"})
     void start() {
         logger.info("Starting API server...");
         port(Integer.parseInt(Optional.ofNullable(System.getenv("PORT")).orElse("80")));
@@ -194,17 +199,12 @@ class API {
                         }
                         // This is gonna be ugly
                         final List<JSONObject> results = new ArrayList<>();
-                        /*
-                        final String query = String.format("SELECT data FROM players WHERE data->'guildXp'->'%s' IS NOT NULL " +
-                                "AND (data->'guildXp'->>'%s')::integer > 0 " +
-                                "ORDER BY data->'guildXp'->'%s' DESC LIMIT 100;", id, id, id);
-                                */
                         final String query = String.format(
                                 "SELECT players.data AS player, accounts.data AS account FROM players\n" +
-                                "    JOIN accounts ON accounts.data->>'discordAccountId' = players.id\n" +
-                                "    WHERE players.data->'guildXp'->'%s' IS NOT NULL\n" +
-                                "        AND (players.data->'guildXp'->>'%s')::integer > 0\n" +
-                                "    ORDER BY (players.data->'guildXp'->>'%s')::integer DESC LIMIT 100;",
+                                        "    JOIN accounts ON accounts.data->>'discordAccountId' = players.id\n" +
+                                        "    WHERE players.data->'guildXp'->'%s' IS NOT NULL\n" +
+                                        "        AND (players.data->'guildXp'->>'%s')::integer > 0\n" +
+                                        "    ORDER BY (players.data->'guildXp'->>'%s')::integer DESC LIMIT 100;",
                                 id, id, id
                         );
                         mewna.getDatabase().getStore().sql(query, p -> {
@@ -263,7 +263,8 @@ class API {
                         return hook;
                     });
                     post("/webhooks/add", (req, res) -> {
-                        mewna.getDatabase().addWebhook(Webhook.fromJson(new JSONObject(req.body())));
+                        final Webhook hook = Webhook.fromJson(new JSONObject(req.body()));
+                        mewna.getDatabase().addWebhook(hook);
                         return new JSONObject();
                     });
                 });

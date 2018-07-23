@@ -174,7 +174,10 @@ public class CommandManager {
                 final String[] split = content.split("\\s+", 2);
                 final String commandName = split[0];
                 final String argstr = split.length > 1 ? split[1] : "";
-                final ArrayList<String> args = new ArrayList<>(Arrays.asList(argstr.split("\\s+")));
+                // Somehow, even *with* trim()ing, we *still* end up with empty strings in the list
+                // This filters them out so it doesn't cause issues elsewhere
+                final ArrayList<String> args = Arrays.stream(argstr.trim().split("\\s+")).filter(e -> !e.isEmpty())
+                        .collect(Collectors.toCollection(ArrayList::new));
                 if(commands.containsKey(commandName)) {
                     final CommandWrapper cmd = commands.get(commandName);
                     if(cmd.isOwner() && !user.getId().equalsIgnoreCase("128316294742147072")) {

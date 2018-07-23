@@ -16,7 +16,8 @@ public class CurrencyHelperTest {
     @Test
     public void testCheckPayment() {
         final CurrencyHelper base = new CurrencyHelper();
-        final Player fakePlayer = new Player("128316294742147072", 0L, 0L, 0L, new HashMap<>(), 0L);
+        final Player fakePlayer = new Player("128316294742147072", 0L, 0L, 0L, new HashMap<>(),
+                0L, new HashMap<>(), new HashMap<>());
         
         // No input
         assertEquals(BAD_EMPTY, base.checkPayment(fakePlayer, "", 0, 100).left);

@@ -1,5 +1,7 @@
 package com.mewna.plugin.plugins;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
 import com.mewna.data.Player;
@@ -9,10 +11,14 @@ import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.Plugin;
 import com.mewna.plugin.metadata.Payment;
 import com.mewna.plugin.metadata.Ratelimit;
+import com.mewna.plugin.plugins.economy.Box;
+import com.mewna.plugin.plugins.economy.Item;
+import com.mewna.plugin.plugins.economy.LootTables;
 import com.mewna.plugin.plugins.settings.EconomySettings;
 import com.mewna.plugin.util.CurrencyHelper;
 import com.mewna.util.Time;
 import lombok.ToString;
+import net.dv8tion.jda.core.EmbedBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import javax.inject.Inject;
@@ -21,7 +27,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+import static com.mewna.data.Player.MAX_INV_WEIGHT;
 import static com.mewna.plugin.plugins.PluginEconomy.ReelSymbol.*;
 
 /**
@@ -263,7 +271,7 @@ public class PluginEconomy extends BasePlugin {
         final int playerWumpus = getRandom().nextInt(GAMBLE_WUMPUS_COUNT) + 1;
         final int winningWumpus = getRandom().nextInt(GAMBLE_WUMPUS_COUNT) + 1;
         
-        final StringBuilder sb = new StringBuilder("You head off to the Wumpus Races to gamble your life away.");
+        final StringBuilder sb = new StringBuilder("You head off to the Wumpus Races to gamble your life away. ");
         sb.append("You bet **").append(ctx.getCost()).append(helper.getCurrencySymbol(ctx)).append("** on Wumpus **#")
                 .append(playerWumpus).append("**.\n\n");
         sb.append("And the winner is Wumpus **#").append(winningWumpus).append("**!\n\n");
@@ -280,6 +288,262 @@ public class PluginEconomy extends BasePlugin {
                     .append("** is gone forever...");
         }
         getRestJDA().sendMessage(ctx.getChannel(), sb.toString()).queue();
+    }
+    
+    @Command(names = {"items", "inventory"}, desc = "View your items.", usage = "items", examples = "items")
+    public void items(final CommandContext ctx) {
+        final Player user = ctx.getPlayer();
+        final EmbedBuilder b = new EmbedBuilder();
+        if(user.getItems() != null && !user.getItems().isEmpty()) {
+            final StringBuilder sb = new StringBuilder();
+            
+            final Map<Item, Long> inv = user.getItems();
+            
+            Lists.partition(new ArrayList<>(inv.keySet()), 2)
+                    .forEach(e -> e.forEach(i -> sb.append(i.getEmote()).append(' ').append(i.getName())
+                            .append(" `x").append(inv.get(i)).append("`, ")));
+            final String str = sb.toString();
+            final String sb2 = str.substring(0, str.length() - 2) + "\n\nWeight: `" +
+                    user.calculateInventoryWeight() + "`/`" + MAX_INV_WEIGHT + "`\n";
+            b.addField("Items", sb2.trim(), false);
+        } else {
+            b.setTitle("Items").setDescription("You have nothing!");
+        }
+        getRestJDA().sendMessage(ctx.getChannel(), b.build()).queue();
+    }
+    
+    //@Command(names = {"boxes", "boxen"}, desc = "View your boxes.", usage = "boxes", examples = "boxes")
+    public void boxes(final CommandContext ctx) {
+        final Player user = ctx.getPlayer();
+        final EmbedBuilder b = new EmbedBuilder();
+        if(user.getBoxes() != null && !user.getBoxes().isEmpty()) {
+            final StringBuilder sb = new StringBuilder();
+            
+            final Map<Box, Long> inv = user.getBoxes();
+            
+            Lists.partition(new ArrayList<>(inv.keySet()), 2)
+                    .forEach(e -> e.forEach(i -> sb.append(i.getName()).append(" `x").append(inv.get(i)).append("`, ")));
+            final String str = sb.toString();
+            b.addField("Boxes", str.substring(0, str.length() - 2).trim(), false);
+        } else {
+            b.setTitle("Boxes").setDescription("You have no boxes!");
+        }
+        getRestJDA().sendMessage(ctx.getChannel(), b.build()).queue();
+    }
+    
+    /*
+    @Command(names = "fillbox", desc = "", usage = "", examples = "")
+    public void boxme(final CommandContext ctx) {
+        final Player user = ctx.getPlayer();
+        user.addToBoxes(Arrays.asList(Box.values()));
+        getDatabase().savePlayer(user);
+        
+        getRestJDA().sendMessage(ctx.getChannel(), "thumbsup").queue();
+    }
+    */
+    
+    @Command(names = "market", desc = "Show available items", usage = "market", examples = "market")
+    public void market(final CommandContext ctx) {
+        final StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < Item.values().length; i++) {
+            final Item item = Item.values()[i];
+            sb.append(item.getEmote()).append(' ').append(item.getName());
+            if(item.isCanBuy()) {
+                sb.append(" B: `").append(item.getBuyValue())
+                        .append("` S: `").append(item.getSellValue()).append('`');
+            } else {
+                sb.append(" S: `").append(item.getSellValue()).append('`');
+            }
+            
+            if(i % 2 == 1 && i != Item.values().length - 1) {
+                sb.append(",\n");
+            } else //noinspection StatementWithEmptyBody
+                if(i == Item.values().length - 1) {
+                    // Intentional no-op
+                } else {
+                    sb.append(", ");
+                }
+        }
+        final EmbedBuilder b = new EmbedBuilder().addField("Market", sb.toString().trim(), false)
+                .addField("", String.format("You can buy and sell items with `%sbuy` and `%ssell`.", ctx.getPrefix(), ctx.getPrefix()),
+                        false);
+        getRestJDA().sendMessage(ctx.getChannel(), b.build()).queue();
+    }
+    
+    @Command(names = "buy", desc = "Buy some items.", usage = "buy <item name> [amount]",
+            examples = {"buy pickaxe", "buy burger 10"})
+    public void buy(final CommandContext ctx) {
+        final List<String> args = ctx.getArgs();
+        final Player player = ctx.getPlayer();
+        if(!args.isEmpty()) {
+            final String itemName = args.remove(0);
+            final Optional<Item> maybeItem = Arrays.stream(Item.values())
+                    .filter(e -> e.getName().equalsIgnoreCase(itemName))
+                    .findFirst();
+            if(maybeItem.isPresent()) {
+                final Item item = maybeItem.get();
+                if(item.isCanBuy()) {
+                    final long amount;
+                    if(args.isEmpty()) {
+                        amount = 1;
+                    } else {
+                        try {
+                            amount = Long.parseLong(args.get(0));
+                            if(amount <= 0) {
+                                throw new IllegalArgumentException();
+                            }
+                        } catch(final Exception e) {
+                            getRestJDA().sendMessage(ctx.getChannel(),
+                                    String.format("%s isn't a valid number", args.get(0))).queue();
+                            return;
+                        }
+                    }
+                    
+                    final long cost = amount * item.getBuyValue();
+                    
+                    final ImmutablePair<Boolean, Long> res = helper.handlePayment(ctx, "" + cost, cost, cost);
+                    if(res.left) {
+                        // Money taken, add item(s)
+                        player.addAllToInventory(ImmutableMap.of(item, amount));
+                        getDatabase().savePlayer(player);
+                        getRestJDA().sendMessage(ctx.getChannel(), String.format("You bought %s %s for %s%s.",
+                                amount, item.getName(), cost, helper.getCurrencySymbol(ctx))).queue();
+                    }
+                } else {
+                    getRestJDA().sendMessage(ctx.getChannel(), "That item cannot be bought.").queue();
+                }
+            } else {
+                getRestJDA().sendMessage(ctx.getChannel(), "That item doesn't exist.").queue();
+            }
+        } else {
+            getRestJDA().sendMessage(ctx.getChannel(), "You have to tell me what to buy.").queue();
+        }
+    }
+    
+    @Command(names = "sell", desc = "Sell some items.", usage = "sell <item name> [amount]",
+            examples = {"sell pickaxe", "sell burger 10"})
+    public void sell(final CommandContext ctx) {
+        final List<String> args = ctx.getArgs();
+        if(!args.isEmpty()) {
+            final String itemName = args.remove(0);
+            final Optional<Item> maybeItem = Arrays.stream(Item.values())
+                    .filter(e -> e.getName().equalsIgnoreCase(itemName))
+                    .findFirst();
+            if(maybeItem.isPresent()) {
+                final Item item = maybeItem.get();
+                final long amount;
+                if(args.isEmpty()) {
+                    amount = 1;
+                } else {
+                    try {
+                        amount = Long.parseLong(args.get(0));
+                        if(amount <= 0) {
+                            throw new IllegalArgumentException();
+                        }
+                    } catch(final Exception e) {
+                        getRestJDA().sendMessage(ctx.getChannel(),
+                                String.format("%s isn't a valid number", args.get(0))).queue();
+                        return;
+                    }
+                }
+                
+                final long payment = amount * item.getSellValue();
+                
+                if(ctx.getPlayer().hasItem(item)) {
+                    if(ctx.getPlayer().getItems().get(item) >= amount) {
+                        ctx.getPlayer().removeAllFromInventory(ImmutableMap.of(item, amount));
+                        ctx.getPlayer().incrementBalance(payment);
+                        getDatabase().savePlayer(ctx.getPlayer());
+                        getRestJDA().sendMessage(ctx.getChannel(), String.format("You sold %s %s for %s%s.",
+                                amount, item.getName(), payment, helper.getCurrencySymbol(ctx))).queue();
+                    } else {
+                        getRestJDA().sendMessage(ctx.getChannel(), "You don't have enough of that item.").queue();
+                    }
+                } else {
+                    getRestJDA().sendMessage(ctx.getChannel(), "You don't have that item.").queue();
+                }
+            } else {
+                getRestJDA().sendMessage(ctx.getChannel(), "That item doesn't exist.").queue();
+            }
+        } else {
+            getRestJDA().sendMessage(ctx.getChannel(), "You have to tell me what to sell.").queue();
+        }
+    }
+    
+    @Command(names = "mine", desc = "Go mining for shines!", usage = "mine", examples = "mine")
+    public void mine(final CommandContext ctx) {
+        if(!ctx.getPlayer().hasItem(Item.PICKAXE)) {
+            getRestJDA().sendMessage(ctx.getChannel(),
+                    String.format("You don't have a `pickaxe`, so you can't mine. Perhaps you should `%sbuy` one...",
+                            ctx.getPrefix()))
+                    .queue();
+            return;
+        }
+        if(LootTables.chance(10)) {
+            ctx.getPlayer().removeOneFromInventory(Item.PICKAXE);
+            getDatabase().savePlayer(ctx.getPlayer());
+            getRestJDA().sendMessage(ctx.getChannel(), "Oh no! Your pickaxe broke when you tried to use it!").queue();
+            return;
+        }
+        final List<Item> loot = LootTables.generateLoot(LootTables.GEMS, 0, 3);
+        if(loot.isEmpty()) {
+            getRestJDA().sendMessage(ctx.getChannel(), "You mined all day, but found nothing but dust.").queue();
+        } else {
+            final StringBuilder sb = new StringBuilder();
+            final Map<Item, Long> count = lootToMap(loot);
+            count.keySet().forEach(e -> sb.append(e.getEmote()).append(" `x").append(count.get(e)).append("`\n"));
+            ctx.getPlayer().addAllToInventory(count);
+            getDatabase().savePlayer(ctx.getPlayer());
+            getRestJDA().sendMessage(ctx.getChannel(), "You dug up: " + sb).queue();
+        }
+    }
+    
+    @Command(names = "fish", desc = "Go fishing for tasty fish!", usage = "fish", examples = "fish")
+    public void fish(final CommandContext ctx) {
+        if(!ctx.getPlayer().hasItem(Item.FISHING_ROD)) {
+            getRestJDA().sendMessage(ctx.getChannel(),
+                    String.format("You don't have a `fishingrod`, so you can't mine. Perhaps you should `%sbuy` one...",
+                            ctx.getPrefix()))
+                    .queue();
+            return;
+        }
+        if(LootTables.chance(10)) {
+            ctx.getPlayer().removeOneFromInventory(Item.FISHING_ROD);
+            getDatabase().savePlayer(ctx.getPlayer());
+            getRestJDA().sendMessage(ctx.getChannel(), "Oh no! Your fishing rod broke when you tried to use it!").queue();
+            return;
+        }
+        final List<Item> loot = LootTables.generateLoot(LootTables.FISHING, 0, 3);
+        if(loot.isEmpty()) {
+            getRestJDA().sendMessage(ctx.getChannel(), "You fished all day, but found nothing but empty water.").queue();
+        } else {
+            final StringBuilder sb = new StringBuilder();
+            final Map<Item, Long> count = lootToMap(loot);
+            count.keySet().forEach(e -> sb.append(e.getEmote()).append(" `x").append(count.get(e)).append("`\n"));
+            ctx.getPlayer().addAllToInventory(count);
+            getDatabase().savePlayer(ctx.getPlayer());
+            getRestJDA().sendMessage(ctx.getChannel(), "You fished up: " + sb).queue();
+        }
+    }
+    
+    public boolean tryDropBox(final CommandContext ctx) {
+        if(LootTables.chance(50)) {
+            return false;
+        }
+        return false;
+    }
+    
+    /* // TODO
+    public boolean tryDropItem(final CommandContext ctx) {
+        return false;
+    }
+    */
+    private Map<Item, Long> lootToMap(final Collection<Item> loot) {
+        return loot.stream().collect(Collectors.groupingBy(e -> e, Collectors.counting()));
+    }
+    
+    private boolean isWeighedDown(final Player player) {
+        return player.calculateInventoryWeight() >= MAX_INV_WEIGHT;
     }
     
     @ToString

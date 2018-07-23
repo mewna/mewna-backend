@@ -259,6 +259,7 @@ public class Database {
     }
     
     public void savePlayer(final Player player) {
+        player.cleanup();
         store.mapSync(Player.class).save(player);
     }
     

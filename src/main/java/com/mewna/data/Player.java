@@ -8,6 +8,8 @@ import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.plugin.behaviour.PlayerEvent;
 import com.mewna.plugin.event.plugin.behaviour.SystemUserEventType;
+import com.mewna.plugin.plugins.economy.Box;
+import com.mewna.plugin.plugins.economy.Item;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
@@ -29,8 +31,10 @@ import java.util.Map.Entry;
 @AllArgsConstructor
 @Table("players")
 @GIndex({"id", "guildXp", "ownedBackgroundPacks"})
-@SuppressWarnings({"unused", "RedundantFieldInitialization"})
+@SuppressWarnings({"unused", "RedundantFieldInitialization", "WeakerAccess", "UnusedReturnValue"})
 public class Player {
+    public static final long MAX_INV_WEIGHT = 10_000;
+    
     @PrimaryKey
     private String id;
     private long balance = 0L;
@@ -38,6 +42,8 @@ public class Player {
     private long dailyStreak = 0L;
     private Map<String, Long> guildXp = new HashMap<>();
     private long globalXp = 0L;
+    private Map<Box, Long> boxes = new HashMap<>();
+    private Map<Item, Long> items = new HashMap<>();
     
     private Player(final String id) {
         this.id = id;
@@ -68,7 +74,8 @@ public class Player {
             Mewna.getInstance().getPluginManager().processEvent(EventType.PLAYER_EVENT,
                     new PlayerEvent(SystemUserEventType.MONEY, this,
                             new JSONObject().put("balance", 100_000L)));
-        } if(balance < 1_000_000L && balance + amount >= 1_000_000L) {
+        }
+        if(balance < 1_000_000L && balance + amount >= 1_000_000L) {
             Mewna.getInstance().getPluginManager().processEvent(EventType.PLAYER_EVENT,
                     new PlayerEvent(SystemUserEventType.MONEY, this,
                             new JSONObject().put("balance", 1_000_000L)));
@@ -126,6 +133,139 @@ public class Player {
         final long avgXp = count == 0 ? 0 : guildXp / count;
         final long avg = balance + globalXp + dailyStreak + avgXp;
         return avg / 4;
+    }
+    
+    // Items
+    
+    public long calculateInventoryWeight() {
+        final long[] w = {0};
+        if(items != null) {
+            items.forEach((k, v) -> w[0] += k.getWeight() * v);
+        }
+        return w[0];
+    }
+    
+    public Player addOneToInventory(final Item item) {
+        if(items == null) {
+            items = new HashMap<>();
+        }
+        items.putIfAbsent(item, 0L);
+        items.put(item, items.get(item) + 1);
+        
+        return this;
+    }
+    
+    public Player addToInventory(final Iterable<Item> input) {
+        input.forEach(this::addOneToInventory);
+        return this;
+    }
+    
+    public Player addAllToInventory(final Map<Item, Long> input) {
+        if(items == null) {
+            items = new HashMap<>();
+        }
+        input.forEach((i, c) -> {
+            items.putIfAbsent(i, 0L);
+            items.put(i, items.get(i) + c);
+        });
+        
+        return this;
+    }
+    
+    public Player removeOneFromInventory(final Item item) {
+        if(items == null) {
+            items = new HashMap<>();
+        }
+        if(items.containsKey(item)) {
+            items.put(item, items.get(item) - 1);
+        }
+        
+        return this;
+    }
+    
+    public Player removeAllFromInventory(final Map<Item, Long> input) {
+        if(items == null) {
+            items = new HashMap<>();
+        }
+        input.forEach((item, count) -> {
+            if(items.containsKey(item)) {
+                items.put(item, items.get(item) - 1);
+            }
+        });
+        
+        return this;
+    }
+    
+    public boolean hasItem(final Item item) {
+        return items.containsKey(item) && items.get(item) > 0L;
+    }
+    
+    // Boxes
+    
+    public Player addOneToBoxes(final Box boxen) {
+        if(boxes == null) {
+            boxes = new HashMap<>();
+        }
+        boxes.putIfAbsent(boxen, 0L);
+        boxes.put(boxen, boxes.get(boxen) + 1);
+        
+        return this;
+    }
+    
+    public Player addToBoxes(final Iterable<Box> boxen) {
+        boxen.forEach(this::addOneToBoxes);
+        return this;
+    }
+    
+    public Player addAllToBoxes(final Map<Box, Long> boxen) {
+        if(boxes == null) {
+            boxes = new HashMap<>();
+        }
+        boxen.forEach((i, c) -> {
+            boxes.putIfAbsent(i, 0L);
+            boxes.put(i, boxes.get(i) + c);
+        });
+        
+        return this;
+    }
+    
+    public Player removeOneFromBoxes(final Box boxen) {
+        if(boxes == null) {
+            boxes = new HashMap<>();
+        }
+        if(boxes.containsKey(boxen)) {
+            boxes.put(boxen, boxes.get(boxen) - 1);
+        }
+        
+        return this;
+    }
+    
+    public Player removeAllFromBoxes(final Map<Box, Long> boxen) {
+        if(boxes == null) {
+            boxes = new HashMap<>();
+        }
+        boxen.forEach((item, count) -> {
+            if(boxes.containsKey(item)) {
+                boxes.put(item, boxes.get(item) - 1);
+            }
+        });
+        
+        return this;
+    }
+    
+    /**
+     * Clean up the player's data so that it's "safe" to put in the DB
+     */
+    public void cleanup() {
+        if(items != null) {
+            items.values().removeIf(l -> l == 0L);
+        }
+        if(boxes != null) {
+            boxes.values().removeIf(l -> l == 0L);
+        }
+        if(balance < 0) {
+            balance = 0;
+        }
     }
     
     // TODO: Caching

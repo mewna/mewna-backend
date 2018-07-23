@@ -18,6 +18,7 @@ import com.mewna.util.Templater;
 import net.dv8tion.jda.core.exceptions.HttpException;
 import net.dv8tion.jda.webhook.WebhookClient;
 import net.dv8tion.jda.webhook.WebhookClientBuilder;
+import net.dv8tion.jda.webhook.WebhookMessageBuilder;
 
 import java.sql.ResultSet;
 import java.util.*;
@@ -125,18 +126,25 @@ public class PluginTwitch extends BasePlugin {
                                                             .build());
                                             
                                             final Templater templater = map(event);
+                                            final WebhookMessageBuilder msgBuilder = new WebhookMessageBuilder();
                                             try {
                                                 switch(mode) {
                                                     case "stream-start": {
-                                                        client.send(templater.render(streamerConfig.getStreamStartMessage()));
+                                                        client.send(msgBuilder.setContent(
+                                                                templater.render(streamerConfig.getStreamStartMessage())
+                                                        ).build());
                                                         break;
                                                     }
                                                     case "stream-end": {
-                                                        client.send(templater.render(streamerConfig.getStreamEndMessage()));
+                                                        client.send(msgBuilder.setContent(
+                                                                templater.render(streamerConfig.getStreamEndMessage())
+                                                        ).build());
                                                         break;
                                                     }
                                                     case "follow": {
-                                                        client.send(templater.render(streamerConfig.getFollowMessage()));
+                                                        client.send(msgBuilder.setContent(
+                                                                templater.render(streamerConfig.getFollowMessage())
+                                                        ).build());
                                                         break;
                                                     }
                                                 }

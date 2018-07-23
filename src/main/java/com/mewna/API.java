@@ -37,9 +37,6 @@ class API {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private final Mewna mewna;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
-    private final OkHttpClient client = new OkHttpClient.Builder().build();
-    private final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     
     @SuppressWarnings({"CodeBlock2Expr", "UnnecessarilyQualifiedInnerClassAccess"})
     void start() {

@@ -1,6 +1,7 @@
 package com.mewna.cache;
 
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.PoolingOptions;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.mapping.MappingManager;
@@ -46,7 +47,9 @@ public class DiscordCache {
     
     public DiscordCache(final Mewna mewna) {
         this.mewna = mewna;
-        cluster = Cluster.builder().addContactPoint(System.getenv("CASSANDRA_HOST")).build();
+        cluster = Cluster.builder().addContactPoint(System.getenv("CASSANDRA_HOST"))
+                .withPoolingOptions(new PoolingOptions().setMaxQueueSize(1_000_000_000))
+                .build();
     }
     
     public void connect() {

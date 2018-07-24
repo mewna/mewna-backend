@@ -116,8 +116,9 @@ public class EventManager {
             final JSONObject user = data.getJSONObject("user");
             /*
             cache.cacheUser(user);
-            cache.cacheMember(data.getString("guild_id"), data)
-            */;
+            cache.cacheMember(data.getString("guild_id"), data);
+            */
+            System.out.println("guild -> " + data.getString("guild_id"));
             final Guild guild = cache.getGuild(data.getString("guild_id"));
             //cache.getMappingManager().mapper(Guild.class).save(guild.toBuilder().memberCount(guild.getMemberCount() + 1).build());
             mewna.getPluginManager().processEvent(event.getType(),

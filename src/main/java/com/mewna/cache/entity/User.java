@@ -39,7 +39,7 @@ public class User {
             }
             return String.format("https://cdn.discordapp.com/avatars/%s/%s.%s", id, avatar, extension);
         } else {
-            final int mod = Integer.parseInt(discriminator) % 5;
+            final int mod = Integer.parseInt(discriminator != null ? discriminator : "0") % 5;
             return String.format("https://cdn.discordapp.com/embed/avatars/%s.png", mod);
         }
     }

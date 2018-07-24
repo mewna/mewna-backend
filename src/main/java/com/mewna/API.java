@@ -52,7 +52,7 @@ class API {
             });
             get("/guild/:id", (req, res) -> {
                 final Guild guild = mewna.getCache().getGuild(req.params(":id"));
-                if(guild != null) {
+                if(guild != null && guild.getId() != null) {
                     return new JSONObject(guild);
                 } else {
                     res.status(404);

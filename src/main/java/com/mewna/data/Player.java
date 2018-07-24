@@ -5,16 +5,12 @@ import com.mewna.Mewna;
 import com.mewna.accounts.Account;
 import com.mewna.cache.entity.Guild;
 import com.mewna.plugin.CommandContext;
-import com.mewna.plugin.event.EventType;
-import com.mewna.plugin.event.plugin.behaviour.PlayerEvent;
-import com.mewna.plugin.event.plugin.behaviour.SystemUserEventType;
 import com.mewna.plugin.plugins.economy.Box;
 import com.mewna.plugin.plugins.economy.Item;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
 import lombok.*;
-import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;

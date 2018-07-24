@@ -189,7 +189,7 @@ public class Player {
         }
         input.forEach((item, count) -> {
             if(items.containsKey(item)) {
-                items.put(item, items.get(item) - 1);
+                items.put(item, items.get(item) - count);
             }
         });
         
@@ -258,10 +258,10 @@ public class Player {
      */
     public void cleanup() {
         if(items != null) {
-            items.values().removeIf(l -> l == 0L);
+            items.values().removeIf(l -> l <= 0L);
         }
         if(boxes != null) {
-            boxes.values().removeIf(l -> l == 0L);
+            boxes.values().removeIf(l -> l <= 0L);
         }
         if(balance < 0) {
             balance = 0;

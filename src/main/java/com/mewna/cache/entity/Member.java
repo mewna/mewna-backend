@@ -24,5 +24,5 @@ public class Member {
     private String id;
     private String nick;
     private String joinedAt;
-    private List<Role> roles;
+    private List<String> roles;
 }

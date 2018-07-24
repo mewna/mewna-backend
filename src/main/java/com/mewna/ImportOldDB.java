@@ -192,10 +192,15 @@ user:%ID%:cache
                             
                             /////////////////////////////////////
                             
-                            final String avatarNoURL = user.getString("avatarUrl")
-                                    .replace("https://cdn.discordapp.com/avatars/" + id + '/', "")
-                                    .replace(".png", "")
-                                    .replace(".gif", "");
+                            final String avatarNoURL;
+                            if(!user.getString("avatarUrl").startsWith("https://discordapp.com/assets/")) {
+                                avatarNoURL = user.getString("avatarUrl")
+                                        .replace("https://cdn.discordapp.com/avatars/" + id + '/', "")
+                                        .replace(".png", "")
+                                        .replace(".gif", "");
+                            } else {
+                                avatarNoURL = null;
+                            }
                             final JSONObject cache = new JSONObject()
                                     .put("id", id)
                                     .put("bot", false)
@@ -207,7 +212,6 @@ user:%ID%:cache
                             player.setBalance(userBalances.optInt(id, 0));
                             //mewna.getDatabase().savePlayer(player);
                             playerCache.putIfAbsent(id, player);
-                            
                         });
                         mewna.getDatabase().getStore().sql("COMMIT;");
                         final long aend = System.currentTimeMillis();

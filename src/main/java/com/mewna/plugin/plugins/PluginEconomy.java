@@ -82,6 +82,10 @@ public class PluginEconomy extends BasePlugin {
         }
         final Player sender = ctx.getPlayer();
         final Player target = getDatabase().getPlayer(ctx.getMentions().get(0));
+        if(target.getId().equalsIgnoreCase(sender.getId())) {
+            getRestJDA().sendMessage(ctx.getChannel(), "Nice try ;)").queue();
+            return;
+        }
         final ImmutablePair<Boolean, Long> res = helper.handlePayment(ctx, ctx.getArgs().get(1), 1, Long.MAX_VALUE);
         if(res.left) {
             target.incrementBalance(res.right);
@@ -485,7 +489,7 @@ public class PluginEconomy extends BasePlugin {
             getRestJDA().sendMessage(ctx.getChannel(), "Oh no! Your pickaxe broke when you tried to use it!").queue();
             return;
         }
-        final List<Item> loot = LootTables.generateLoot(LootTables.GEMS, 0, 3);
+        final List<Item> loot = LootTables.generateLoot(LootTables.GEMS, 1, 3);
         if(loot.isEmpty()) {
             getRestJDA().sendMessage(ctx.getChannel(), "You mined all day, but found nothing but dust.").queue();
         } else {
@@ -502,7 +506,7 @@ public class PluginEconomy extends BasePlugin {
     public void fish(final CommandContext ctx) {
         if(!ctx.getPlayer().hasItem(Item.FISHING_ROD)) {
             getRestJDA().sendMessage(ctx.getChannel(),
-                    String.format("You don't have a `fishingrod`, so you can't mine. Perhaps you should `%sbuy` one...",
+                    String.format("You don't have a `fishingrod`, so you can't fish. Perhaps you should `%sbuy` one...",
                             ctx.getPrefix()))
                     .queue();
             return;
@@ -513,7 +517,7 @@ public class PluginEconomy extends BasePlugin {
             getRestJDA().sendMessage(ctx.getChannel(), "Oh no! Your fishing rod broke when you tried to use it!").queue();
             return;
         }
-        final List<Item> loot = LootTables.generateLoot(LootTables.FISHING, 0, 3);
+        final List<Item> loot = LootTables.generateLoot(LootTables.FISHING, 1, 3);
         if(loot.isEmpty()) {
             getRestJDA().sendMessage(ctx.getChannel(), "You fished all day, but found nothing but empty water.").queue();
         } else {

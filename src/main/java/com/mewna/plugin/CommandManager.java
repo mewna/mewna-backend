@@ -109,7 +109,7 @@ public class CommandManager {
             final String channelId = data.getString("channel_id");
             // See https://github.com/discordapp/discord-api-docs/issues/582
             // Note this isn't in the docs yet, but should be at some point (hopefully soon)
-            final String guildId = data.optString("guild_id");
+            final String guildId = data.getString("guild_id");
             final String userId = data.getJSONObject("author").getString("id");
             if(guildId == null) {
                 logger.warn("Ignoring DM: user {}, channel {}, message {}, content {}", userId, channelId,

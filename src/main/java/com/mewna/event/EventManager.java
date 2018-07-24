@@ -110,12 +110,14 @@ public class EventManager {
         // Emotes
         handlers.put(GUILD_EMOJIS_UPDATE, (event, data) -> {
         });
-        
+        */
         // Members
         handlers.put(GUILD_MEMBER_ADD, (event, data) -> {
             final JSONObject user = data.getJSONObject("user");
+            /*
             cache.cacheUser(user);
-            cache.cacheMember(data.getString("guild_id"), data);
+            cache.cacheMember(data.getString("guild_id"), data)
+            */;
             final Guild guild = cache.getGuild(data.getString("guild_id"));
             //cache.getMappingManager().mapper(Guild.class).save(guild.toBuilder().memberCount(guild.getMemberCount() + 1).build());
             mewna.getPluginManager().processEvent(event.getType(),
@@ -123,11 +125,14 @@ public class EventManager {
         });
         handlers.put(GUILD_MEMBER_REMOVE, (event, data) -> {
             final Guild guild = cache.getGuild(data.getString("guild_id"));
+            /*
             cache.deleteMember(data.getString("guild_id"), data.getJSONObject("user").getString("id"));
-            //cache.getMappingManager().mapper(Guild.class).save(guild.toBuilder().memberCount(guild.getMemberCount() - 1).build());
+            cache.getMappingManager().mapper(Guild.class).save(guild.toBuilder().memberCount(guild.getMemberCount() - 1).build());
+            */
             mewna.getPluginManager().processEvent(event.getType(), new GuildMemberRemoveEvent(guild,
                     cache.getUser(data.getJSONObject("user").getString("id"))));
         });
+        /*
         handlers.put(GUILD_MEMBER_UPDATE, (event, data) -> {
             final String guildId = data.getString("guild_id");
             cache.cacheMember(guildId, data);

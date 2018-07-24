@@ -96,8 +96,11 @@ public class Account {
         if(data.has("aboutText")) {
             if(!builder.aboutText.equals(data.getString("aboutText"))) {
                 Mewna.getInstance().getPluginManager().processEvent(EventType.ACCOUNT_EVENT,
-                        new AccountEvent(SystemUserEventType.MONEY, this,
-                                new JSONObject().put("balance", 1_000_000L)));
+                        new AccountEvent(SystemUserEventType.DESCRIPTION, this,
+                                new JSONObject()
+                                        .put("old", builder.aboutText)
+                                        .put("new", data.getString("aboutText"))
+                        ));
             }
             builder.aboutText(data.getString("aboutText"));
             ++changes;

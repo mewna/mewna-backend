@@ -474,6 +474,7 @@ public class PluginEconomy extends BasePlugin {
         }
     }
     
+    @Ratelimit(time = 10)
     @Command(names = "mine", desc = "Go mining for shines!", usage = "mine", examples = "mine")
     public void mine(final CommandContext ctx) {
         if(!ctx.getPlayer().hasItem(Item.PICKAXE)) {
@@ -498,10 +499,11 @@ public class PluginEconomy extends BasePlugin {
             count.keySet().forEach(e -> sb.append(e.getEmote()).append(" `x").append(count.get(e)).append("`\n"));
             ctx.getPlayer().addAllToInventory(count);
             getDatabase().savePlayer(ctx.getPlayer());
-            getRestJDA().sendMessage(ctx.getChannel(), "You dug up: " + sb).queue();
+            getRestJDA().sendMessage(ctx.getChannel(), "You dug up:\n" + sb).queue();
         }
     }
     
+    @Ratelimit(time = 10)
     @Command(names = "fish", desc = "Go fishing for tasty fish!", usage = "fish", examples = "fish")
     public void fish(final CommandContext ctx) {
         if(!ctx.getPlayer().hasItem(Item.FISHING_ROD)) {
@@ -526,7 +528,7 @@ public class PluginEconomy extends BasePlugin {
             count.keySet().forEach(e -> sb.append(e.getEmote()).append(" `x").append(count.get(e)).append("`\n"));
             ctx.getPlayer().addAllToInventory(count);
             getDatabase().savePlayer(ctx.getPlayer());
-            getRestJDA().sendMessage(ctx.getChannel(), "You fished up: " + sb).queue();
+            getRestJDA().sendMessage(ctx.getChannel(), "You fished up:\n" + sb).queue();
         }
     }
     

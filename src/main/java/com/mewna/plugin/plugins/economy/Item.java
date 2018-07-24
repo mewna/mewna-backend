@@ -34,7 +34,7 @@ public enum Item {
     FISHING_ROD(    ItemType.TOOL,          "fishingrod",       "\uD83C\uDFA3", 25,     10,     true,       1),
     
     // Fish
-    FISH(           ItemType.FISH,          "fish",             "\uD83D\uDC1F", 5,      1,      true,       1),
+    FISH(           ItemType.FISH,          "fish",             "\uD83D\uDC1F", 5,      2,      true,       1),
     WHALE(          ItemType.FISH,          "whale",            "\uD83D\uDC0B", 25,     10,     true,      1),
     TROPICAL_FISH(  ItemType.FISH,          "tropicalfish",     "\uD83D\uDC20", 25,     15,     true,       1),
     BOOT(           ItemType.FISH,          "boot",             "\uD83D\uDC62", 3,      1,      true,       1),

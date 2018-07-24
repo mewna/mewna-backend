@@ -63,10 +63,6 @@ public final class Mewna {
         TextureManager.preload(this);
         eventManager.getCache().connect();
         database.init();
-        if(System.getenv("DO_IMPORT") != null) {
-            ImportOldDB.importDb(this);
-            return;
-        }
         pluginManager.init();
         new API(this).start();
         nats = new NatsServer(this);

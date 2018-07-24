@@ -60,6 +60,7 @@ public class EventManager {
         this.mewna = mewna;
         cache = new DiscordCache(mewna);
         
+        /*
         // Channels
         handlers.put(CHANNEL_CREATE, (event, data) -> cache.cacheChannel(data));
         handlers.put(CHANNEL_DELETE, (event, data) -> cache.deleteChannel(data.getString("id")));
@@ -82,7 +83,7 @@ public class EventManager {
                 final JSONObject o = (JSONObject) r;
                 cache.cacheRole(new JSONObject().put("guild_id", id).put("role", o));
             });
-            logger.info("Caching initial {} member chunk.", members.length());
+            //logger.info("Caching initial {} member chunk.", members.length());
             members.forEach(r -> {
                 cache.cacheUser(((JSONObject) r).getJSONObject("user"));
                 cache.cacheMember(id, (JSONObject) r);
@@ -116,14 +117,14 @@ public class EventManager {
             cache.cacheUser(user);
             cache.cacheMember(data.getString("guild_id"), data);
             final Guild guild = cache.getGuild(data.getString("guild_id"));
-            cache.getMappingManager().mapper(Guild.class).save(guild.toBuilder().memberCount(guild.getMemberCount() + 1).build());
+            //cache.getMappingManager().mapper(Guild.class).save(guild.toBuilder().memberCount(guild.getMemberCount() + 1).build());
             mewna.getPluginManager().processEvent(event.getType(),
                     new GuildMemberAddEvent(guild, cache.getMember(guild, cache.getUser(user.getString("id")))));
         });
         handlers.put(GUILD_MEMBER_REMOVE, (event, data) -> {
             final Guild guild = cache.getGuild(data.getString("guild_id"));
             cache.deleteMember(data.getString("guild_id"), data.getJSONObject("user").getString("id"));
-            cache.getMappingManager().mapper(Guild.class).save(guild.toBuilder().memberCount(guild.getMemberCount() - 1).build());
+            //cache.getMappingManager().mapper(Guild.class).save(guild.toBuilder().memberCount(guild.getMemberCount() - 1).build());
             mewna.getPluginManager().processEvent(event.getType(), new GuildMemberRemoveEvent(guild,
                     cache.getUser(data.getJSONObject("user").getString("id"))));
         });
@@ -133,7 +134,7 @@ public class EventManager {
         });
         handlers.put(GUILD_MEMBERS_CHUNK, (event, data) -> {
             final JSONArray members = data.getJSONArray("members");
-            logger.info("Caching chunk with {} members.", members.length());
+            //logger.info("Caching chunk with {} members.", members.length());
             members.forEach(m -> {
                 cache.cacheUser(((JSONObject) m).getJSONObject("user"));
                 cache.cacheMember(data.getString("guild_id"), (JSONObject) m);
@@ -145,6 +146,7 @@ public class EventManager {
         handlers.put(GUILD_ROLE_DELETE, (event, data) -> cache.deleteRole(data.getString("role_id")));
         handlers.put(GUILD_ROLE_UPDATE, (event, data) -> cache.cacheRole(data));
         
+        
         // Users
         handlers.put(USER_UPDATE, (event, data) -> cache.cacheUser(data));
         handlers.put(PRESENCE_UPDATE, (event, data) -> cache.cacheUser(data.getJSONObject("user")));
@@ -154,6 +156,7 @@ public class EventManager {
             // Not needed
         });
         handlers.put(VOICE_STATE_UPDATE, (event, data) -> cache.cacheVoiceState(data));
+        */
         
         // Messages
         handlers.put(MESSAGE_CREATE, (event, data) -> {
@@ -194,6 +197,7 @@ public class EventManager {
         });
         
         // Audio
+        /*
         handlers.put(AUDIO_TRACK_START, (event, data) -> {
             logger.debug("Got audio event {} with data {}", event.getType(), data);
             mewna.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_START, data));
@@ -222,6 +226,7 @@ public class EventManager {
             logger.debug("Got audio event {} with data {}", event.getType(), data);
             mewna.getPluginManager().processEvent(event.getType(), createAudioEvent(TrackMode.TRACK_NOW_PLAYING, data));
         });
+        */
         
         // Internal events
         handlers.put(LEVEL_UP, (event, data) -> {

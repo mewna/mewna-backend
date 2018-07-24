@@ -24,6 +24,7 @@ import org.json.JSONObject;
 @Plugin(name = "Music", desc = "Control the way music is played in your server.", settings = MusicSettings.class,
         enabled = false)
 public class PluginMusic extends BasePlugin {
+    /*
     @Event(EventType.AUDIO_TRACK_QUEUE)
     public void handleTrackQueue(final AudioTrackEvent event) {
         final Channel channel = event.getChannel();
@@ -205,4 +206,5 @@ public class PluginMusic extends BasePlugin {
         USER_IN_DIFFERENT_VOICE,
         SELF_AND_USER_IN_SAME_VOICE,
     }
+    */
 }

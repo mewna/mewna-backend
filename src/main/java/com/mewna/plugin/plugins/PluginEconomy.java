@@ -489,7 +489,7 @@ public class PluginEconomy extends BasePlugin {
             getRestJDA().sendMessage(ctx.getChannel(), "Oh no! Your pickaxe broke when you tried to use it!").queue();
             return;
         }
-        final List<Item> loot = LootTables.generateLoot(LootTables.GEMS, 1, 3);
+        final List<Item> loot = LootTables.generateLoot(LootTables.GEMS, 0, 2);
         if(loot.isEmpty()) {
             getRestJDA().sendMessage(ctx.getChannel(), "You mined all day, but found nothing but dust.").queue();
         } else {

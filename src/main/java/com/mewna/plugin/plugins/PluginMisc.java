@@ -166,6 +166,7 @@ public class PluginMisc extends BasePlugin {
         final EmbedBuilder builder = new EmbedBuilder();
         builder.setTitle("Mewna help")
                 .addField("Dashboard", System.getenv("DOMAIN"), false)
+                .addField("Commands", System.getenv("DOMAIN") + "/discord/commands", false)
                 .addField("Support server", "https://discord.gg/UwdDN6r", false)
                 .addField("", "Everything can be enabled / disabled in the dashboard.", false)
         ;

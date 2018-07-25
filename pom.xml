@@ -12,7 +12,7 @@
         <jda.version>3.7.1_385</jda.version>
         <nats.version>0.5.0</nats.version>
         <cassandra.version>3.5.0</cassandra.version>
-        <fcps.version>LATEST</fcps.version>
+        <fcps.version>3.1.0</fcps.version>
         <javax.inject.version>1</javax.inject.version>
         <commons.lang.version>3.7</commons.lang.version>
         <commons.collections.version>LATEST</commons.collections.version>

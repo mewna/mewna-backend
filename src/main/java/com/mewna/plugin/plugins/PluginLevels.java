@@ -105,8 +105,9 @@ public class PluginLevels extends BasePlugin {
     public static int getPlayerRankGlobally(final User player) {
         final int[] rank = {-1};
         final String playerId = player.getId();
-        Mewna.getInstance().getDatabase().getStore().sql("SELECT rank FROM (SELECT row_number() OVER () AS rank, data FROM players " +
-                "ORDER BY (data->>'globalXp')::integer DESC) AS _q " +
+        Mewna.getInstance().getDatabase().getStore().sql("SELECT rank FROM (SELECT row_number() OVER (" +
+                "ORDER BY (data->>'globalXp')::integer DESC" +
+                ") AS rank, data FROM players) AS _q " +
                 "WHERE data->>'id' = '" + playerId + "';", p -> {
             final ResultSet resultSet = p.executeQuery();
             if(resultSet.isBeforeFirst()) {

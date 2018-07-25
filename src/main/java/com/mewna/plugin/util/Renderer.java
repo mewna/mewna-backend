@@ -230,6 +230,7 @@ public final class Renderer {
             // 536x35
             final long userXp = player.getGlobalXp();
             final long userLevel = PluginLevels.xpToLevel(userXp);
+            final long userLevelXp = PluginLevels.fullLevelToXp(userLevel);
             final long nextLevel = userLevel + 1;
             final long nextLevelXp = PluginLevels.fullLevelToXp(nextLevel);
             final long xpNeeded = PluginLevels.nextLevelXp(userXp);
@@ -237,7 +238,7 @@ public final class Renderer {
             g2.setColor(SIXTY_SEVEN_PERCENT_OPAQUE_BLACK);
             g2.fillRect(32, 519, 536, 35);
             // calc. bar size
-            final int barWidth = (int) (532 * (nextXpTotal / (double) nextLevelXp));
+            final int barWidth = (int) (532 * ((userXp - userLevelXp) / (double) (nextLevelXp - userLevelXp)));
             g2.setColor(PRIMARY_THEME_COLOUR);
             g2.fillRect(34, 521, barWidth, 31);
             // XP text
@@ -301,6 +302,7 @@ public final class Renderer {
             // User stats
             final long userXp = player.getXp(guild);
             final long userLevel = PluginLevels.xpToLevel(userXp);
+            final long userLevelXp = PluginLevels.fullLevelToXp(userLevel);
             final long nextLevel = userLevel + 1;
             final long playerRank = PluginLevels.getPlayerRankInGuild(guild, user);
             // Text
@@ -327,7 +329,7 @@ public final class Renderer {
             g2.setColor(SIXTY_SEVEN_PERCENT_OPAQUE_BLACK);
             g2.fillRect(188, 123, 566, 42);
             // calc. bar size
-            final int barWidth = (int) (562 * (nextXpTotal / (double) nextLevelXp));
+            final int barWidth = (int) (562 * ((userXp - userLevelXp) / (double) (nextLevelXp - userLevelXp)));
             g2.setColor(PRIMARY_THEME_COLOUR);
             g2.fillRect(190, 125, barWidth, 38);
             // XP text

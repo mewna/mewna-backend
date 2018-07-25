@@ -77,10 +77,10 @@ public class CommandManager {
             final List<String> tmp = new ArrayList<>(Arrays.asList(cmd.names()));
             final String name = tmp.remove(0);
             final String[] aliases = tmp.toArray(new String[0]);
-            commandMetadata.add(new CommandMetadata(name, cmd.desc(), aliases, cmd.usage(), cmd.examples()));
+            commandMetadata.add(new CommandMetadata(name, pluginAnnotation.name(), cmd.desc(), aliases, cmd.usage(), cmd.examples()));
         } else {
             for(final String name : cmd.names()) {
-                commandMetadata.add(new CommandMetadata(name, cmd.desc(), new String[0], cmd.usage(), cmd.examples()));
+                commandMetadata.add(new CommandMetadata(name, pluginAnnotation.name(), cmd.desc(), new String[0], cmd.usage(), cmd.examples()));
             }
         }
     }
@@ -287,6 +287,7 @@ public class CommandManager {
     @Value
     public static final class CommandMetadata {
         private String name;
+        private String plugin;
         private String desc;
         private String[] aliases;
         private String[] usage;

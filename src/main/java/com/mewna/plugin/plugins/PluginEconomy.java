@@ -254,7 +254,7 @@ public class PluginEconomy extends BasePlugin {
             
             //noinspection UnnecessarilyQualifiedStaticallyImportedElement
             if(roll[1][0] == ReelSymbol.BOOM) {
-                sb.append("\nOh no! The slot machine exploded! You pay out **").append(payout).append(helper.getCurrencySymbol(ctx))
+                sb.append("\nOh no! The slot machine exploded! You pay out **").append(-payout).append(helper.getCurrencySymbol(ctx))
                         .append("** to cover the repair cost.");
             } else {
                 sb.append("\nYou won **").append(payout).append(helper.getCurrencySymbol(ctx)).append("**!");

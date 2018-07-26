@@ -46,7 +46,7 @@ public class PluginEconomy extends BasePlugin {
     
     private static final long DAILY_BASE_REWARD = 100;
     
-    private static final int GAMBLE_WUMPUS_COUNT = 5;
+    private static final int GAMBLE_WUMPUS_COUNT = 4;
     
     private final Map<String, SlotMachine> slotsCache = new HashMap<>();
     @Inject

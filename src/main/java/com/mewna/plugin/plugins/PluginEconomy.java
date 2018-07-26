@@ -224,7 +224,7 @@ public class PluginEconomy extends BasePlugin {
         final ReelSymbol[][] roll = slotsCache.get(user.getId()).roll();
         
         // 10% chance of guaranteed win
-        if(getRandom().nextInt(100) < 20) {
+        if(getRandom().nextInt(100) < 25) {
             // Middle row == "winning" row
             @SuppressWarnings("UnnecessarilyQualifiedStaticallyImportedElement")
             final ReelSymbol[] symbols = ReelSymbol.values();

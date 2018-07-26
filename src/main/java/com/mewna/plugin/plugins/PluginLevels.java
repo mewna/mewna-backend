@@ -148,9 +148,9 @@ public class PluginLevels extends BasePlugin {
                 sendLevelUpMessage(settings, event, member);
             }
             if(settings.isRemovePreviousRoleRewards()) {
-                removeAndAddRoleRewards(settings, guild, member, event.getLevel(), () -> sendLevelUpMessage(settings, event, member));
+                removeAndAddRoleRewards(settings, guild, member, event.getLevel(), () -> {});
             } else {
-                addRoleRewards(settings, guild, member, event.getLevel(), () -> sendLevelUpMessage(settings, event, member));
+                addRoleRewards(settings, guild, member, event.getLevel(), () -> {});
             }
         }
     }

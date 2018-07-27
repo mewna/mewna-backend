@@ -3,17 +3,15 @@ package com.mewna.plugin.plugins.settings;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
-import com.mewna.plugin.plugins.PluginWelcoming;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.json.JSONObject;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -23,8 +21,8 @@ import java.util.Optional;
  */
 @Getter
 @Setter
+@AllArgsConstructor
 @Accessors(chain = true)
-@Builder(toBuilder = true)
 @Table("settings_welcoming")
 @GIndex("id")
 @SuppressWarnings("unused")
@@ -36,16 +34,13 @@ public class WelcomingSettings implements PluginSettings {
     private String messageChannel;
     private String joinRoleId;
     private boolean enableWelcomeMessages;
-    private String welcomeMessage;
+    private String welcomeMessage = "Hey {user.mention}, welcome to {server.name}!";
     private boolean enableGoodbyeMessages;
-    private String goodbyeMessage;
+    private String goodbyeMessage = "Sorry to see you go, {user.name}...";
     
-    public static WelcomingSettings base(final String id) {
-        final Map<String, CommandSettings> settings = new HashMap<>();
-        PluginSettings.commandsOwnedByPlugin(PluginWelcoming.class).forEach(e -> settings.put(e, CommandSettings.base()));
-        return new WelcomingSettings(id, settings, null, null, false,
-                "Hey {user.mention}, welcome to {server.name}!", false,
-                "Sorry to see you go, {user.name}...");
+    public WelcomingSettings(final String id) {
+        this.id = id;
+        commandSettings = generateCommandSettings();
     }
     
     @Override
@@ -77,32 +72,31 @@ public class WelcomingSettings implements PluginSettings {
     
     @Override
     public boolean updateSettings(final Database database, final JSONObject data) {
-        final WelcomingSettingsBuilder builder = toBuilder();
         try {
             String messageChannel = data.optString("messageChannel");
             if(messageChannel != null && messageChannel.isEmpty()) {
                 // non-null but empty should be nulled so that things work right
                 messageChannel = null;
             }
-            builder.messageChannel(messageChannel);
+            this.messageChannel = messageChannel;
             
             String joinRoleId = data.optString("joinRoleId");
             if(joinRoleId != null && joinRoleId.isEmpty()) {
                 // non-null but empty should be nulled so that things work right
                 joinRoleId = null;
             }
-            builder.joinRoleId(joinRoleId);
-            builder.enableWelcomeMessages(data.optBoolean("enableWelcomeMessages", false));
-            builder.enableGoodbyeMessages(data.optBoolean("enableGoodbyeMessages", false));
+            this.joinRoleId = joinRoleId;
+            enableWelcomeMessages = data.optBoolean("enableWelcomeMessages", false);
+            enableGoodbyeMessages = data.optBoolean("enableGoodbyeMessages", false);
             // Trigger exception if not present
             data.getString("welcomeMessage");
             data.getString("goodbyeMessage");
             
-            builder.welcomeMessage(data.getString("welcomeMessage"));
-            builder.goodbyeMessage(data.getString("goodbyeMessage"));
+            welcomeMessage = data.getString("welcomeMessage");
+            goodbyeMessage = data.getString("goodbyeMessage");
             
-            builder.commandSettings(commandSettingsFromJson(data));
-            database.saveSettings(builder.build());
+            commandSettings.putAll(commandSettingsFromJson(data));
+            database.saveSettings(this);
             return true;
         } catch(final Exception e) {
             return false;

@@ -18,8 +18,6 @@ import redis.clients.jedis.Transaction;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.sql.ResultSet;
 import java.util.*;
 import java.util.function.Consumer;
@@ -83,29 +81,10 @@ public class Database {
         final List<Class<?>> classes = new ArrayList<>();
         new FastClasspathScanner(Plugin.class.getPackage().getName()).matchAllStandardClasses(cls -> {
             if(PluginSettings.class.isAssignableFrom(cls) && !cls.equals(PluginSettings.class)) {
-                boolean hasBase = false;
-                for(final Method method : cls.getMethods()) {
-                    if(// @formatter:off
-                            // Verify name
-                            method.getName().equals("base")
-                            // Verify static
-                            && Modifier.isStatic(method.getModifiers())
-                            // Verify params
-                            && method.getParameterCount() == 1 && method.getParameterTypes()[0].equals(String.class)
-                        ) {
-                        // @formatter:on
-                        hasBase = true;
-                        break;
-                    }
-                }
-                if(hasBase) {
-                    classes.add(cls);
-                    //noinspection unchecked
-                    pluginSettingsByName.put(cls.getSimpleName().toLowerCase().replace("settings", ""),
-                            (Class<? extends PluginSettings>) cls);
-                } else {
-                    logger.error("Was asked to map settings class {}, but it has no base()?!", cls.getName());
-                }
+                classes.add(cls);
+                //noinspection unchecked
+                pluginSettingsByName.put(cls.getSimpleName().toLowerCase().replace("settings", ""),
+                        (Class<? extends PluginSettings>) cls);
             }
         }).scan();
         premap(classes.toArray(new Class[0]));
@@ -203,14 +182,11 @@ public class Database {
         if(maybeSettings.isPresent()) {
             return maybeSettings.get();
         } else {
-            // Base the settings and return
             try {
-                // TODO: Shouldn't do this, just use default field values on instantiation. Jackson should do the right thing.
-                @SuppressWarnings("unchecked")
-                final T base = (T) type.getMethod("base", String.class).invoke(null, id);
+                final T base = type.getConstructor(String.class).newInstance(id);
                 saveSettings(base);
                 return base;
-            } catch(final IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            } catch(final IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
                 throw new RuntimeException(e);
             }
         }

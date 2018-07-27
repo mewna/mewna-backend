@@ -3,6 +3,7 @@ package com.mewna.data;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
 import com.mewna.plugin.CommandManager.CommandWrapper;
+import com.mewna.plugin.plugins.PluginMusic;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -26,6 +27,12 @@ public interface PluginSettings {
     static <T> List<String> commandsOwnedByPlugin(final Class<T> cls) {
         return Mewna.getInstance().getCommandManager().getCommandsForPlugin(cls).stream().map(CommandWrapper::getBaseName)
                 .distinct().collect(Collectors.toList());
+    }
+    
+    default Map<String, CommandSettings> generateCommandSettings() {
+        final Map<String, CommandSettings> settings = new HashMap<>();
+        commandsOwnedByPlugin(getClass()).forEach(e -> settings.put(e, CommandSettings.base()));
+        return settings;
     }
     
     Map<String, CommandSettings> getCommandSettings();

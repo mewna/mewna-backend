@@ -3,17 +3,15 @@ package com.mewna.plugin.plugins.settings;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
-import com.mewna.plugin.plugins.PluginEmotes;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.json.JSONObject;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -22,8 +20,8 @@ import java.util.Map;
  */
 @Getter
 @Setter
+@AllArgsConstructor
 @Accessors(chain = true)
-@Builder(toBuilder = true)
 @Table("settings_emote")
 @GIndex("id")
 public class EmotesSettings implements PluginSettings {
@@ -31,10 +29,9 @@ public class EmotesSettings implements PluginSettings {
     private final String id;
     private final Map<String, CommandSettings> commandSettings;
     
-    public static EmotesSettings base(final String id) {
-        final Map<String, CommandSettings> settings = new HashMap<>();
-        PluginSettings.commandsOwnedByPlugin(PluginEmotes.class).forEach(e -> settings.put(e, CommandSettings.base()));
-        return new EmotesSettings(id, settings);
+    public EmotesSettings(final String id) {
+        this.id = id;
+        commandSettings = generateCommandSettings();
     }
     
     @Override
@@ -44,9 +41,8 @@ public class EmotesSettings implements PluginSettings {
     
     @Override
     public boolean updateSettings(final Database database, final JSONObject data) {
-        final EmotesSettingsBuilder builder = toBuilder();
-        builder.commandSettings(commandSettingsFromJson(data));
-        database.saveSettings(builder.build());
+        commandSettings.putAll(commandSettingsFromJson(data));
+        database.saveSettings(this);
         return true;
     }
 }

@@ -3,7 +3,6 @@ package com.mewna.plugin.plugins.settings;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
-import com.mewna.plugin.plugins.PluginLogging;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
@@ -13,7 +12,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.json.JSONObject;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -23,7 +21,6 @@ import java.util.Map;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Builder(toBuilder = true)
 @Table("settings_logging")
 @GIndex("id")
 @SuppressWarnings("unused")
@@ -32,10 +29,9 @@ public class LoggingSettings implements PluginSettings {
     private final String id;
     private final Map<String, CommandSettings> commandSettings;
     
-    public static LoggingSettings base(final String id) {
-        final Map<String, CommandSettings> settings = new HashMap<>();
-        PluginSettings.commandsOwnedByPlugin(PluginLogging.class).forEach(e -> settings.put(e, CommandSettings.base()));
-        return new LoggingSettings(id, settings);
+    public LoggingSettings(final String id) {
+        this.id = id;
+        commandSettings = generateCommandSettings();
     }
     
     @Override

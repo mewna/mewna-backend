@@ -3,17 +3,15 @@ package com.mewna.plugin.plugins.settings;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
-import com.mewna.plugin.plugins.PluginMusic;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.json.JSONObject;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -22,8 +20,8 @@ import java.util.Map;
  */
 @Getter
 @Setter
+@AllArgsConstructor
 @Accessors(chain = true)
-@Builder(toBuilder = true)
 @Table("settings_music")
 @GIndex("id")
 @SuppressWarnings("unused")
@@ -32,10 +30,9 @@ public class MusicSettings implements PluginSettings {
     private final String id;
     private final Map<String, CommandSettings> commandSettings;
     
-    public static MusicSettings base(final String id) {
-        final Map<String, CommandSettings> settings = new HashMap<>();
-        PluginSettings.commandsOwnedByPlugin(PluginMusic.class).forEach(e -> settings.put(e, CommandSettings.base()));
-        return new MusicSettings(id, settings);
+    public MusicSettings(final String id) {
+        this.id = id;
+        commandSettings = generateCommandSettings();
     }
     
     @Override
@@ -45,9 +42,8 @@ public class MusicSettings implements PluginSettings {
     
     @Override
     public boolean updateSettings(final Database database, final JSONObject data) {
-        final MusicSettingsBuilder builder = toBuilder();
-        builder.commandSettings(commandSettingsFromJson(data));
-        database.saveSettings(builder.build());
+        this.commandSettings.putAll(commandSettingsFromJson(data));
+        database.saveSettings(this);
         return true;
     }
 }

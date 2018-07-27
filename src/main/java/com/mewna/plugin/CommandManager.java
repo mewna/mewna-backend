@@ -8,6 +8,7 @@ import com.mewna.cache.entity.User;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.PluginManager.PluginMetadata;
+import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.message.MessageCreateEvent;
 import com.mewna.plugin.metadata.Payment;
 import com.mewna.plugin.metadata.Ratelimit;
@@ -127,13 +128,28 @@ public class CommandManager {
             }
             
             final Channel channel = mewna.getCache().getChannel(channelId);
+            if(channel == null) {
+                logger.error("Got message from unknown (uncached) channel {}!?", channelId);
+                return;
+            }
             if(channel.getType() != ChannelType.GUILD_TEXT.getType()) {
                 // Ignore it if it's not a guild message
+                return;
+            }
+            if(channel.getId() == null) {
                 return;
             }
             
             // Collect cache data
             final Guild guild = mewna.getCache().getGuild(guildId);
+            if(guild == null) {
+                logger.error("Got message from unknown (uncached) guild {}!?", guildId);
+                return;
+            }
+            if(guild.getId() == null) {
+                return;
+            }
+            
             final List<User> mentions = new ArrayList<>();
             for(final Object o : data.getJSONArray("mentions")) {
                 final JSONObject j = (JSONObject) o;
@@ -143,8 +159,10 @@ public class CommandManager {
             
             if(System.getenv("DEBUG") != null) {
                 if(!user.getId().equals("128316294742147072")) {
+                    /*
                     mewna.getPluginManager().processEvent("MESSAGE_CREATE", new MessageCreateEvent(user, channel, guild, mentions,
                             data.getString("content"), data.getBoolean("mention_everyone")));
+                            */
                     return;
                 }
             }
@@ -276,7 +294,7 @@ public class CommandManager {
                 }
             } else {
                 // No prefix found, pass it down as an event
-                mewna.getPluginManager().processEvent("MESSAGE_CREATE", new MessageCreateEvent(user, channel, guild, mentions,
+                mewna.getPluginManager().processEvent(EventType.MESSAGE_CREATE, new MessageCreateEvent(user, channel, guild, mentions,
                         data.getString("content"), data.getBoolean("mention_everyone")));
             }
         } catch(final Throwable t) {

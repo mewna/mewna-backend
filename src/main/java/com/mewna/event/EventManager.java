@@ -59,103 +59,26 @@ public class EventManager {
     public EventManager(final Mewna mewna) {
         this.mewna = mewna;
         cache = new DiscordCache(mewna);
-        
-        /*
-        // Channels
-        handlers.put(CHANNEL_CREATE, (event, data) -> cache.cacheChannel(data));
-        handlers.put(CHANNEL_DELETE, (event, data) -> cache.deleteChannel(data.getString("id")));
-        handlers.put(CHANNEL_UPDATE, (event, data) -> cache.cacheChannel(data));
-        
-        // Guilds
-        handlers.put(GUILD_CREATE, (event, data) -> {
-            final String id = data.getString("id");
-            cache.cacheGuild(data);
-            final JSONArray roles = data.getJSONArray("roles");
-            final JSONArray members = data.getJSONArray("members");
-            final JSONArray channels = data.getJSONArray("channels");
-            channels.forEach(r -> {
-                final JSONObject o = (JSONObject) r;
-                cache.cacheChannel(o.put("guild_id", id));
-            });
-            roles.forEach(r -> {
-                // We do this because ROLE_* events give us {role: {}, guild_id: ""}
-                // and it's easier to just have one method and transform data before
-                final JSONObject o = (JSONObject) r;
-                cache.cacheRole(new JSONObject().put("guild_id", id).put("role", o));
-            });
-            //logger.info("Caching initial {} member chunk.", members.length());
-            members.forEach(r -> {
-                cache.cacheUser(((JSONObject) r).getJSONObject("user"));
-                cache.cacheMember(id, (JSONObject) r);
-            });
-            if(data.has("voice_states") && !data.isNull("voice_states")) {
-                final JSONArray states = data.getJSONArray("voice_states");
-                for(final Object o : states) {
-                    final JSONObject state = (JSONObject) o;
-                    state.put("guild_id", id);
-                    // TODO: Bulk-cache in redis transactions
-                    cache.cacheVoiceState(state);
-                }
-            }
-        });
-        handlers.put(GUILD_DELETE, (event, data) -> {
-            if(data.has("unavailable")) {
-                logger.warn("Guild went unavailable: {}", data.getString("id"));
-            } else {
-                cache.deleteGuild(data.getString("id"));
-            }
-        });
-        handlers.put(GUILD_UPDATE, (event, data) -> cache.cacheGuild(data));
-        
-        // Emotes
-        handlers.put(GUILD_EMOJIS_UPDATE, (event, data) -> {
-        });
-        */
         // Members
         handlers.put(GUILD_MEMBER_ADD, (event, data) -> {
             final JSONObject user = data.getJSONObject("user");
-            /*
-            cache.cacheUser(user);
-            cache.cacheMember(data.getString("guild_id"), data);
-            */
             final Guild guild = cache.getGuild(data.getString("guild_id"));
-            //cache.getMappingManager().mapper(Guild.class).save(guild.toBuilder().memberCount(guild.getMemberCount() + 1).build());
+            if(guild.getId() == null) {
+                return;
+            }
             mewna.getPluginManager().processEvent(event.getType(),
                     new GuildMemberAddEvent(guild, cache.getMember(guild, cache.getUser(user.getString("id")))));
         });
         handlers.put(GUILD_MEMBER_REMOVE, (event, data) -> {
             final Guild guild = cache.getGuild(data.getString("guild_id"));
-            /*
-            cache.deleteMember(data.getString("guild_id"), data.getJSONObject("user").getString("id"));
-            cache.getMappingManager().mapper(Guild.class).save(guild.toBuilder().memberCount(guild.getMemberCount() - 1).build());
-            */
+            if(guild.getId() == null) {
+                return;
+            }
             mewna.getPluginManager().processEvent(event.getType(), new GuildMemberRemoveEvent(guild,
                     cache.getUser(data.getJSONObject("user").getString("id"))));
         });
+
         /*
-        handlers.put(GUILD_MEMBER_UPDATE, (event, data) -> {
-            final String guildId = data.getString("guild_id");
-            cache.cacheMember(guildId, data);
-        });
-        handlers.put(GUILD_MEMBERS_CHUNK, (event, data) -> {
-            final JSONArray members = data.getJSONArray("members");
-            //logger.info("Caching chunk with {} members.", members.length());
-            members.forEach(m -> {
-                cache.cacheUser(((JSONObject) m).getJSONObject("user"));
-                cache.cacheMember(data.getString("guild_id"), (JSONObject) m);
-            });
-        });
-        
-        // Roles
-        handlers.put(GUILD_ROLE_CREATE, (event, data) -> cache.cacheRole(data));
-        handlers.put(GUILD_ROLE_DELETE, (event, data) -> cache.deleteRole(data.getString("role_id")));
-        handlers.put(GUILD_ROLE_UPDATE, (event, data) -> cache.cacheRole(data));
-        
-        
-        // Users
-        handlers.put(USER_UPDATE, (event, data) -> cache.cacheUser(data));
-        handlers.put(PRESENCE_UPDATE, (event, data) -> cache.cacheUser(data.getJSONObject("user")));
-        
         // Voice
         handlers.put(VOICE_SERVER_UPDATE, (event, data) -> {
             // Not needed
@@ -274,24 +197,6 @@ public class EventManager {
             } catch(final IOException e) {
                 e.printStackTrace();
             }
-        });
-        
-        // We don't really care about these Discord gateway events
-        handlers.put(GUILD_SYNC, (event, data) -> {
-        });
-        handlers.put(GUILD_BAN_ADD, (event, data) -> {
-        });
-        handlers.put(GUILD_BAN_REMOVE, (event, data) -> {
-        });
-        handlers.put(MESSAGE_REACTION_ADD, (event, data) -> {
-        });
-        handlers.put(MESSAGE_REACTION_REMOVE, (event, data) -> {
-        });
-        handlers.put(MESSAGE_REACTION_REMOVE_ALL, (event, data) -> {
-        });
-        handlers.put(READY, (event, data) -> {
-        });
-        handlers.put(TYPING_START, (event, data) -> {
         });
     }
     

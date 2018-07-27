@@ -3,11 +3,10 @@ package com.mewna.plugin.plugins.settings;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
-import com.mewna.plugin.plugins.PluginLevels;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -22,8 +21,8 @@ import java.util.*;
  */
 @Getter
 @Setter
+@AllArgsConstructor
 @Accessors(chain = true)
-@Builder(toBuilder = true)
 @Table("settings_levels")
 @GIndex("id")
 @SuppressWarnings("unused")
@@ -32,22 +31,20 @@ public class LevelsSettings implements PluginSettings {
     @PrimaryKey
     private final String id;
     private final Map<String, CommandSettings> commandSettings;
-    private final boolean levelsEnabled;
-    private final boolean levelUpMessagesEnabled;
-    private final boolean removePreviousRoleRewards;
-    private final String levelUpMessage;
+    private boolean levelsEnabled;
+    private boolean levelUpMessagesEnabled = true;
+    private boolean removePreviousRoleRewards = true;
+    private String levelUpMessage = "{user.name} leveled :up: to level {level}! :tada:";
     /**
      * Maps role ids to levels. I know it could be done differently. It was
      * done this way because doing a {@code Map<Long, Set<String>>} was SOMEHOW
      * causing issues in the JS frontend part of things. idfk HOW, but it did.
      */
-    private Map<String, Long> levelRoleRewards;
+    private Map<String, Long> levelRoleRewards = new HashMap<>();
     
-    public static LevelsSettings base(final String id) {
-        final Map<String, CommandSettings> settings = new HashMap<>();
-        PluginSettings.commandsOwnedByPlugin(PluginLevels.class).forEach(e -> settings.put(e, CommandSettings.base()));
-        return new LevelsSettings(id, settings, false, true, true,
-                "{user.name} leveled :up: to level {level}! :tada:", new HashMap<>());
+    public LevelsSettings(final String id) {
+        this.id = id;
+        commandSettings = generateCommandSettings();
     }
     
     @Override
@@ -75,7 +72,6 @@ public class LevelsSettings implements PluginSettings {
     
     @Override
     public boolean updateSettings(final Database database, final JSONObject data) {
-        final LevelsSettingsBuilder builder = toBuilder();
         try {
             // Trigger exception if not present
             data.getString("levelUpMessage");
@@ -83,10 +79,10 @@ public class LevelsSettings implements PluginSettings {
             if(levelUpMessage == null) {
                 levelUpMessage = "";
             }
-            builder.levelUpMessage(levelUpMessage);
-            builder.levelsEnabled(data.optBoolean("levelsEnabled", false));
-            builder.levelUpMessagesEnabled(data.optBoolean("levelUpMessagesEnabled", false));
-            builder.removePreviousRoleRewards(data.optBoolean("removePreviousRoleRewards", false));
+            this.levelUpMessage = levelUpMessage;
+            levelsEnabled = data.optBoolean("levelsEnabled", false);
+            levelUpMessagesEnabled = data.optBoolean("levelUpMessagesEnabled", false);
+            removePreviousRoleRewards = data.optBoolean("removePreviousRoleRewards", false);
             
             // Basically just copy the object into a map as-is, converting data types to make sure it works
             final JSONObject rewards = data.getJSONObject("levelRoleRewards");
@@ -102,10 +98,10 @@ public class LevelsSettings implements PluginSettings {
                 }
             });
             remove.forEach(roleRewards::remove);
-            builder.levelRoleRewards(roleRewards);
-            
-            builder.commandSettings(commandSettingsFromJson(data));
-            database.saveSettings(builder.build());
+            levelRoleRewards.clear();
+            levelRoleRewards.putAll(roleRewards);
+            commandSettings.putAll(commandSettingsFromJson(data));
+            database.saveSettings(this);
             return true;
         } catch(final JSONException e) {
             return false;

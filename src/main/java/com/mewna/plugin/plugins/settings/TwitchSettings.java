@@ -4,11 +4,13 @@ import com.mewna.Mewna;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
-import com.mewna.plugin.plugins.PluginTwitch;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -22,8 +24,8 @@ import java.util.*;
  */
 @Getter
 @Setter
+@AllArgsConstructor
 @Accessors(chain = true)
-@Builder(toBuilder = true)
 @Table("settings_twitch")
 @GIndex({"id", "partneredStreamers", "twitchStreamers"})
 @SuppressWarnings("unused")
@@ -37,14 +39,13 @@ public class TwitchSettings implements PluginSettings {
      * streamer may have their own server and/or a server with friends and/or
      * etc
      */
-    private Set<String> partneredStreamers;
+    private Set<String> partneredStreamers = new HashSet<>();
     
-    private List<TwitchStreamerConfig> twitchStreamers;
+    private List<TwitchStreamerConfig> twitchStreamers = new ArrayList<>();
     
-    public static TwitchSettings base(final String id) {
-        final Map<String, CommandSettings> settings = new HashMap<>();
-        PluginSettings.commandsOwnedByPlugin(PluginTwitch.class).forEach(e -> settings.put(e, CommandSettings.base()));
-        return new TwitchSettings(id, settings, null, new HashSet<>(), new ArrayList<>());
+    public TwitchSettings(final String id) {
+        this.id = id;
+        commandSettings = generateCommandSettings();
     }
     
     @Override
@@ -86,14 +87,13 @@ public class TwitchSettings implements PluginSettings {
     
     @Override
     public boolean updateSettings(final Database database, final JSONObject data) {
-        final TwitchSettingsBuilder builder = toBuilder();
         if(data.optString("twitchWebhookChannel") != null) {
             if(!data.isNull("twitchWebhookChannel")) {
-                builder.twitchWebhookChannel(data.getString("twitchWebhookChannel"));
+                twitchWebhookChannel = data.getString("twitchWebhookChannel");
             }
         }
         final JSONArray streamersJson = data.getJSONArray("twitchStreamers");
-        final List<TwitchStreamerConfig> streamers = new ArrayList<>();
+        final Collection<TwitchStreamerConfig> streamers = new ArrayList<>();
         for(final Object o : streamersJson) {
             final JSONObject streamer = (JSONObject) o;
             try {
@@ -108,6 +108,7 @@ public class TwitchSettings implements PluginSettings {
                     // This is **very intentionally** done like this
                     // Later on, this will be used, but for now, we
                     // wanna make sure that people can't try to sneek it in
+                    //noinspection ConstantConditions,StatementWithEmptyBody
                     if(false) {
                         // Sub to follow messages
                     } else {
@@ -119,8 +120,9 @@ public class TwitchSettings implements PluginSettings {
                 return false;
             }
         }
-        builder.twitchStreamers(streamers);
-        database.saveSettings(builder.build());
+        twitchStreamers.clear();
+        twitchStreamers.addAll(streamers);
+        database.saveSettings(this);
         return true;
     }
     

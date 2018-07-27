@@ -23,11 +23,11 @@ public enum Item {
     PASTA(          ItemType.FOOD,          "pasta",            "\uD83C\uDF5D", 10,     3,      true,       1),
     
     // Gem
-    DIAMOND(        ItemType.GEM,           "diamond",          "\uD83D\uDC8E", 500,    90,     false,      1),
-    COMET(          ItemType.GEM,           "comet",            "\u2604",       200,    50,     true,       1),
-    STAR(           ItemType.GEM,           "star",             "\uD83C\uDF1F", 100,    35,     true,       1),
-    SNOWFLAKE(      ItemType.GEM,           "snowflake",        "\u2744",       50,     20,     true,       1),
-    SPARKLES(       ItemType.GEM,           "sparkles",         "\u2728",       50,     20,     true,       1),
+    DIAMOND(        ItemType.GEM,           "diamond",          "\uD83D\uDC8E", 500,    50,     false,      1),
+    COMET(          ItemType.GEM,           "comet",            "\u2604",       200,    35,     true,       1),
+    STAR(           ItemType.GEM,           "star",             "\uD83C\uDF1F", 100,    20,     true,       1),
+    SNOWFLAKE(      ItemType.GEM,           "snowflake",        "\u2744",       50,     10,     true,       1),
+    SPARKLES(       ItemType.GEM,           "sparkles",         "\u2728",       50,     10,     true,       1),
     
     // Tool
     PICKAXE(        ItemType.TOOL,          "pickaxe",          "\u26CF",       25,     10,     true,       1),
@@ -35,8 +35,8 @@ public enum Item {
     
     // Fish
     FISH(           ItemType.FISH,          "fish",             "\uD83D\uDC1F", 5,      2,      true,       1),
-    WHALE(          ItemType.FISH,          "whale",            "\uD83D\uDC0B", 25,     10,     true,      1),
-    TROPICAL_FISH(  ItemType.FISH,          "tropicalfish",     "\uD83D\uDC20", 25,     15,     true,       1),
+    WHALE(          ItemType.FISH,          "whale",            "\uD83D\uDC0B", 25,     8,     true,      1),
+    TROPICAL_FISH(  ItemType.FISH,          "tropicalfish",     "\uD83D\uDC20", 20,     5,     true,       1),
     BOOT(           ItemType.FISH,          "boot",             "\uD83D\uDC62", 3,      1,      true,       1),
     WEED(           ItemType.FISH,          "weed",             "\uD83C\uDF31", 1,      1,      true,       1),
     

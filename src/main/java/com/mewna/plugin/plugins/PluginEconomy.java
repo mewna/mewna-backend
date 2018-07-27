@@ -1,5 +1,6 @@
 package com.mewna.plugin.plugins;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.mewna.cache.entity.Guild;
@@ -20,8 +21,11 @@ import com.mewna.util.Time;
 import lombok.ToString;
 import net.dv8tion.jda.core.EmbedBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.json.JSONObject;
 
 import javax.inject.Inject;
+import java.io.IOException;
+import java.sql.ResultSet;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -266,6 +270,29 @@ public class PluginEconomy extends BasePlugin {
         }
     }
     
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    
+    @Ratelimit(time = 20)
+    @Command(names = "baltop", desc = "See the 10 richest users.", usage = "baltop", examples = "baltop")
+    public void baltop(final CommandContext ctx) {
+        getDatabase().getStore().sql("SELECT * FROM players ORDER BY (data->>'balance')::integer DESC LIMIT 10;", p -> {
+            final ResultSet res = p.executeQuery();
+            final StringBuilder sb = new StringBuilder("The 10 richest users are:\n\n");
+            while(res.next()) {
+                try {
+                    final String id = res.getString("id");
+                    final Player player = MAPPER.readValue(res.getString("data"), Player.class);
+                    final User user = getCache().getUser(id);
+                    sb.append("- ").append(user.getName()).append('#').append(user.getDiscriminator()).append(" - ")
+                            .append(player.getBalance()).append(helper.getCurrencySymbol(ctx)).append('\n');
+                } catch(final IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            getRestJDA().sendMessage(ctx.getChannel(), sb.toString()).queue();
+        });
+    }
+    
     @Payment(min = 20, max = 1000, fromFirstArg = true)
     @Ratelimit(time = 60)
     @Command(names = "gamble", desc = "Bet big on the Wumpus Races.", usage = "gamble [amount]",
@@ -474,7 +501,7 @@ public class PluginEconomy extends BasePlugin {
         }
     }
     
-    @Ratelimit(time = 10)
+    @Ratelimit(time = 20)
     @Command(names = "mine", desc = "Go mining for shines!", usage = "mine", examples = "mine")
     public void mine(final CommandContext ctx) {
         if(!ctx.getPlayer().hasItem(Item.PICKAXE)) {

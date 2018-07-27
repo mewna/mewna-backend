@@ -26,7 +26,7 @@ import java.util.Map.Entry;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table("players")
-@GIndex({"id", "guildXp", "ownedBackgroundPacks"})
+@GIndex({"id", "guildXp", "ownedBackgroundPacks", "balance"})
 @SuppressWarnings({"unused", "RedundantFieldInitialization", "WeakerAccess", "UnusedReturnValue"})
 public class Player {
     public static final long MAX_INV_WEIGHT = 10_000;

@@ -327,7 +327,7 @@ public class PluginLevels extends BasePlugin {
                     .setImage("attachment://profile.png")
                     .setColor(Renderer.PRIMARY_COLOUR)
                     .setDescription(String.format("[View full profile](%s)", profileUrl))
-                    .setFooter("You can change your background on your profile.", null);
+                    .setFooter("You can change your description and background on your profile.", null);
             getRestJDA().sendFile(ctx.getChannel(), cardBytes, "profile.png",
                     new MessageBuilder().setEmbed(builder.build()).build())
                     .queue();

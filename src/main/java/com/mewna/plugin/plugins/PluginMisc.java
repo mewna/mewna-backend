@@ -168,6 +168,7 @@ public class PluginMisc extends BasePlugin {
                 .addField("Dashboard", System.getenv("DOMAIN"), false)
                 .addField("Commands", System.getenv("DOMAIN") + "/discord/commands", false)
                 .addField("Support server", "https://discord.gg/UwdDN6r", false)
+                .addField("Follow us on Twitter!", "https://twitter.com/mewnabot", false)
                 .addField("", "Everything can be enabled / disabled in the dashboard.", false)
         ;
         getRestJDA().sendMessage(ctx.getChannel().getId(), builder.build()).queue();

@@ -46,7 +46,7 @@ public class EconomySettings implements PluginSettings {
                     final Optional<String> string = Optional.ofNullable(data.optString(key));
                     if(string.isPresent()) {
                         final String sym = string.get();
-                        if(sym.length() > 16) {
+                        if(sym.length() > 64) {
                             return false;
                         }
                     } else {

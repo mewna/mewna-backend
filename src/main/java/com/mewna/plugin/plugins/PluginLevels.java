@@ -256,7 +256,7 @@ public class PluginLevels extends BasePlugin {
         final Guild guild = ctx.getGuild();
         final LevelsSettings settings = getMewna().getDatabase().getOrBaseSettings(LevelsSettings.class, guild.getId());
         if(!settings.isLevelsEnabled()) {
-            getRestJDA().sendMessage(ctx.getChannel(), "Levels are not enabled in this server.").queue();
+            getRestJDA().sendMessage(ctx.getChannel(), "Levels are not enabled in this server. The server owner (or administrators) should enable them in the dashboard: <https://mewna.com/>").queue();
             return;
         }
         final User user;
@@ -356,7 +356,7 @@ public class PluginLevels extends BasePlugin {
         final Guild guild = ctx.getGuild();
         final LevelsSettings settings = getMewna().getDatabase().getOrBaseSettings(LevelsSettings.class, guild.getId());
         if(!settings.isLevelsEnabled()) {
-            getRestJDA().sendMessage(ctx.getChannel(), "Levels are not enabled in this server.").queue();
+            getRestJDA().sendMessage(ctx.getChannel(), "Levels are not enabled in this server. The server owner (or administrators) should enable them in the dashboard: <https://mewna.com/>").queue();
             return;
         }
         getRestJDA().sendMessage(ctx.getChannel(), System.getenv("DOMAIN") + "/discord/leaderboards/" + guild.getId()).queue();

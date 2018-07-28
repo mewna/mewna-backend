@@ -74,14 +74,16 @@ public class CommandManager {
                     pluginAnnotation.name(), pluginClass.getName());
         }
         // Load metadata
-        if(cmd.aliased()) {
-            final List<String> tmp = new ArrayList<>(Arrays.asList(cmd.names()));
-            final String name = tmp.remove(0);
-            final String[] aliases = tmp.toArray(new String[0]);
-            commandMetadata.add(new CommandMetadata(name, pluginAnnotation.name(), cmd.desc(), aliases, cmd.usage(), cmd.examples()));
-        } else {
-            for(final String name : cmd.names()) {
-                commandMetadata.add(new CommandMetadata(name, pluginAnnotation.name(), cmd.desc(), new String[0], cmd.usage(), cmd.examples()));
+        if(!cmd.owner()) {
+            if(cmd.aliased()) {
+                final List<String> tmp = new ArrayList<>(Arrays.asList(cmd.names()));
+                final String name = tmp.remove(0);
+                final String[] aliases = tmp.toArray(new String[0]);
+                commandMetadata.add(new CommandMetadata(name, pluginAnnotation.name(), cmd.desc(), aliases, cmd.usage(), cmd.examples()));
+            } else {
+                for(final String name : cmd.names()) {
+                    commandMetadata.add(new CommandMetadata(name, pluginAnnotation.name(), cmd.desc(), new String[0], cmd.usage(), cmd.examples()));
+                }
             }
         }
     }

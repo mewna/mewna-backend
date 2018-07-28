@@ -21,7 +21,6 @@ import com.mewna.util.Time;
 import lombok.ToString;
 import net.dv8tion.jda.core.EmbedBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.json.JSONObject;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -51,7 +50,7 @@ public class PluginEconomy extends BasePlugin {
     private static final long DAILY_BASE_REWARD = 100;
     
     private static final int GAMBLE_WUMPUS_COUNT = 4;
-    
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     private final Map<String, SlotMachine> slotsCache = new HashMap<>();
     @Inject
     private CurrencyHelper helper;
@@ -122,8 +121,8 @@ public class PluginEconomy extends BasePlugin {
             player.incrementDailyStreak();
             final long bonus = 100 + 10 * (player.getDailyStreak() - 1);
             player.incrementBalance(DAILY_BASE_REWARD + bonus);
-            getRestJDA().sendMessage(ctx.getChannel(), String.format("You collect your daily **%s%s**.\n\nStreak up! New streak: `%sx`.",
-                    DAILY_BASE_REWARD, helper.getCurrencySymbol(ctx), player.getDailyStreak())).queue();
+            getRestJDA().sendMessage(ctx.getChannel(), String.format("You collect your daily **%s%s**.\n\nStreak up! New streak: `%sx`, bonus: %s%s.",
+                    DAILY_BASE_REWARD, helper.getCurrencySymbol(ctx), player.getDailyStreak(), bonus, helper.getCurrencySymbol(ctx))).queue();
         } else {
             player.resetDailyStreak();
             player.incrementBalance(DAILY_BASE_REWARD);
@@ -269,8 +268,6 @@ public class PluginEconomy extends BasePlugin {
             getRestJDA().sendMessage(ctx.getChannel(), sb.append("\nThe slot machine paid out nothing...").toString()).queue();
         }
     }
-    
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     
     @Ratelimit(time = 20)
     @Command(names = "baltop", desc = "See the 10 richest users.", usage = "baltop", examples = "baltop")

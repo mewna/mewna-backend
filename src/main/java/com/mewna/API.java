@@ -117,7 +117,7 @@ class API {
                                 });
                             }
                             data.put("id", account.getId())
-                                    .put("username", account.getId())
+                                    .put("username", account.getUsername())
                                     .put("displayName", account.getDisplayName())
                                     .put("avatar", account.getAvatar())
                                     .put("aboutText", account.getAboutText())

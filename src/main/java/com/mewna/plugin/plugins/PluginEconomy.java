@@ -508,7 +508,7 @@ public class PluginEconomy extends BasePlugin {
                     .queue();
             return;
         }
-        if(LootTables.chance(10)) {
+        if(LootTables.chance(5)) {
             ctx.getPlayer().removeOneFromInventory(Item.PICKAXE);
             getDatabase().savePlayer(ctx.getPlayer());
             getRestJDA().sendMessage(ctx.getChannel(), "Oh no! Your pickaxe broke when you tried to use it!").queue();
@@ -537,7 +537,7 @@ public class PluginEconomy extends BasePlugin {
                     .queue();
             return;
         }
-        if(LootTables.chance(10)) {
+        if(LootTables.chance(5)) {
             ctx.getPlayer().removeOneFromInventory(Item.FISHING_ROD);
             getDatabase().savePlayer(ctx.getPlayer());
             getRestJDA().sendMessage(ctx.getChannel(), "Oh no! Your fishing rod broke when you tried to use it!").queue();

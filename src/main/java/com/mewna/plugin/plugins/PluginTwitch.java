@@ -3,6 +3,7 @@ package com.mewna.plugin.plugins;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
+import com.mewna.cache.entity.Guild;
 import com.mewna.data.Webhook;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Plugin;
@@ -93,6 +94,10 @@ public class PluginTwitch extends BasePlugin {
                 while(resultSet.next()) {
                     webhookGuilds.add(resultSet.getString("id"));
                 }
+                webhookGuilds.removeIf(e -> {
+                    final Guild guild = getMewna().getCache().getGuild(e);
+                    return guild == null || guild.getId() == null;
+                });
                 if(!webhookGuilds.isEmpty()) {
                     webhookGuilds.forEach(guildId -> {
                         final TwitchSettings settings = getDatabase().getOrBaseSettings(TwitchSettings.class, guildId);

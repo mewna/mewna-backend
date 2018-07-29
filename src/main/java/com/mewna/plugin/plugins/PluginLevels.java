@@ -89,7 +89,7 @@ public class PluginLevels extends BasePlugin {
                 "ORDER BY (data->'guildXp'->>'" + guildId + "')::integer DESC" +
                 ") AS rank, data FROM players " +
                 "WHERE data->'guildXp'->'" + guildId + "' IS NOT NULL "+
-                /*"ORDER BY (data->'guildXp'->>'" + guildId + "')::integer DESC*/") AS _q " +
+                ") AS _q " +
                 "WHERE data->>'id' = '" + playerId + "';", p -> {
             final ResultSet resultSet = p.executeQuery();
             if(resultSet.isBeforeFirst()) {

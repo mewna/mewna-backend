@@ -201,7 +201,7 @@ class API {
                         final String query = String.format(
                                 "SELECT players.data AS player, accounts.data AS account FROM players\n" +
                                         "    JOIN accounts ON accounts.data->>'discordAccountId' = players.id\n" +
-                                        "    WHERE players.data->'guildXp'->'%s' IS NOT NULL\n" +
+                                        "    WHERE players.data->'guildXp' ? '%s'\n" +
                                         "        AND (players.data->'guildXp'->>'%s')::integer > 0\n" +
                                         "    ORDER BY (players.data->'guildXp'->>'%s')::integer DESC LIMIT 100;",
                                 id, id, id

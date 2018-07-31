@@ -1,21 +1,8 @@
 package com.mewna.plugin.plugins;
 
-import com.mewna.cache.entity.Channel;
-import com.mewna.cache.entity.Guild;
-import com.mewna.cache.entity.User;
-import com.mewna.cache.entity.VoiceState;
 import com.mewna.plugin.BasePlugin;
-import com.mewna.plugin.Command;
-import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.Plugin;
-import com.mewna.plugin.event.Event;
-import com.mewna.plugin.event.EventType;
-import com.mewna.plugin.event.audio.AudioTrackEvent;
 import com.mewna.plugin.plugins.settings.MusicSettings;
-import com.mewna.plugin.util.Emotes;
-import com.mewna.util.Time;
-import net.dv8tion.jda.core.EmbedBuilder;
-import org.json.JSONObject;
 
 /**
  * @author amy

@@ -44,6 +44,7 @@ public class Account {
     private String aboutText = "A mysterious stranger.";
     private String customBackground = "/backgrounds/default/plasma";
     private List<String> ownedBackgroundPacks = new ArrayList<>(Collections.singletonList("default"));
+    private boolean isInBeta;
     
     @SuppressWarnings("WeakerAccess")
     public Account(final String id) {

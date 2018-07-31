@@ -109,6 +109,9 @@ public class CommandManager {
     
     public void tryExecCommand(final JSONObject data) {
         try {
+            if(!data.has("guild_id") || data.isNull("guild_id")) {
+                return;
+            }
             final String channelId = data.getString("channel_id");
             // See https://github.com/discordapp/discord-api-docs/issues/582
             // Note this isn't in the docs yet, but should be at some point (hopefully soon)

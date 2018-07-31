@@ -123,6 +123,7 @@ class API {
                                     .put("aboutText", account.getAboutText())
                                     .put("customBackground", account.getCustomBackground())
                                     .put("ownedBackgroundPacks", account.getOwnedBackgroundPacks())
+                                    .put("isInBeta", account.isInBeta())
                             ;
                             return data;
                         } else {

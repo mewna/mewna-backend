@@ -5,6 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import static com.mewna.plugin.metadata.RatelimitType.GLOBAL;
 import static com.mewna.plugin.metadata.RatelimitType.GUILD;
 
 /**
@@ -14,7 +15,7 @@ import static com.mewna.plugin.metadata.RatelimitType.GUILD;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Ratelimit {
-    RatelimitType type() default GUILD;
+    RatelimitType type() default GLOBAL;
     
     /**
      * @return How long, <strong>in seconds</strong>, the ratelimit is.

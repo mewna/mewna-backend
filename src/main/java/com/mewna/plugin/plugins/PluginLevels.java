@@ -198,13 +198,9 @@ public class PluginLevels extends BasePlugin {
         final Player player = getDatabase().getPlayer(author);
         getLogger().trace("Handling chat message for player {} in {}", author.getId(), guild.getId());
         
-        // Calc. cooldown
         final ImmutablePair<Boolean, Long> localRes = getMewna().getRatelimiter()
                 .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-local:" + guild.getId(),
                         TimeUnit.MINUTES.toMillis(1));
-        final ImmutablePair<Boolean, Long> globalRes = getMewna().getRatelimiter()
-                .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-global", TimeUnit.MINUTES.toMillis(10));
-        
         if(!localRes.left) {
             final long oldXp = player.getXp(guild);
             final long xp = getXp(player);
@@ -223,6 +219,9 @@ public class PluginLevels extends BasePlugin {
                     getMewna().getRatelimiter().getRatelimitTime(author.getId(), "chat-xp-local:" + guild.getId(),
                             TimeUnit.MINUTES.toMillis(1)));
         }
+    
+        final ImmutablePair<Boolean, Long> globalRes = getMewna().getRatelimiter()
+                .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-global", TimeUnit.MINUTES.toMillis(10));
         if(!globalRes.left) {
             final long oldXp = player.getGlobalXp();
             final long xp = getXp(player);

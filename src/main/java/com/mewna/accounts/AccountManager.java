@@ -51,7 +51,7 @@ public class AccountManager {
     }
     
     public void createOrUpdateDiscordOAuthLinkedAccount(final JSONObject data) {
-        final String id = data.has("id") && !data.isNull("id") && data.getString("id").matches("\\d{16,22}")
+        final String id = data.has("id") && !data.isNull("id") && data.getString("id").matches("\\d+")
                 ? data.getString("id")
                 : Snowflakes.getNewSnowflake();
         final AccountBuilder builder = mewna.getDatabase().getAccountById(id).map(Account::toBuilder)

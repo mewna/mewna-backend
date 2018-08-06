@@ -7,6 +7,7 @@ import com.mewna.cache.entity.Channel;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
 import com.mewna.data.CommandSettings;
+import com.mewna.data.Player;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.PluginManager.PluginMetadata;
 import com.mewna.plugin.event.EventType;
@@ -258,11 +259,16 @@ public class CommandManager {
                             return;
                         }
                     }
-                    
-                    final Optional<Account> maybeAccount = mewna.getAccountManager().getAccountByLinkedDiscord(user.getId());
+                    final Player player = mewna.getDatabase().getPlayer(user);
+                    Optional<Account> maybeAccount = mewna.getAccountManager().getAccountByLinkedDiscord(user.getId());
                     if(!maybeAccount.isPresent()) {
                         logger.error("No account present for Discord account {}!!!", user.getId());
-                        return;
+                        mewna.getAccountManager().createNewDiscordLinkedAccount(player, user);
+                        maybeAccount = mewna.getAccountManager().getAccountByLinkedDiscord(user.getId());
+                        if(!maybeAccount.isPresent()) {
+                            logger.error("No account present for Discord account {} after creation!?", user.getId());
+                            return;
+                        }
                     } else {
                         final Account account = maybeAccount.get();
                         if(account.isBanned()) {
@@ -274,7 +280,7 @@ public class CommandManager {
                     long cost = 0L;
                     // Commands may require payment before running
                     final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr, guild, channel,
-                            mentions, mewna.getDatabase().getPlayer(user), maybeAccount.get(), 0L, prefix);
+                            mentions, player, maybeAccount.get(), 0L, prefix);
                     if(cmd.getPayment() != null) {
                         // By default, try to make the minimum payment
                         String maybePayment = cmd.getPayment().min() + "";

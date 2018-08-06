@@ -302,8 +302,8 @@ public class CommandManager {
                     final CommandContext ctx = paymentCtx.toBuilder().cost(cost).build();
                     
                     try {
-                        logger.info("Command: {}#{} ({}) in {}#{}-{}: {} {}", user.getName(), user.getDiscriminator(),
-                                user.getId(), guild.getId(), channel.getId(), data.getString("id"), commandName, argstr);
+                        logger.info("Command: {}#{} ({}, account: {}) in {}#{}-{}: {} {}", user.getName(), user.getDiscriminator(),
+                                user.getId(), ctx.getAccount().getId(), guild.getId(), channel.getId(), data.getString("id"), commandName, argstr);
                         cmd.getMethod().invoke(cmd.getPlugin(), ctx);
                     } catch(final IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();

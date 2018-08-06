@@ -266,6 +266,7 @@ public class CommandManager {
                     } else {
                         final Account account = maybeAccount.get();
                         if(account.isBanned()) {
+                            logger.warn("Denying command from banned account {}: {}", account.getId(), account.getBanReason());
                             mewna.getRestJDA().sendMessage(channel, "Banned from Mewna. Reason: " + account.getBanReason()).queue();
                             return;
                         }

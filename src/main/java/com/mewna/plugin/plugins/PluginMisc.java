@@ -6,6 +6,8 @@ import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Command;
 import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.Plugin;
+import com.mewna.plugin.metadata.Ratelimit;
+import com.mewna.plugin.metadata.RatelimitType;
 import com.mewna.plugin.plugins.PluginMisc.XMonster.Action;
 import com.mewna.plugin.plugins.PluginMisc.XMonster.Legendary;
 import com.mewna.plugin.plugins.misc.serial.*;
@@ -148,6 +150,7 @@ public class PluginMisc extends BasePlugin {
         }
     }
     
+    @Ratelimit(type = RatelimitType.GUILD, time = 5)
     @Command(names = "catgirl", desc = "Get a random (SFW) catgirl picture.", usage = "catgirl", examples = "catgirl")
     public void catgirl(final CommandContext ctx) {
         try {

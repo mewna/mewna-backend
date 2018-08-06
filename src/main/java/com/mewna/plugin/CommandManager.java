@@ -1,6 +1,7 @@
 package com.mewna.plugin;
 
 import com.mewna.Mewna;
+import com.mewna.accounts.Account;
 import com.mewna.cache.ChannelType;
 import com.mewna.cache.entity.Channel;
 import com.mewna.cache.entity.Guild;
@@ -35,7 +36,7 @@ import java.util.stream.Collectors;
 public class CommandManager {
     private static final List<String> PREFIXES;
     private static final String CLIENT_ID = System.getenv("CLIENT_ID");
-
+    
     static {
         PREFIXES = new ArrayList<>(Arrays.asList(Optional.ofNullable(System.getenv("PREFIXES"))
                 .orElse("bmew.,bmew ,=").split(",")));
@@ -258,8 +259,21 @@ public class CommandManager {
                         }
                     }
                     
+                    final Optional<Account> maybeAccount = mewna.getAccountManager().getAccountByLinkedDiscord(user.getId());
+                    if(!maybeAccount.isPresent()) {
+                        logger.error("No account present for Discord account {}!!!", user.getId());
+                        return;
+                    } else {
+                        final Account account = maybeAccount.get();
+                        if(account.isBanned()) {
+                            mewna.getRestJDA().sendMessage(channel, "Banned from Mewna. Reason: " + account.getBanReason()).queue();
+                            return;
+                        }
+                    }
                     long cost = 0L;
                     // Commands may require payment before running
+                    final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr, guild, channel,
+                            mentions, mewna.getDatabase().getPlayer(user), maybeAccount.get(), 0L, prefix);
                     if(cmd.getPayment() != null) {
                         // By default, try to make the minimum payment
                         String maybePayment = cmd.getPayment().min() + "";
@@ -274,9 +288,6 @@ public class CommandManager {
                             }
                         }
                         
-                        final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr, guild, channel,
-                                mentions, mewna.getDatabase().getPlayer(user), 0L, prefix);
-                        
                         final ImmutablePair<Boolean, Long> res = mewna.getPluginManager().getCurrencyHelper().handlePayment(paymentCtx,
                                 maybePayment, cmd.getPayment().min(), cmd.getPayment().max());
                         // If we can make the payment, set the cost and continue
@@ -288,10 +299,11 @@ public class CommandManager {
                         }
                     }
                     
-                    final CommandContext ctx = new CommandContext(user, commandName, args, argstr, guild, channel, mentions,
-                            mewna.getDatabase().getPlayer(user), cost, prefix);
+                    final CommandContext ctx = paymentCtx.toBuilder().cost(cost).build();
                     
                     try {
+                        logger.info("Command: {}#{} ({}) in {}#{}-{}: {} {}", user.getName(), user.getDiscriminator(),
+                                user.getId(), guild.getId(), channel.getId(), data.getString("id"), commandName, argstr);
                         cmd.getMethod().invoke(cmd.getPlugin(), ctx);
                     } catch(final IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();

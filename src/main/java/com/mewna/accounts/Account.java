@@ -45,6 +45,8 @@ public class Account {
     private String customBackground = "/backgrounds/default/plasma";
     private List<String> ownedBackgroundPacks = new ArrayList<>(Collections.singletonList("default"));
     private boolean isInBeta;
+    private boolean isBanned;
+    private String banReason;
     
     @SuppressWarnings("WeakerAccess")
     public Account(final String id) {

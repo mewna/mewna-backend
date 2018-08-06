@@ -77,7 +77,7 @@ public class EventManager {
     
             final JSONObject u = data.getJSONObject("user");
             final User user = new User(u.getString("id"), u.getString("username"), u.getString("discriminator"),
-                    u.has("avatar") ? u.getString("avatar") : null, u.has("bot") && u.getBoolean("bot"));
+                    u.has("avatar") ? u.optString("avatar") : null, u.has("bot") && u.getBoolean("bot"));
     
             mewna.getPluginManager().processEvent(event.getType(), new GuildMemberRemoveEvent(guild, user));
         });

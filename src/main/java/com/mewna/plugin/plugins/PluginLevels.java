@@ -317,7 +317,7 @@ public class PluginLevels extends BasePlugin {
             return;
         }
         
-        getRestJDA().sendMessage(ctx.getChannel(), Emotes.LOADING_ICON + " Generating rank card (this will take a few seconds)")
+        getRestJDA().sendMessage(ctx.getChannel(), Emotes.LOADING_ICON + " Generating profile card (this will take a few seconds)")
                 .queue(message ->
                         getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
                             // lol

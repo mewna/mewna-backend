@@ -10,6 +10,9 @@ import com.mewna.plugin.metadata.Ratelimit;
 import com.mewna.plugin.metadata.RatelimitType;
 import com.mewna.plugin.plugins.PluginMisc.XMonster.Action;
 import com.mewna.plugin.plugins.PluginMisc.XMonster.Legendary;
+import com.mewna.plugin.plugins.dnd.dice.notation.DiceNotationExpression;
+import com.mewna.plugin.plugins.dnd.dice.parser.DefaultDiceNotationParser;
+import com.mewna.plugin.plugins.dnd.dice.parser.DiceNotationParser;
 import com.mewna.plugin.plugins.misc.serial.*;
 import com.mewna.plugin.plugins.settings.MiscSettings;
 import lombok.Getter;
@@ -175,6 +178,22 @@ public class PluginMisc extends BasePlugin {
                 .addField("", "Everything can be enabled / disabled in the dashboard.", false)
         ;
         getRestJDA().sendMessage(ctx.getChannel().getId(), builder.build()).queue();
+    }
+    
+    private final DiceNotationParser parser = new DefaultDiceNotationParser();
+    
+    @Command(names = {"roll", "r"}, desc = "Roll some dice, D&D style", usage = "roll <dice expression>",
+            examples = {"roll 5d6", "roll 5d6+2", "roll 1d20 + 5d6 - 10"})
+    public void roll(final CommandContext ctx) {
+        String message;
+        try {
+            final DiceNotationExpression expr = parser.parse(ctx.getArgstr());
+        
+            message = String.format("Input: %s\nOutput: %s", ctx.getArgstr(), expr.getValue());
+        } catch(final Exception e) {
+            message = "Invalid dice expression.";
+        }
+        getRestJDA().sendMessage(ctx.getChannel(), message).queue();
     }
     
     private void sendResponse(final CommandContext ctx, final String res) {

@@ -17,11 +17,11 @@ import net.dv8tion.jda.core.entities.impl.TextChannelImpl;
 import net.dv8tion.jda.core.requests.Request;
 import net.dv8tion.jda.core.requests.Response;
 import net.dv8tion.jda.core.requests.RestAction;
-import net.dv8tion.jda.core.requests.Route;
 import net.dv8tion.jda.core.requests.Route.Channels;
 import net.dv8tion.jda.core.requests.Route.CompiledRoute;
 import net.dv8tion.jda.core.requests.Route.Guilds;
 import net.dv8tion.jda.core.requests.Route.Messages;
+import net.dv8tion.jda.core.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.core.requests.restaction.MessageAction;
 import net.dv8tion.jda.core.utils.Checks;
 import okhttp3.OkHttpClient;
@@ -55,6 +55,7 @@ public class RestJDA {
         fakeJDA.setSelfUser(new SelfUserImpl(Long.parseLong(System.getenv("CLIENT_ID")), fakeJDA));
     }
     
+    @CheckReturnValue
     public RestAction<Void> sendTyping(final Channel channel) {
         final CompiledRoute route = Channels.SEND_TYPING.compile(channel.getId());
         return new BasicRestAction<>(fakeJDA, route);
@@ -149,6 +150,33 @@ public class RestJDA {
         Checks.notNull(newContent, "message");
         final CompiledRoute route = Messages.EDIT_MESSAGE.compile(Long.toString(channelId), Long.toString(messageId));
         return new MessageAction(fakeJDA, route, new TextChannelImpl(channelId, new GuildImpl(fakeJDA, 0))).apply(newContent);
+    }
+    
+    @CheckReturnValue
+    public MessageAction editMessage(final Channel channel, final long messageId, final Message newContent) {
+        return editMessage(Long.parseLong(channel.getId()), messageId, newContent);
+    }
+    
+    @CheckReturnValue
+    public AuditableRestAction<Void> deleteMessageById(final Channel channel, final String messageId) {
+        return deleteMessageById(channel.getId(), messageId);
+    }
+    
+    @CheckReturnValue
+    public AuditableRestAction<Void> deleteMessageById(final String channelId, final String messageId) {
+        Checks.isSnowflake(messageId, "Message ID");
+        
+        final CompiledRoute route = Messages.DELETE_MESSAGE.compile(channelId, messageId);
+        return new AuditableRestAction<Void>(fakeJDA, route) {
+            @Override
+            protected void handleResponse(final Response response, final Request<Void> request) {
+                if(response.isOk()) {
+                    request.onSuccess(null);
+                } else {
+                    request.onFailure(response);
+                }
+            }
+        };
     }
     
     @CheckReturnValue

@@ -17,6 +17,7 @@ import com.mewna.plugin.event.plugin.behaviour.PlayerEvent;
 import com.mewna.plugin.event.plugin.behaviour.SystemUserEventType;
 import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
+import com.mewna.plugin.util.Emotes;
 import com.mewna.plugin.util.Renderer;
 import com.mewna.util.Templater;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -88,7 +89,7 @@ public class PluginLevels extends BasePlugin {
         Mewna.getInstance().getDatabase().getStore().sql("SELECT rank FROM (SELECT row_number() OVER (" +
                 "ORDER BY (data->'guildXp'->>'" + guildId + "')::integer DESC" +
                 ") AS rank, data FROM players " +
-                "WHERE data->'guildXp'->'" + guildId + "' IS NOT NULL "+
+                "WHERE data->'guildXp'->'" + guildId + "' IS NOT NULL " +
                 ") AS _q " +
                 "WHERE data->>'id' = '" + playerId + "';", p -> {
             final ResultSet resultSet = p.executeQuery();
@@ -148,9 +149,11 @@ public class PluginLevels extends BasePlugin {
                 sendLevelUpMessage(settings, event, member);
             }
             if(settings.isRemovePreviousRoleRewards()) {
-                removeAndAddRoleRewards(settings, guild, member, event.getLevel(), () -> {});
+                removeAndAddRoleRewards(settings, guild, member, event.getLevel(), () -> {
+                });
             } else {
-                addRoleRewards(settings, guild, member, event.getLevel(), () -> {});
+                addRoleRewards(settings, guild, member, event.getLevel(), () -> {
+                });
             }
         }
     }
@@ -219,7 +222,7 @@ public class PluginLevels extends BasePlugin {
                     getMewna().getRatelimiter().getRatelimitTime(author.getId(), "chat-xp-local:" + guild.getId(),
                             TimeUnit.MINUTES.toMillis(1)));
         }
-    
+        
         final ImmutablePair<Boolean, Long> globalRes = getMewna().getRatelimiter()
                 .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-global", TimeUnit.MINUTES.toMillis(10));
         if(!globalRes.left) {
@@ -273,25 +276,27 @@ public class PluginLevels extends BasePlugin {
             return;
         }
         
-        getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
-            // lol
-            // we do everything possible to guarantee that this should be safe
-            // without doing a check here
-            //noinspection ConstantConditions
-            final Account account = getDatabase().getAccountByDiscordId(user.getId()).get();
-            final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.getId();
-    
-            final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
-            final EmbedBuilder builder = new EmbedBuilder()
-                    .setTitle("**" + user.getName() + "**'s rank card", null)
-                    .setImage("attachment://rank.png")
-                    .setColor(Renderer.PRIMARY_COLOUR)
-                    .setDescription(String.format("[View full profile](%s)", profileUrl))
-                    .setFooter("You can change your background on your profile.", null);
-            getRestJDA().sendFile(ctx.getChannel(), cardBytes, "rank.png",
-                    new MessageBuilder().setEmbed(builder.build()).build())
-                    .queue();
-        });
+        getRestJDA().sendMessage(ctx.getChannel(), Emotes.LOADING_ICON + " Generating rank card (this will take a few seconds)")
+                .queue(message -> getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
+                    // lol
+                    // we do everything possible to guarantee that this should be safe
+                    // without doing a check here
+                    //noinspection ConstantConditions
+                    final Account account = getDatabase().getAccountByDiscordId(user.getId()).get();
+                    final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.getId();
+                    
+                    final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
+                    final EmbedBuilder builder = new EmbedBuilder()
+                            .setTitle("**" + user.getName() + "**'s rank card", null)
+                            .setImage("attachment://rank.png")
+                            .setColor(Renderer.PRIMARY_COLOUR)
+                            .setDescription(String.format("[View full profile](%s)", profileUrl))
+                            .setFooter("You can change your background on your profile.", null);
+                    getRestJDA().deleteMessageById(ctx.getChannel(), message.getId())
+                            .queue(___ -> getRestJDA().sendFile(ctx.getChannel(), cardBytes, "rank.png",
+                                    new MessageBuilder().setEmbed(builder.build()).build())
+                                    .queue());
+                }));
     }
     
     @Command(names = "profile", desc = "Check your profile card, or someone else's.", usage = "profile [@mention]",
@@ -306,31 +311,34 @@ public class PluginLevels extends BasePlugin {
             user = ctx.getMentions().get(0);
             player = getDatabase().getPlayer(user);
         }
-    
+        
         if(user.isBot()) {
             getRestJDA().sendMessage(ctx.getChannel(), "Bots can't have profiles!").queue();
             return;
         }
         
-        getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
-            // lol
-            // we do everything possible to guarantee that this should be safe
-            // without doing a check here
-            //noinspection ConstantConditions
-            final Account account = getDatabase().getAccountByDiscordId(user.getId()).get();
-            final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.getId();
-            
-            final byte[] cardBytes = Renderer.generateProfileCard(user, player);
-            final EmbedBuilder builder = new EmbedBuilder()
-                    .setTitle("**" + user.getName() + "**'s profile card", null)
-                    .setImage("attachment://profile.png")
-                    .setColor(Renderer.PRIMARY_COLOUR)
-                    .setDescription(String.format("[View full profile](%s)", profileUrl))
-                    .setFooter("You can change your description and background on your profile.", null);
-            getRestJDA().sendFile(ctx.getChannel(), cardBytes, "profile.png",
-                    new MessageBuilder().setEmbed(builder.build()).build())
-                    .queue();
-        });
+        getRestJDA().sendMessage(ctx.getChannel(), Emotes.LOADING_ICON + " Generating rank card (this will take a few seconds)")
+                .queue(message ->
+                        getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
+                            // lol
+                            // we do everything possible to guarantee that this should be safe
+                            // without doing a check here
+                            //noinspection ConstantConditions
+                            final Account account = getDatabase().getAccountByDiscordId(user.getId()).get();
+                            final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.getId();
+                            
+                            final byte[] cardBytes = Renderer.generateProfileCard(user, player);
+                            final EmbedBuilder builder = new EmbedBuilder()
+                                    .setTitle("**" + user.getName() + "**'s profile card", null)
+                                    .setImage("attachment://profile.png")
+                                    .setColor(Renderer.PRIMARY_COLOUR)
+                                    .setDescription(String.format("[View full profile](%s)", profileUrl))
+                                    .setFooter("You can change your description and background on your profile.", null);
+                            getRestJDA().deleteMessageById(ctx.getChannel(), message.getId()).queue(___ ->
+                                    getRestJDA().sendFile(ctx.getChannel(), cardBytes, "profile.png",
+                                            new MessageBuilder().setEmbed(builder.build()).build())
+                                            .queue());
+                        }));
     }
     
     @Command(names = "score", desc = "Check your score, or someone else's.", usage = "score [@mention]",

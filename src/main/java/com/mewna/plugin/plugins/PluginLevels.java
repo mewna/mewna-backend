@@ -192,39 +192,10 @@ public class PluginLevels extends BasePlugin {
     
     @Event(EventType.MESSAGE_CREATE)
     public void handleChatMessage(final MessageCreateEvent event) {
-        final Guild guild = event.getGuild();
-        final LevelsSettings settings = getMewna().getDatabase().getOrBaseSettings(LevelsSettings.class, guild.getId());
-        if(!settings.isLevelsEnabled()) {
-            return;
-        }
         final User author = event.getAuthor();
         final Player player = getDatabase().getPlayer(author);
-        getLogger().trace("Handling chat message for player {} in {}", author.getId(), guild.getId());
-        
-        final ImmutablePair<Boolean, Long> localRes = getMewna().getRatelimiter()
-                .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-local:" + guild.getId(),
-                        TimeUnit.MINUTES.toMillis(1));
-        if(!localRes.left) {
-            final long oldXp = player.getXp(guild);
-            final long xp = getXp(player);
-            player.incrementLocalXp(guild, xp);
-            getDatabase().savePlayer(player);
-            getLogger().debug("Local XP: {} in {}: {} -> {}", author.getId(), guild.getId(), oldXp, oldXp + xp);
-            if(isLevelUp(oldXp, oldXp + xp)) {
-                getLogger().debug("{} in {}: Level up to {}", author.getId(), guild.getId(), xpToLevel(oldXp + xp));
-                // Emit level-up event so we can process it
-                getMewna().getNats().pushBackendEvent(EventType.LEVEL_UP, new JSONObject().put("user", author.getId())
-                        .put("guild", guild.getId()).put("level", xpToLevel(oldXp + xp)).put("xp", oldXp + xp)
-                        .put("channel", event.getChannel().getId()));
-            }
-        } else {
-            getLogger().debug("Local XP: {} in {} ratelimited ({}ms)", author.getId(), guild.getId(),
-                    getMewna().getRatelimiter().getRatelimitTime(author.getId(), "chat-xp-local:" + guild.getId(),
-                            TimeUnit.MINUTES.toMillis(1)));
-        }
-        
         final ImmutablePair<Boolean, Long> globalRes = getMewna().getRatelimiter()
-                .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-global", TimeUnit.MINUTES.toMillis(10));
+                .checkUpdateRatelimit(author.getId(), "chat-xp-global", TimeUnit.MINUTES.toMillis(10));
         if(!globalRes.left) {
             final long oldXp = player.getGlobalXp();
             final long xp = getXp(player);
@@ -249,6 +220,35 @@ public class PluginLevels extends BasePlugin {
                     }
                 }
             }
+        }
+        
+        final Guild guild = event.getGuild();
+        final LevelsSettings settings = getMewna().getDatabase().getOrBaseSettings(LevelsSettings.class, guild.getId());
+        if(!settings.isLevelsEnabled()) {
+            return;
+        }
+        getLogger().trace("Handling chat message for player {} in {}", author.getId(), guild.getId());
+        
+        final ImmutablePair<Boolean, Long> localRes = getMewna().getRatelimiter()
+                .checkUpdateRatelimit(event.getAuthor().getId(), "chat-xp-local:" + guild.getId(),
+                        TimeUnit.MINUTES.toMillis(1));
+        if(!localRes.left) {
+            final long oldXp = player.getXp(guild);
+            final long xp = getXp(player);
+            player.incrementLocalXp(guild, xp);
+            getDatabase().savePlayer(player);
+            getLogger().debug("Local XP: {} in {}: {} -> {}", author.getId(), guild.getId(), oldXp, oldXp + xp);
+            if(isLevelUp(oldXp, oldXp + xp)) {
+                getLogger().debug("{} in {}: Level up to {}", author.getId(), guild.getId(), xpToLevel(oldXp + xp));
+                // Emit level-up event so we can process it
+                getMewna().getNats().pushBackendEvent(EventType.LEVEL_UP, new JSONObject().put("user", author.getId())
+                        .put("guild", guild.getId()).put("level", xpToLevel(oldXp + xp)).put("xp", oldXp + xp)
+                        .put("channel", event.getChannel().getId()));
+            }
+        } else {
+            getLogger().debug("Local XP: {} in {} ratelimited ({}ms)", author.getId(), guild.getId(),
+                    getMewna().getRatelimiter().getRatelimitTime(author.getId(), "chat-xp-local:" + guild.getId(),
+                            TimeUnit.MINUTES.toMillis(1)));
         }
     }
     

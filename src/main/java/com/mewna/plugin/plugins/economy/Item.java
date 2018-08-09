@@ -35,10 +35,10 @@ public enum Item {
     
     // Fish
     FISH(           ItemType.FISH,          "fish",             "\uD83D\uDC1F", 5,      2,      true,       1),
-    WHALE(          ItemType.FISH,          "whale",            "\uD83D\uDC0B", 25,     8,     true,      1),
-    TROPICAL_FISH(  ItemType.FISH,          "tropicalfish",     "\uD83D\uDC20", 20,     5,     true,       1),
+    WHALE(          ItemType.FISH,          "whale",            "\uD83D\uDC0B", 25,     8,      true,       1),
+    TROPICAL_FISH(  ItemType.FISH,          "tropicalfish",     "\uD83D\uDC20", 20,     5,      true,       1),
     BOOT(           ItemType.FISH,          "boot",             "\uD83D\uDC62", 3,      1,      true,       1),
-    WEED(           ItemType.FISH,          "weeds",             "\uD83C\uDF31", 1,      1,      true,       1),
+    WEED(           ItemType.FISH,          "weeds",            "\uD83C\uDF31", 1,      1,      true,       1),
     
     // Collectible
     DIE(            ItemType.COLLECTIBLE,   "die",              "\uD83C\uDFB2", 0,      20,     false,      1),

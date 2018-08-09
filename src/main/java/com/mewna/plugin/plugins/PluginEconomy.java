@@ -401,6 +401,12 @@ public class PluginEconomy extends BasePlugin {
     @Command(names = "buy", desc = "Buy some items.", usage = "buy <item name> [amount]",
             examples = {"buy pickaxe", "buy burger 10"})
     public void buy(final CommandContext ctx) {
+        if(isWeighedDown(ctx.getPlayer())) {
+            getRestJDA().sendMessage(ctx.getChannel(),
+                    "Your inventory is full! Try selling some stuff first.")
+                    .queue();
+            return;
+        }
         final List<String> args = ctx.getArgs();
         final Player player = ctx.getPlayer();
         if(!args.isEmpty()) {
@@ -501,6 +507,12 @@ public class PluginEconomy extends BasePlugin {
     @Ratelimit(time = 20)
     @Command(names = "mine", desc = "Go mining for shines!", usage = "mine", examples = "mine")
     public void mine(final CommandContext ctx) {
+        if(isWeighedDown(ctx.getPlayer())) {
+            getRestJDA().sendMessage(ctx.getChannel(),
+                    "Your inventory is full! Try selling some stuff first.")
+                    .queue();
+            return;
+        }
         if(!ctx.getPlayer().hasItem(Item.PICKAXE)) {
             getRestJDA().sendMessage(ctx.getChannel(),
                     String.format("You don't have a `pickaxe`, so you can't mine. Perhaps you should `%sbuy` one...",
@@ -530,6 +542,12 @@ public class PluginEconomy extends BasePlugin {
     @Ratelimit(time = 10)
     @Command(names = "fish", desc = "Go fishing for tasty fish!", usage = "fish", examples = "fish")
     public void fish(final CommandContext ctx) {
+        if(isWeighedDown(ctx.getPlayer())) {
+            getRestJDA().sendMessage(ctx.getChannel(),
+                    "Your inventory is full! Try selling some stuff first.")
+                    .queue();
+            return;
+        }
         if(!ctx.getPlayer().hasItem(Item.FISHING_ROD)) {
             getRestJDA().sendMessage(ctx.getChannel(),
                     String.format("You don't have a `fishingrod`, so you can't fish. Perhaps you should `%sbuy` one...",

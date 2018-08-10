@@ -1,15 +1,19 @@
 version: 2
 jobs:
- build:
-   machine: true
-   steps:
-     - checkout
-     # start proprietary DB using private Docker image
-     # with credentials stored in the UI
-     - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+  build:
+    machine: true
+    steps:
+    - checkout
+    # start proprietary DB using private Docker image
+    # with credentials stored in the UI
+    - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
 
-     # build the application image
-     - run: docker build -t mewna/discord-backend:$CIRCLE_BRANCH .
+    # Git submodules
+    - run: git submodule sync --recursive
+    - run: git submodule update --init --recursive --remote
 
-     # deploy the image
-     - run: docker push mewna/discord-backend:$CIRCLE_BRANCH
+    # build the application image
+    - run: docker build -t mewna/discord-backend:$CIRCLE_BRANCH .
+
+    # deploy the image
+    - run: docker push mewna/discord-backend:$CIRCLE_BRANCH

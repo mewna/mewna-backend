@@ -11,6 +11,9 @@ import com.mewna.plugin.CommandManager;
 import com.mewna.plugin.PluginManager;
 import com.mewna.plugin.util.TextureManager;
 import com.mewna.util.Ratelimiter;
+import com.timgroup.statsd.NoOpStatsDClient;
+import com.timgroup.statsd.NonBlockingStatsDClient;
+import com.timgroup.statsd.StatsDClient;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +49,15 @@ public final class Mewna {
     @Getter
     private final PaypalHandler paypalHandler = new PaypalHandler(this);
     
+    @Getter
+    private final StatsDClient statsClient;
+    
     private Mewna() {
+        if(System.getenv("STATSD_ENABLED") != null) {
+            statsClient = new NonBlockingStatsDClient(null, System.getenv("STATSD_HOST"), 8125);
+        } else {
+            statsClient = new NoOpStatsDClient();
+        }
     }
     
     public static void main(final String[] args) {

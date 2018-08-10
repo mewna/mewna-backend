@@ -22,6 +22,7 @@
         <postgres.orm.version>1dcc398cb3</postgres.orm.version>
         <jackson.version>2.9.2</jackson.version>
         <paypal.version>1.14.0</paypal.version>
+        <dogstatsd.version>2.6.1</dogstatsd.version>
     </properties>
 
     <repositories>
@@ -289,6 +290,13 @@
             <groupId>org.antlr</groupId>
             <artifactId>antlr4</artifactId>
             <version>4.5.2</version>
+        </dependency>
+
+        <!-- dogstatsd -->
+        <dependency>
+            <groupId>com.datadoghq</groupId>
+            <artifactId>java-dogstatsd-client</artifactId>
+            <version>${dogstatsd.version}</version>
         </dependency>
 
         <!-- JUnit -->

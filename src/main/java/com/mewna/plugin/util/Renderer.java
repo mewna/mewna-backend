@@ -1,5 +1,6 @@
 package com.mewna.plugin.util;
 
+import com.mewna.Mewna;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
 import com.mewna.data.Player;
@@ -131,6 +132,7 @@ public final class Renderer {
     }
     
     public static byte[] generateProfileCard(final User user, final Player player) {
+        Mewna.getInstance().getStatsClient().count("discord.backend.cards.rendered", 1, "type:profile");
         final BufferedImage card = new BufferedImage(600, 600, BufferedImage.TYPE_INT_ARGB);
         try {
             final Graphics2D g2 = card.createGraphics();
@@ -256,7 +258,8 @@ public final class Renderer {
         }
     }
     
-    public static byte[] generateRankCard(final Guild guild, final User user, final Player player) { // lol
+    public static byte[] generateRankCard(final Guild guild, final User user, final Player player) {
+        Mewna.getInstance().getStatsClient().count("discord.backend.cards.rendered", 1, "type:rank");
         final BufferedImage card = new BufferedImage(800, 200, BufferedImage.TYPE_INT_ARGB);
         try {
             final Graphics2D g2 = card.createGraphics();

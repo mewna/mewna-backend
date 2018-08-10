@@ -52,6 +52,7 @@ public final class CurrencyHelper {
                 return ImmutablePair.of(false, -1L);
             }
             case OK: {
+                mewna.getStatsClient().count("discord.backend.money.spent", check.right);
                 ctx.getPlayer().incrementBalance(-check.right);
                 mewna.getDatabase().savePlayer(ctx.getPlayer());
                 return ImmutablePair.of(true, check.right);

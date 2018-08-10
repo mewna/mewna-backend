@@ -142,6 +142,7 @@ public class PluginLevels extends BasePlugin {
     @Event(EventType.LEVEL_UP)
     public void handleLevelUp(final LevelUpEvent event) {
         final Guild guild = event.getGuild();
+        getMewna().getStatsClient().count("discord.backend.levelups", 1);
         final LevelsSettings settings = getMewna().getDatabase().getOrBaseSettings(LevelsSettings.class, guild.getId());
         if(settings.isLevelsEnabled()) {
             final Member member = getCache().getMember(guild, event.getUser());
@@ -199,6 +200,7 @@ public class PluginLevels extends BasePlugin {
         if(!globalRes.left) {
             final long oldXp = player.getGlobalXp();
             final long xp = getXp(player);
+            getMewna().getStatsClient().count("discord.backend.xpgained.global", xp);
             player.incrementGlobalXp(getXp(player));
             getDatabase().savePlayer(player);
             // Level-up notifications here?
@@ -235,6 +237,7 @@ public class PluginLevels extends BasePlugin {
         if(!localRes.left) {
             final long oldXp = player.getXp(guild);
             final long xp = getXp(player);
+            getMewna().getStatsClient().count("discord.backend.xpgained.local", xp);
             player.incrementLocalXp(guild, xp);
             getDatabase().savePlayer(player);
             getLogger().debug("Local XP: {} in {}: {} -> {}", author.getId(), guild.getId(), oldXp, oldXp + xp);

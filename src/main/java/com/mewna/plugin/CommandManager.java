@@ -272,6 +272,7 @@ public class CommandManager {
                     } else {
                         final Account account = maybeAccount.get();
                         if(account.isBanned()) {
+                            mewna.getStatsClient().count("discord.backend.commands.banned", 1);
                             logger.warn("Denying command from banned account {}: {}", account.getId(), account.getBanReason());
                             mewna.getRestJDA().sendMessage(channel, "Banned from Mewna. Reason: " + account.getBanReason()).queue();
                             return;
@@ -311,6 +312,7 @@ public class CommandManager {
                     try {
                         logger.info("Command: {}#{} ({}, account: {}) in {}#{}-{}: {} {}", user.getName(), user.getDiscriminator(),
                                 user.getId(), ctx.getAccount().getId(), guild.getId(), channel.getId(), data.getString("id"), commandName, argstr);
+                        mewna.getStatsClient().count("discord.backend.commands.run", 1, "name:" + cmd.getName());
                         cmd.getMethod().invoke(cmd.getPlugin(), ctx);
                     } catch(final IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();

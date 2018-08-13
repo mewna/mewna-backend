@@ -105,8 +105,6 @@ class API {
                         final Optional<Account> maybeAccount = mewna.getAccountManager().getAccountById(req.params(":id"));
                         if(maybeAccount.isPresent()) {
                             final Account account = maybeAccount.get();
-                            // TODO: This won't always exist!
-                            final String discordAccountId = account.getDiscordAccountId();
                             final JSONObject data = new JSONObject();
                             data.put("id", account.getId())
                                     .put("username", account.getUsername())

@@ -108,14 +108,6 @@ class API {
                             // TODO: This won't always exist!
                             final String discordAccountId = account.getDiscordAccountId();
                             final JSONObject data = new JSONObject();
-                            if(discordAccountId != null && !discordAccountId.isEmpty()) {
-                                final Optional<Player> maybePlayer = mewna.getDatabase().getOptionalPlayer(discordAccountId);
-                                maybePlayer.ifPresent(player -> {
-                                    final JSONObject pl = new JSONObject(player);
-                                    pl.remove("account");
-                                    data.put("player", pl);
-                                });
-                            }
                             data.put("id", account.getId())
                                     .put("username", account.getUsername())
                                     .put("displayName", account.getDisplayName())

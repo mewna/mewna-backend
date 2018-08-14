@@ -101,6 +101,19 @@ class API {
                     get("/", (req, res) -> {
                         return new JSONObject(mewna.getDatabase().getAccountById(req.params(":id")));
                     });
+                    get("/links", (req, res) -> {
+                        final Optional<Account> maybeAccount = mewna.getAccountManager().getAccountById(req.params(":id"));
+                        if(maybeAccount.isPresent()) {
+                            final Account account = maybeAccount.get();
+                            final JSONObject data = new JSONObject();
+                            data
+                                    .put("discord", account.getDiscordAccountId())
+                            ;
+                            return data;
+                        } else {
+                            return new JSONObject().put("error", "no links");
+                        }
+                    });
                     get("/profile", (req, res) -> {
                         final Optional<Account> maybeAccount = mewna.getAccountManager().getAccountById(req.params(":id"));
                         if(maybeAccount.isPresent()) {

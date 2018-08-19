@@ -67,8 +67,10 @@ public class EventManager {
             if(guild.getId() == null) {
                 return;
             }
-            mewna.getPluginManager().processEvent(event.getType(),
-                    new GuildMemberAddEvent(guild, cache.getMember(guild, cache.getUser(user.getString("id")))));
+            if(user.has("id") && user.optString("id") != null) {
+                mewna.getPluginManager().processEvent(event.getType(),
+                        new GuildMemberAddEvent(guild, cache.getMember(guild, cache.getUser(user.getString("id")))));
+            }
         });
         handlers.put(GUILD_MEMBER_REMOVE, (event, data) -> {
             final Guild guild = cache.getGuild(data.getString("guild_id"));

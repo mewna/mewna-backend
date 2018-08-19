@@ -119,7 +119,12 @@ public class CommandManager {
             // See https://github.com/discordapp/discord-api-docs/issues/582
             // Note this isn't in the docs yet, but should be at some point (hopefully soon)
             final String guildId = data.getString("guild_id");
-            final String userId = data.getJSONObject("author").getString("id");
+            
+            final JSONObject author = data.getJSONObject("author");
+            final String userId = author.getString("id");
+            if(data.has("bot") && data.getBoolean("bot")) {
+                return;
+            }
             if(guildId == null) {
                 logger.warn("Ignoring DM: user {}, channel {}, message {}, content {}", userId, channelId,
                         data.getString("id"), data.getString("content"));

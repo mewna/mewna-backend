@@ -156,7 +156,6 @@ public class PluginManager {
     public <T extends BaseEvent> void processEvent(final String type, final T event) {
         Optional.ofNullable(discordEventHandlers.get(type)).ifPresent(x -> x.forEach(h -> {
             try {
-                Sentry.getContext().recordBreadcrumb(new BreadcrumbBuilder().setMessage("Started processing " + type).build());
                 h.getHandle().invoke(h.getHolder(), event);
             } catch(final IllegalAccessException | InvocationTargetException e) {
                 Sentry.capture(e);

@@ -227,6 +227,7 @@ public class PluginMisc extends BasePlugin {
         final List<String> args = ctx.getArgs();
         if(args.size() < 2) {
             sendResponse(ctx, "Not enough arguments provided.");
+            return;
         }
         
         final String searchType = args.get(0);

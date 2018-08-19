@@ -16,6 +16,7 @@ import com.mewna.plugin.event.plugin.twitch.TwitchStreamerEvent;
 import com.mewna.plugin.plugins.settings.TwitchSettings;
 import com.mewna.plugin.plugins.settings.TwitchSettings.TwitchStreamerConfig;
 import com.mewna.util.Templater;
+import io.sentry.Sentry;
 import net.dv8tion.jda.core.exceptions.HttpException;
 import net.dv8tion.jda.webhook.WebhookClient;
 import net.dv8tion.jda.webhook.WebhookClientBuilder;
@@ -165,9 +166,13 @@ public class PluginTwitch extends BasePlugin {
                                                     // Bad hook, delet
                                                     getLogger().warn("Deleting bad webhook {} on {}", webhook.getId(), webhook.getChannel());
                                                     getDatabase().deleteWebhook(webhook.getChannel());
+                                                } else {
+                                                    // TODO: Capture more info?
+                                                    Sentry.capture(e);
                                                 }
                                             }
                                         } catch(final ExecutionException e) {
+                                            Sentry.capture(e);
                                             e.printStackTrace();
                                         }
                                     }

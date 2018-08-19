@@ -18,6 +18,7 @@ import com.mewna.plugin.event.message.MessageDeleteBulkEvent;
 import com.mewna.plugin.event.message.MessageDeleteEvent;
 import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import com.mewna.plugin.event.plugin.twitch.*;
+import io.sentry.Sentry;
 import lombok.Getter;
 import net.dv8tion.jda.core.entities.MessageType;
 import org.json.JSONArray;
@@ -180,6 +181,7 @@ public class EventManager {
                 final TwitchStreamer toStreamer = MAPPER.readValue(to, TwitchStreamer.class);
                 mewna.getPluginManager().processEvent(event.getType(), new TwitchFollowerEvent(fromStreamer, toStreamer));
             } catch(final IOException e) {
+                Sentry.capture(e);
                 e.printStackTrace();
             }
         });
@@ -191,6 +193,7 @@ public class EventManager {
                 final TwitchStreamData streamData = MAPPER.readValue(streamDataString, TwitchStreamData.class);
                 mewna.getPluginManager().processEvent(event.getType(), new TwitchStreamStartEvent(streamer, streamData));
             } catch(final IOException e) {
+                Sentry.capture(e);
                 e.printStackTrace();
             }
         });
@@ -199,6 +202,7 @@ public class EventManager {
                 final TwitchStreamer streamer = MAPPER.readValue(data.getJSONObject("streamer").toString(), TwitchStreamer.class);
                 mewna.getPluginManager().processEvent(event.getType(), new TwitchStreamEndEvent(streamer));
             } catch(final IOException e) {
+                Sentry.capture(e);
                 e.printStackTrace();
             }
         });
@@ -221,6 +225,7 @@ public class EventManager {
         try {
             Optional.ofNullable(handlers.get(event.getType())).ifPresent(e -> e.accept(event, event.getData()));
         } catch(final Exception e) {
+            Sentry.capture(e);
             e.printStackTrace();
         }
     }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
 import com.mewna.plugin.CommandManager.CommandWrapper;
 import com.mewna.plugin.plugins.PluginMusic;
+import io.sentry.Sentry;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -129,6 +130,7 @@ public interface PluginSettings {
     
             return commandSettings;
         } catch(final Exception e) {
+            Sentry.capture(e);
             throw new RuntimeException(e);
         }
     }

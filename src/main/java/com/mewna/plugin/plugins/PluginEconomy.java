@@ -18,6 +18,7 @@ import com.mewna.plugin.plugins.economy.LootTables;
 import com.mewna.plugin.plugins.settings.EconomySettings;
 import com.mewna.plugin.util.CurrencyHelper;
 import com.mewna.util.Time;
+import io.sentry.Sentry;
 import lombok.ToString;
 import net.dv8tion.jda.core.EmbedBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -283,6 +284,7 @@ public class PluginEconomy extends BasePlugin {
                     sb.append("- ").append(user.getName()).append('#').append(user.getDiscriminator()).append(" - ")
                             .append(player.getBalance()).append(helper.getCurrencySymbol(ctx)).append('\n');
                 } catch(final IOException e) {
+                    Sentry.capture(e);
                     e.printStackTrace();
                 }
             }

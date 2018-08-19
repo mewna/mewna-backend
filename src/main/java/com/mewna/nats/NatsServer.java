@@ -5,6 +5,7 @@ import io.nats.client.Nats;
 import io.nats.streaming.StreamingConnection;
 import io.nats.streaming.StreamingConnectionFactory;
 import io.nats.streaming.SubscriptionOptions;
+import io.sentry.Sentry;
 import lombok.Getter;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -60,6 +61,7 @@ public class NatsServer {
                 } catch(final Exception e) {
                     logger.error("Caught error while processing socket message:");
                     e.printStackTrace();
+                    Sentry.capture(e);
                 }
             }, new SubscriptionOptions.Builder().durableName("mewna-backend-event-queue-durable").build());
             connection.subscribe("backend-event-broadcast", m -> {
@@ -67,6 +69,7 @@ public class NatsServer {
                 logger.info("Got broadcast: {}", message);
             });
         } catch(final IOException | InterruptedException e) {
+            Sentry.capture(e);
             throw new RuntimeException(e);
         }
     }

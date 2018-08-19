@@ -8,6 +8,7 @@ import com.mewna.cache.entity.User;
 import com.mewna.plugin.Plugin;
 import gg.amy.pgorm.PgStore;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
+import io.sentry.Sentry;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -187,6 +188,7 @@ public class Database {
                 saveSettings(base);
                 return base;
             } catch(final IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
+                Sentry.capture(e);
                 throw new RuntimeException(e);
             }
         }
@@ -278,6 +280,7 @@ public class Database {
                 try {
                     holder.setValue(MAPPER.readValue(data, Account.class));
                 } catch(final IOException e) {
+                    Sentry.capture(e);
                     throw new RuntimeException(e);
                 }
             }
@@ -304,6 +307,7 @@ public class Database {
                 try {
                     posts.add(MAPPER.readValue(data, TimelinePost.class));
                 } catch(final IOException e) {
+                    Sentry.capture(e);
                     e.printStackTrace();
                 }
             }
@@ -322,6 +326,7 @@ public class Database {
                 try {
                     posts.add(MAPPER.readValue(data, TimelinePost.class));
                 } catch(final IOException e) {
+                    Sentry.capture(e);
                     e.printStackTrace();
                 }
             }

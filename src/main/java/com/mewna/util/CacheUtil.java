@@ -1,5 +1,6 @@
 package com.mewna.util;
 
+import io.sentry.Sentry;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 
@@ -39,6 +40,7 @@ public final class CacheUtil {
             IMAGE_CACHE.put(path, cachedImage);
             return cachedImage;
         } catch(final IOException e) {
+            Sentry.capture(e);
             throw new RuntimeException(e);
         }
     }
@@ -63,6 +65,7 @@ public final class CacheUtil {
             IMAGE_CACHE.put(url, cachedImage);
             return cachedImage;
         } catch(final IOException e) {
+            Sentry.capture(e);
             throw new RuntimeException(e);
         }
     }

@@ -9,6 +9,7 @@ import com.mewna.plugin.util.TextureManager.Background;
 import com.mewna.util.CacheUtil;
 import com.mewna.util.CacheUtil.CachedImage;
 import com.mewna.util.Numbers;
+import io.sentry.Sentry;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -254,6 +255,7 @@ public final class Renderer {
             baos.close();
             return bytes;
         } catch(final IOException e) {
+            Sentry.capture(e);
             throw new IllegalStateException(e);
         }
     }
@@ -346,6 +348,7 @@ public final class Renderer {
             baos.close();
             return bytes;
         } catch(final IOException e) {
+            Sentry.capture(e);
             throw new IllegalStateException(e);
         }
     }

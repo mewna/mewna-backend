@@ -8,6 +8,7 @@ import com.mewna.plugin.util.TextureManager;
 import com.paypal.api.payments.*;
 import com.paypal.base.rest.APIContext;
 import com.paypal.base.rest.PayPalRESTException;
+import io.sentry.Sentry;
 import lombok.Getter;
 import lombok.Value;
 import org.json.JSONObject;
@@ -98,10 +99,12 @@ public class PaypalHandler {
                 logger.error("COULDN'T CREATE PAYPAL TRANSACTION:");
                 logger.error("{}", e.getDetails());
                 e.printStackTrace();
+                Sentry.capture(e);
                 return new JSONObject().put("status", "error").put("error", e.getMessage());
             } catch(final IllegalArgumentException e) {
                 logger.error("COULDN'T CREATE PAYPAL TRANSACTION:", e);
                 e.printStackTrace();
+                Sentry.capture(e);
                 return new JSONObject().put("status", "error").put("error", e.getMessage());
             }
         } else {

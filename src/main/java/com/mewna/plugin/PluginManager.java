@@ -10,6 +10,8 @@ import com.mewna.plugin.event.Event;
 import com.mewna.plugin.util.CurrencyHelper;
 import com.mewna.util.UserAgentInterceptor;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
+import io.sentry.Sentry;
+import io.sentry.event.BreadcrumbBuilder;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Value;
@@ -96,6 +98,7 @@ public class PluginManager {
                             logger.debug("Injected into {}#{}", obj.getClass().getName(), f.getName());
                         } catch(final IllegalAccessException e) {
                             logger.error("Couldn't inject {}#{}: {}", obj.getClass().getName(), f.getName(), e);
+                            Sentry.capture(e);
                         }
                     }
                 }
@@ -144,6 +147,7 @@ public class PluginManager {
                 }
                 logger.info("Finished loading plugin {}: {}", pluginAnnotation.name(), pluginAnnotation.desc());
             } catch(final InstantiationException | IllegalAccessException e) {
+                Sentry.capture(e);
                 e.printStackTrace();
             }
         }
@@ -152,8 +156,10 @@ public class PluginManager {
     public <T extends BaseEvent> void processEvent(final String type, final T event) {
         Optional.ofNullable(discordEventHandlers.get(type)).ifPresent(x -> x.forEach(h -> {
             try {
+                Sentry.getContext().recordBreadcrumb(new BreadcrumbBuilder().setMessage("Started processing " + type).build());
                 h.getHandle().invoke(h.getHolder(), event);
             } catch(final IllegalAccessException | InvocationTargetException e) {
+                Sentry.capture(e);
                 e.printStackTrace();
             }
         }));

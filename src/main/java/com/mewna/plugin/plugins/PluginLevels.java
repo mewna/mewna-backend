@@ -177,7 +177,11 @@ public class PluginLevels extends BasePlugin {
             // If we have some, remove lower roles then add in the rest
             final List<String> removeRoles = settings.getLevelRoleRewards().entrySet().stream()
                     .filter(e -> e.getValue() < level).map(Entry::getKey).collect(Collectors.toList());
-            getRestJDA().addAndRemoveManyRolesForMember(guild, member, rewards, removeRoles).queue(__ -> callback.run());
+            if(removeRoles.isEmpty()) {
+                getRestJDA().addManyRolesToMember(guild, member, rewards.toArray(new String[0])).queue(__ -> callback.run());
+            } else {
+                getRestJDA().addAndRemoveManyRolesForMember(guild, member, rewards, removeRoles).queue(__ -> callback.run());
+            }
         }
     }
     

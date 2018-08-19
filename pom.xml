@@ -23,6 +23,7 @@
         <jackson.version>2.9.2</jackson.version>
         <paypal.version>1.14.0</paypal.version>
         <dogstatsd.version>2.6.1</dogstatsd.version>
+        <sentry.version>1.7.5</sentry.version>
     </properties>
 
     <repositories>
@@ -297,6 +298,13 @@
             <groupId>com.datadoghq</groupId>
             <artifactId>java-dogstatsd-client</artifactId>
             <version>${dogstatsd.version}</version>
+        </dependency>
+
+        <!-- Sentry -->
+        <dependency>
+            <groupId>io.sentry</groupId>
+            <artifactId>sentry</artifactId>
+            <version>${sentry.version}</version>
         </dependency>
 
         <!-- JUnit -->

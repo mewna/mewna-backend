@@ -14,6 +14,7 @@ import com.mewna.util.Ratelimiter;
 import com.timgroup.statsd.NoOpStatsDClient;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
+import io.sentry.Sentry;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +72,7 @@ public final class Mewna {
     
     private void start() {
         logger.info("Starting Mewna backend...");
+        Sentry.init();
         TextureManager.preload(this);
         eventManager.getCache().connect();
         database.init();

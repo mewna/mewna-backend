@@ -4,6 +4,7 @@ import com.mewna.Mewna;
 import com.mewna.cache.entity.User;
 import com.mewna.data.Player;
 import com.mewna.util.CacheUtil;
+import io.sentry.Sentry;
 import lombok.Getter;
 import net.dv8tion.jda.core.utils.IOUtil;
 import org.slf4j.Logger;
@@ -72,6 +73,7 @@ public final class TextureManager {
                 }
             }
         } catch(final IOException e) {
+            Sentry.capture(e);
             e.printStackTrace();
         }
     }
@@ -96,6 +98,7 @@ public final class TextureManager {
             final String json = new String(IOUtil.readFully(is));
             mewna.getPaypalHandler().loadBackgroundManifest(json);
         } catch(final IOException e) {
+            Sentry.capture(e);
             throw new RuntimeException(e);
         }
         BACKGROUNDS.forEach(bg -> {
@@ -116,6 +119,7 @@ public final class TextureManager {
             baos.close();
             Mewna.getInstance().getDatabase().redis(r -> r.set(String.format(AVATAR_CACHE_KEY, user.getId()).getBytes(), bytes));
         } catch(final IOException e) {
+            Sentry.capture(e);
             throw new IllegalStateException(e);
         }
     }
@@ -137,6 +141,7 @@ public final class TextureManager {
                     avatar[0] = ImageIO.read(bais);
                     bais.close();
                 } catch(final IOException e) {
+                    Sentry.capture(e);
                     throw new IllegalStateException(e);
                 }
             } else {
@@ -164,6 +169,7 @@ public final class TextureManager {
             connection.disconnect();
             return avatar;
         } catch(final IOException e) {
+            Sentry.capture(e);
             throw new RuntimeException(e);
         }
     }

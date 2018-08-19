@@ -11,6 +11,7 @@ import com.mewna.data.PluginSettings;
 import com.mewna.data.Webhook;
 import com.mewna.plugin.plugins.PluginLevels;
 import com.mewna.plugin.util.TextureManager;
+import io.sentry.Sentry;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -180,11 +181,13 @@ class API {
                                 } catch(final RuntimeException e) {
                                     logger.error("{} settings for {} failed updateSettings expectedly", req.params(":type"), req.params(":id"));
                                     e.printStackTrace();
+                                    Sentry.capture(e);
                                     return new JSONObject().put("status", "error").put("error", "invalid config");
                                 } catch(final Exception e) {
                                     logger.error("{} settings for {} failed updateSettings unexpectedly", req.params(":type"), req.params(":id"));
                                     logger.error("Caught unknown exception updating:");
                                     e.printStackTrace();
+                                    Sentry.capture(e);
                                     return new JSONObject().put("status", "error").put("error", "very invalid config");
                                 }
                             } else {
@@ -243,6 +246,7 @@ class API {
                                                 .put("accountId", account.getId())
                                         );
                                     } catch(final IOException e) {
+                                        Sentry.capture(e);
                                         e.printStackTrace();
                                     }
                                     ++counter;

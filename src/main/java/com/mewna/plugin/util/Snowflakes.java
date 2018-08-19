@@ -1,5 +1,6 @@
 package com.mewna.plugin.util;
 
+import io.sentry.Sentry;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
@@ -24,6 +25,7 @@ public final class Snowflakes {
                     .build()).execute().body().string();
             return snowflake;
         } catch(final IOException e) {
+            Sentry.capture(e);
             throw new RuntimeException(e);
         }
     }

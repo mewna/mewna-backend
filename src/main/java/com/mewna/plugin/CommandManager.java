@@ -16,6 +16,7 @@ import com.mewna.plugin.metadata.Payment;
 import com.mewna.plugin.metadata.Ratelimit;
 import com.mewna.plugin.plugins.settings.BehaviourSettings;
 import com.mewna.util.Time;
+import io.sentry.Sentry;
 import lombok.Getter;
 import lombok.Value;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -128,6 +129,7 @@ public class CommandManager {
             final User user = mewna.getCache().getUser(userId);
             if(user == null) {
                 logger.error("Got message from unknown (uncached) user {}!?", userId);
+                Sentry.capture("Uncached user: " + userId);
                 return;
             }
             if(user.isBot()) {
@@ -137,6 +139,7 @@ public class CommandManager {
             final Channel channel = mewna.getCache().getChannel(channelId);
             if(channel == null) {
                 logger.error("Got message from unknown (uncached) channel {}!?", channelId);
+                Sentry.capture("Uncached channel: " + channelId);
                 return;
             }
             if(channel.getType() != ChannelType.GUILD_TEXT.getType()) {
@@ -151,9 +154,12 @@ public class CommandManager {
             final Guild guild = mewna.getCache().getGuild(guildId);
             if(guild == null) {
                 logger.error("Got message from unknown (uncached) guild {}!?", guildId);
+                Sentry.capture("Uncached guild: " + guildId);
                 return;
             }
             if(guild.getId() == null) {
+                logger.error("Got message from unknown (uncached) guild {}!?", guildId);
+                Sentry.capture("Uncached guild: " + guildId);
                 return;
             }
             
@@ -228,6 +234,7 @@ public class CommandManager {
                         }
                     } else {
                         logger.warn("No plugin metadata for command {}!?", cmd.getBaseName());
+                        Sentry.capture("Command with no plugin metadata: " + cmd.getBaseName());
                     }
                     
                     if(cmd.getRatelimit() != null) {
@@ -263,10 +270,12 @@ public class CommandManager {
                     Optional<Account> maybeAccount = mewna.getAccountManager().getAccountByLinkedDiscord(user.getId());
                     if(!maybeAccount.isPresent()) {
                         logger.error("No account present for Discord account {}!!!", user.getId());
+                        Sentry.capture("No account present for Discord account: " + user.getId());
                         mewna.getAccountManager().createNewDiscordLinkedAccount(player, user);
                         maybeAccount = mewna.getAccountManager().getAccountByLinkedDiscord(user.getId());
                         if(!maybeAccount.isPresent()) {
                             logger.error("No account present for Discord account {} after creation!?", user.getId());
+                            Sentry.capture("No account present for Discord account despite creation: " + user.getId());
                             return;
                         }
                     } else {
@@ -315,6 +324,7 @@ public class CommandManager {
                         mewna.getStatsClient().count("discord.backend.commands.run", 1, "name:" + cmd.getName());
                         cmd.getMethod().invoke(cmd.getPlugin(), ctx);
                     } catch(final IllegalAccessException | InvocationTargetException e) {
+                        Sentry.capture(e);
                         e.printStackTrace();
                     }
                 }
@@ -324,6 +334,7 @@ public class CommandManager {
                         data.getString("content"), data.getBoolean("mention_everyone")));
             }
         } catch(final Throwable t) {
+            Sentry.capture(t);
             logger.error("Error at high-level command processor:", t);
         }
     }

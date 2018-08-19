@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
 import com.mewna.cache.entity.*;
+import io.sentry.Sentry;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.slf4j.Logger;
@@ -43,6 +44,7 @@ public class DiscordCache {
             return client.newCall(new Request.Builder().get().url(System.getenv("SHARDS_URL") + url).build())
                     .execute().body().string();
         } catch(final NullPointerException | IOException e) {
+            Sentry.capture(e);
             throw new IllegalStateException(e);
         }
     }
@@ -51,6 +53,7 @@ public class DiscordCache {
         try {
             return mapper.readValue(get("/cache/guild/" + id), Guild.class);
         } catch(final IOException e) {
+            Sentry.capture(e);
             throw new IllegalStateException(e);
         }
     }
@@ -59,6 +62,7 @@ public class DiscordCache {
         try {
             return mapper.readValue(get("/cache/guild/" + guild.getId() + "/member/" + user.getId()), Member.class);
         } catch(final IOException e) {
+            Sentry.capture(e);
             throw new IllegalStateException(e);
         }
     }
@@ -67,6 +71,7 @@ public class DiscordCache {
         try {
             return mapper.readValue(get("/cache/channel/" + channel), Channel.class);
         } catch(final IOException e) {
+            Sentry.capture(e);
             throw new IllegalStateException(e);
         }
     }
@@ -75,6 +80,7 @@ public class DiscordCache {
         try {
             return mapper.readValue(get("/cache/guild/" + id + "/channels"), new TypeReference<List<Channel>>(){});
         } catch(final IOException e) {
+            Sentry.capture(e);
             throw new IllegalStateException(e);
         }
     }
@@ -83,6 +89,7 @@ public class DiscordCache {
         try {
             return mapper.readValue(get("/cache/user/" + id), User.class);
         } catch(final IOException e) {
+            Sentry.capture(e);
             throw new IllegalStateException(e);
         }
     }
@@ -91,6 +98,7 @@ public class DiscordCache {
         try {
             return mapper.readValue(get("/cache/roles/" + id), Role.class);
         } catch(final IOException e) {
+            Sentry.capture(e);
             throw new IllegalStateException(e);
         }
     }
@@ -99,6 +107,7 @@ public class DiscordCache {
         try {
             return mapper.readValue(get("/cache/guild/" + id + "/roles"), new TypeReference<List<Role>>(){});
         } catch(final IOException e) {
+            Sentry.capture(e);
             throw new IllegalStateException(e);
         }
     }

@@ -15,6 +15,7 @@ import com.mewna.plugin.plugins.dnd.dice.parser.DefaultDiceNotationParser;
 import com.mewna.plugin.plugins.dnd.dice.parser.DiceNotationParser;
 import com.mewna.plugin.plugins.misc.serial.*;
 import com.mewna.plugin.plugins.settings.MiscSettings;
+import io.sentry.Sentry;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -121,6 +122,7 @@ public class PluginMisc extends BasePlugin {
         try {
             input.close();
         } catch(final IOException e) {
+            Sentry.capture(e);
             throw new RuntimeException(e);
         }
         

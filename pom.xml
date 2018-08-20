@@ -4,15 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>gg.mewna</groupId>
+    <groupId>com.mewna</groupId>
     <artifactId>mewna-discord</artifactId>
     <version>0.0.1</version>
 
     <properties>
         <jda.version>3.7.1_385</jda.version>
         <nats.version>0.5.0</nats.version>
-        <cassandra.version>3.5.0</cassandra.version>
         <fcps.version>3.1.0</fcps.version>
+        <guava.version>26.0-jre</guava.version>
         <javax.inject.version>1</javax.inject.version>
         <commons.lang.version>3.7</commons.lang.version>
         <commons.collections.version>LATEST</commons.collections.version>
@@ -104,23 +104,6 @@
             <classifier>javadoc</classifier>
         </dependency>
 
-        <!-- Cassandra -->
-        <dependency>
-            <groupId>com.datastax.cassandra</groupId>
-            <artifactId>cassandra-driver-core</artifactId>
-            <version>${cassandra.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.datastax.cassandra</groupId>
-            <artifactId>cassandra-driver-mapping</artifactId>
-            <version>${cassandra.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.datastax.cassandra</groupId>
-            <artifactId>cassandra-driver-extras</artifactId>
-            <version>${cassandra.version}</version>
-        </dependency>
-
         <!-- Fast Classpath Scanner -->
         <dependency>
             <groupId>io.github.lukehutch</groupId>
@@ -137,6 +120,25 @@
             <groupId>io.github.lukehutch</groupId>
             <artifactId>fast-classpath-scanner</artifactId>
             <version>${fcps.version}</version>
+            <classifier>javadoc</classifier>
+        </dependency>
+
+        <!-- Guava -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+            <classifier>sources</classifier>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
             <classifier>javadoc</classifier>
         </dependency>
 

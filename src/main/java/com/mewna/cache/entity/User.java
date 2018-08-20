@@ -1,8 +1,5 @@
 package com.mewna.cache.entity;
 
-import com.datastax.driver.mapping.annotations.PartitionKey;
-import com.datastax.driver.mapping.annotations.Table;
-import com.datastax.driver.mapping.annotations.Transient;
 import lombok.*;
 
 /**
@@ -14,21 +11,17 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(keyspace = "mewna", name = "users")
 public class User {
-    @PartitionKey
     private String id;
     private String name;
     private String discriminator;
     private String avatar;
     private boolean bot;
     
-    @Transient
     public String asMention() {
         return "<@" + id + '>';
     }
     
-    @Transient
     public String getAvatarURL() {
         if(avatar != null && !avatar.trim().isEmpty()) {
             final String extension;

@@ -3,6 +3,7 @@ package com.mewna.plugin.plugins.settings;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
+import com.mewna.plugin.plugins.PluginLogging;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
@@ -31,7 +32,7 @@ public class LoggingSettings implements PluginSettings {
     
     public LoggingSettings(final String id) {
         this.id = id;
-        commandSettings = generateCommandSettings();
+        commandSettings = generateCommandSettings(PluginLogging.class);
     }
     
     @Override

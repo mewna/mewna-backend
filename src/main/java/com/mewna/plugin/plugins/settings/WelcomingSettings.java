@@ -3,6 +3,7 @@ package com.mewna.plugin.plugins.settings;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
+import com.mewna.plugin.plugins.PluginWelcoming;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
@@ -40,7 +41,7 @@ public class WelcomingSettings implements PluginSettings {
     
     public WelcomingSettings(final String id) {
         this.id = id;
-        commandSettings = generateCommandSettings();
+        commandSettings = generateCommandSettings(PluginWelcoming.class);
     }
     
     @Override

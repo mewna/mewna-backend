@@ -3,7 +3,6 @@ package com.mewna.data;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
 import com.mewna.plugin.CommandManager.CommandWrapper;
-import com.mewna.plugin.plugins.PluginMusic;
 import io.sentry.Sentry;
 import org.json.JSONObject;
 
@@ -30,9 +29,9 @@ public interface PluginSettings {
                 .distinct().collect(Collectors.toList());
     }
     
-    default Map<String, CommandSettings> generateCommandSettings() {
+    default <T> Map<String, CommandSettings> generateCommandSettings(final Class<T> plugin) {
         final Map<String, CommandSettings> settings = new HashMap<>();
-        commandsOwnedByPlugin(getClass()).forEach(e -> settings.put(e, CommandSettings.base()));
+        commandsOwnedByPlugin(plugin).forEach(e -> settings.put(e, CommandSettings.base()));
         return settings;
     }
     
@@ -65,7 +64,7 @@ public interface PluginSettings {
      * Actually updates the settings in the database. This may catch validation
      * errors that {@link #validateSettings(JSONObject)} and {@link #validate(JSONObject)}
      * did not catch, and will return false in that specific case.
-     * <p />
+     * <p/>
      * This should be pure <b>IN THE CASE OF FAILURE ONLY</b>. Specifically,
      * this method should <b>NOT</b> update anything in the database on
      * failure; the database should only ever be updated if the data is 100%
@@ -118,7 +117,7 @@ public interface PluginSettings {
     default Map<String, CommandSettings> commandSettingsFromJson(final JSONObject data) {
         try {
             final Map<String, CommandSettings> commandSettings = new HashMap<>();
-    
+            
             if(data.has("commandSettings")) {
                 Optional.ofNullable(data.optJSONObject("commandSettings")).ifPresent(o -> {
                     for(final String key : o.keySet()) {
@@ -127,7 +126,7 @@ public interface PluginSettings {
                     }
                 });
             }
-    
+            
             return commandSettings;
         } catch(final Exception e) {
             Sentry.capture(e);

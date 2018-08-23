@@ -311,14 +311,17 @@ class API {
             path("/plugins", () -> {
                 // More shit goes here
                 //noinspection TypeMayBeWeakened
-                final JSONArray data = new JSONArray(mewna.getPluginManager().getPluginMetadata());
-                data.forEach(e -> {
-                    // ;-;
-                    // TODO: Find better solution
-                    ((JSONObject) e).remove("settingsClass");
-                    ((JSONObject) e).remove("pluginClass");
+                get("/metadata", (req, res) -> {
+                    @SuppressWarnings("TypeMayBeWeakened")
+                    final JSONArray data = new JSONArray(mewna.getPluginManager().getPluginMetadata());
+                    data.forEach(e -> {
+                        // ;-;
+                        // TODO: Find better solution
+                        ((JSONObject) e).remove("settingsClass");
+                        ((JSONObject) e).remove("pluginClass");
+                    });
+                    return data;
                 });
-                get("/metadata", (req, res) -> data);
             });
             get("/player/:id", (req, res) -> new JSONObject(mewna.getDatabase().getPlayer(req.params(":id"))));
         });

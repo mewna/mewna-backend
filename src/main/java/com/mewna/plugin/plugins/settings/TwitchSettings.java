@@ -4,6 +4,7 @@ import com.mewna.Mewna;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
+import com.mewna.plugin.plugins.PluginTwitch;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
@@ -45,7 +46,7 @@ public class TwitchSettings implements PluginSettings {
     
     public TwitchSettings(final String id) {
         this.id = id;
-        commandSettings = generateCommandSettings();
+        commandSettings = generateCommandSettings(PluginTwitch.class);
     }
     
     @Override

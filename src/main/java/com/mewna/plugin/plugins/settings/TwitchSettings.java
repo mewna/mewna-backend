@@ -4,6 +4,7 @@ import com.mewna.Mewna;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
+import com.mewna.plugin.plugins.PluginBehaviour;
 import com.mewna.plugin.plugins.PluginTwitch;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
@@ -47,6 +48,15 @@ public class TwitchSettings implements PluginSettings {
     public TwitchSettings(final String id) {
         this.id = id;
         commandSettings = generateCommandSettings(PluginTwitch.class);
+    }
+    
+    @Override
+    public PluginSettings refreshCommands() {
+        final Map<String, CommandSettings> oldSettings = new HashMap<>(commandSettings);
+        final Map<String, CommandSettings> newSettings = generateCommandSettings(PluginTwitch.class);
+        newSettings.putAll(oldSettings);
+        commandSettings.putAll(newSettings);
+        return this;
     }
     
     @Override

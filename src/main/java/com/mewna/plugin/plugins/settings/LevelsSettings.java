@@ -3,6 +3,7 @@ package com.mewna.plugin.plugins.settings;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
+import com.mewna.plugin.plugins.PluginBehaviour;
 import com.mewna.plugin.plugins.PluginLevels;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
@@ -46,6 +47,15 @@ public class LevelsSettings implements PluginSettings {
     public LevelsSettings(final String id) {
         this.id = id;
         commandSettings = generateCommandSettings(PluginLevels.class);
+    }
+    
+    @Override
+    public PluginSettings refreshCommands() {
+        final Map<String, CommandSettings> oldSettings = new HashMap<>(commandSettings);
+        final Map<String, CommandSettings> newSettings = generateCommandSettings(PluginLevels.class);
+        newSettings.putAll(oldSettings);
+        commandSettings.putAll(newSettings);
+        return this;
     }
     
     @Override

@@ -20,6 +20,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.MessageBuilder;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
@@ -196,6 +197,16 @@ public class PluginMisc extends BasePlugin {
             message = "Invalid dice expression.";
         }
         getRestJDA().sendMessage(ctx.getChannel(), message).queue();
+    }
+    
+    @Command(names = "ping", desc = "Check if Mewna's still working.", usage = "ping", examples = "ping")
+    public void ping(final CommandContext ctx) {
+        final long start = System.currentTimeMillis();
+        getRestJDA().sendMessage(ctx.getChannel(), "Pinging...").queue(msg -> {
+            final long end = System.currentTimeMillis();
+            getRestJDA().editMessage(ctx.getChannel(), msg.getIdLong(),
+                    new MessageBuilder().append("Pong! (took ").append(end - start).append("ms)").build()).queue();
+        });
     }
     
     private void sendResponse(final CommandContext ctx, final String res) {

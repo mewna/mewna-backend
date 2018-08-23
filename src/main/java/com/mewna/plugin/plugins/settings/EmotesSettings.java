@@ -3,6 +3,7 @@ package com.mewna.plugin.plugins.settings;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
+import com.mewna.plugin.plugins.PluginBehaviour;
 import com.mewna.plugin.plugins.PluginEconomy;
 import com.mewna.plugin.plugins.PluginEmotes;
 import gg.amy.pgorm.annotations.GIndex;
@@ -14,6 +15,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -34,6 +36,15 @@ public class EmotesSettings implements PluginSettings {
     public EmotesSettings(final String id) {
         this.id = id;
         commandSettings = generateCommandSettings(PluginEmotes.class);
+    }
+    
+    @Override
+    public PluginSettings refreshCommands() {
+        final Map<String, CommandSettings> oldSettings = new HashMap<>(commandSettings);
+        final Map<String, CommandSettings> newSettings = generateCommandSettings(PluginEmotes.class);
+        newSettings.putAll(oldSettings);
+        commandSettings.putAll(newSettings);
+        return this;
     }
     
     @Override

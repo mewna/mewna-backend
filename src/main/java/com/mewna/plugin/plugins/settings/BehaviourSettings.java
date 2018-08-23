@@ -13,6 +13,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -35,6 +36,15 @@ public class BehaviourSettings implements PluginSettings {
     public BehaviourSettings(final String id) {
         this.id = id;
         commandSettings = generateCommandSettings(PluginBehaviour.class);
+    }
+    
+    @Override
+    public PluginSettings refreshCommands() {
+        final Map<String, CommandSettings> oldSettings = new HashMap<>(commandSettings);
+        final Map<String, CommandSettings> newSettings = generateCommandSettings(PluginBehaviour.class);
+        newSettings.putAll(oldSettings);
+        commandSettings.putAll(newSettings);
+        return this;
     }
     
     @Override

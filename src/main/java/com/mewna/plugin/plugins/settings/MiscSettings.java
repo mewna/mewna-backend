@@ -3,6 +3,7 @@ package com.mewna.plugin.plugins.settings;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
+import com.mewna.plugin.plugins.PluginBehaviour;
 import com.mewna.plugin.plugins.PluginMisc;
 import com.mewna.plugin.plugins.PluginMusic;
 import gg.amy.pgorm.annotations.GIndex;
@@ -14,6 +15,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -35,6 +37,15 @@ public class MiscSettings implements PluginSettings {
     public MiscSettings(final String id) {
         this.id = id;
         commandSettings = generateCommandSettings(PluginMisc.class);
+    }
+    
+    @Override
+    public PluginSettings refreshCommands() {
+        final Map<String, CommandSettings> oldSettings = new HashMap<>(commandSettings);
+        final Map<String, CommandSettings> newSettings = generateCommandSettings(PluginMisc.class);
+        newSettings.putAll(oldSettings);
+        commandSettings.putAll(newSettings);
+        return this;
     }
     
     @Override

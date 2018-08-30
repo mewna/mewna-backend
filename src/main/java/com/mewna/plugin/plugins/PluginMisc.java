@@ -2,6 +2,8 @@ package com.mewna.plugin.plugins;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.mewna.data.Player;
+import com.mewna.data.Player.ClickerData;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Command;
 import com.mewna.plugin.CommandContext;
@@ -31,6 +33,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
@@ -66,6 +70,7 @@ public class PluginMisc extends BasePlugin {
     private final List<XFeat> feats = new CopyOnWriteArrayList<>();
     @Getter
     private final List<XRace> races = new CopyOnWriteArrayList<>();
+    private final DiceNotationParser parser = new DefaultDiceNotationParser();
     @Inject
     private OkHttpClient client;
     
@@ -183,15 +188,13 @@ public class PluginMisc extends BasePlugin {
         getRestJDA().sendMessage(ctx.getChannel().getId(), builder.build()).queue();
     }
     
-    private final DiceNotationParser parser = new DefaultDiceNotationParser();
-    
     @Command(names = {"roll", "r"}, desc = "Roll some dice, D&D style", usage = "roll <dice expression>",
             examples = {"roll 5d6", "roll 5d6+2", "roll 1d20 + 5d6 - 10"})
     public void roll(final CommandContext ctx) {
         String message;
         try {
             final DiceNotationExpression expr = parser.parse(ctx.getArgstr());
-        
+            
             message = String.format("Input: %s\nOutput: %s", ctx.getArgstr(), expr.getValue());
         } catch(final Exception e) {
             message = "Invalid dice expression.";
@@ -209,12 +212,45 @@ public class PluginMisc extends BasePlugin {
         });
     }
     
-    private void sendResponse(final CommandContext ctx, final String res) {
-        getRestJDA().sendMessage(ctx.getChannel(), res).queue();
-    }
-    
-    private void sendEmbedResponse(final CommandContext ctx, final EmbedBuilder builder) {
-        getRestJDA().sendMessage(ctx.getChannel(), builder.build()).queue();
+    @Command(names = {"clicker", "click"}, desc = "Like Cookie Clicker, but Mewna-style.",
+            usage = {"", ""}, examples = {"", ""})
+    public void clicker(final CommandContext ctx) {
+        final ClickerData data = ctx.getPlayer().getClickerData();
+        final long last = data.getLastCheck();
+        final long now = System.currentTimeMillis();
+        if(last == -1L) {
+            // Never checked, start them off
+            getRestJDA().sendMessage(ctx.getChannel(), "You've never clicked! oh no D:").queue();
+            data.setLastCheck(now);
+            ctx.getPlayer().setClickerData(data);
+            getDatabase().savePlayer(ctx.getPlayer());
+        } else {
+            // Calculate delta
+            final long delta = now - last;
+            // MS -> S and floor
+            final long deltaSeconds = Math.round(Math.floor(delta / 1000D));
+            
+            // Compute stats and update in db
+            
+            data.setLastCheck(now);
+            // TODO: Factor in upgrades
+            final BigDecimal increase = Player.BASE_CLICKRATE.multiply(BigDecimal.valueOf(deltaSeconds));
+            data.setTotalClicks(data.getTotalClicks().add(increase));
+            ctx.getPlayer().setClickerData(data);
+            getDatabase().savePlayer(ctx.getPlayer());
+            
+            final String stats = "```CSS\n" +
+                    "       [Delta] : " + delta + "ms\n" +
+                    "         [CPS] : " + Player.BASE_CLICKRATE + " cps\n" +
+                    "[Total clicks] : " + data.getTotalClicks().setScale(0, RoundingMode.FLOOR) + " clicks\n" +
+                    "      [Gained] : " + increase.toPlainString() + " clicks\n" +
+                    "    [Upgrades] : TODO\n" +
+                    "[Current tier] : TODO\n" +
+                    "```";
+            
+            // Finally, display
+            getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + "'s click stats:\n" + stats).queue();
+        }
     }
     
     @Command(names = "dnd", desc = "Get useful information for your D&D 5e game.", usage = {
@@ -449,6 +485,14 @@ public class PluginMisc extends BasePlugin {
                     sendResponse(ctx, sb.toString());
                 }
         }
+    }
+    
+    private void sendResponse(final CommandContext ctx, final String res) {
+        getRestJDA().sendMessage(ctx.getChannel(), res).queue();
+    }
+    
+    private void sendEmbedResponse(final CommandContext ctx, final EmbedBuilder builder) {
+        getRestJDA().sendMessage(ctx.getChannel(), builder.build()).queue();
     }
     
     private EmbedBuilder sendRace(final XRace race) {

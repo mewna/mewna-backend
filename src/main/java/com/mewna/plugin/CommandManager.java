@@ -275,7 +275,7 @@ public class CommandManager {
                     Optional<Account> maybeAccount = mewna.getAccountManager().getAccountByLinkedDiscord(user.getId());
                     if(!maybeAccount.isPresent()) {
                         logger.error("No account present for Discord account {}!!!", user.getId());
-                        Sentry.capture("No account present for Discord account: " + user.getId());
+                        //Sentry.capture("No account present for Discord account: " + user.getId());
                         mewna.getAccountManager().createNewDiscordLinkedAccount(player, user);
                         maybeAccount = mewna.getAccountManager().getAccountByLinkedDiscord(user.getId());
                         if(!maybeAccount.isPresent()) {

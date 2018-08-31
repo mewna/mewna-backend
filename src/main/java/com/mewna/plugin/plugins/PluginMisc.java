@@ -212,8 +212,8 @@ public class PluginMisc extends BasePlugin {
         });
     }
     
-    @Command(names = {"clicker", "click"}, desc = "Like Cookie Clicker, but Mewna-style.",
-            usage = {"", ""}, examples = {"", ""})
+    @Command(names = {"tato", "miner"}, desc = "Mewna Miner - Like Cookie Clicker, but tato-flavoured.",
+            usage = {"tato", "tato help", "tato uppgrade [upgrade]", "tato build [building]", "tato food [food[,food,...]]"}, examples = {"", ""})
     public void clicker(final CommandContext ctx) {
         final ClickerData data = ctx.getPlayer().getClickerData();
         final List<String> args = ctx.getArgs();
@@ -222,6 +222,14 @@ public class PluginMisc extends BasePlugin {
             final String subCmd = args.remove(0);
             switch(subCmd.toLowerCase()) {
                 case "help": {
+                    final String m = "__Mewna Miner Help__\n\n" +
+                            "- Check your stats by running `tato`.\n" +
+                            "- Get this info with `tato help`.\n" +
+                            "- View upgrades, or buy them, with `tato upgrade`.\n" +
+                            "- View or buy buildings with `tato build`.\n" +
+                            "- Feed your Mewna Miners with `tato food`.\n" +
+                            "- Remember to check back regularly to get your tato!";
+                    getRestJDA().sendMessage(ctx.getChannel(), m).queue();
                     break;
                 }
                 case "upgrade": {

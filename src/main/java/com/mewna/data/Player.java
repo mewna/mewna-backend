@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import static com.mewna.data.Player.ClickerTiers.*;
+
 /**
  * @author amy
  * @since 4/10/18.
@@ -296,13 +298,98 @@ public class Player {
         return Mewna.getInstance().getDatabase().getAccountByDiscordId(id).get();
     }
     
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static final class Votes {
-        // $ E L L O U T
-        // uwu
-        private long dblorg;
+    public enum ClickerTiers {
+        // @formatter:off
+        T1  ("Nine Lives",         BigDecimal.valueOf(                        0L)), // 0
+        T2  ("Just Nyan More",     BigDecimal.valueOf(                      100L)), // 100
+        T3  ("Purrenial Interest", BigDecimal.valueOf(                    1_000L)), // 1k
+        T4  ("Hitting the Catnip", BigDecimal.valueOf(                   10_000L)), // 10k
+        T5  ("Found YouTube",      BigDecimal.valueOf(                  100_000L)), // 100k
+        T6  ("Claws Out",          BigDecimal.valueOf(                1_000_000L)), // 1m
+        T7  ("Soft Pads",          BigDecimal.valueOf(            1_000_000_000L)), // 1b
+        T8  ("Found By YouTube",   BigDecimal.valueOf(        1_000_000_000_000L)), // 1t
+        T9  ("Caliconnoisseur",    BigDecimal.valueOf(    1_000_000_000_000_000L)), // 1qd
+        T10 ("Uses Litterbox",     BigDecimal.valueOf(1_000_000_000_000_000_000L)), // 1qt
+        ; // Long.MAX_VALUE for comparison            9_223_372_036_854_775_807L
+    
+        // @formatter:on
+        @Getter
+        private final String name;
+        
+        @Getter
+        private final BigDecimal minValue;
+        
+        ClickerTiers(final String name, final BigDecimal minValue) {
+            this.name = name;
+            this.minValue = minValue;
+        }
+    }
+    
+    public enum ClickerBuildings {
+        // @formatter:off
+        MINER(              "miner",                "A Mewna who mines for tato.",                      T1, 10L,    Item.PICKAXE),
+        FERTILIZER(         "fertilizer",           "Fertilizer to grow more tato in the mines.",       T2, 100L,   Item.PASTA, Item.RAMEN),
+        FRENCH_FRY_MACHINE( "frenchfrymachine",     "Turn tato into french fries to boost output.",     T3, 500L,   Item.FRIES, Item.HOTDOG),
+        POTATO_CHIP_FACTORY("potatochipfactory",    "Turn tato into french chips to boost output.",     T4, 1000L,  Item.FRIES, Item.BURGER),
+        FOOD_TRUCK(         "foodtruck",            "Cart out tato faster for extra income.",           T5, 10000L, Item.FRIES, Item.BURGER, Item.HOTDOG, Item.PASTA, Item.RAMEN),
+        TATO_TEMPLE(        "tatotemple",           "Worship the Almighty Tato for mining blessings.",  T6, 50000L, Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD),
+        ;
+    
+        // @formatter:on
+        @Getter
+        private final String name;
+        @Getter
+        private final String desc;
+        @Getter
+        private final ClickerTiers tier;
+        @Getter
+        private final long flowers;
+        
+        @Getter
+        private final Item[] requiredItems;
+        
+        ClickerBuildings(final String name, final String desc, final ClickerTiers tier, final long flowers,
+                         final Item... requiredItems) {
+            this.name = name;
+            this.desc = desc;
+            this.tier = tier;
+            this.flowers = flowers;
+            this.requiredItems = requiredItems;
+        }
+        
+    }
+    
+    public enum ClickerUpgrades {
+        // @formatter:off
+        POTATO_SLICER(      "potatoslicer",     "description goes here uwu", null, 10L, Item.PICKAXE),
+        POTATO_MASHER(      "potatomasher",     "description goes here uwu", null, 100L, Item.BOOT, Item.COMET),
+        FRENCH_FRY_OIL(     "frenchfryoil",     "description goes here uwu", null, 500L, Item.COMET, Item.FRIES),
+        POTATO_CHIP_SALT(   "potatochipsalt",   "description goes here uwu", null, 1000L, Item.STAR, Item.FRIES),
+        EXTRA_SEASONING(    "extraseasoning",   "description goes here uwu", null, 10000L, Item.DIAMOND, Item.FRIES),
+        CUTER_EARS(         "cuterears",        "description goes here uwu", null, 50000L, Item.STAR, Item.DIAMOND),
+        ;
+    
+        // @formatter:on
+        @Getter
+        private final String name;
+        @Getter
+        private final String desc;
+        @Getter
+        private final ClickerTiers tier;
+        @Getter
+        private final long flowers;
+        
+        @Getter
+        private final Item[] items;
+        
+        ClickerUpgrades(final String name, final String desc, final ClickerTiers tier, final long flowers, final Item... items) {
+            this.name = name;
+            this.desc = desc;
+            this.tier = tier;
+            this.flowers = flowers;
+            this.items = items;
+        }
+        
     }
     
     @Data
@@ -321,37 +408,19 @@ public class Player {
         
         private Set<ClickerTiers> unlockedTiers = new HashSet<>();
         
+        private Map<ClickerBuildings, Long> buildings = new HashMap<>();
+        
         private Map<ClickerUpgrades, Long> upgrades = new HashMap<>();
+        
+        private long food = 1000L;
     }
     
-    public enum ClickerTiers {
-        
-        // @formatter:off
-        T1  ("Nine Lives",         BigDecimal.valueOf(                        0L)), // 0
-        T2  ("Just Nyan More",     BigDecimal.valueOf(                      100L)), // 100
-        T3  ("Purrenial Interest", BigDecimal.valueOf(                    1_000L)), // 1k
-        T4  ("Hitting the Catnip", BigDecimal.valueOf(                   10_000L)), // 10k
-        T5  ("Found YouTube",      BigDecimal.valueOf(                  100_000L)), // 100k
-        T6  ("Claws Out",          BigDecimal.valueOf(                1_000_000L)), // 1m
-        T7  ("Soft Pads",          BigDecimal.valueOf(            1_000_000_000L)), // 1b
-        T8  ("Found By YouTube",   BigDecimal.valueOf(        1_000_000_000_000L)), // 1t
-        T9  ("Caliconnoisseur",    BigDecimal.valueOf(    1_000_000_000_000_000L)), // 1qd
-        T10 ("Uses Litterbox",     BigDecimal.valueOf(1_000_000_000_000_000_000L)), // 1qt
-        ; // Long.MAX_VALUE for comparison            9_223_372_036_854_775_807L
-        // @formatter:on
-        
-        @Getter
-        private final String name;
-        @Getter
-        private final BigDecimal minValue;
-    
-        ClickerTiers(final String name, final BigDecimal minValue) {
-            this.name = name;
-            this.minValue = minValue;
-        }
-    }
-    
-    public enum ClickerUpgrades {
-    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static final class Votes {
+        // $ E L L O U T
+        // uwu
+        private long dblorg;
     }
 }

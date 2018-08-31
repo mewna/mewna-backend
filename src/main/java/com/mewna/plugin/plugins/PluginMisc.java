@@ -216,6 +216,27 @@ public class PluginMisc extends BasePlugin {
             usage = {"", ""}, examples = {"", ""})
     public void clicker(final CommandContext ctx) {
         final ClickerData data = ctx.getPlayer().getClickerData();
+        final List<String> args = ctx.getArgs();
+    
+        if(!args.isEmpty()) {
+            final String subCmd = args.remove(0);
+            switch(subCmd.toLowerCase()) {
+                case "help": {
+                    break;
+                }
+                case "upgrade": {
+                    break;
+                }
+                case "build": {
+                    break;
+                }
+                case "food": {
+                    break;
+                }
+            }
+            return;
+        }
+        
         final long last = data.getLastCheck();
         final long now = System.currentTimeMillis();
         if(last == -1L) {
@@ -239,6 +260,19 @@ public class PluginMisc extends BasePlugin {
             ctx.getPlayer().setClickerData(data);
             getDatabase().savePlayer(ctx.getPlayer());
             
+            final StringBuilder stats = new StringBuilder("```CSS\n")
+                    .append("       [Delta] : ").append(deltaSeconds).append("s\n")
+                    .append("         [TPS] : ").append(Player.BASE_CLICKRATE).append(" tato / sec\n")
+                    .append("  [Total tato] : ").append(data.getTotalClicks().setScale(0, RoundingMode.FLOOR)).append(" tato\n")
+                    .append("      [Gained] : ").append(increase.setScale(0, RoundingMode.FLOOR)).append(" tato\n")
+                    .append("    [Upgrades] : ").append("TODO").append(" \n")
+                    .append("   [Buildings] : ").append("TODO").append(" \n")
+                    .append("[Current Tier] : ").append("TODO").append(" \n")
+                    .append("```\n\n")
+                    .append("(Try `").append(ctx.getCommand()).append(" help` if you're confused)")
+                    ;
+            
+            /*
             final String stats = "```CSS\n" +
                     "       [Delta] : " + delta + "ms\n" +
                     "         [CPS] : " + Player.BASE_CLICKRATE + " cps\n" +
@@ -247,6 +281,7 @@ public class PluginMisc extends BasePlugin {
                     "    [Upgrades] : TODO\n" +
                     "[Current tier] : TODO\n" +
                     "```";
+                    */
             
             // Finally, display
             getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + "'s click stats:\n" + stats).queue();

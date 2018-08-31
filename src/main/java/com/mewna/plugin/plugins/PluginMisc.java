@@ -383,6 +383,7 @@ public class PluginMisc extends BasePlugin {
                             }
                         }
                     }
+                    break;
                 }
                 /*
                 case "food": {

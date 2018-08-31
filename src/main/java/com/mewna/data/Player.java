@@ -13,6 +13,7 @@ import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
 import lombok.*;
 
+import java.beans.Transient;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -298,6 +299,8 @@ public class Player {
         return Mewna.getInstance().getDatabase().getAccountByDiscordId(id).get();
     }
     
+    // Inner classes
+    
     public enum ClickerTiers {
         // @formatter:off
         T1  ("Nine Lives",         BigDecimal.valueOf(                        0L)), // 0
@@ -327,15 +330,15 @@ public class Player {
     
     public enum ClickerBuildings {
         // @formatter:off
-        MINER(              "miner",                "A Mewna who mines for tato.",                      T1, 10L,    Item.PICKAXE),
-        FERTILIZER(         "fertilizer",           "Fertilizer to grow more tato in the mines.",       T2, 100L,   Item.PASTA, Item.RAMEN),
-        FRENCH_FRY_MACHINE( "frenchfrymachine",     "Turn tato into french fries to boost output.",     T3, 500L,   Item.FRIES, Item.HOTDOG),
-        POTATO_CHIP_FACTORY("potatochipfactory",    "Turn tato into french chips to boost output.",     T4, 1000L,  Item.FRIES, Item.BURGER),
-        FOOD_TRUCK(         "foodtruck",            "Cart out tato faster for extra income.",           T5, 10000L, Item.FRIES, Item.BURGER, Item.HOTDOG, Item.PASTA, Item.RAMEN),
-        TATO_TEMPLE(        "tatotemple",           "Worship the Almighty Tato for mining blessings.",  T6, 50000L, Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD),
+        MINER(              "miner",             "A Mewna who mines for tato.",                     T1, 10L,   1L,      Item.PICKAXE),
+        FERTILIZER(         "fertilizer",        "Fertilizer to grow more tato in the mines.",      T2, 100L,  10L,     Item.PASTA, Item.RAMEN),
+        FRENCH_FRY_MACHINE( "frenchfrymachine",  "Turn tato into french fries to boost output.",    T3, 250L,  100L,    Item.FRIES, Item.HOTDOG),
+        POTATO_CHIP_FACTORY("potatochipfactory", "Turn tato into french chips to boost output.",    T4, 500L,  1000L,   Item.FRIES, Item.BURGER),
+        FOOD_TRUCK(         "foodtruck",         "Cart out tato faster for extra income.",          T5, 1000L, 10000L,  Item.FRIES, Item.BURGER, Item.HOTDOG, Item.PASTA, Item.RAMEN),
+        TATO_TEMPLE(        "tatotemple",        "Worship the Almighty Tato for mining blessings.", T6, 5000L, 100000L, Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD),
         ;
     
-        // @formatter:on
+        // @formatter:off
         @Getter
         private final String name;
         @Getter
@@ -344,29 +347,39 @@ public class Player {
         private final ClickerTiers tier;
         @Getter
         private final long flowers;
-        
         @Getter
-        private final Item[] requiredItems;
+        private final long output;
+        @Getter
+        private final Item[] items;
         
         ClickerBuildings(final String name, final String desc, final ClickerTiers tier, final long flowers,
-                         final Item... requiredItems) {
+                         final long output, final Item... items) {
             this.name = name;
             this.desc = desc;
             this.tier = tier;
             this.flowers = flowers;
-            this.requiredItems = requiredItems;
+            this.output = output;
+            this.items = items;
         }
-        
+    
+        public static ClickerBuildings byName(final String name) {
+            for(final ClickerBuildings u : values()) {
+                if(u.name.equalsIgnoreCase(name)) {
+                    return u;
+                }
+            }
+            return null;
+        }
     }
     
     public enum ClickerUpgrades {
         // @formatter:off
-        POTATO_SLICER(      "potatoslicer",     "description goes here uwu", null, 10L, Item.PICKAXE),
-        POTATO_MASHER(      "potatomasher",     "description goes here uwu", null, 100L, Item.BOOT, Item.COMET),
-        FRENCH_FRY_OIL(     "frenchfryoil",     "description goes here uwu", null, 500L, Item.COMET, Item.FRIES),
-        POTATO_CHIP_SALT(   "potatochipsalt",   "description goes here uwu", null, 1000L, Item.STAR, Item.FRIES),
-        EXTRA_SEASONING(    "extraseasoning",   "description goes here uwu", null, 10000L, Item.DIAMOND, Item.FRIES),
-        CUTER_EARS(         "cuterears",        "description goes here uwu", null, 50000L, Item.STAR, Item.DIAMOND),
+        POTATO_SLICER(   "potatoslicer",   "Potato slicers help your Mewnas get tato faster.",                               null, 10L,    Item.PICKAXE),
+        POTATO_MASHER(   "potatomasher",   "Potato mashers increase your Mewnas' tato production",                           null, 100L,   Item.BOOT, Item.COMET),
+        FRENCH_FRY_OIL(  "frenchfryoil",   "French fry oil makes fry machines output more.",                                 null, 500L,   Item.COMET, Item.FRIES),
+        POTATO_CHIP_SALT("potatochipsalt", "Potato chip salt causes factories to produce more.",                             null, 1000L,  Item.STAR, Item.FRIES),
+        EXTRA_SEASONING( "extraseasoning", "Extra seasoning makes your food tastier and restore more hunger.",               null, 10000L, Item.DIAMOND, Item.FRIES),
+        CUTER_EARS(      "cuterears",      "Cuter ears make your Mewnas irresistable, and people will give them free tato.", null, 50000L, Item.STAR, Item.DIAMOND),
         ;
     
         // @formatter:on
@@ -378,10 +391,10 @@ public class Player {
         private final ClickerTiers tier;
         @Getter
         private final long flowers;
-        
+    
         @Getter
         private final Item[] items;
-        
+    
         ClickerUpgrades(final String name, final String desc, final ClickerTiers tier, final long flowers, final Item... items) {
             this.name = name;
             this.desc = desc;
@@ -389,7 +402,15 @@ public class Player {
             this.flowers = flowers;
             this.items = items;
         }
-        
+    
+        public static ClickerUpgrades byName(final String name) {
+            for(final ClickerUpgrades u : values()) {
+                if(u.name.equalsIgnoreCase(name)) {
+                    return u;
+                }
+            }
+            return null;
+        }
     }
     
     @Data
@@ -406,13 +427,38 @@ public class Player {
         
         private BigDecimal totalClicks = BigDecimal.ZERO;
         
-        private Set<ClickerTiers> unlockedTiers = new HashSet<>();
-        
         private Map<ClickerBuildings, Long> buildings = new HashMap<>();
         
-        private Map<ClickerUpgrades, Long> upgrades = new HashMap<>();
+        private Set<ClickerUpgrades> upgrades = new HashSet<>();
         
         private long food = 1000L;
+        
+        @Transient
+        @JsonIgnore
+        public BigDecimal getTatoPerSecond() {
+            BigDecimal res = BASE_CLICKRATE;
+            for(final ClickerBuildings b : buildings.keySet()) {
+                res = res.add(new BigDecimal(0));
+            }
+            return res;
+        }
+        
+        @Transient
+        @JsonIgnore
+        @SuppressWarnings("UnnecessarilyQualifiedStaticallyImportedElement")
+        public ClickerTiers getTier() {
+            for(int i = 0; i < ClickerTiers.values().length; i++) {
+                final ClickerTiers tier = ClickerTiers.values()[i];
+                if(tier.getMinValue().compareTo(totalClicks) > 0) {
+                    if(i > 0) {
+                        return ClickerTiers.values()[i - 1];
+                    } else {
+                        return ClickerTiers.values()[i];
+                    }
+                }
+            }
+            return T1;
+        }
     }
     
     @Data

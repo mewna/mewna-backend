@@ -2,6 +2,10 @@ package com.mewna.plugin.plugins;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.mewna.data.Player.ClickerBuildings;
+import com.mewna.data.Player.ClickerData;
+import com.mewna.data.Player.ClickerTiers;
+import com.mewna.data.Player.ClickerUpgrades;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Command;
 import com.mewna.plugin.CommandContext;
@@ -13,8 +17,11 @@ import com.mewna.plugin.plugins.PluginMisc.XMonster.Legendary;
 import com.mewna.plugin.plugins.dnd.dice.notation.DiceNotationExpression;
 import com.mewna.plugin.plugins.dnd.dice.parser.DefaultDiceNotationParser;
 import com.mewna.plugin.plugins.dnd.dice.parser.DiceNotationParser;
+import com.mewna.plugin.plugins.economy.Item;
 import com.mewna.plugin.plugins.misc.serial.*;
 import com.mewna.plugin.plugins.settings.MiscSettings;
+import com.mewna.plugin.util.CurrencyHelper;
+import com.mewna.plugin.util.Emotes;
 import io.sentry.Sentry;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +31,7 @@ import net.dv8tion.jda.core.MessageBuilder;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.json.JSONObject;
 
 import javax.inject.Inject;
@@ -31,6 +39,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
@@ -39,6 +49,7 @@ import java.util.stream.Collectors;
  * @author amy
  * @since 5/19/18.
  */
+@SuppressWarnings("OverlyCoupledClass")
 @Plugin(name = "Misc", desc = "Miscellaneous things, like kittens and puppies.", settings = MiscSettings.class)
 public class PluginMisc extends BasePlugin {
     private static final Collection<String> SPELL_CLASSES = new CopyOnWriteArrayList<>(
@@ -66,8 +77,11 @@ public class PluginMisc extends BasePlugin {
     private final List<XFeat> feats = new CopyOnWriteArrayList<>();
     @Getter
     private final List<XRace> races = new CopyOnWriteArrayList<>();
+    private final DiceNotationParser parser = new DefaultDiceNotationParser();
     @Inject
     private OkHttpClient client;
+    @Inject
+    private CurrencyHelper currencyHelper;
     
     public PluginMisc() {
         parseMonsters();
@@ -183,15 +197,13 @@ public class PluginMisc extends BasePlugin {
         getRestJDA().sendMessage(ctx.getChannel().getId(), builder.build()).queue();
     }
     
-    private final DiceNotationParser parser = new DefaultDiceNotationParser();
-    
     @Command(names = {"roll", "r"}, desc = "Roll some dice, D&D style", usage = "roll <dice expression>",
             examples = {"roll 5d6", "roll 5d6+2", "roll 1d20 + 5d6 - 10"})
     public void roll(final CommandContext ctx) {
         String message;
         try {
             final DiceNotationExpression expr = parser.parse(ctx.getArgstr());
-        
+            
             message = String.format("Input: %s\nOutput: %s", ctx.getArgstr(), expr.getValue());
         } catch(final Exception e) {
             message = "Invalid dice expression.";
@@ -209,12 +221,234 @@ public class PluginMisc extends BasePlugin {
         });
     }
     
-    private void sendResponse(final CommandContext ctx, final String res) {
-        getRestJDA().sendMessage(ctx.getChannel(), res).queue();
-    }
-    
-    private void sendEmbedResponse(final CommandContext ctx, final EmbedBuilder builder) {
-        getRestJDA().sendMessage(ctx.getChannel(), builder.build()).queue();
+    @Command(names = {"tato", "miner"}, desc = "Mewna Miner - Like Cookie Clicker, but tato-flavoured.",
+            usage = {"tato", "tato help", "tato upgrade [buy <upgrade>]", "tato building [buy <building>]",
+                    "tato food [food[,food,...]]"},
+            examples = {"", ""})
+    public void clicker(final CommandContext ctx) {
+        final ClickerData data = ctx.getPlayer().getClickerData();
+        final List<String> args = ctx.getArgs();
+        
+        if(!args.isEmpty()) {
+            final String subCmd = args.remove(0);
+            switch(subCmd.toLowerCase()) {
+                case "help": {
+                    final String m = "__Mewna Miner Help__\n\n" +
+                            "- Get this info with `tato help`.\n" +
+                            "- Check your stats by running `tato`.\n" +
+                            "- View upgrades, or buy them, with `tato upgrade`.\n" +
+                            "- View or buy buildings with `tato build`.\n" +
+                            //"- Feed your Mewna Miners with `tato food`.\n" +
+                            "- Remember to check back regularly to get your tato!";
+                    getRestJDA().sendMessage(ctx.getChannel(), m).queue();
+                    break;
+                }
+                case "upgrades":
+                case "upgrade": {
+                    if(args.isEmpty()) {
+                        // List
+                        final EmbedBuilder builder = new EmbedBuilder();
+                        builder.setDescription("__**Upgrades**__\nUpgrades can be bought exactly once.");
+                        for(final ClickerUpgrades u : ClickerUpgrades.values()) {
+                            final String body = u.getFlowers() + " " + currencyHelper.getCurrencySymbol(ctx);
+                            final String check = data.getUpgrades().contains(u) ? Emotes.YES + ' ' : "";
+                            final StringBuilder sb = new StringBuilder();
+                            final Item[] items = u.getItems();
+                            if(items.length > 0) {
+                                sb.append(" and ");
+                                for(final Item item : items) {
+                                    sb.append(item.getEmote()).append(' ');
+                                }
+                            }
+                            
+                            builder.addField(check + u.getName(), body + sb + "\n*" + u.getDesc() + '*',
+                                    false);
+                        }
+                        getRestJDA().sendMessage(ctx.getChannel(), builder.build()).queue();
+                    } else {
+                        final String action = args.remove(0);
+                        switch(action) {
+                            case "buy":
+                            case "b": {
+                                if(args.isEmpty()) {
+                                    getRestJDA().sendMessage(ctx.getChannel(),
+                                            Emotes.NO + " You need to tell me what upgrade you want to buy!").queue();
+                                } else {
+                                    final String type = args.remove(0);
+                                    final ClickerUpgrades upgrade = ClickerUpgrades.byName(type);
+                                    if(upgrade == null) {
+                                        getRestJDA().sendMessage(ctx.getChannel(),
+                                                Emotes.NO + " That's not a real upgrade!").queue();
+                                    } else if(data.getUpgrades().contains(upgrade)) {
+                                        getRestJDA().sendMessage(ctx.getChannel(),
+                                                Emotes.NO + " You already have that upgrade, silly!").queue();
+                                    } else {
+                                        // TODO: Check money, items
+                                        // We check items first so that we don't take money on a failure
+                                        final boolean hasItems = Arrays.stream(upgrade.getItems())
+                                                .allMatch(ctx.getPlayer()::hasItem);
+                                        if(hasItems) {
+                                            
+                                            final ImmutablePair<Boolean, Long> check = currencyHelper.handlePayment(ctx,
+                                                    upgrade.getFlowers() + "", upgrade.getFlowers(),
+                                                    upgrade.getFlowers());
+                                            if(check.left) {
+                                                // Payment worked
+                                                data.getUpgrades().add(upgrade);
+                                                ctx.getPlayer().setClickerData(data);
+                                                getDatabase().savePlayer(ctx.getPlayer());
+                                                getRestJDA().sendMessage(ctx.getChannel(),
+                                                        Emotes.YES + " You bought the `" + upgrade.getName() + "` upgrade.").queue();
+                                            }
+                                        } else {
+                                            getRestJDA().sendMessage(ctx.getChannel(),
+                                                    Emotes.NO + " You don't have the items needed to buy that!").queue();
+                                        }
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                }
+                case "building":
+                case "buildings":
+                case "builds":
+                case "build": {
+                    if(args.isEmpty()) {
+                        // List
+                        final EmbedBuilder builder = new EmbedBuilder();
+                        builder.setDescription("__**Buildings**__\nBuildings can be bought many times.");
+                        for(final ClickerBuildings u : ClickerBuildings.values()) {
+                            final String body = u.getFlowers() + " " + currencyHelper.getCurrencySymbol(ctx);
+                            final long amount = data.getBuildings().getOrDefault(u, 0L);
+                            final StringBuilder sb = new StringBuilder();
+                            final Item[] items = u.getItems();
+                            if(items.length > 0) {
+                                sb.append(" and ");
+                                for(final Item item : items) {
+                                    sb.append(item.getEmote()).append(' ');
+                                }
+                            }
+                            
+                            // lol
+                            builder.addField(u.getName() + " (you have: " + amount + ')', body + sb + "\n*"
+                                    + u.getDesc() + "*\nOutput: " + u.getOutput() + " tato per second", false);
+                        }
+                        getRestJDA().sendMessage(ctx.getChannel(), builder.build()).queue();
+                        break;
+                    } else {
+                        final String action = args.remove(0);
+                        switch(action) {
+                            case "buy":
+                            case "b": {
+                                if(args.isEmpty()) {
+                                    getRestJDA().sendMessage(ctx.getChannel(),
+                                            Emotes.NO + " You need to tell me what upgrade you want to buy!").queue();
+                                } else {
+                                    final String type = args.remove(0);
+                                    final ClickerBuildings building = ClickerBuildings.byName(type);
+                                    if(building == null) {
+                                        getRestJDA().sendMessage(ctx.getChannel(),
+                                                Emotes.NO + " That's not a real building!").queue();
+                                    } else {
+                                        // TODO: Check money, items
+                                        // We check items first so that we don't take money on a failure
+                                        final boolean hasItems = Arrays.stream(building.getItems())
+                                                .allMatch(ctx.getPlayer()::hasItem);
+                                        if(hasItems) {
+                                            final ImmutablePair<Boolean, Long> check = currencyHelper.handlePayment(ctx,
+                                                    building.getFlowers() + "", building.getFlowers(),
+                                                    building.getFlowers());
+                                            if(check.left) {
+                                                // Payment worked
+                                                if(data.getBuildings().containsKey(building)) {
+                                                    data.getBuildings().put(building, data.getBuildings().get(building) + 1);
+                                                } else {
+                                                    data.getBuildings().put(building, 1L);
+                                                }
+                                                ctx.getPlayer().setClickerData(data);
+                                                getDatabase().savePlayer(ctx.getPlayer());
+                                                getRestJDA().sendMessage(ctx.getChannel(),
+                                                        Emotes.YES + " You bought a `" + building.getName() + "`.").queue();
+                                            }
+                                        } else {
+                                            getRestJDA().sendMessage(ctx.getChannel(),
+                                                    Emotes.NO + " You don't have the items needed to buy that!").queue();
+                                        }
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                /*
+                case "food": {
+                    break;
+                }
+                */
+                default: {
+                    getRestJDA().sendMessage(ctx.getChannel(), Emotes.NO + " I don't know how to do that...").queue();
+                    break;
+                }
+            }
+            return;
+        }
+        
+        long last = data.getLastCheck();
+        final long now = System.currentTimeMillis();
+        if(last == -1L) {
+            // Never checked, start them off
+            data.setLastCheck(now);
+            ctx.getPlayer().setClickerData(data);
+            getDatabase().savePlayer(ctx.getPlayer());
+            last = now;
+        }
+        // Calculate delta
+        final long delta = now - last;
+        // MS -> S and floor
+        final long deltaSeconds = Math.round(Math.floor(delta / 1000D));
+        
+        // Compute stats and update in db
+        
+        data.setLastCheck(now);
+        final BigDecimal increase = data.getTatoPerSecond().multiply(BigDecimal.valueOf(deltaSeconds));
+        data.setTotalClicks(data.getTotalClicks().add(increase));
+        ctx.getPlayer().setClickerData(data);
+        getDatabase().savePlayer(ctx.getPlayer());
+        
+        final ClickerTiers tier = data.getTier();
+        
+        final StringBuilder upgradeSB = new StringBuilder();
+        if(data.getUpgrades().isEmpty()) {
+            upgradeSB.append("No upgrades!\n");
+        } else {
+            data.getUpgrades().forEach(e -> upgradeSB.append('.').append(e.getName()).append('\n'));
+        }
+        final StringBuilder buildingSB = new StringBuilder();
+        if(data.getBuildings().isEmpty()) {
+            buildingSB.append("No buildings!\n");
+        } else {
+            data.getBuildings().forEach((b, c) -> buildingSB.append('.').append(b.getName()).append(" x").append(c).append('\n'));
+        }
+        
+        final StringBuilder stats = new StringBuilder("```CSS\n")
+                // TODO: Testing, remove
+                // .append("       [Delta] : ").append(deltaSeconds).append("s\n")
+                .append("         [TPS] : ").append(data.getTatoPerSecond()).append(" tato / sec\n")
+                .append("  [Total tato] : ").append(data.getTotalClicks().setScale(0, RoundingMode.FLOOR)).append(" tato\n")
+                .append("      [Gained] : ").append(increase.setScale(0, RoundingMode.FLOOR)).append(" tato\n")
+                .append("[Current Tier] : ").append(tier.name()).append(" - ").append(tier.getName()).append("\n\n")
+                // oh god why
+                .append("[Upgrades]\n").append(upgradeSB.substring(0, upgradeSB.length() - 1)).append("\n\n")
+                .append("[Buildings]\n").append(buildingSB.substring(0, buildingSB.length() - 1)).append(" \n")
+                .append("```\n\n")
+                .append("(Try `").append(ctx.getPrefix()).append(ctx.getCommand()).append(" help` if you're confused)");
+        
+        // Finally, display
+        getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + "'s tato stats:\n" + stats).queue();
     }
     
     @Command(names = "dnd", desc = "Get useful information for your D&D 5e game.", usage = {
@@ -449,6 +683,14 @@ public class PluginMisc extends BasePlugin {
                     sendResponse(ctx, sb.toString());
                 }
         }
+    }
+    
+    private void sendResponse(final CommandContext ctx, final String res) {
+        getRestJDA().sendMessage(ctx.getChannel(), res).queue();
+    }
+    
+    private void sendEmbedResponse(final CommandContext ctx, final EmbedBuilder builder) {
+        getRestJDA().sendMessage(ctx.getChannel(), builder.build()).queue();
     }
     
     private EmbedBuilder sendRace(final XRace race) {

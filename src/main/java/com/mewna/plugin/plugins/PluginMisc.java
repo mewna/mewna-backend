@@ -392,13 +392,14 @@ public class PluginMisc extends BasePlugin {
             return;
         }
         
-        final long last = data.getLastCheck();
+        long last = data.getLastCheck();
         final long now = System.currentTimeMillis();
         if(last == -1L) {
             // Never checked, start them off
             data.setLastCheck(now);
             ctx.getPlayer().setClickerData(data);
             getDatabase().savePlayer(ctx.getPlayer());
+            last = now;
         }
         // Calculate delta
         final long delta = now - last;
@@ -409,7 +410,7 @@ public class PluginMisc extends BasePlugin {
         
         data.setLastCheck(now);
         // TODO: Factor in upgrades
-        final BigDecimal increase = Player.BASE_CLICKRATE.multiply(BigDecimal.valueOf(deltaSeconds));
+        final BigDecimal increase = data.getTatoPerSecond().multiply(BigDecimal.valueOf(delta));
         data.setTotalClicks(data.getTotalClicks().add(increase));
         ctx.getPlayer().setClickerData(data);
         getDatabase().savePlayer(ctx.getPlayer());
@@ -417,6 +418,7 @@ public class PluginMisc extends BasePlugin {
         final ClickerTiers tier = data.getTier();
         
         final StringBuilder stats = new StringBuilder("```CSS\n")
+                // TODO: Testing, remove
                 .append("       [Delta] : ").append(deltaSeconds).append("s\n")
                 .append("         [TPS] : ").append(Player.BASE_CLICKRATE).append(" tato / sec\n")
                 .append("  [Total tato] : ").append(data.getTotalClicks().setScale(0, RoundingMode.FLOOR)).append(" tato\n")
@@ -428,7 +430,7 @@ public class PluginMisc extends BasePlugin {
                 .append("(Try `").append(ctx.getCommand()).append(" help` if you're confused)");
         
         // Finally, display
-        getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + "'s click stats:\n" + stats).queue();
+        getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + "'s tato stats:\n" + stats).queue();
     }
     
     @Command(names = "dnd", desc = "Get useful information for your D&D 5e game.", usage = {

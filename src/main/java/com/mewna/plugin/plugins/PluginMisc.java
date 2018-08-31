@@ -2,7 +2,6 @@ package com.mewna.plugin.plugins;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mewna.data.Player;
 import com.mewna.data.Player.ClickerBuildings;
 import com.mewna.data.Player.ClickerData;
 import com.mewna.data.Player.ClickerTiers;
@@ -235,11 +234,11 @@ public class PluginMisc extends BasePlugin {
             switch(subCmd.toLowerCase()) {
                 case "help": {
                     final String m = "__Mewna Miner Help__\n\n" +
-                            "- Check your stats by running `tato`.\n" +
                             "- Get this info with `tato help`.\n" +
+                            "- Check your stats by running `tato`.\n" +
                             "- View upgrades, or buy them, with `tato upgrade`.\n" +
                             "- View or buy buildings with `tato build`.\n" +
-                            "- Feed your Mewna Miners with `tato food`.\n" +
+                            //"- Feed your Mewna Miners with `tato food`.\n" +
                             "- Remember to check back regularly to get your tato!";
                     getRestJDA().sendMessage(ctx.getChannel(), m).queue();
                     break;
@@ -385,7 +384,13 @@ public class PluginMisc extends BasePlugin {
                         }
                     }
                 }
+                /*
                 case "food": {
+                    break;
+                }
+                */
+                default: {
+                    getRestJDA().sendMessage(ctx.getChannel(), Emotes.NO + " I don't know how to do that...").queue();
                     break;
                 }
             }
@@ -409,25 +414,38 @@ public class PluginMisc extends BasePlugin {
         // Compute stats and update in db
         
         data.setLastCheck(now);
-        // TODO: Factor in upgrades
-        final BigDecimal increase = data.getTatoPerSecond().multiply(BigDecimal.valueOf(delta));
+        final BigDecimal increase = data.getTatoPerSecond().multiply(BigDecimal.valueOf(deltaSeconds));
         data.setTotalClicks(data.getTotalClicks().add(increase));
         ctx.getPlayer().setClickerData(data);
         getDatabase().savePlayer(ctx.getPlayer());
         
         final ClickerTiers tier = data.getTier();
         
+        final StringBuilder upgradeSB = new StringBuilder();
+        if(data.getUpgrades().isEmpty()) {
+            upgradeSB.append("No upgrades!\n");
+        } else {
+            data.getUpgrades().forEach(e -> upgradeSB.append('.').append(e.getName()).append('\n'));
+        }
+        final StringBuilder buildingSB = new StringBuilder();
+        if(data.getBuildings().isEmpty()) {
+            buildingSB.append("No buildings!\n");
+        } else {
+            data.getBuildings().forEach((b, c) -> buildingSB.append('.').append(b.getName()).append(" x").append(c).append('\n'));
+        }
+        
         final StringBuilder stats = new StringBuilder("```CSS\n")
                 // TODO: Testing, remove
-                .append("       [Delta] : ").append(deltaSeconds).append("s\n")
-                .append("         [TPS] : ").append(Player.BASE_CLICKRATE).append(" tato / sec\n")
+                // .append("       [Delta] : ").append(deltaSeconds).append("s\n")
+                .append("         [TPS] : ").append(data.getTatoPerSecond()).append(" tato / sec\n")
                 .append("  [Total tato] : ").append(data.getTotalClicks().setScale(0, RoundingMode.FLOOR)).append(" tato\n")
                 .append("      [Gained] : ").append(increase.setScale(0, RoundingMode.FLOOR)).append(" tato\n")
-                .append("    [Upgrades] : ").append("TODO").append(" \n")
-                .append("   [Buildings] : ").append("TODO").append(" \n")
-                .append("[Current Tier] : ").append(tier.name()).append(" - ").append(tier.getName()).append(" \n")
+                .append("[Current Tier] : ").append(tier.name()).append(" - ").append(tier.getName()).append("\n\n")
+                // oh god why
+                .append("[Upgrades]\n").append(upgradeSB.substring(0, upgradeSB.length() - 1)).append("\n\n")
+                .append("[Buildings]\n").append(buildingSB.substring(0, buildingSB.length() - 1)).append(" \n")
                 .append("```\n\n")
-                .append("(Try `").append(ctx.getCommand()).append(" help` if you're confused)");
+                .append("(Try `").append(ctx.getPrefix()).append(ctx.getCommand()).append(" help` if you're confused)");
         
         // Finally, display
         getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + "'s tato stats:\n" + stats).queue();

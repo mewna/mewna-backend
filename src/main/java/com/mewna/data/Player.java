@@ -330,12 +330,12 @@ public class Player {
     
     public enum ClickerBuildings {
         // @formatter:off
-        MINER(              "miner",             "A Mewna who mines for tato.",                     T1, 10L,   1L,      Item.PICKAXE),
-        FERTILIZER(         "fertilizer",        "Fertilizer to grow more tato in the mines.",      T2, 100L,  10L,     Item.PASTA, Item.RAMEN),
-        FRENCH_FRY_MACHINE( "frenchfrymachine",  "Turn tato into french fries to boost output.",    T3, 250L,  100L,    Item.FRIES, Item.HOTDOG),
-        POTATO_CHIP_FACTORY("potatochipfactory", "Turn tato into french chips to boost output.",    T4, 500L,  1000L,   Item.FRIES, Item.BURGER),
-        FOOD_TRUCK(         "foodtruck",         "Cart out tato faster for extra income.",          T5, 1000L, 10000L,  Item.FRIES, Item.BURGER, Item.HOTDOG, Item.PASTA, Item.RAMEN),
-        TATO_TEMPLE(        "tatotemple",        "Worship the Almighty Tato for mining blessings.", T6, 5000L, 100000L, Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD),
+        MINER(              "miner",             "A Mewna who mines for tato.",                     T1, 10L,   BigDecimal.valueOf(1L),      Item.PICKAXE),
+        FERTILIZER(         "fertilizer",        "Fertilizer to grow more tato in the mines.",      T2, 100L,  BigDecimal.valueOf(10L),     Item.PASTA, Item.RAMEN),
+        FRENCH_FRY_MACHINE( "frenchfrymachine",  "Turn tato into french fries to boost output.",    T3, 250L,  BigDecimal.valueOf(100L),    Item.FRIES, Item.HOTDOG),
+        POTATO_CHIP_FACTORY("potatochipfactory", "Turn tato into french chips to boost output.",    T4, 500L,  BigDecimal.valueOf(1000L),   Item.FRIES, Item.BURGER),
+        FOOD_TRUCK(         "foodtruck",         "Cart out tato faster for extra income.",          T5, 1000L, BigDecimal.valueOf(10000L),  Item.FRIES, Item.BURGER, Item.HOTDOG, Item.PASTA, Item.RAMEN),
+        TATO_TEMPLE(        "tatotemple",        "Worship the Almighty Tato for mining blessings.", T6, 5000L, BigDecimal.valueOf(100000L), Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD),
         ;
     
         // @formatter:off
@@ -348,12 +348,12 @@ public class Player {
         @Getter
         private final long flowers;
         @Getter
-        private final long output;
+        private final BigDecimal output;
         @Getter
         private final Item[] items;
         
         ClickerBuildings(final String name, final String desc, final ClickerTiers tier, final long flowers,
-                         final long output, final Item... items) {
+                         final BigDecimal output, final Item... items) {
             this.name = name;
             this.desc = desc;
             this.tier = tier;
@@ -374,12 +374,12 @@ public class Player {
     
     public enum ClickerUpgrades {
         // @formatter:off
-        POTATO_SLICER(   "potatoslicer",   "Potato slicers help your Mewnas get tato faster.",                               null, 10L,    Item.PICKAXE),
-        POTATO_MASHER(   "potatomasher",   "Potato mashers increase your Mewnas' tato production",                           null, 100L,   Item.BOOT, Item.COMET),
-        FRENCH_FRY_OIL(  "frenchfryoil",   "French fry oil makes fry machines output more.",                                 null, 500L,   Item.COMET, Item.FRIES),
-        POTATO_CHIP_SALT("potatochipsalt", "Potato chip salt causes factories to produce more.",                             null, 1000L,  Item.STAR, Item.FRIES),
-        EXTRA_SEASONING( "extraseasoning", "Extra seasoning makes your food tastier and restore more hunger.",               null, 10000L, Item.DIAMOND, Item.FRIES),
-        CUTER_EARS(      "cuterears",      "Cuter ears make your Mewnas irresistable, and people will give them free tato.", null, 50000L, Item.STAR, Item.DIAMOND),
+        POTATO_SLICER(   "potatoslicer",   "Potato slicers help your Mewnas get tato faster.",                               null, 10L,     Item.PICKAXE),
+        POTATO_MASHER(   "potatomasher",   "Potato mashers increase your Mewnas' tato production",                           null, 100L,    Item.BOOT, Item.COMET),
+        FRENCH_FRY_OIL(  "frenchfryoil",   "French fry oil makes fry machines output more.",                                 null, 500L,    Item.COMET, Item.FRIES),
+        POTATO_CHIP_SALT("potatochipsalt", "Potato chip salt causes factories to produce more.",                             null, 1000L,   Item.STAR, Item.FRIES),
+        EXTRA_SEASONING( "extraseasoning", "Extra seasoning makes your food tastier and worth more tato.",                   null, 10000L,  Item.DIAMOND, Item.FRIES),
+        CUTER_EARS(      "cuterears",      "Cuter ears make your Mewnas irresistable, and people will give them free tato.", null, 100000L, Item.STAR, Item.DIAMOND),
         ;
     
         // @formatter:on
@@ -437,8 +437,47 @@ public class Player {
         @JsonIgnore
         public BigDecimal getTatoPerSecond() {
             BigDecimal res = BASE_CLICKRATE;
-            for(final ClickerBuildings b : buildings.keySet()) {
-                res = res.add(new BigDecimal(0));
+            for(final Entry<ClickerBuildings, Long> entry : buildings.entrySet()) {
+                if(entry.getValue() == 0L) {
+                    continue;
+                }
+                BigDecimal out = entry.getKey().getOutput();
+                switch(entry.getKey()) {
+                    case MINER: {
+                        if(upgrades.contains(ClickerUpgrades.POTATO_SLICER)) {
+                            out = out.multiply(BigDecimal.valueOf(2L));
+                        }
+                        if(upgrades.contains(ClickerUpgrades.POTATO_MASHER)) {
+                            out = out.multiply(BigDecimal.valueOf(2L));
+                        }
+                        break;
+                    }
+                    case FRENCH_FRY_MACHINE: {
+                        if(upgrades.contains(ClickerUpgrades.FRENCH_FRY_OIL)) {
+                            out = out.multiply(BigDecimal.valueOf(2L));
+                        }
+                        break;
+                    }
+                    case FOOD_TRUCK: {
+                        if(upgrades.contains(ClickerUpgrades.EXTRA_SEASONING)) {
+                            out = out.multiply(BigDecimal.valueOf(2L));
+                        }
+                        break;
+                    }
+                    case POTATO_CHIP_FACTORY: {
+                        if(upgrades.contains(ClickerUpgrades.POTATO_CHIP_SALT)) {
+                            out = out.multiply(BigDecimal.valueOf(2L));
+                        }
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+                if(upgrades.contains(ClickerUpgrades.CUTER_EARS)) {
+                    out = out.multiply(BigDecimal.valueOf(10L));
+                }
+                res = res.add(out.multiply(BigDecimal.valueOf(entry.getValue())));
             }
             return res;
         }

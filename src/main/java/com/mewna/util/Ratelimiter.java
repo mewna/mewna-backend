@@ -3,6 +3,8 @@ package com.mewna.util;
 import com.mewna.Mewna;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 /**
  * @author amy
  * @since 4/14/18.
@@ -45,7 +47,7 @@ public class Ratelimiter {
                 try {
                     final long last = Long.parseLong(v);
                     final long now = System.currentTimeMillis();
-                    res[0] = last - now;
+                    res[0] = last - now + ThreadLocalRandom.current().nextLong(5000L);
                 } catch(final Exception ignored) {}
             }
         });
@@ -53,9 +55,11 @@ public class Ratelimiter {
     }
     
     @SuppressWarnings("unchecked")
-    private ImmutablePair<Boolean, Long> isRatelimited(final String id, final String type, final long ms) {
+    private ImmutablePair<Boolean, Long> isRatelimited(final String id, final String type, long ms) {
+        ms += ThreadLocalRandom.current().nextLong(5000L);
         final ImmutablePair[] pair = {null};
-        
+    
+        final long finalMs = ms;
         mewna.getDatabase().redis(j -> {
             final String key = id + ':' + type + ":ratelimit";
             if(j.exists(key)) {
@@ -63,8 +67,8 @@ public class Ratelimiter {
                 try {
                     final long last = Long.parseLong(v);
                     final long now = System.currentTimeMillis();
-                    if(last + ms > now) {
-                        pair[0] = new ImmutablePair<>(true, last + ms - now);
+                    if(last + finalMs > now) {
+                        pair[0] = new ImmutablePair<>(true, last + finalMs - now );
                     } else {
                         pair[0] = new ImmutablePair<>(false, -1L);
                     }

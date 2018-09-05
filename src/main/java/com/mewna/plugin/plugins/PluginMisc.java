@@ -224,7 +224,7 @@ public class PluginMisc extends BasePlugin {
     @Command(names = {"tato", "miner"}, desc = "Mewna Miner - Like Cookie Clicker, but tato-flavoured.",
             usage = {"tato", "tato help", "tato upgrade [buy <upgrade>]", "tato building [buy <building>]"/*,
                     "tato food [food[,food,...]]"*/},
-            examples = {"", ""})
+            examples = {"tato", "tato upgrade", "tato building", "tato help"})
     public void clicker(final CommandContext ctx) {
         final ClickerData data = ctx.getPlayer().getClickerData();
         final List<String> args = ctx.getArgs();

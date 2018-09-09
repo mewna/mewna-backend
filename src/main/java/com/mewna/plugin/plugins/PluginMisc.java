@@ -45,6 +45,8 @@ import java.math.RoundingMode;
 import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -67,6 +69,7 @@ public class PluginMisc extends BasePlugin {
             .registerTypeAdapter(XFeat.class, new XFeatDeserializer())
             .registerTypeAdapter(XRace.class, new XRaceDeserializer())
             .create();
+    private final ExecutorService pool = Executors.newCachedThreadPool();
     @Getter
     private final List<XSpell> spells = new CopyOnWriteArrayList<>();
     @Getter
@@ -395,7 +398,7 @@ public class PluginMisc extends BasePlugin {
                 case "top": {
                     getRestJDA().sendMessage(ctx.getChannel(), Emotes.LOADING_ICON
                             + " Counting tato (this will take a few seconds)")
-                            .queue(msg -> {
+                            .queue(msg -> pool.execute(() -> {
                                 final String query = "SELECT id, (data->'clickerData'->>'totalClicks') AS clicks FROM players " +
                                         "WHERE data ?? 'clickerData' " +
                                         "ORDER BY (data->'clickerData'->>'totalClicks')::bigint DESC " +
@@ -413,7 +416,7 @@ public class PluginMisc extends BasePlugin {
                                     getRestJDA().editMessage(ctx.getChannel(), msg.getIdLong(),
                                             new MessageBuilder().setContent(res).build()).queue();
                                 });
-                            });
+                            }));
                     break;
                 }
                 default: {

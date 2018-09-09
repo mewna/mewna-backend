@@ -395,7 +395,7 @@ public class PluginMisc extends BasePlugin {
                 case "top": {
                     getRestJDA().sendMessage(ctx.getChannel(), Emotes.LOADING_ICON
                             + " Counting tato (this will take a few seconds)")
-                            .queue(msg -> getRestJDA().sendTyping(ctx.getChannel()).queue(___ -> {
+                            .queue(msg -> {
                                 final String query = "SELECT id, (data->'clickerData'->>'totalClicks') AS clicks FROM players " +
                                         "WHERE data ?? 'clickerData' " +
                                         "ORDER BY (data->'clickerData'->>'totalClicks')::bigint DESC " +
@@ -409,11 +409,11 @@ public class PluginMisc extends BasePlugin {
                                         final User user = getCache().getUser(id);
                                         rows.add(user.getName() + '#' + user.getDiscriminator() + " - " + clicks + " tato");
                                     }
-                                    final String res = "__Mewna Miner Leaderboards__" + String.join("\n", rows);
+                                    final String res = "__Mewna Miner Leaderboards__\n\n" + String.join("\n", rows);
                                     getRestJDA().editMessage(ctx.getChannel(), msg.getIdLong(),
                                             new MessageBuilder().setContent(res).build()).queue();
                                 });
-                            }));
+                            });
                     break;
                 }
                 default: {

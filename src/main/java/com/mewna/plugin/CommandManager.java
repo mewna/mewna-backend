@@ -265,6 +265,7 @@ public class CommandManager {
                                 baseName + ':' + ratelimitKey,
                                 TimeUnit.SECONDS.toMillis(cmd.getRatelimit().time()));
                         if(check.left) {
+                            mewna.getStatsClient().count("discord.backend.commands.ratelimit", 1, "name:" + cmd.getName());
                             mewna.getRestJDA().sendMessage(channelId,
                                     String.format("You're using that command too fast! Try again in **%s**.",
                                             Time.toHumanReadableDuration(check.right))).queue();

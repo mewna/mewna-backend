@@ -407,7 +407,7 @@ public class PluginMisc extends BasePlugin {
                                         final String id = resultSet.getString("id");
                                         final String clicks = resultSet.getString("clicks");
                                         final User user = getCache().getUser(id);
-                                        rows.add(user.getName() + '#' + user.getDiscriminator() + " - " + clicks + " tato");
+                                        rows.add("**" + user.getName() + '#' + user.getDiscriminator() + "** - " + clicks + " tato");
                                     }
                                     final String res = "__Mewna Miner Leaderboards__\n\n" + String.join("\n", rows);
                                     getRestJDA().editMessage(ctx.getChannel(), msg.getIdLong(),

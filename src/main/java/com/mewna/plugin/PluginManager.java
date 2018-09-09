@@ -11,7 +11,6 @@ import com.mewna.plugin.util.CurrencyHelper;
 import com.mewna.util.UserAgentInterceptor;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import io.sentry.Sentry;
-import io.sentry.event.BreadcrumbBuilder;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Value;

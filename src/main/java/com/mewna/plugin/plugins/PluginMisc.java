@@ -2,6 +2,7 @@ package com.mewna.plugin.plugins;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.mewna.cache.entity.User;
 import com.mewna.data.Player.ClickerBuildings;
 import com.mewna.data.Player.ClickerData;
 import com.mewna.data.Player.ClickerTiers;
@@ -41,6 +42,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
@@ -390,6 +392,30 @@ public class PluginMisc extends BasePlugin {
                     break;
                 }
                 */
+                case "top": {
+                    getRestJDA().sendMessage(ctx.getChannel(), Emotes.LOADING_ICON
+                            + " Counting tato (this will take a few seconds)")
+                            .queue(msg -> getRestJDA().sendTyping(ctx.getChannel()).queue(___ -> {
+                                final String query = "SELECT id, (data->'clickerData'->>'totalClicks') AS clicks FROM players " +
+                                        "WHERE data ? 'clickerData' " +
+                                        "ORDER BY (data->'clickerData'->>'totalClicks')::bigint DESC " +
+                                        "LIMIT 10;";
+                                getDatabase().getStore().sql(query, p -> {
+                                    final ResultSet resultSet = p.executeQuery();
+                                    final Collection<String> rows = new ArrayList<>();
+                                    while(resultSet.next()) {
+                                        final String id = resultSet.getString("id");
+                                        final String clicks = resultSet.getString("clicks");
+                                        final User user = getCache().getUser(id);
+                                        rows.add(user.getName() + '#' + user.getDiscriminator() + " - " + clicks + " tato");
+                                    }
+                                    final String res = "__Mewna Miner Leaderboards__" + String.join("\n", rows);
+                                    getRestJDA().editMessage(ctx.getChannel(), msg.getIdLong(),
+                                            new MessageBuilder().setContent(res).build()).queue();
+                                });
+                            }));
+                    break;
+                }
                 default: {
                     getRestJDA().sendMessage(ctx.getChannel(), Emotes.NO + " I don't know how to do that...").queue();
                     break;

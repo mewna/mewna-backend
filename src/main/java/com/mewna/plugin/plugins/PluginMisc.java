@@ -399,7 +399,7 @@ public class PluginMisc extends BasePlugin {
                             + " Counting tato (this will take a few seconds)")
                             .queue(msg -> pool.execute(() -> {
                                 final String query = "SELECT id, (data->'clickerData'->>'totalClicks') AS clicks FROM players " +
-                                        "WHERE data ?? 'clickerData' " +
+                                        "WHERE (data->'clickerData'->>'totalClicks')::bigint > 0 " +
                                         "ORDER BY (data->'clickerData'->>'totalClicks')::bigint DESC " +
                                         "LIMIT 10;";
                                 getDatabase().getStore().sql(query, p -> {

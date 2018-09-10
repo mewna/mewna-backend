@@ -288,17 +288,16 @@ public class PluginMisc extends BasePlugin {
                                         getRestJDA().sendMessage(ctx.getChannel(),
                                                 Emotes.NO + " You already have that upgrade, silly!").queue();
                                     } else {
-                                        // TODO: Check money, items
                                         // We check items first so that we don't take money on a failure
                                         final boolean hasItems = Arrays.stream(upgrade.getItems())
                                                 .allMatch(ctx.getPlayer()::hasItem);
                                         if(hasItems) {
-                                            
                                             final ImmutablePair<Boolean, Long> check = currencyHelper.handlePayment(ctx,
                                                     upgrade.getFlowers() + "", upgrade.getFlowers(),
                                                     upgrade.getFlowers());
                                             if(check.left) {
                                                 // Payment worked
+                                                Arrays.stream(upgrade.getItems()).forEach(ctx.getPlayer()::removeOneFromInventory);
                                                 data.getUpgrades().add(upgrade);
                                                 ctx.getPlayer().setClickerData(data);
                                                 getDatabase().savePlayer(ctx.getPlayer());
@@ -358,7 +357,6 @@ public class PluginMisc extends BasePlugin {
                                         getRestJDA().sendMessage(ctx.getChannel(),
                                                 Emotes.NO + " That's not a real building!").queue();
                                     } else {
-                                        // TODO: Check money, items
                                         // We check items first so that we don't take money on a failure
                                         final boolean hasItems = Arrays.stream(building.getItems())
                                                 .allMatch(ctx.getPlayer()::hasItem);
@@ -368,6 +366,7 @@ public class PluginMisc extends BasePlugin {
                                                     building.getFlowers());
                                             if(check.left) {
                                                 // Payment worked
+                                                Arrays.stream(building.getItems()).forEach(ctx.getPlayer()::removeOneFromInventory);
                                                 if(data.getBuildings().containsKey(building)) {
                                                     data.getBuildings().put(building, data.getBuildings().get(building) + 1);
                                                 } else {

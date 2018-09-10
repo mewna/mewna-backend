@@ -330,12 +330,12 @@ public class Player {
     
     public enum ClickerBuildings {
         // @formatter:off
-        MINER(              "miner",             "A Mewna who mines for tato.",                     T1, 20L,    BigDecimal.valueOf(1L),      Item.PICKAXE),
-        FERTILIZER(         "fertilizer",        "Fertilizer to grow more tato in the mines.",      T2, 250L,   BigDecimal.valueOf(10L),     Item.PASTA, Item.RAMEN, Item.DONUT),
-        FRENCH_FRY_MACHINE( "frenchfrymachine",  "Turn tato into french fries to boost output.",    T3, 2000L,  BigDecimal.valueOf(100L),    Item.FRIES, Item.HOTDOG, Item.BOOT),
-        POTATO_CHIP_FACTORY("potatochipfactory", "Turn tato into french chips to boost output.",    T4, 5000L,  BigDecimal.valueOf(1000L),   Item.FRIES, Item.BURGER, Item.BOOT),
-        FOOD_TRUCK(         "foodtruck",         "Cart out tato faster for extra income.",          T5, 10000L, BigDecimal.valueOf(10000L),  Item.FRIES, Item.BURGER, Item.HOTDOG, Item.PASTA, Item.RAMEN, Item.FISH, Item.TROPICAL_FISH, Item.BURRITO),
-        TATO_TEMPLE(        "tatotemple",        "Worship the Almighty Tato for mining blessings.", T6, 20000L, BigDecimal.valueOf(100000L), Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE),
+        MINER(              "miner",             "A Mewna who mines for tato.",                     T1, 20L,     BigDecimal.valueOf(1L),      Item.PICKAXE),
+        FERTILIZER(         "fertilizer",        "Fertilizer to grow more tato in the mines.",      T2, 250L,    BigDecimal.valueOf(10L),     Item.PASTA, Item.RAMEN, Item.DONUT),
+        FRENCH_FRY_MACHINE( "frenchfrymachine",  "Turn tato into french fries to boost output.",    T3, 2000L,   BigDecimal.valueOf(100L),    Item.FRIES, Item.HOTDOG, Item.BOOT),
+        POTATO_CHIP_FACTORY("potatochipfactory", "Turn tato into french chips to boost output.",    T4, 5000L,   BigDecimal.valueOf(1000L),   Item.FRIES, Item.BURGER, Item.BOOT),
+        FOOD_TRUCK(         "foodtruck",         "Cart out tato faster for extra income.",          T5, 10000L,  BigDecimal.valueOf(10000L),  Item.FRIES, Item.BURGER, Item.HOTDOG, Item.PASTA, Item.RAMEN, Item.FISH, Item.TROPICAL_FISH, Item.BURRITO),
+        TATO_TEMPLE(        "tatotemple",        "Worship the Almighty Tato for mining blessings.", T6, 200000L, BigDecimal.valueOf(100000L), Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE),
         ;
     
         // @formatter:off

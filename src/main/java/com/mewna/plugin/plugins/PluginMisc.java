@@ -56,11 +56,44 @@ import java.util.stream.Collectors;
 @SuppressWarnings("OverlyCoupledClass")
 @Plugin(name = "Misc", desc = "Miscellaneous things, like kittens and puppies.", settings = MiscSettings.class)
 public class PluginMisc extends BasePlugin {
+    private static final Map<Character, String> MEMETEXT_MAP = new HashMap<>();
     private static final Collection<String> SPELL_CLASSES = new CopyOnWriteArrayList<>(
             Arrays.asList(
                     "bard", "cleric", "druid", "paladin", "ranger", "sorcerer", "warlock", "wizard"
             )
     );
+    
+    static {
+        MEMETEXT_MAP.put('a', "\uD83C\uDDE6");
+        MEMETEXT_MAP.put('b', "\uD83C\uDDE7");
+        MEMETEXT_MAP.put('c', "\uD83C\uDDE8");
+        MEMETEXT_MAP.put('d', "\uD83C\uDDE9");
+        MEMETEXT_MAP.put('e', "\uD83C\uDDEA");
+        MEMETEXT_MAP.put('f', "\uD83C\uDDEB");
+        MEMETEXT_MAP.put('g', "\uD83C\uDDEC");
+        MEMETEXT_MAP.put('h', "\uD83C\uDDED");
+        MEMETEXT_MAP.put('i', "\uD83C\uDDEE");
+        MEMETEXT_MAP.put('j', "\uD83C\uDDEF");
+        MEMETEXT_MAP.put('k', "\uD83C\uDDF0");
+        MEMETEXT_MAP.put('l', "\uD83C\uDDF1");
+        MEMETEXT_MAP.put('m', "\uD83C\uDDF2");
+        MEMETEXT_MAP.put('n', "\uD83C\uDDF3");
+        MEMETEXT_MAP.put('o', "\uD83C\uDDF4");
+        MEMETEXT_MAP.put('p', "\uD83C\uDDF5");
+        MEMETEXT_MAP.put('q', "\uD83C\uDDF6");
+        MEMETEXT_MAP.put('r', "\uD83C\uDDF7");
+        MEMETEXT_MAP.put('s', "\uD83C\uDDF8");
+        MEMETEXT_MAP.put('t', "\uD83C\uDDF9");
+        MEMETEXT_MAP.put('u', "\uD83C\uDDFA");
+        MEMETEXT_MAP.put('v', "\uD83C\uDDFB");
+        MEMETEXT_MAP.put('w', "\uD83C\uDDFC");
+        MEMETEXT_MAP.put('x', "\uD83C\uDDFD");
+        MEMETEXT_MAP.put('y', "\uD83C\uDDFE");
+        MEMETEXT_MAP.put('z', "\uD83C\uDDFF");
+        MEMETEXT_MAP.put('?', "\u2753");
+        MEMETEXT_MAP.put('!', "\u2757");
+    }
+    
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(XMonster.class, new XMonsterDeserializer())
             .registerTypeAdapter(XSpell.class, new XSpellDeserializer())
@@ -69,7 +102,9 @@ public class PluginMisc extends BasePlugin {
             .registerTypeAdapter(XFeat.class, new XFeatDeserializer())
             .registerTypeAdapter(XRace.class, new XRaceDeserializer())
             .create();
+    
     private final ExecutorService pool = Executors.newCachedThreadPool();
+    
     @Getter
     private final List<XSpell> spells = new CopyOnWriteArrayList<>();
     @Getter
@@ -83,18 +118,26 @@ public class PluginMisc extends BasePlugin {
     @Getter
     private final List<XRace> races = new CopyOnWriteArrayList<>();
     private final DiceNotationParser parser = new DefaultDiceNotationParser();
+    
     @Inject
     private OkHttpClient client;
     @Inject
     private CurrencyHelper currencyHelper;
     
+    private String[] rubeface = {};
+    
     public PluginMisc() {
+        parseRubeface();
         parseMonsters();
         parseSpells();
         parseMagicItems();
         parseItems();
         parseFeats();
         parseRaces();
+    }
+    
+    private void parseRubeface() {
+        rubeface = readFile("misc/rubeface.txt").toArray(new String[0]);
     }
     
     private void parseMonsters() {
@@ -133,7 +176,7 @@ public class PluginMisc extends BasePlugin {
         this.races.addAll(Arrays.asList(races));
     }
     
-    private Collection<String> readFile(@SuppressWarnings("SameParameterValue") final String file) {
+    private Collection<String> readFile(final String file) {
         final List<String> list = new ArrayList<>();
         
         final InputStream in = getClass().getResourceAsStream('/' + file);
@@ -187,6 +230,49 @@ public class PluginMisc extends BasePlugin {
         } catch(final IOException e) {
             getRestJDA().sendMessage(ctx.getChannel(), "Couldn't find catgirl :(").queue();
         }
+    }
+    
+    @Command(names = {"rubeface", "rf"}, desc = "Rubeface, the perfect meme for every situation.", usage = "rubeface",
+            examples = "rubeface")
+    public void rubeface(final CommandContext ctx) {
+        getRestJDA().sendMessage(ctx.getChannel(), new EmbedBuilder().setTitle("Rubeface").setImage(rubeface[getRandom().nextInt(rubeface.length)]).build()).queue();
+    }
+    
+    @Command(names = {"memetext", "bigtext", "mt"}, desc = "Convert stuff to big characters.", usage = "memetext <input>",
+            examples = "memetext some text I want to be big!")
+    public void memetext(final CommandContext ctx) {
+        if(ctx.getArgstr().trim().isEmpty()) {
+            getRestJDA().sendMessage(ctx.getChannel(), "You need to give me something to meme!").queue();
+            return;
+        }
+        final StringBuilder sb = new StringBuilder();
+        for(final char c : ctx.getArgstr().toCharArray()) {
+            sb.append(MEMETEXT_MAP.getOrDefault(c, "" + c)).append(' ');
+        }
+        getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + ": " + sb.toString().trim()).queue();
+    }
+    
+    @Command(names = {"bootlegcat", "blc"}, desc = "See a bootleg cat, for when mew.cat doesn't work.", usage = "bootlegcat",
+            examples = "bootlegcat")
+    public void bootlegcat(final CommandContext ctx) {
+        getRestJDA().sendMessage(ctx.getChannel(), "Do any of these describe YOU?\n" +
+                '\n' +
+                Emotes.YES + " Slow internet speeds?\n" +
+                Emotes.YES + " Limited cellular data plan?\n" +
+                Emotes.YES + " Too lazy to click a cat image?\n" +
+                "`bootlegcat` has you covered! \uD83C\uDF89\uD83C\uDF89\uD83C\uDF89\n" +
+                '\n' +
+                "```\n" +
+                "___|____|____|____|____|____|__\n" +
+                "__|____|____|____|____|____|___\n" +
+                "|____|___|_         ____|____|\n" +
+                "___|___|    (\\.-./)  _|____|__\n" +
+                "_|____|_  = (^ Y ^) =  _|____|\n" +
+                "__|____|___ /`---`\\ __|____|___\n" +
+                "|____|____|_U___|_U|____|____\n" +
+                "___|____|____|____|____|____|__\n" +
+                "__|____|____|____|____|____|____\n" +
+                "```").queue();
     }
     
     @Command(names = {"help", "?"}, desc = "Get links to helpful information.", usage = "help", examples = "help")

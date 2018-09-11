@@ -241,11 +241,17 @@ public class PluginEconomy extends BasePlugin {
         final boolean win = roll[1][0] == roll[1][1] && roll[1][0] == roll[1][2];
         
         final StringBuilder sb = new StringBuilder("The slot machines rolled up:\n");
+        int counter = 0;
         for(final ReelSymbol[] row : roll) {
             for(final ReelSymbol col : row) {
                 sb.append(col.emote);
             }
+            if(counter == 1) {
+                sb.append('⬅');
+                
+            }
             sb.append('\n');
+            ++counter;
         }
         
         if(win) {

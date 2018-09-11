@@ -12,7 +12,7 @@ import com.mewna.plugin.plugins.settings.EmotesSettings;
  */
 @Plugin(name = "Emotes", desc = "Fun little emotes for your server.", settings = EmotesSettings.class)
 public class PluginEmotes extends BasePlugin {
-    @Command(names = {"bap", "chew", "cookie", "hug", "lick", "nom", "poke", "prod", "shoot", "stab", "tickle"},
+    @Command(names = {"bap", "chew", "cookie", "hug", "lick", "nom", "pat", "poke", "prod", "shoot", "stab", "tickle"},
             desc = "Fun little emote commands. You need to mention someone to use them.", usage = "<command> <person>",
             examples = {"bap someone", "stab someone else", "poke everyone"}, aliased = false)
     public void emote(final CommandContext ctx) {
@@ -39,6 +39,9 @@ public class PluginEmotes extends BasePlugin {
                 break;
             case "nom":
                 action = "nommed on";
+                break;
+            case "pat":
+                action = "were lovingly patted <:blobhyperpat:352487540785414155>";
                 break;
             case "poke":
                 action = "poked";

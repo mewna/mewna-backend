@@ -1,9 +1,10 @@
 package com.mewna.plugin.plugins.settings;
 
+import com.mewna.Mewna;
+import com.mewna.cache.entity.Role;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
-import com.mewna.plugin.plugins.PluginBehaviour;
 import com.mewna.plugin.plugins.PluginLevels;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
@@ -55,6 +56,19 @@ public class LevelsSettings implements PluginSettings {
         final Map<String, CommandSettings> newSettings = generateCommandSettings(PluginLevels.class);
         newSettings.putAll(oldSettings);
         commandSettings.putAll(newSettings);
+        return this;
+    }
+    
+    @Override
+    public PluginSettings otherRefresh() {
+        final Collection<String> bad = new ArrayList<>();
+        levelRoleRewards.keySet().forEach(e -> {
+            final Role role = Mewna.getInstance().getCache().getRole(e);
+            if(role == null || role.getId() == null || role.getGuildId() == null || role.getName() == null) {
+                bad.add(e);
+            }
+        });
+        bad.forEach(levelRoleRewards::remove);
         return this;
     }
     

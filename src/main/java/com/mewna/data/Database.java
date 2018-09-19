@@ -182,7 +182,7 @@ public class Database {
         final Optional<T> maybeSettings = getSettingsByType(type, id);
         if(maybeSettings.isPresent()) {
             final T maybe = maybeSettings.get();
-            saveSettings(maybe.refreshCommands());
+            saveSettings(maybe.refreshCommands().otherRefresh());
             return maybe;
         } else {
             try {

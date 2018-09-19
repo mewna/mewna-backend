@@ -12,7 +12,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <jda.version>3.7.1_385</jda.version>
-        <nats.version>0.5.0</nats.version>
         <fcps.version>3.1.0</fcps.version>
         <guava.version>26.0-jre</guava.version>
         <javax.inject.version>1</javax.inject.version>
@@ -65,25 +64,6 @@
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
             <version>${jda.version}</version>
-            <classifier>javadoc</classifier>
-        </dependency>
-
-        <!-- nats-streaming -->
-        <dependency>
-            <groupId>io.nats</groupId>
-            <artifactId>java-nats-streaming</artifactId>
-            <version>${nats.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.nats</groupId>
-            <artifactId>java-nats-streaming</artifactId>
-            <version>${nats.version}</version>
-            <classifier>sources</classifier>
-        </dependency>
-        <dependency>
-            <groupId>io.nats</groupId>
-            <artifactId>java-nats-streaming</artifactId>
-            <version>${nats.version}</version>
             <classifier>javadoc</classifier>
         </dependency>
 

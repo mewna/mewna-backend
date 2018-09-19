@@ -5,7 +5,7 @@ import com.mewna.cache.DiscordCache;
 import com.mewna.data.Database;
 import com.mewna.event.EventManager;
 import com.mewna.jda.RestJDA;
-import com.mewna.nats.NatsServer;
+import com.mewna.nats.Q;
 import com.mewna.paypal.PaypalHandler;
 import com.mewna.plugin.CommandManager;
 import com.mewna.plugin.PluginManager;
@@ -42,7 +42,7 @@ public final class Mewna {
     private final Ratelimiter ratelimiter = new Ratelimiter(this);
     private final Logger logger = LoggerFactory.getLogger(getClass());
     @Getter
-    private NatsServer nats;
+    private Q nats;
     
     @Getter
     private final AccountManager accountManager = new AccountManager(this);
@@ -78,7 +78,7 @@ public final class Mewna {
         database.init();
         pluginManager.init();
         new API(this).start();
-        nats = new NatsServer(this);
+        nats = new Q(this);
         nats.connect();
         logger.info("Finished starting!");
     }

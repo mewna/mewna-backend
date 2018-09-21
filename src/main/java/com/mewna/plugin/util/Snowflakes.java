@@ -13,12 +13,17 @@ import java.io.IOException;
 public final class Snowflakes {
     @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
     private static final OkHttpClient client = new OkHttpClient.Builder().build();
+    @SuppressWarnings("StaticVariableOfConcreteClass")
+    private static final InternalSnowflake snowflake = new InternalSnowflake(0L, 0L);
     
     private Snowflakes() {
     }
     
     @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
     public static String getNewSnowflake() {
+        if(System.getenv("FORCE_INTERNAL_SNOWFLAKES") != null) {
+            return snowflake.nextId() + "";
+        }
         try {
             @SuppressWarnings("ConstantConditions")
             final String snowflake = client.newCall(new Request.Builder().get().url(System.getenv("SNOWFLAKE_GENERATOR") + '/')

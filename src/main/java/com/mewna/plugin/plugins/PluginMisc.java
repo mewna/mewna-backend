@@ -249,7 +249,9 @@ public class PluginMisc extends BasePlugin {
         for(final char c : ctx.getArgstr().toCharArray()) {
             sb.append(MEMETEXT_MAP.getOrDefault(c, "" + c)).append(' ');
         }
-        getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + ": " + sb.toString().trim()).queue();
+        getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + ": " + sb.toString().trim()
+                .replace("@everyone", "[haha very funny]")
+                .replace("@here", "[haha very funny]")).queue();
     }
     
     @Command(names = {"bootlegcat", "blc"}, desc = "See a bootleg cat, for when mew.cat doesn't work.", usage = "bootlegcat",
@@ -323,7 +325,9 @@ public class PluginMisc extends BasePlugin {
         for(final String e : ctx.getArgstr().split("\\s+")) {
             s.append(e).append(' ').append(emoji).append(' ');
         }
-        getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + " > " + s.toString().trim().replaceAll("@everyone", "[haha very funny]").replaceAll("@here", "[haha very funny]")).queue();
+        getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + " > " + s.toString().trim()
+                .replace("@everyone", "[haha very funny]")
+                .replace("@here", "[haha very funny]")).queue();
     }
     
     @Command(names = {"help", "?"}, desc = "Get links to helpful information.", usage = "help", examples = "help")

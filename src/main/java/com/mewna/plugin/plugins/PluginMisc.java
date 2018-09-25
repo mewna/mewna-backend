@@ -323,7 +323,7 @@ public class PluginMisc extends BasePlugin {
         for(final String e : ctx.getArgstr().split("\\s+")) {
             s.append(e).append(' ').append(emoji).append(' ');
         }
-        getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + " > " + s.toString().trim()).queue();
+        getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + " > " + s.toString().trim().replaceAll("@everyone", "[haha very funny]").replaceAll("@here", "[haha very funny]")).queue();
     }
     
     @Command(names = {"help", "?"}, desc = "Get links to helpful information.", usage = "help", examples = "help")

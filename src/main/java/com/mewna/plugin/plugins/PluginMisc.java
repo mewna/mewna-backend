@@ -275,6 +275,57 @@ public class PluginMisc extends BasePlugin {
                 "```").queue();
     }
     
+    @Command(
+            names = {
+                    "clappify",
+                    "breadify",
+                    "potatofy"
+            },
+            desc = "\uD83D\uDC4F Clap \uD83D\uDC4F some \uD83D\uDC4F text \uD83D\uDC4F (or \uD83C\uDF5E, or \uD83E\uDD54, whatever)",
+            usage = {
+                    "clappify <text>",
+                    "breadify <text>",
+                    "potatofy <text>"
+            },
+            examples = {
+                    "clappify don't clap if you don't know how to clappify",
+                    "breadify :tomato:",
+                    "potatofy tato is the best food"
+            }
+    )
+    public void emojify(final CommandContext ctx) {
+        if(ctx.getArgstr() == null || ctx.getArgstr().isEmpty()) {
+            getRestJDA().sendMessage(ctx.getChannel(),
+                    String.format("You need to give me something to %s!", ctx.getCommand().toLowerCase()))
+                    .queue();
+            return;
+        }
+        final String emoji;
+        switch(ctx.getCommand().toLowerCase()) {
+            case "clappify": {
+                emoji = "\uD83D\uDC4F";
+                break;
+            }
+            case "breadify": {
+                emoji = "\uD83C\uDF5E";
+                break;
+            }
+            case "potatofy": {
+                emoji = "\uD83E\uDD54";
+                break;
+            }
+            default: {
+                emoji = "\u2753";
+                break;
+            }
+        }
+        final StringBuilder s = new StringBuilder(emoji + ' ');
+        for(final String e : ctx.getArgstr().split("\\s+")) {
+            s.append(e).append(' ').append(emoji).append(' ');
+        }
+        getRestJDA().sendMessage(ctx.getChannel(), s.toString().trim()).queue();
+    }
+    
     @Command(names = {"help", "?"}, desc = "Get links to helpful information.", usage = "help", examples = "help")
     public void help(final CommandContext ctx) {
         final EmbedBuilder builder = new EmbedBuilder();
@@ -550,7 +601,6 @@ public class PluginMisc extends BasePlugin {
         }
         
         final StringBuilder stats = new StringBuilder("```CSS\n")
-                // TODO: Testing, remove
                 // .append("       [Delta] : ").append(deltaSeconds).append("s\n")
                 .append("         [TPS] : ").append(data.getTatoPerSecond()).append(" tato / sec\n")
                 .append("  [Total tato] : ").append(data.getTotalClicks().setScale(0, RoundingMode.FLOOR)).append(" tato\n")
@@ -671,7 +721,6 @@ public class PluginMisc extends BasePlugin {
                                 }
                                 sb.append('\n');
                             }
-                            // TODO
                             sendEmbedResponse(ctx, builder.addField("Spells", sb.toString(), false));
                             return;
                         }

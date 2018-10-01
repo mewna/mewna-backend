@@ -125,8 +125,9 @@ public final class TextureManager {
         }
     }
     
-    public static void expireAvatar(final String id) {
-        Mewna.getInstance().getDatabase().redis(r -> r.del(String.format(AVATAR_CACHE_KEY, id)));
+    private static void expireAvatar(final String id) {
+        // expire in 1 day
+        Mewna.getInstance().getDatabase().redis(r -> r.expire(String.format(AVATAR_CACHE_KEY, id), 3600*24));
     }
     
     @SuppressWarnings("WeakerAccess")

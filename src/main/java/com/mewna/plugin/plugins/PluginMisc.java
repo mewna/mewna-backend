@@ -253,6 +253,12 @@ public class PluginMisc extends BasePlugin {
                 .replace("@everyone", "[haha very funny]")
                 .replace("@here", "[haha very funny]")).queue();
     }
+
+
+    @Command(names = "snowman", desc = "Do you want to build a snowman?", usage = "snowman", examples="snowman")
+    public void snowman(final CommandContext ctx){
+        getRestJDA().sendMessage(ctx.getChannel(), "<:snowman:496314615144251392>").queue();
+    }
     
     @Command(names = {"bootlegcat", "blc"}, desc = "See a bootleg cat, for when mew.cat doesn't work.", usage = "bootlegcat",
             examples = "bootlegcat")

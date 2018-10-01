@@ -118,6 +118,7 @@ public final class TextureManager {
             final byte[] bytes = baos.toByteArray();
             baos.close();
             Mewna.getInstance().getDatabase().redis(r -> r.set(String.format(AVATAR_CACHE_KEY, user.getId()).getBytes(), bytes));
+            expireAvatar(user.getId());
         } catch(final IOException e) {
             Sentry.capture(e);
             throw new IllegalStateException(e);

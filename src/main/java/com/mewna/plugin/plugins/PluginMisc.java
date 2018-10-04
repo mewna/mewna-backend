@@ -333,7 +333,8 @@ public class PluginMisc extends BasePlugin {
         }
         getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + " > " + s.toString().trim()
                 .replace("@everyone", "[haha very funny]")
-                .replace("@here", "[haha very funny]")).queue();
+                .replace("@here", "[haha very funny]")
+                .replace(ctx.getGuild().getId(), "haha no")).queue();
     }
     
     @Command(names = {"help", "?"}, desc = "Get links to helpful information.", usage = "help", examples = "help")

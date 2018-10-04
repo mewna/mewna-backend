@@ -54,8 +54,8 @@ public class Database {
         init = true;
         logger.info("Connecting to Redis...");
         final JedisPoolConfig config = new JedisPoolConfig();
-        config.setMaxIdle(1500);
-        config.setMaxTotal(1500);
+        config.setMaxIdle(10);
+        config.setMaxTotal(100);
         config.setMaxWaitMillis(500);
         jedisPool = new JedisPool(config, System.getenv("REDIS_HOST"));
         logger.info("Redis connection pool ready!");

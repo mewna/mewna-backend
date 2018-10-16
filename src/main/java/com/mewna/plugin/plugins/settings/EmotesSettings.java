@@ -11,6 +11,7 @@ import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.json.JSONObject;
@@ -24,14 +25,15 @@ import java.util.Map;
  */
 @Getter
 @Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 @Table("settings_emote")
 @GIndex("id")
 public class EmotesSettings implements PluginSettings {
     @PrimaryKey
-    private final String id;
-    private final Map<String, CommandSettings> commandSettings;
+    private String id;
+    private Map<String, CommandSettings> commandSettings;
     
     public EmotesSettings(final String id) {
         this.id = id;

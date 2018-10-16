@@ -9,8 +9,7 @@ import com.paypal.api.payments.*;
 import com.paypal.base.rest.APIContext;
 import com.paypal.base.rest.PayPalRESTException;
 import io.sentry.Sentry;
-import lombok.Getter;
-import lombok.Value;
+import lombok.*;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -160,10 +159,13 @@ public class PaypalHandler {
         }
     }
     
-    @Value
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
     @SuppressWarnings("WeakerAccess")
     public static final class SKU {
-        private final String sku;
-        private final long cents;
+        private String sku;
+        private long cents;
     }
 }

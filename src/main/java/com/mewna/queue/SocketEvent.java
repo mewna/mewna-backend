@@ -1,4 +1,4 @@
-package com.mewna.nats;
+package com.mewna.queue;
 
 import lombok.Value;
 import org.json.JSONObject;

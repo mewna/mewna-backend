@@ -26,6 +26,7 @@ import java.util.*;
  */
 @Getter
 @Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 @Table("settings_twitch")
@@ -33,8 +34,8 @@ import java.util.*;
 @SuppressWarnings("unused")
 public class TwitchSettings implements PluginSettings {
     @PrimaryKey
-    private final String id;
-    private final Map<String, CommandSettings> commandSettings;
+    private String id;
+    private Map<String, CommandSettings> commandSettings;
     private String twitchWebhookChannel;
     /**
      * Twitch streamers are "partnered" on a per-Discord basis, because ex. a

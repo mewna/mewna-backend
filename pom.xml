@@ -20,8 +20,8 @@
         <commons.text.version>1.2</commons.text.version>
         <jedis.version>2.9.0</jedis.version>
         <spark.version>2.7.2</spark.version>
-        <postgres.orm.version>1dcc398cb3</postgres.orm.version>
-        <jackson.version>2.9.2</jackson.version>
+        <postgres.orm.version>1cfc8d1</postgres.orm.version>
+        <jackson.version>2.9.6</jackson.version>
         <paypal.version>1.14.0</paypal.version>
         <dogstatsd.version>2.6.1</dogstatsd.version>
         <sentry.version>1.7.5</sentry.version>
@@ -45,7 +45,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.16.18</version>
+            <version>1.18.2</version>
         </dependency>
 
         <!-- JDA -->

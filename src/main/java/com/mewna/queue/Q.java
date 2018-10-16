@@ -1,4 +1,4 @@
-package com.mewna.nats;
+package com.mewna.queue;
 
 import com.mewna.Mewna;
 import io.sentry.Sentry;
@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.Protocol;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -18,7 +19,6 @@ import java.util.concurrent.Executors;
  * @author amy
  * @since 4/8/18.
  */
-@SuppressWarnings("unused")
 public class Q {
     private final JedisPoolConfig config = new JedisPoolConfig();
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -36,52 +36,57 @@ public class Q {
         config.setMaxIdle(10);
         config.setMaxTotal(10);
         config.setMaxWaitMillis(500);
-        jedisPool = new JedisPool(config, System.getenv("REDIS_HOST"));
+        jedisPool = new JedisPool(config, System.getenv("REDIS_HOST"), 6379, Protocol.DEFAULT_TIMEOUT, System.getenv("REDIS_PASS"));
         pool.execute(() -> {
             while(true) {
                 // TODO: Exit loop somehow?
                 try(final Jedis jedis = jedisPool.getResource()) {
-                    final List<String> out = jedis.blpop(0, System.getenv("EVENT_QUEUE"));
-                    out.forEach(str -> {
-                        try {
-                            final JSONObject o = new JSONObject(str);
-                            final SocketEvent event;
-                            if(o.has("shard") && !o.isNull("shard")) {
-                                final JSONObject shard = o.getJSONObject("shard");
-                                event = new SocketEvent(o.getString("t"), o.getJSONObject("d"), o.getLong("ts"),
-                                        shard.getInt("id"), shard.getInt("limit"));
-                            } else {
-                                // If we have no shard data, fake it
-                                event = new SocketEvent(o.getString("t"), o.getJSONObject("d"), o.getLong("ts"), -1, -1);
-                            }
-                            pool.execute(() -> mewna.getEventManager().handle(event));
-                        } catch(final Exception e) {
-                            logger.error("Caught error while processing socket message:");
-                            e.printStackTrace();
-                            Sentry.capture(e);
+                    final List<String> out = jedis.blpop(0, System.getenv("EVENT_QUEUE") + ":backend-event-queue");
+                    final String str = out.get(1);
+                    try {
+                        final JSONObject o = new JSONObject(str);
+                        final SocketEvent event;
+                        if(o.has("shard") && !o.isNull("shard")) {
+                            final JSONObject shard = o.getJSONObject("shard");
+                            event = new SocketEvent(o.getString("t"), o.getJSONObject("d"), o.getLong("ts"),
+                                    shard.getInt("id"), shard.getInt("limit"));
+                        } else {
+                            // If we have no shard data, fake it
+                            event = new SocketEvent(o.getString("t"), o.getJSONObject("d"), o.getLong("ts"), -1, -1);
                         }
-                    });
+                        pool.execute(() -> mewna.getEventManager().handle(event));
+                    } catch(final Exception e) {
+                        logger.error("Caught error while processing socket message:");
+                        e.printStackTrace();
+                        Sentry.capture(e);
+                        logger.error(str);
+                    }
                 }
             }
         });
     }
     
+    @SuppressWarnings("unused")
     public <T> void broadcastBackendEvent(final String type, final T data) {
         pushEvent("backend-event-broadcast", type, data);
     }
     
+    @SuppressWarnings("unused")
     public <T> void pushBackendEvent(final String type, final T data) {
         pushEvent("backend-event-queue", type, data);
     }
     
+    @SuppressWarnings("unused")
     public <T> void pushShardEvent(final String type, final T data) {
         pushEvent("discord-event-queue", type, data);
     }
     
+    @SuppressWarnings("unused")
     public <T> void pushAudioEvent(final String type, final T data) {
         pushEvent("audio-event-queue", type, data);
     }
     
+    @SuppressWarnings("unused")
     public <T> void pushTwitchEvent(final String type, final T data) {
         pushEvent("twitch-event-queue", type, data);
     }
@@ -90,7 +95,7 @@ public class Q {
         final JSONObject event = new JSONObject().put("t", type).put("ts", System.currentTimeMillis()).put("d", data);
         if(jedisPool != null) {
             try(final Jedis jedis = jedisPool.getResource()) {
-                jedis.rpush(System.getenv("EVENT_QUEUE"), event.toString());
+                jedis.rpush(System.getenv("EVENT_QUEUE") + ':' + queue, event.toString());
             }
         }
     }

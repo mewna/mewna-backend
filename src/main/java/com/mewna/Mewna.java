@@ -5,7 +5,7 @@ import com.mewna.cache.DiscordCache;
 import com.mewna.data.Database;
 import com.mewna.event.EventManager;
 import com.mewna.jda.RestJDA;
-import com.mewna.nats.Q;
+import com.mewna.queue.Q;
 import com.mewna.paypal.PaypalHandler;
 import com.mewna.plugin.CommandManager;
 import com.mewna.plugin.PluginManager;

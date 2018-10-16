@@ -11,6 +11,7 @@ import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.json.JSONException;
@@ -24,6 +25,7 @@ import java.util.*;
  */
 @Getter
 @Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 @Table("settings_levels")
@@ -32,8 +34,8 @@ import java.util.*;
 public class LevelsSettings implements PluginSettings {
     private static final int DISCORD_MAX_MESSAGE_SIZE = 2000;
     @PrimaryKey
-    private final String id;
-    private final Map<String, CommandSettings> commandSettings;
+    private String id;
+    private Map<String, CommandSettings> commandSettings;
     private boolean levelsEnabled;
     private boolean levelUpMessagesEnabled = true;
     private boolean removePreviousRoleRewards = true;

@@ -9,7 +9,7 @@ import com.mewna.cache.DiscordCache;
 import com.mewna.cache.entity.Channel;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
-import com.mewna.nats.SocketEvent;
+import com.mewna.queue.SocketEvent;
 import com.mewna.plugin.event.audio.AudioTrackEvent;
 import com.mewna.plugin.event.audio.AudioTrackEvent.AudioTrackInfo;
 import com.mewna.plugin.event.guild.member.GuildMemberAddEvent;

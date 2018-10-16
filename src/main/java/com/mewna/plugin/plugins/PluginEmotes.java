@@ -64,6 +64,8 @@ public class PluginEmotes extends BasePlugin {
         }
         getRestJDA().sendMessage(ctx.getChannel(), String.format("%s, you were %s by %s!",
                 ctx.getArgstr().replaceAll("@everyone", "very funny")
-                        .replaceAll("@here", "nice try"), action, ctx.getUser().getName())).queue();
+                        .replaceAll("@here", "nice try")
+                        .replaceAll(ctx.getGuild().getId(), "haha no"),
+                action, ctx.getUser().getName())).queue();
     }
 }

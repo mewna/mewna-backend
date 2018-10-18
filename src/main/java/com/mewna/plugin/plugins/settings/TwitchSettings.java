@@ -4,7 +4,6 @@ import com.mewna.Mewna;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
-import com.mewna.plugin.plugins.PluginBehaviour;
 import com.mewna.plugin.plugins.PluginTwitch;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
@@ -111,11 +110,7 @@ public class TwitchSettings implements PluginSettings {
             try {
                 // If this fails, it's bad JSON or some shit, but it shouldn't have passed the validation steps anyway
                 final TwitchStreamerConfig twitchStreamer = MAPPER.readValue(streamer.toString(), TwitchStreamerConfig.class);
-                if(twitchStreamer.isStreamStartMessagesEnabled() || twitchStreamer.isStreamEndMessagesEnabled()) {
-                    // Sub to up/down messages
-                    Mewna.getInstance().getNats().pushTwitchEvent("TWITCH_SUBSCRIBE", new JSONObject()
-                            .put("id", twitchStreamer.getId()).put("topic", "streams"));
-                }
+                
                 if(twitchStreamer.isFollowMessagesEnabled()) {
                     // This is **very intentionally** done like this
                     // Later on, this will be used, but for now, we
@@ -132,6 +127,31 @@ public class TwitchSettings implements PluginSettings {
                 return false;
             }
         }
+
+        // If a streamer is in the new list, and NOT in the old list, then we
+        // need to subscribe to those notifications
+        for(final TwitchStreamerConfig streamer : streamers) {
+            if(twitchStreamers.stream().noneMatch(e -> e.id.equals(streamer.id))) {
+                if(streamer.isStreamStartMessagesEnabled() || streamer.isStreamEndMessagesEnabled()) {
+                    // Sub to up/down messages
+                    Mewna.getInstance().getNats().pushTwitchEvent("TWITCH_SUBSCRIBE", new JSONObject()
+                            .put("id", streamer.getId()).put("topic", "streams"));
+                }
+            } else {
+                for(final TwitchStreamerConfig e : twitchStreamers) {
+                    if(e.id.equals(streamer.id)) {
+                        if(e.streamEndMessagesEnabled != streamer.streamEndMessagesEnabled
+                                || e.streamStartMessagesEnabled != streamer.streamStartMessagesEnabled) {
+                            Mewna.getInstance().getNats().pushTwitchEvent("TWITCH_SUBSCRIBE", new JSONObject()
+                                    .put("id", streamer.getId()).put("topic", "streams"));
+                        }
+                    }
+                }
+            }
+        }
+        
+        // We don't try to unsubscribe from webhooks because that would honestly be a nightmare x-x
+
         twitchStreamers.clear();
         twitchStreamers.addAll(streamers);
         database.saveSettings(this);
@@ -150,5 +170,10 @@ public class TwitchSettings implements PluginSettings {
         private String streamEndMessage;
         private boolean followMessagesEnabled;
         private String followMessage;
+        
+        @Override
+        public String toString() {
+            return String.format("TwitchStreamerConfig(%s)", id);
+        }
     }
 }

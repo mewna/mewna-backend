@@ -72,7 +72,7 @@ public class CommandManager {
                     m.getDeclaredAnnotation(Ratelimit.class),
                     m.getDeclaredAnnotation(Payment.class),
                     cmd.desc(),
-                    cmd.owner(), pluginInstance, m));
+                    cmd.owner() || pluginAnnotation.owner(), pluginInstance, m));
             logger.info("Loaded plugin command '{}' for plugin '{}' ({})", s,
                     pluginAnnotation.name(), pluginClass.getName());
         }

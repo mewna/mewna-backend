@@ -77,7 +77,7 @@ public class CommandManager {
                     pluginAnnotation.name(), pluginClass.getName());
         }
         // Load metadata
-        if(!cmd.owner()) {
+        if(!cmd.owner() && !pluginAnnotation.owner()) {
             if(cmd.aliased()) {
                 final List<String> tmp = new ArrayList<>(Arrays.asList(cmd.names()));
                 final String name = tmp.remove(0);

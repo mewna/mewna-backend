@@ -2,6 +2,7 @@ package com.mewna.plugin.event.plugin.twitch;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
@@ -17,6 +18,7 @@ import java.util.List;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TwitchStreamData {
     @JsonProperty("user_id")
     private String userId;
@@ -35,4 +37,7 @@ public class TwitchStreamData {
     private String type;
     @JsonProperty("game_id")
     private String gameId;
+    @JsonProperty("user_name")
+    private String userName;
+    
 }

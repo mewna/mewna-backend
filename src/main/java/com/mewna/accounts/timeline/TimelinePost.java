@@ -5,10 +5,7 @@ import com.mewna.plugin.util.Snowflakes;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Value;
+import lombok.*;
 import org.json.JSONObject;
 
 import java.util.Map;
@@ -17,12 +14,15 @@ import java.util.Map;
  * @author amy
  * @since 6/25/18.
  */
-@Value
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Table("timeline_posts")
 @GIndex({"id", "author"})
 public class TimelinePost {
     @PrimaryKey
-    private final String id;
+    private String id;
     
     /**
      * Note: As of right now, this may refer to a {@link com.mewna.data.Player}
@@ -30,21 +30,21 @@ public class TimelinePost {
      * about how things really work.
      */
     @JsonProperty("author")
-    private final String author;
+    private String author;
     
     /**
      * If a post is marked as {@code system}, the {@link #content} field is NOT
      * interpreted as user-created text, but rather as a blob of JSON that
      * should be parsed to work out display etc. info.
      */
-    private final boolean system;
+    private boolean system;
     
     // tfw no unions feels bad man
     // So we only SOMETIMES want this to be text. When it's a `system` post, we
     // want this to be proper structured JSON that doesn't get serialized to a
     // string so that we can do some queries over it and stuff
     // V:
-    private final PostContent content;
+    private PostContent content;
     
     public static TimelinePost create(final String author, final boolean system, final String text) {
         return new TimelinePost(Snowflakes.getNewSnowflake(), author, system,
@@ -53,6 +53,7 @@ public class TimelinePost {
     }
     
     @Getter
+    @Setter
     @NoArgsConstructor
     @AllArgsConstructor
     @SuppressWarnings("WeakerAccess")

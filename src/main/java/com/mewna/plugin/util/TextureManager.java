@@ -6,7 +6,6 @@ import com.mewna.data.Player;
 import com.mewna.util.CacheUtil;
 import io.sentry.Sentry;
 import lombok.Getter;
-import net.dv8tion.jda.core.utils.IOUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,6 +77,17 @@ public final class TextureManager {
         }
     }
     
+    private static byte[] readFully(final InputStream stream) throws IOException {
+        final byte[] buffer = new byte[1024];
+        try(final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            int readAmount;
+            while((readAmount = stream.read(buffer)) != -1) {
+                bos.write(buffer, 0, readAmount);
+            }
+            return bos.toByteArray();
+        }
+    }
+    
     public static void preload(final Mewna mewna) {
         if(preloaded) {
             return;
@@ -95,7 +105,7 @@ public final class TextureManager {
             }
         });
         try(final InputStream is = CacheUtil.class.getResourceAsStream("/backgrounds/manifest.json")) {
-            final String json = new String(IOUtil.readFully(is));
+            final String json = new String(readFully(is));
             mewna.getPaypalHandler().loadBackgroundManifest(json);
         } catch(final IOException e) {
             Sentry.capture(e);
@@ -127,7 +137,7 @@ public final class TextureManager {
     
     private static void expireAvatar(final String id) {
         // expire in 1 day
-        Mewna.getInstance().getDatabase().redis(r -> r.expire(String.format(AVATAR_CACHE_KEY, id), 3600*24));
+        Mewna.getInstance().getDatabase().redis(r -> r.expire(String.format(AVATAR_CACHE_KEY, id), 3600 * 24));
     }
     
     @SuppressWarnings("WeakerAccess")

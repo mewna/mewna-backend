@@ -5,9 +5,9 @@ import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
 import com.mewna.plugin.event.BaseEvent;
 import com.mewna.plugin.event.EventType;
+import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import lombok.Value;
-import org.json.JSONObject;
 
 /**
  * @author amy
@@ -50,8 +50,8 @@ public class AudioTrackEvent extends BaseEvent {
         private String title;
         private String uri;
         
-        public static AudioTrackInfo fromJson(JSONObject o) {
-            return new AudioTrackInfo(o.getString("identifier"), o.getString("author"), o.getInt("length"),
+        public static AudioTrackInfo fromJson(final JsonObject o) {
+            return new AudioTrackInfo(o.getString("identifier"), o.getString("author"), o.getInteger("length"),
                     o.getBoolean("isStream"), o.getString("title"), o.getString("uri"));
         }
     }

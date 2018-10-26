@@ -10,7 +10,7 @@ import com.mewna.plugin.event.plugin.behaviour.AccountEvent;
 import com.mewna.plugin.event.plugin.behaviour.PlayerEvent;
 import com.mewna.plugin.event.plugin.behaviour.SystemUserEventType;
 import com.mewna.plugin.plugins.settings.BehaviourSettings;
-import org.json.JSONObject;
+import io.vertx.core.json.JsonObject;
 
 /**
  * @author amy
@@ -29,7 +29,7 @@ public class PluginBehaviour extends BasePlugin {
         handle(event.getAccount(), event.getType(), event.getData());
     }
     
-    private void handle(final Account account, final SystemUserEventType type, final JSONObject data) {
+    private void handle(final Account account, final SystemUserEventType type, final JsonObject data) {
         final TimelinePost post = TimelinePost.create(account.getId(), true, data
                 .put("type", type.getEventId()).toString());
         getDatabase().savePost(post);
@@ -73,7 +73,7 @@ public class PluginBehaviour extends BasePlugin {
                     .put("type", BACKGROUND.getEventId()).toString());
             getDatabase().savePost(post);
         }
-        getRestJDA().sendMessage(ctx.getChannel(), "Posting 1/6").queue();
+        getCatnip().sendMessage(ctx.getChannel(), "Posting 1/6").queue();
         Thread.sleep(60_000);
         {
             final TimelinePost post = TimelinePost.create(id, true, new JSONObject()
@@ -82,7 +82,7 @@ public class PluginBehaviour extends BasePlugin {
                     .put("type", DESCRIPTION.getEventId()).toString());
             getDatabase().savePost(post);
         }
-        getRestJDA().sendMessage(ctx.getChannel(), "Posting 2/6").queue();
+        getCatnip().sendMessage(ctx.getChannel(), "Posting 2/6").queue();
         Thread.sleep(60_000);
         {
             final TimelinePost post = TimelinePost.create(id, true, new JSONObject()
@@ -90,7 +90,7 @@ public class PluginBehaviour extends BasePlugin {
                     .put("type", GLOBAL_LEVEL.getEventId()).toString());
             getDatabase().savePost(post);
         }
-        getRestJDA().sendMessage(ctx.getChannel(), "Posting 3/6").queue();
+        getCatnip().sendMessage(ctx.getChannel(), "Posting 3/6").queue();
         Thread.sleep(60_000);
         {
             final TimelinePost post = TimelinePost.create(id, true, new JSONObject()
@@ -98,7 +98,7 @@ public class PluginBehaviour extends BasePlugin {
                     .put("type", MONEY.getEventId()).toString());
             getDatabase().savePost(post);
         }
-        getRestJDA().sendMessage(ctx.getChannel(), "Posting 4/6").queue();
+        getCatnip().sendMessage(ctx.getChannel(), "Posting 4/6").queue();
         Thread.sleep(60_000);
         {
             final TimelinePost post = TimelinePost.create(id, true, new JSONObject()
@@ -107,7 +107,7 @@ public class PluginBehaviour extends BasePlugin {
                     .put("type", TWITCH_STREAM.getEventId()).toString());
             getDatabase().savePost(post);
         }
-        getRestJDA().sendMessage(ctx.getChannel(), "Posting 5/6").queue();
+        getCatnip().sendMessage(ctx.getChannel(), "Posting 5/6").queue();
         Thread.sleep(60_000);
         {
             final TimelinePost post = TimelinePost.create(id, true, new JSONObject()
@@ -116,7 +116,7 @@ public class PluginBehaviour extends BasePlugin {
                     .put("type", TWITCH_STREAM.getEventId()).toString());
             getDatabase().savePost(post);
         }
-        getRestJDA().sendMessage(ctx.getChannel(), "Posting 6/6").queue();
+        getCatnip().sendMessage(ctx.getChannel(), "Posting 6/6").queue();
     }
     */
 }

@@ -3,6 +3,8 @@ package com.mewna.plugin.plugins;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mewna.cache.entity.User;
+import com.mewna.catnip.entity.builder.EmbedBuilder;
+import com.mewna.catnip.entity.builder.MessageBuilder;
 import com.mewna.data.Player.ClickerBuildings;
 import com.mewna.data.Player.ClickerData;
 import com.mewna.data.Player.ClickerTiers;
@@ -24,16 +26,14 @@ import com.mewna.plugin.plugins.settings.MiscSettings;
 import com.mewna.plugin.util.CurrencyHelper;
 import com.mewna.plugin.util.Emotes;
 import io.sentry.Sentry;
+import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.MessageBuilder;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.json.JSONObject;
 
 import javax.inject.Inject;
 import java.io.BufferedReader;
@@ -198,10 +198,12 @@ public class PluginMisc extends BasePlugin {
             @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
             final String cat = Objects.requireNonNull(client.newCall(new Request.Builder().get().url("https://aws.random.cat/meow").build())
                     .execute().body()).string();
-            final JSONObject json = new JSONObject(cat); // meow
-            getRestJDA().sendMessage(ctx.getChannel(), new EmbedBuilder().setTitle("Cat").setImage(json.getString("file")).build()).queue();
+            final JsonObject json = new JsonObject(cat); // meow
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    new EmbedBuilder().title("Cat").image(json.getString("file")).build());
         } catch(final IOException e) {
-            getRestJDA().sendMessage(ctx.getChannel(), "Couldn't find cat :(").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    "Couldn't find cat :(");
         }
     }
     
@@ -211,10 +213,12 @@ public class PluginMisc extends BasePlugin {
             @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
             final String dog = Objects.requireNonNull(client.newCall(new Request.Builder().get().url("https://random.dog/woof.json").build())
                     .execute().body()).string();
-            final JSONObject json = new JSONObject(dog); // woof
-            getRestJDA().sendMessage(ctx.getChannel(), new EmbedBuilder().setTitle("Dog").setImage(json.getString("url")).build()).queue();
+            final JsonObject json = new JsonObject(dog); // woof
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    new EmbedBuilder().title("Dog").image(json.getString("url")).build());
         } catch(final IOException e) {
-            getRestJDA().sendMessage(ctx.getChannel(), "Couldn't find dog :(").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    "Couldn't find dog :(");
         }
     }
     
@@ -225,45 +229,49 @@ public class PluginMisc extends BasePlugin {
             @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
             final String catgirl = Objects.requireNonNull(client.newCall(new Request.Builder().get().url("https://nekos.life/api/neko").build())
                     .execute().body()).string();
-            final JSONObject json = new JSONObject(catgirl); // nya
-            getRestJDA().sendMessage(ctx.getChannel(), new EmbedBuilder().setTitle("Catgirl").setImage(json.getString("neko")).build()).queue();
+            final JsonObject json = new JsonObject(catgirl); // nya
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    new EmbedBuilder().title("Catgirl").image(json.getString("neko")).build());
         } catch(final IOException e) {
-            getRestJDA().sendMessage(ctx.getChannel(), "Couldn't find catgirl :(").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    "Couldn't find catgirl :(");
         }
     }
     
     @Command(names = {"rubeface", "rf"}, desc = "Rubeface, the perfect meme for every situation.", usage = "rubeface",
             examples = "rubeface")
     public void rubeface(final CommandContext ctx) {
-        getRestJDA().sendMessage(ctx.getChannel(), new EmbedBuilder().setTitle("Rubeface").setImage(rubeface[getRandom().nextInt(rubeface.length)]).build()).queue();
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                new EmbedBuilder().title("Rubeface").image(rubeface[getRandom().nextInt(rubeface.length)]).build());
     }
     
     @Command(names = {"memetext", "bigtext", "mt"}, desc = "Convert stuff to big characters.", usage = "memetext <input>",
             examples = "memetext some text I want to be big!")
     public void memetext(final CommandContext ctx) {
         if(ctx.getArgstr().trim().isEmpty()) {
-            getRestJDA().sendMessage(ctx.getChannel(), "You need to give me something to meme!").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    "You need to give me something to meme!");
             return;
         }
         final StringBuilder sb = new StringBuilder();
         for(final char c : ctx.getArgstr().toCharArray()) {
             sb.append(MEMETEXT_MAP.getOrDefault(c, "" + c)).append(' ');
         }
-        getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + ": " + sb.toString().trim()
-                .replace("@everyone", "[haha very funny]")
-                .replace("@here", "[haha very funny]")).queue();
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                ctx.getUser().asMention() + ": " + sb.toString().trim()
+                        .replace("@everyone", "[haha very funny]")
+                        .replace("@here", "[haha very funny]"));
     }
-
-
-    @Command(names = "snowman", desc = "Do you want to build a snowman?", usage = "snowman", examples="snowman")
-    public void snowman(final CommandContext ctx){
-        getRestJDA().sendMessage(ctx.getChannel(), "<:snowman:496314615144251392>").queue();
+    
+    @Command(names = "snowman", desc = "Do you want to build a snowman?", usage = "snowman", examples = "snowman")
+    public void snowman(final CommandContext ctx) {
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "<:snowman:496314615144251392>");
     }
     
     @Command(names = {"bootlegcat", "blc"}, desc = "See a bootleg cat, for when mew.cat doesn't work.", usage = "bootlegcat",
             examples = "bootlegcat")
     public void bootlegcat(final CommandContext ctx) {
-        getRestJDA().sendMessage(ctx.getChannel(), "Do any of these describe YOU?\n" +
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Do any of these describe YOU?\n" +
                 '\n' +
                 Emotes.YES + " Slow internet speeds?\n" +
                 Emotes.YES + " Limited cellular data plan?\n" +
@@ -280,7 +288,7 @@ public class PluginMisc extends BasePlugin {
                 "|____|____|_U___|_U|____|____\n" +
                 "___|____|____|____|____|____|__\n" +
                 "__|____|____|____|____|____|____\n" +
-                "```").queue();
+                "```");
     }
     
     @Command(
@@ -303,9 +311,9 @@ public class PluginMisc extends BasePlugin {
     )
     public void emojify(final CommandContext ctx) {
         if(ctx.getArgstr() == null || ctx.getArgstr().isEmpty()) {
-            getRestJDA().sendMessage(ctx.getChannel(),
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
                     String.format("You need to give me something to %s!", ctx.getCommand().toLowerCase()))
-                    .queue();
+            ;
             return;
         }
         final String emoji;
@@ -331,23 +339,23 @@ public class PluginMisc extends BasePlugin {
         for(final String e : ctx.getArgstr().split("\\s+")) {
             s.append(e).append(' ').append(emoji).append(' ');
         }
-        getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + " > " + s.toString().trim()
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), ctx.getUser().asMention() + " > " + s.toString().trim()
                 .replace("@everyone", "[haha very funny]")
                 .replace("@here", "[haha very funny]")
-                .replace(ctx.getGuild().getId(), "haha no")).queue();
+                .replace(ctx.getGuild().getId(), "haha no"));
     }
     
     @Command(names = {"help", "?"}, desc = "Get links to helpful information.", usage = "help", examples = "help")
     public void help(final CommandContext ctx) {
         final EmbedBuilder builder = new EmbedBuilder();
-        builder.setTitle("Mewna help")
-                .addField("Dashboard", System.getenv("DOMAIN"), false)
-                .addField("Commands", System.getenv("DOMAIN") + "/discord/commands", false)
-                .addField("Support server", "https://discord.gg/UwdDN6r", false)
-                .addField("Follow us on Twitter!", "https://twitter.com/mewnabot", false)
-                .addField("", "Everything can be enabled / disabled in the dashboard.", false)
+        builder.title("Mewna help")
+                .field("Dashboard", System.getenv("DOMAIN"), false)
+                .field("Commands", System.getenv("DOMAIN") + "/discord/commands", false)
+                .field("Support server", "https://discord.gg/UwdDN6r", false)
+                .field("Follow us on Twitter!", "https://twitter.com/mewnabot", false)
+                .field("", "Everything can be enabled / disabled in the dashboard.", false)
         ;
-        getRestJDA().sendMessage(ctx.getChannel().getId(), builder.build()).queue();
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), builder.build());
     }
     
     @Command(names = {"roll", "r"}, desc = "Roll some dice, D&D style", usage = "roll <dice expression>",
@@ -361,19 +369,20 @@ public class PluginMisc extends BasePlugin {
         } catch(final Exception e) {
             message = "Invalid dice expression.";
         }
-        getRestJDA().sendMessage(ctx.getChannel(), message).queue();
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), message);
     }
     
     @Command(names = "ping", desc = "Check if Mewna's still working.", usage = "ping", examples = "ping")
     public void ping(final CommandContext ctx) {
         final long start = System.currentTimeMillis();
-        getRestJDA().sendMessage(ctx.getChannel(), "Pinging...").queue(msg -> {
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Pinging...").thenAccept(msg -> {
             final long end = System.currentTimeMillis();
-            getRestJDA().editMessage(ctx.getChannel(), msg.getIdLong(),
-                    new MessageBuilder().append("Pong! (took ").append(end - start).append("ms)").build()).queue();
+            getCatnip().rest().channel().editMessage(ctx.getChannel().getId(), msg.id(),
+                    new MessageBuilder().content("Pong! (took " + (end - start) + "ms)").build());
         });
     }
     
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Command(names = {"tato", "miner"}, desc = "Mewna Miner - Like Cookie Clicker, but tato-flavoured.",
             usage = {"tato", "tato help", "tato upgrade [buy <upgrade>]", "tato building [buy <building>]"/*,
                     "tato food [food[,food,...]]"*/},
@@ -393,15 +402,15 @@ public class PluginMisc extends BasePlugin {
                             "- View or buy buildings with `tato build [buy <name>]`.\n" +
                             //"- Feed your Mewna Miners with `tato food`.\n" +
                             "- Remember to check back regularly to get your tato!";
-                    getRestJDA().sendMessage(ctx.getChannel(), m).queue();
+                    getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), m);
                     break;
                 }
                 case "upgrades":
                 case "upgrade": {
                     if(args.isEmpty()) {
                         // List
-                        final EmbedBuilder builder = new EmbedBuilder();
-                        builder.setDescription("__**Upgrades**__\nUpgrades can be bought exactly once.");
+                        final EmbedBuilder builder = new EmbedBuilder()
+                                .description("__**Upgrades**__\nUpgrades can be bought exactly once.");
                         for(final ClickerUpgrades u : ClickerUpgrades.values()) {
                             final String body = u.getFlowers() + " " + currencyHelper.getCurrencySymbol(ctx);
                             final String check = data.getUpgrades().contains(u) ? Emotes.YES + ' ' : "";
@@ -414,27 +423,27 @@ public class PluginMisc extends BasePlugin {
                                 }
                             }
                             
-                            builder.addField(check + u.getName(), body + sb + "\n*" + u.getDesc() + '*',
+                            builder.field(check + u.getName(), body + sb + "\n*" + u.getDesc() + '*',
                                     false);
                         }
-                        getRestJDA().sendMessage(ctx.getChannel(), builder.build()).queue();
+                        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), builder.build());
                     } else {
                         final String action = args.remove(0);
                         switch(action) {
                             case "buy":
                             case "b": {
                                 if(args.isEmpty()) {
-                                    getRestJDA().sendMessage(ctx.getChannel(),
-                                            Emotes.NO + " You need to tell me what upgrade you want to buy!").queue();
+                                    getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                                            Emotes.NO + " You need to tell me what upgrade you want to buy!");
                                 } else {
                                     final String type = args.remove(0);
                                     final ClickerUpgrades upgrade = ClickerUpgrades.byName(type);
                                     if(upgrade == null) {
-                                        getRestJDA().sendMessage(ctx.getChannel(),
-                                                Emotes.NO + " That's not a real upgrade!").queue();
+                                        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                                                Emotes.NO + " That's not a real upgrade!");
                                     } else if(data.getUpgrades().contains(upgrade)) {
-                                        getRestJDA().sendMessage(ctx.getChannel(),
-                                                Emotes.NO + " You already have that upgrade, silly!").queue();
+                                        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                                                Emotes.NO + " You already have that upgrade, silly!");
                                     } else {
                                         // We check items first so that we don't take money on a failure
                                         final boolean hasItems = Arrays.stream(upgrade.getItems())
@@ -449,12 +458,12 @@ public class PluginMisc extends BasePlugin {
                                                 data.getUpgrades().add(upgrade);
                                                 ctx.getPlayer().setClickerData(data);
                                                 getDatabase().savePlayer(ctx.getPlayer());
-                                                getRestJDA().sendMessage(ctx.getChannel(),
-                                                        Emotes.YES + " You bought the `" + upgrade.getName() + "` upgrade.").queue();
+                                                getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                                                        Emotes.YES + " You bought the `" + upgrade.getName() + "` upgrade.");
                                             }
                                         } else {
-                                            getRestJDA().sendMessage(ctx.getChannel(),
-                                                    Emotes.NO + " You don't have the items needed to buy that!").queue();
+                                            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                                                    Emotes.NO + " You don't have the items needed to buy that!");
                                         }
                                     }
                                 }
@@ -470,8 +479,8 @@ public class PluginMisc extends BasePlugin {
                 case "build": {
                     if(args.isEmpty()) {
                         // List
-                        final EmbedBuilder builder = new EmbedBuilder();
-                        builder.setDescription("__**Buildings**__\nBuildings can be bought many times.");
+                        final EmbedBuilder builder = new EmbedBuilder()
+                                .description("__**Buildings**__\nBuildings can be bought many times.");
                         for(final ClickerBuildings u : ClickerBuildings.values()) {
                             final String body = u.getFlowers() + " " + currencyHelper.getCurrencySymbol(ctx);
                             final long amount = data.getBuildings().getOrDefault(u, 0L);
@@ -485,10 +494,10 @@ public class PluginMisc extends BasePlugin {
                             }
                             
                             // lol
-                            builder.addField(u.getName() + " (you have: " + amount + ')', body + sb + "\n*"
+                            builder.field(u.getName() + " (you have: " + amount + ')', body + sb + "\n*"
                                     + u.getDesc() + "*\nOutput: " + u.getOutput() + " tato per second", false);
                         }
-                        getRestJDA().sendMessage(ctx.getChannel(), builder.build()).queue();
+                        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), builder.build());
                         break;
                     } else {
                         final String action = args.remove(0);
@@ -496,14 +505,14 @@ public class PluginMisc extends BasePlugin {
                             case "buy":
                             case "b": {
                                 if(args.isEmpty()) {
-                                    getRestJDA().sendMessage(ctx.getChannel(),
-                                            Emotes.NO + " You need to tell me what upgrade you want to buy!").queue();
+                                    getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                                            Emotes.NO + " You need to tell me what upgrade you want to buy!");
                                 } else {
                                     final String type = args.remove(0);
                                     final ClickerBuildings building = ClickerBuildings.byName(type);
                                     if(building == null) {
-                                        getRestJDA().sendMessage(ctx.getChannel(),
-                                                Emotes.NO + " That's not a real building!").queue();
+                                        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                                                Emotes.NO + " That's not a real building!");
                                     } else {
                                         // We check items first so that we don't take money on a failure
                                         final boolean hasItems = Arrays.stream(building.getItems())
@@ -522,12 +531,12 @@ public class PluginMisc extends BasePlugin {
                                                 }
                                                 ctx.getPlayer().setClickerData(data);
                                                 getDatabase().savePlayer(ctx.getPlayer());
-                                                getRestJDA().sendMessage(ctx.getChannel(),
-                                                        Emotes.YES + " You bought a `" + building.getName() + "`.").queue();
+                                                getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                                                        Emotes.YES + " You bought a `" + building.getName() + "`.");
                                             }
                                         } else {
-                                            getRestJDA().sendMessage(ctx.getChannel(),
-                                                    Emotes.NO + " You don't have the items needed to buy that!").queue();
+                                            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                                                    Emotes.NO + " You don't have the items needed to buy that!");
                                         }
                                     }
                                 }
@@ -543,9 +552,9 @@ public class PluginMisc extends BasePlugin {
                 }
                 */
                 case "top": {
-                    getRestJDA().sendMessage(ctx.getChannel(), Emotes.LOADING_ICON
+                    getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), Emotes.LOADING_ICON
                             + " Counting tato (this will take a few seconds)")
-                            .queue(msg -> pool.execute(() -> {
+                            .thenAccept(msg -> pool.execute(() -> {
                                 final String query = "SELECT id, (data->'clickerData'->>'totalClicks') AS clicks FROM players " +
                                         "WHERE (data->'clickerData'->>'totalClicks')::bigint > 0 " +
                                         "ORDER BY (data->'clickerData'->>'totalClicks')::bigint DESC " +
@@ -560,14 +569,14 @@ public class PluginMisc extends BasePlugin {
                                         rows.add("**" + user.getName() + '#' + user.getDiscriminator() + "** - " + clicks + " tato");
                                     }
                                     final String res = "__Mewna Miner Leaderboards__\n\n" + String.join("\n", rows);
-                                    getRestJDA().editMessage(ctx.getChannel(), msg.getIdLong(),
-                                            new MessageBuilder().setContent(res).build()).queue();
+                                    getCatnip().rest().channel().editMessage(ctx.getChannel().getId(), msg.id(),
+                                            new MessageBuilder().content(res).build());
                                 });
                             }));
                     break;
                 }
                 default: {
-                    getRestJDA().sendMessage(ctx.getChannel(), Emotes.NO + " I don't know how to do that...").queue();
+                    getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), Emotes.NO + " I don't know how to do that...");
                     break;
                 }
             }
@@ -624,7 +633,7 @@ public class PluginMisc extends BasePlugin {
                 .append("(Try `").append(ctx.getPrefix()).append(ctx.getCommand()).append(" help` if you're confused)");
         
         // Finally, display
-        getRestJDA().sendMessage(ctx.getChannel(), ctx.getUser().asMention() + "'s tato stats:\n" + stats).queue();
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), ctx.getUser().asMention() + "'s tato stats:\n" + stats);
     }
     
     @Command(names = "dnd", desc = "Get useful information for your D&D 5e game.", usage = {
@@ -711,7 +720,7 @@ public class PluginMisc extends BasePlugin {
                                             && e.getLevel().equalsIgnoreCase(args.get(1)))
                                     .collect(Collectors.toList());
                             final EmbedBuilder builder = new EmbedBuilder()
-                                    .setTitle(String.format("%s %s spells", StringUtils.capitalize(args.get(0)), level), null);
+                                    .title(String.format("%s %s spells", StringUtils.capitalize(args.get(0)), level));
                             final StringBuilder sb = new StringBuilder();
                             for(final XSpell spell : spells) {
                                 final String[] split = spell.getClasses().split(", ");
@@ -732,7 +741,7 @@ public class PluginMisc extends BasePlugin {
                                 }
                                 sb.append('\n');
                             }
-                            sendEmbedResponse(ctx, builder.addField("Spells", sb.toString(), false));
+                            sendEmbedResponse(ctx, builder.field("Spells", sb.toString(), false));
                             return;
                         }
                     }
@@ -861,66 +870,69 @@ public class PluginMisc extends BasePlugin {
     }
     
     private void sendResponse(final CommandContext ctx, final String res) {
-        getRestJDA().sendMessage(ctx.getChannel(), res).queue();
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), res);
     }
     
     private void sendEmbedResponse(final CommandContext ctx, final EmbedBuilder builder) {
-        getRestJDA().sendMessage(ctx.getChannel(), builder.build()).queue();
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), builder.build());
     }
     
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private EmbedBuilder sendRace(final XRace race) {
-        final EmbedBuilder builder = new EmbedBuilder().setTitle(race.getName(), null);
-        builder.addField("Size", race.getSize(), false)
-                .addField("Speed", race.getSpeed() + "ft", false);
+        final EmbedBuilder builder = new EmbedBuilder().title(race.getName());
+        builder.field("Size", race.getSize(), false)
+                .field("Speed", race.getSpeed() + "ft", false);
         if(!race.getAbility().equalsIgnoreCase("None")) {
-            builder.addField("Ability", race.getAbility(), false);
+            builder.field("Ability", race.getAbility(), false);
         }
         if(!race.getProficiency().equalsIgnoreCase("None")) {
-            builder.addField("Proficiency", race.getProficiency(), false);
+            builder.field("Proficiency", race.getProficiency(), false);
         }
         if(!race.getTraits().isEmpty()) {
             for(int i = 0; i < race.getTraits().size(); i++) {
                 final Trait trait = race.getTraits().get(i);
-                builder.addField("Trait " + (i + 1), trait.getName(), false);
+                builder.field("Trait " + (i + 1), trait.getName(), false);
                 for(int j = 0; j < trait.getText().size(); j++) {
-                    builder.addField("Trait " + (i + 1) + '.' + (j + 1), trait.getText().get(j), false);
+                    builder.field("Trait " + (i + 1) + '.' + (j + 1), trait.getText().get(j), false);
                 }
             }
         }
         return builder;
     }
     
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private EmbedBuilder sendFeat(final XFeat feat) {
-        final EmbedBuilder builder = new EmbedBuilder().setTitle(feat.getName(), null);
+        final EmbedBuilder builder = new EmbedBuilder().title(feat.getName());
         if(!feat.getPrereq().equalsIgnoreCase("None")) {
-            builder.addField("Prerequisite", feat.getPrereq(), false);
+            builder.field("Prerequisite", feat.getPrereq(), false);
         }
         if(!feat.getText().isEmpty()) {
             for(int i = 0; i < feat.getText().size(); i++) {
-                builder.addField("Text " + (i + 1), feat.getText().get(i), false);
+                builder.field("Text " + (i + 1), feat.getText().get(i), false);
             }
         }
         
         if(!feat.getModifiers().isEmpty()) {
             for(int i = 0; i < feat.getModifiers().size(); i++) {
                 final Modifier modifier = feat.getModifiers().get(i);
-                builder.addField("Modifier " + (i + 1), String.format("%s\n%s", modifier.getCategory(), modifier.getText()), false);
+                builder.field("Modifier " + (i + 1), String.format("%s\n%s", modifier.getCategory(), modifier.getText()), false);
             }
         }
         return builder;
     }
     
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private EmbedBuilder sendItem(final XItem item) {
-        final EmbedBuilder builder = new EmbedBuilder().setTitle(item.getName(), null);
+        final EmbedBuilder builder = new EmbedBuilder().title(item.getName());
         if(!item.getType().equalsIgnoreCase("None")) {
-            builder.addField("Type", item.getType(), false);
+            builder.field("Type", item.getType(), false);
         }
         if(!item.getValue().equalsIgnoreCase("None")) {
-            builder.addField("Value", item.getValue(), false);
+            builder.field("Value", item.getValue(), false);
         }
         
         if(!item.getWeight().equalsIgnoreCase("None")) {
-            builder.addField("Weight", item.getWeight(), false);
+            builder.field("Weight", item.getWeight(), false);
         }
         
         if(!item.getDmg1().equalsIgnoreCase("None")) {
@@ -928,97 +940,100 @@ public class PluginMisc extends BasePlugin {
             if(!item.getDmg2().equalsIgnoreCase("None")) {
                 damage += " (" + item.getDmg2() + ')';
             }
-            builder.addField("Damage", damage, false);
+            builder.field("Damage", damage, false);
         }
         if(!item.getDmgType().equalsIgnoreCase("None")) {
-            builder.addField("Damage Type", item.getDmgType(), false);
+            builder.field("Damage Type", item.getDmgType(), false);
         }
         if(!item.getProperty().equalsIgnoreCase("None")) {
-            builder.addField("Properties", item.getProperty(), false);
+            builder.field("Properties", item.getProperty(), false);
         }
         if(!item.getRange().equalsIgnoreCase("None")) {
-            builder.addField("Range", item.getRange(), false);
+            builder.field("Range", item.getRange(), false);
         }
         if(!item.getRoll().isEmpty()) {
             for(int i = 0; i < item.getRoll().size(); i++) {
-                builder.addField("Roll " + (i + 1), item.getRoll().get(i), false);
+                builder.field("Roll " + (i + 1), item.getRoll().get(i), false);
             }
         }
         if(!item.getText().isEmpty()) {
             for(int i = 0; i < item.getText().size(); i++) {
-                builder.addField("Text " + (i + 1), item.getText().get(i), false);
+                builder.field("Text " + (i + 1), item.getText().get(i), false);
             }
         }
         return builder;
     }
     
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private EmbedBuilder sendMagicItem(final XMagicItem magicItem) {
-        final EmbedBuilder builder = new EmbedBuilder().setTitle(magicItem.getName(), null);
-        builder.addField("Type", magicItem.getType(), false);
+        final EmbedBuilder builder = new EmbedBuilder().title(magicItem.getName());
+        builder.field("Type", magicItem.getType(), false);
         for(int i = 0; i < magicItem.getText().size(); i++) {
-            builder.addField("Text " + (i + 1), magicItem.getText().get(i), false);
+            builder.field("Text " + (i + 1), magicItem.getText().get(i), false);
         }
         return builder;
     }
     
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private EmbedBuilder sendSpell(final XSpell spell) {
-        final EmbedBuilder builder = new EmbedBuilder().setTitle(spell.getName(), null)
-                .addField("Type", spell.getSchool(), false)
-                .addField("Class", spell.getClasses(), false)
-                .addField("Level", spell.getLevel(), false)
-                .addField("Target", spell.getRange(), false)
-                .addField("Casting time", spell.getTime(), false)
-                .addField("Duration", spell.getDuration(), false)
-                .addField("Components", spell.getComponents(), false);
+        final EmbedBuilder builder = new EmbedBuilder().title(spell.getName())
+                .field("Type", spell.getSchool(), false)
+                .field("Class", spell.getClasses(), false)
+                .field("Level", spell.getLevel(), false)
+                .field("Target", spell.getRange(), false)
+                .field("Casting time", spell.getTime(), false)
+                .field("Duration", spell.getDuration(), false)
+                .field("Components", spell.getComponents(), false);
         for(int i = 0; i < spell.getText().size(); i++) {
-            builder.addField("Text " + (i + 1), spell.getText().get(i), false);
+            builder.field("Text " + (i + 1), spell.getText().get(i), false);
         }
         return builder;
     }
     
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private EmbedBuilder sendMonster(final XMonster monster) {
-        final EmbedBuilder builder = new EmbedBuilder().setTitle(monster.getName(), null)
-                .addField("Type", monster.getType(), false)
-                .addField("Size", monster.getSize(), false)
-                .addField("Alignment", monster.getAlignment(), false)
-                .addField("AC", String.format("%s", monster.getAc()), false)
-                .addField("HP", String.format("%s\n**%s**", monster.getHp(), monster.getSave()), false)
-                .addField("Speed", monster.getSpeed(), false)
-                .addField("Ability scores",
+        final EmbedBuilder builder = new EmbedBuilder().title(monster.getName())
+                .field("Type", monster.getType(), false)
+                .field("Size", monster.getSize(), false)
+                .field("Alignment", monster.getAlignment(), false)
+                .field("AC", String.format("%s", monster.getAc()), false)
+                .field("HP", String.format("%s\n**%s**", monster.getHp(), monster.getSave()), false)
+                .field("Speed", monster.getSpeed(), false)
+                .field("Ability scores",
                         String.format("STR: %s\nDEX: %s\nCON: %s\nINT: %s\nWIS: %s\nCHA:%s\n",
                                 monster.getStrength(), monster.getDexterity(), monster.getConstitution(),
                                 monster.getIntelligence(), monster.getWisdom(), monster.getCharisma()), false)
-                .addField("Senses", monster.getSenses(), false)
-                .addField("Languages", monster.getLanguages(), false)
-                .addField("CR", monster.getCr(), false);
+                .field("Senses", monster.getSenses(), false)
+                .field("Languages", monster.getLanguages(), false)
+                .field("CR", monster.getCr(), false);
         
         for(int i = 0; i < monster.getActions().size(); i++) {
             final Action action = monster.getActions().get(i);
-            builder.addField("Action " + (i + 1), action.getName(), false);
+            builder.field("Action " + (i + 1), action.getName(), false);
             for(int j = 0; j < action.getText().size(); j++) {
-                builder.addField("Action " + (i + 1) + '.' + (j + 1), action.getText().get(j), false);
+                builder.field("Action " + (i + 1) + '.' + (j + 1), action.getText().get(j), false);
             }
             for(int j = 0; j < action.getAttack().size(); j++) {
-                builder.addField("Action " + (i + 1) + '.' + (j + 1), action.getAttack().get(j), false);
+                builder.field("Action " + (i + 1) + '.' + (j + 1), action.getAttack().get(j), false);
             }
         }
         
         for(int i = 0; i < monster.getTraits().size(); i++) {
             final Trait trait = monster.getTraits().get(i);
-            builder.addField("Trait " + (i + 1), trait.getName(), false);
+            builder.field("Trait " + (i + 1), trait.getName(), false);
             for(int j = 0; j < trait.getText().size(); j++) {
-                builder.addField("Trait " + (i + 1) + '.' + (j + 1), trait.getText().get(j), false);
+                builder.field("Trait " + (i + 1) + '.' + (j + 1), trait.getText().get(j), false);
             }
         }
         
         for(int i = 0; i < monster.getLegendaries().size(); i++) {
             final Legendary action = monster.getLegendaries().get(i);
-            builder.addField("Legendary " + (i + 1), action.getName(), false);
+            builder.field("Legendary " + (i + 1), action.getName(), false);
             for(int j = 0; j < action.getText().size(); j++) {
-                builder.addField("Legendary " + (i + 1) + '.' + (j + 1), action.getText().get(j), false);
+                builder.field("Legendary " + (i + 1) + '.' + (j + 1), action.getText().get(j), false);
             }
             for(int j = 0; j < action.getAttack().size(); j++) {
-                builder.addField("Legendary " + (i + 1) + '.' + (j + 1), action.getAttack().get(j), false);
+                builder.field("Legendary " + (i + 1) + '.' + (j + 1), action.getAttack().get(j), false);
             }
         }
         return builder;

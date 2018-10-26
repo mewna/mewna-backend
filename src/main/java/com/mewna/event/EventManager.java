@@ -9,6 +9,7 @@ import com.mewna.cache.DiscordCache;
 import com.mewna.cache.entity.Channel;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
+import com.mewna.catnip.entity.message.MessageType;
 import com.mewna.queue.SocketEvent;
 import com.mewna.plugin.event.audio.AudioTrackEvent;
 import com.mewna.plugin.event.audio.AudioTrackEvent.AudioTrackInfo;
@@ -19,10 +20,9 @@ import com.mewna.plugin.event.message.MessageDeleteEvent;
 import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import com.mewna.plugin.event.plugin.twitch.*;
 import io.sentry.Sentry;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import lombok.Getter;
-import net.dv8tion.jda.core.entities.MessageType;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,19 +55,19 @@ public class EventManager {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     @Getter
     private final DiscordCache cache;
-    private final Map<String, BiConsumer<SocketEvent, JSONObject>> handlers = new HashMap<>();
+    private final Map<String, BiConsumer<SocketEvent, JsonObject>> handlers = new HashMap<>();
     
     public EventManager(final Mewna mewna) {
         this.mewna = mewna;
         cache = new DiscordCache(mewna);
         // Members
         handlers.put(GUILD_MEMBER_ADD, (event, data) -> {
-            final JSONObject user = data.getJSONObject("user");
+            final JsonObject user = data.getJsonObject("user");
             final Guild guild = cache.getGuild(data.getString("guild_id"));
             if(guild.getId() == null) {
                 return;
             }
-            if(user.has("id") && user.optString("id") != null) {
+            if(user.containsKey("id") && user.getString("id", null) != null) {
                 mewna.getPluginManager().processEvent(event.getType(),
                         new GuildMemberAddEvent(guild, cache.getMember(guild, cache.getUser(user.getString("id")))));
             }
@@ -78,9 +78,10 @@ public class EventManager {
                 return;
             }
     
-            final JSONObject u = data.getJSONObject("user");
+            final JsonObject u = data.getJsonObject("user");
             final User user = new User(u.getString("id"), u.getString("username"), u.getString("discriminator"),
-                    u.has("avatar") ? u.optString("avatar") : null, u.has("bot") && u.getBoolean("bot"));
+                    u.containsKey("avatar") ? u.getString("avatar", null) : null,
+                    u.containsKey("bot") && u.getBoolean("bot", false));
     
             mewna.getPluginManager().processEvent(event.getType(), new GuildMemberRemoveEvent(guild, user));
         });
@@ -108,7 +109,7 @@ public class EventManager {
             // CHANNEL_ICON_CHANGE      5
             // CHANNEL_PINNED_MESSAGE   6
             // GUILD_MEMBER_JOIN        7
-            if(!data.isNull("webhook_id") || data.getInt("type") != MessageType.DEFAULT.getId()) {
+            if(data.containsKey("webhook_id") || data.getInteger("type") != MessageType.DEFAULT.getId()) {
                 return;
             }
             // This will pass down to the event handler, so we don't need to worry about it here
@@ -121,7 +122,7 @@ public class EventManager {
         });
         handlers.put(MESSAGE_DELETE_BULK, (event, data) -> {
             // Would have to cache messages...
-            final JSONArray jsonArray = data.getJSONArray("ids");
+            final JsonArray jsonArray = data.getJsonArray("ids");
             final List<String> list = new ArrayList<>();
             jsonArray.forEach(e -> list.add((String) e));
             mewna.getPluginManager().processEvent(event.getType(),
@@ -176,8 +177,8 @@ public class EventManager {
         
         // Twitch events
         handlers.put(TWITCH_FOLLOWER, (event, data) -> {
-            final String from = data.getJSONObject("from").toString();
-            final String to = data.getJSONObject("to").toString();
+            final String from = data.getJsonObject("from").toString();
+            final String to = data.getJsonObject("to").toString();
             try {
                 final TwitchStreamer fromStreamer = MAPPER.readValue(from, TwitchStreamer.class);
                 final TwitchStreamer toStreamer = MAPPER.readValue(to, TwitchStreamer.class);
@@ -188,8 +189,8 @@ public class EventManager {
             }
         });
         handlers.put(TWITCH_STREAM_START, (event, data) -> {
-            final String streamerDataString = data.getJSONObject("streamer").toString();
-            final String streamDataString = data.getJSONObject("streamData").toString();
+            final String streamerDataString = data.getJsonObject("streamer").toString();
+            final String streamDataString = data.getJsonObject("streamData").toString();
             try {
                 final TwitchStreamer streamer = MAPPER.readValue(streamerDataString, TwitchStreamer.class);
                 final TwitchStreamData streamData = MAPPER.readValue(streamDataString, TwitchStreamData.class);
@@ -201,7 +202,7 @@ public class EventManager {
         });
         handlers.put(TWITCH_STREAM_END, (event, data) -> {
             try {
-                final TwitchStreamer streamer = MAPPER.readValue(data.getJSONObject("streamer").toString(), TwitchStreamer.class);
+                final TwitchStreamer streamer = MAPPER.readValue(data.getJsonObject("streamer").toString(), TwitchStreamer.class);
                 mewna.getPluginManager().processEvent(event.getType(), new TwitchStreamEndEvent(streamer));
             } catch(final IOException e) {
                 Sentry.capture(e);
@@ -210,13 +211,13 @@ public class EventManager {
         });
     }
     
-    private AudioTrackEvent createAudioEvent(final TrackMode mode, final JSONObject data) {
-        final JSONObject ctx = data.getJSONObject("ctx");
+    private AudioTrackEvent createAudioEvent(final TrackMode mode, final JsonObject data) {
+        final JsonObject ctx = data.getJsonObject("ctx");
         final Guild guild = cache.getGuild(ctx.getString("guild"));
         final Channel channel = cache.getChannel(ctx.getString("channel"));
         final User user = cache.getUser(ctx.getString("userId"));
-        if(data.has("info") && !data.isNull("info")) {
-            final AudioTrackInfo info = AudioTrackInfo.fromJson(data.getJSONObject("info"));
+        if(data.containsKey("info") && data.getJsonObject("info", null) != null) {
+            final AudioTrackInfo info = AudioTrackInfo.fromJson(data.getJsonObject("info"));
             return new AudioTrackEvent(mode, guild, channel, user, info);
         } else {
             return new AudioTrackEvent(mode, guild, channel, user, null);

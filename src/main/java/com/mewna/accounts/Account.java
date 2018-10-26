@@ -9,8 +9,8 @@ import com.mewna.plugin.util.TextureManager;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
+import io.vertx.core.json.JsonObject;
 import lombok.*;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,9 +55,9 @@ public class Account {
     
     // Configuration
     
-    boolean validateSettings(final JSONObject data) {
-        if(data.has("aboutText")) {
-            final String aboutText = data.optString("aboutText");
+    boolean validateSettings(final JsonObject data) {
+        if(data.getMap().containsKey("aboutText")) {
+            final String aboutText = data.getString("aboutText", null);
             if(aboutText == null || aboutText.isEmpty()) {
                 return false;
             }
@@ -65,8 +65,8 @@ public class Account {
                 return false;
             }
         }
-        if(data.has("customBackground")) {
-            String bg = data.optString("customBackground");
+        if(data.getMap().containsKey("customBackground")) {
+            String bg = data.getString("customBackground", null);
             if(bg == null || bg.isEmpty()) {
                 return false;
             }
@@ -92,15 +92,15 @@ public class Account {
         return true;
     }
     
-    void updateSettings(final Database database, final JSONObject data) {
+    void updateSettings(final Database database, final JsonObject data) {
         final String id = data.getString("id");
         final AccountBuilder builder = database.getAccountById(id).map(Account::toBuilder).orElse(builder());
         int changes = 0;
-        if(data.has("aboutText")) {
+        if(data.getMap().containsKey("aboutText")) {
             if(!builder.aboutText.equals(data.getString("aboutText"))) {
                 Mewna.getInstance().getPluginManager().processEvent(EventType.ACCOUNT_EVENT,
                         new AccountEvent(SystemUserEventType.DESCRIPTION, this,
-                                new JSONObject()
+                                new JsonObject()
                                         .put("old", builder.aboutText)
                                         .put("new", data.getString("aboutText"))
                         ));
@@ -108,11 +108,11 @@ public class Account {
             builder.aboutText(data.getString("aboutText"));
             ++changes;
         }
-        if(data.has("customBackground")) {
+        if(data.getMap().containsKey("customBackground")) {
             if(!builder.customBackground.equals("/backgrounds/" + data.getString("customBackground"))) {
                 Mewna.getInstance().getPluginManager().processEvent(EventType.ACCOUNT_EVENT,
                         new AccountEvent(SystemUserEventType.BACKGROUND, this,
-                                new JSONObject().put("bg", "/backgrounds/" + data.getString("customBackground"))));
+                                new JsonObject().put("bg", "/backgrounds/" + data.getString("customBackground"))));
             }
             builder.customBackground("/backgrounds/" + data.getString("customBackground"));
             ++changes;

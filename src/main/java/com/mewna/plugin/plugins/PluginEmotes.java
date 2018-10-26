@@ -17,7 +17,7 @@ public class PluginEmotes extends BasePlugin {
             examples = {"bap someone", "stab someone else", "poke everyone"}, aliased = false)
     public void emote(final CommandContext ctx) {
         if(ctx.getArgstr().isEmpty()) {
-            getRestJDA().sendMessage(ctx.getChannel(), "You need to tell me who you're doing that to.").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You need to tell me who you're doing that to.");
             return;
         }
         final String action;
@@ -62,10 +62,10 @@ public class PluginEmotes extends BasePlugin {
                 action = "hit by an unknown action";
                 break;
         }
-        getRestJDA().sendMessage(ctx.getChannel(), String.format("%s, you were %s by %s!",
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), String.format("%s, you were %s by %s!",
                 ctx.getArgstr().replaceAll("@everyone", "very funny")
                         .replaceAll("@here", "nice try")
                         .replaceAll(ctx.getGuild().getId(), "haha no"),
-                action, ctx.getUser().getName())).queue();
+                action, ctx.getUser().getName()));
     }
 }

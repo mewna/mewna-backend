@@ -21,7 +21,7 @@ public class PluginMusic extends BasePlugin {
                 .addBlankField(true)
                 .addField("Artist", event.getInfo().getAuthor(), true)
                 .addField("Length", Time.toHumanReadableDuration(event.getInfo().getLength()), true);
-        getRestJDA().sendMessage(channel, builder.build()).queue();
+        getCatnip().sendMessage(channel, builder.build()).queue();
     }
     
     @Event(EventType.AUDIO_TRACK_START)
@@ -33,7 +33,7 @@ public class PluginMusic extends BasePlugin {
                 .addBlankField(true)
                 .addField("Artist", event.getInfo().getAuthor(), true)
                 .addField("Length", Time.toHumanReadableDuration(event.getInfo().getLength()), true);
-        getRestJDA().sendMessage(channel, builder.build()).queue();
+        getCatnip().sendMessage(channel, builder.build()).queue();
     }
     
     @Event(EventType.AUDIO_QUEUE_END)
@@ -41,7 +41,7 @@ public class PluginMusic extends BasePlugin {
         final Channel channel = event.getChannel();
         final EmbedBuilder builder = new EmbedBuilder();
         builder.setTitle(Emotes.YES + " Queue ended");
-        getRestJDA().sendMessage(channel, builder.build()).queue();
+        getCatnip().sendMessage(channel, builder.build()).queue();
     }
     
     @Event(EventType.AUDIO_TRACK_NOW_PLAYING)
@@ -53,20 +53,20 @@ public class PluginMusic extends BasePlugin {
                 .addBlankField(true)
                 .addField("Artist", event.getInfo().getAuthor(), true)
                 .addField("Length", Time.toHumanReadableDuration(event.getInfo().getLength()), true);
-        getRestJDA().sendMessage(channel, builder.build()).queue();
+        getCatnip().sendMessage(channel, builder.build()).queue();
     }
     
     @Command(names = "join", desc = "Bring Mewna into a voice channel with you.", usage = "join", examples = "join")
     public void join(final CommandContext ctx) {
         final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
         if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-            getRestJDA().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
+            getCatnip().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
         } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE || check == VoiceCheck.SELF_AND_USER_IN_SAME_VOICE) {
-            getRestJDA().sendMessage(ctx.getChannel(), "I'm already in a voice channel! If this isn't right, try doing `"
+            getCatnip().sendMessage(ctx.getChannel(), "I'm already in a voice channel! If this isn't right, try doing `"
                     + ctx.getPrefix() + "leave --force`.").queue();
         } else {
             final VoiceState state = getMewna().getCache().getVoiceState(ctx.getUser().getId());
-            getRestJDA().sendMessage(ctx.getChannel(), "Connecting to voice channel #"
+            getCatnip().sendMessage(ctx.getChannel(), "Connecting to voice channel #"
                     + ctx.getChannel().getName()).queue();
             getLogger().info("Attempting join -> voice channel {}#{}", ctx.getGuild().getId(),
                     state.getChannel().getId());
@@ -93,11 +93,11 @@ public class PluginMusic extends BasePlugin {
         }
         final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
         if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-            getRestJDA().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
+            getCatnip().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
         } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-            getRestJDA().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
+            getCatnip().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
         } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-            getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel! If this isn't right, try doing `"
+            getCatnip().sendMessage(ctx.getChannel(), "I'm not in a voice channel! If this isn't right, try doing `"
                     + ctx.getPrefix() + "leave --force`.").queue();
         } else {
             final VoiceState state = getMewna().getCache().getSelfVoiceState(ctx.getGuild().getId());
@@ -114,14 +114,14 @@ public class PluginMusic extends BasePlugin {
     public void queue(final CommandContext ctx) {
         final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
         if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-            getRestJDA().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
+            getCatnip().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
         } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-            getRestJDA().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
+            getCatnip().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
         } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-            getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel!").queue();
+            getCatnip().sendMessage(ctx.getChannel(), "I'm not in a voice channel!").queue();
         } else {
             if(ctx.getArgs().isEmpty()) {
-                getRestJDA().sendMessage(ctx.getChannel(), "You need to give me something to queue!").queue();
+                getCatnip().sendMessage(ctx.getChannel(), "You need to give me something to queue!").queue();
             } else {
                 getMewna().getNats().pushAudioEvent("AUDIO_QUEUE", new JSONObject()
                         .put("ctx", ctxToAudioCtx(ctx)).put("track", String.join(" ", ctx.getArgs())));
@@ -133,11 +133,11 @@ public class PluginMusic extends BasePlugin {
     public void skip(final CommandContext ctx) {
         final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
         if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-            getRestJDA().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
+            getCatnip().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
         } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-            getRestJDA().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
+            getCatnip().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
         } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-            getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel!").queue();
+            getCatnip().sendMessage(ctx.getChannel(), "I'm not in a voice channel!").queue();
         } else {
             getMewna().getNats().pushAudioEvent("AUDIO_PLAY", new JSONObject()
                     .put("ctx", ctxToAudioCtx(ctx)).put("track", String.join(" ", ctx.getArgs())));
@@ -148,11 +148,11 @@ public class PluginMusic extends BasePlugin {
     public void play(final CommandContext ctx) {
         final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
         if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-            getRestJDA().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
+            getCatnip().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
         } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-            getRestJDA().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
+            getCatnip().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
         } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-            getRestJDA().sendMessage(ctx.getChannel(), "I'm not in a voice channel!").queue();
+            getCatnip().sendMessage(ctx.getChannel(), "I'm not in a voice channel!").queue();
         } else {
             getMewna().getNats().pushAudioEvent("AUDIO_PLAY", new JSONObject()
                     .put("ctx", ctxToAudioCtx(ctx)).put("track", String.join(" ", ctx.getArgs())));

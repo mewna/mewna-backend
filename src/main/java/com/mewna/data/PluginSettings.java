@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
 import com.mewna.plugin.CommandManager.CommandWrapper;
 import io.sentry.Sentry;
-import org.json.JSONObject;
+import io.vertx.core.json.JsonObject;
 
 import java.io.IOException;
 import java.util.*;
@@ -64,11 +64,11 @@ public interface PluginSettings {
      *
      * @return {@code true} if the data is valid, {@code false} otherwise.
      */
-    boolean validateSettings(JSONObject data);
+    boolean validateSettings(JsonObject data);
     
     /**
      * Actually updates the settings in the database. This may catch validation
-     * errors that {@link #validateSettings(JSONObject)} and {@link #validate(JSONObject)}
+     * errors that {@link #validateSettings(JsonObject)} and {@link #validate(JsonObject)}
      * did not catch, and will return false in that specific case.
      * <p/>
      * This should be pure <b>IN THE CASE OF FAILURE ONLY</b>. Specifically,
@@ -83,36 +83,33 @@ public interface PluginSettings {
      * @return {@code true} if the operation succeeded, {@code false} if some
      * invalid data still made it through.
      */
-    boolean updateSettings(Database database, JSONObject data);
+    boolean updateSettings(Database database, JsonObject data);
     
     /**
-     * Actually does the validation. Will call {@link #validateSettings(JSONObject)}
+     * Actually does the validation. Will call {@link #validateSettings(JsonObject)}
      * after validating {@code commandSettings}
      *
      * @param data The data to validate
      *
      * @return {@code true} if the data is valid, {@code false} otherwise.
      */
-    default boolean validate(final JSONObject data) {
+    default boolean validate(final JsonObject data) {
         // validate commandSettings
-        if(data.has("commandSettings") && !data.isNull("commandSettings")) {
-            final Optional<JSONObject> maybeSettings = Optional.ofNullable(data.optJSONObject("commandSettings"));
-            if(maybeSettings.isPresent()) {
-                final JSONObject commandSettings = maybeSettings.get();
-                final Set<String> keys = commandSettings.keySet();
-                for(final String key : keys) {
-                    final Optional<JSONObject> maybeCommand = Optional.ofNullable(commandSettings.optJSONObject(key));
-                    if(maybeCommand.isPresent()) {
-                        try {
-                            // If this fails, it's bad JSON or some shit, so reject it
-                            MAPPER.readValue(maybeCommand.get().toString(), CommandSettings.class);
-                        } catch(final IOException e) {
-                            return false;
-                        }
-                    } else {
-                        // Exit early due to bad command
+        if(data.containsKey("commandSettings") && data.getJsonObject("commandSettings", null) != null) {
+            final JsonObject commandSettings = data.getJsonObject("commandSettings");
+            final Set<String> keys = commandSettings.fieldNames();
+            for(final String key : keys) {
+                final Optional<JsonObject> maybeCommand = Optional.ofNullable(commandSettings.getJsonObject(key, null));
+                if(maybeCommand.isPresent()) {
+                    try {
+                        // If this fails, it's bad JSON or some shit, so reject it
+                        MAPPER.readValue(maybeCommand.get().toString(), CommandSettings.class);
+                    } catch(final IOException e) {
                         return false;
                     }
+                } else {
+                    // Exit early due to bad command
+                    return false;
                 }
             }
         }
@@ -120,15 +117,16 @@ public interface PluginSettings {
         return validateSettings(data);
     }
     
-    default Map<String, CommandSettings> commandSettingsFromJson(final JSONObject data) {
+    default Map<String, CommandSettings> commandSettingsFromJson(final JsonObject data) {
         try {
             final Map<String, CommandSettings> commandSettings = new HashMap<>();
             
-            if(data.has("commandSettings")) {
-                Optional.ofNullable(data.optJSONObject("commandSettings")).ifPresent(o -> {
-                    for(final String key : o.keySet()) {
-                        final Optional<JSONObject> maybeSettings = Optional.ofNullable(o.optJSONObject(key));
-                        maybeSettings.ifPresent(s -> commandSettings.put(key, new CommandSettings(s.optBoolean("enabled", true))));
+            if(data.containsKey("commandSettings")) {
+                Optional.ofNullable(data.getJsonObject("commandSettings", null)).ifPresent(o -> {
+                    for(final String key : o.fieldNames()) {
+                        final Optional<JsonObject> maybeSettings = Optional.ofNullable(o.getJsonObject(key, null));
+                        maybeSettings.ifPresent(s -> commandSettings.put(key,
+                                new CommandSettings(s.getBoolean("enabled", true))));
                     }
                 });
             }

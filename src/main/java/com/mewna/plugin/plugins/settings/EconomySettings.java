@@ -3,18 +3,16 @@ package com.mewna.plugin.plugins.settings;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
-import com.mewna.plugin.plugins.PluginBehaviour;
 import com.mewna.plugin.plugins.PluginEconomy;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
+import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,11 +51,11 @@ public class EconomySettings implements PluginSettings {
     }
     
     @Override
-    public boolean validateSettings(final JSONObject data) {
-        for(final String key : data.keySet()) {
+    public boolean validateSettings(final JsonObject data) {
+        for(final String key : data.fieldNames()) {
             switch(key) {
                 case "currencySymbol": {
-                    final Optional<String> string = Optional.ofNullable(data.optString(key));
+                    final Optional<String> string = Optional.ofNullable(data.getString(key, null));
                     if(string.isPresent()) {
                         final String sym = string.get();
                         if(sym.length() > 64) {
@@ -77,11 +75,11 @@ public class EconomySettings implements PluginSettings {
     }
     
     @Override
-    public boolean updateSettings(final Database database, final JSONObject data) {
+    public boolean updateSettings(final Database database, final JsonObject data) {
         try {
             // Trigger exception if not present
             data.getString("currencySymbol");
-            String currencySymbol = data.optString("currencySymbol");
+            String currencySymbol = data.getString("currencySymbol", null);
             if(currencySymbol == null || currencySymbol.isEmpty()) {
                 currencySymbol = ":white_flower:";
             }
@@ -89,7 +87,7 @@ public class EconomySettings implements PluginSettings {
             commandSettings.putAll(commandSettingsFromJson(data));
             database.saveSettings(this);
             return true;
-        } catch(final JSONException e) {
+        } catch(final Exception e) {
             e.printStackTrace();
             return false;
         }

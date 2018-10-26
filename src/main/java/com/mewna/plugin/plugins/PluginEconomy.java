@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
+import com.mewna.catnip.entity.builder.EmbedBuilder;
 import com.mewna.data.Player;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Command;
@@ -20,7 +21,6 @@ import com.mewna.plugin.util.CurrencyHelper;
 import com.mewna.util.Time;
 import io.sentry.Sentry;
 import lombok.ToString;
-import net.dv8tion.jda.core.EmbedBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import javax.inject.Inject;
@@ -62,14 +62,14 @@ public class PluginEconomy extends BasePlugin {
         if(ctx.getMentions().isEmpty()) {
             final Player player = ctx.getPlayer();
             final long balance = player.getBalance();
-            getRestJDA().sendMessage(ctx.getChannel(),
-                    String.format("**You** have **%s%s**.", balance, helper.getCurrencySymbol(ctx))).queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    String.format("**You** have **%s%s**.", balance, helper.getCurrencySymbol(ctx)));
         } else {
             final User m = ctx.getMentions().get(0);
             final Player player = getDatabase().getPlayer(m);
             final long balance = player.getBalance();
-            getRestJDA().sendMessage(ctx.getChannel(),
-                    String.format("**%s** has **%s%s**.", m.getName(), balance, helper.getCurrencySymbol(ctx))).queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    String.format("**%s** has **%s%s**.", m.getName(), balance, helper.getCurrencySymbol(ctx)));
         }
     }
     
@@ -77,25 +77,25 @@ public class PluginEconomy extends BasePlugin {
             examples = "pay @someone 100")
     public void pay(final CommandContext ctx) {
         if(ctx.getMentions().isEmpty()) {
-            getRestJDA().sendMessage(ctx.getChannel(), "You need to mention someone to pay.").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You need to mention someone to pay.");
             return;
         }
         if(ctx.getArgs().size() < 2) {
-            getRestJDA().sendMessage(ctx.getChannel(), "You need to mention someone to pay, and specify an amount to pay.").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You need to mention someone to pay, and specify an amount to pay.");
             return;
         }
         final Player sender = ctx.getPlayer();
         final Player target = getDatabase().getPlayer(ctx.getMentions().get(0));
         if(target.getId().equalsIgnoreCase(sender.getId())) {
-            getRestJDA().sendMessage(ctx.getChannel(), "Nice try ;)").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Nice try ;)");
             return;
         }
         final ImmutablePair<Boolean, Long> res = helper.handlePayment(ctx, ctx.getArgs().get(1), 1, Long.MAX_VALUE);
         if(res.left) {
             target.incrementBalance(res.right);
             getDatabase().savePlayer(target);
-            getRestJDA().sendMessage(ctx.getChannel(), String.format("**%s**, you sent **%s%s** to **%s**.",
-                    ctx.getUser().getName(), res.right, helper.getCurrencySymbol(ctx), ctx.getMentions().get(0).getName())).queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), String.format("**%s**, you sent **%s%s** to **%s**.",
+                    ctx.getUser().getName(), res.right, helper.getCurrencySymbol(ctx), ctx.getMentions().get(0).getName()));
         }
     }
     
@@ -110,9 +110,9 @@ public class PluginEconomy extends BasePlugin {
         if(last.toLocalDate().plusDays(1).toEpochDay() > now.toLocalDate().toEpochDay()) {
             final long nextMillis = TimeUnit.SECONDS.toMillis(last.toLocalDate().plusDays(1).atStartOfDay(zone).toEpochSecond());
             final long nowMillis = TimeUnit.SECONDS.toMillis(now.toEpochSecond(zone.getRules().getOffset(now)));
-            getRestJDA().sendMessage(ctx.getChannel(),
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
                     String.format("You can collect your daily again in **%s**.",
-                            Time.toHumanReadableDuration(nextMillis - nowMillis))).queue();
+                            Time.toHumanReadableDuration(nextMillis - nowMillis)));
             return;
         }
         final boolean streak;
@@ -122,14 +122,14 @@ public class PluginEconomy extends BasePlugin {
             player.incrementDailyStreak();
             final long bonus = 100 + 10 * (player.getDailyStreak() - 1);
             player.incrementBalance(DAILY_BASE_REWARD + bonus);
-            getRestJDA().sendMessage(ctx.getChannel(), String.format("You collect your daily **%s%s**.\n\nStreak up! New streak: `%sx`, bonus: %s%s.",
-                    DAILY_BASE_REWARD, helper.getCurrencySymbol(ctx), player.getDailyStreak(), bonus, helper.getCurrencySymbol(ctx))).queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), String.format("You collect your daily **%s%s**.\n\nStreak up! New streak: `%sx`, bonus: %s%s.",
+                    DAILY_BASE_REWARD, helper.getCurrencySymbol(ctx), player.getDailyStreak(), bonus, helper.getCurrencySymbol(ctx)));
         } else {
             player.resetDailyStreak();
             player.incrementBalance(DAILY_BASE_REWARD);
-            getRestJDA().sendMessage(ctx.getChannel(), String.format("You collect your daily **%s%s**." +
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), String.format("You collect your daily **%s%s**." +
                             "\n\nIt's been more than 2 days since you last collected your %sdaily, so your streak has been reset.",
-                    DAILY_BASE_REWARD, helper.getCurrencySymbol(ctx), ctx.getPrefix())).queue();
+                    DAILY_BASE_REWARD, helper.getCurrencySymbol(ctx), ctx.getPrefix()));
         }
         
         player.updateLastDaily();
@@ -190,7 +190,7 @@ public class PluginEconomy extends BasePlugin {
         }
         ctx.getPlayer().incrementBalance(amount);
         getDatabase().savePlayer(ctx.getPlayer());
-        getRestJDA().sendMessage(ctx.getChannel().getId(), text).queue();
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), text);
     }
     
     @Payment(min = HEIST_BASE_COST)
@@ -205,12 +205,12 @@ public class PluginEconomy extends BasePlugin {
             ctx.getPlayer().incrementBalance(reward);
             getDatabase().savePlayer(ctx.getPlayer());
             
-            getRestJDA().sendMessage(ctx.getChannel(), String.format("You break into Fort Knick-Knacks and steal %s%s from inside.",
-                    reward, helper.getCurrencySymbol(ctx))).queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), String.format("You break into Fort Knick-Knacks and steal %s%s from inside.",
+                    reward, helper.getCurrencySymbol(ctx)));
         } else {
             // lose
-            getRestJDA().sendMessage(ctx.getChannel(), String.format("Oh no! The guards caught you! They take %s%s from you and let you go.",
-                    HEIST_BASE_COST, helper.getCurrencySymbol(ctx))).queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), String.format("Oh no! The guards caught you! They take %s%s from you and let you go.",
+                    HEIST_BASE_COST, helper.getCurrencySymbol(ctx)));
         }
     }
     
@@ -270,9 +270,9 @@ public class PluginEconomy extends BasePlugin {
                 sb.append("\nYou won **").append(payout).append(helper.getCurrencySymbol(ctx)).append("**!");
             }
             
-            getRestJDA().sendMessage(ctx.getChannel(), sb.toString()).queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), sb.toString());
         } else {
-            getRestJDA().sendMessage(ctx.getChannel(), sb.append("\nThe slot machine paid out nothing...").toString()).queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), sb.append("\nThe slot machine paid out nothing...").toString());
         }
     }
     
@@ -294,7 +294,7 @@ public class PluginEconomy extends BasePlugin {
                     e.printStackTrace();
                 }
             }
-            getRestJDA().sendMessage(ctx.getChannel(), sb.toString()).queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), sb.toString());
         });
     }
     
@@ -323,9 +323,10 @@ public class PluginEconomy extends BasePlugin {
             sb.append("You bet on a loser! Your **").append(ctx.getCost()).append(helper.getCurrencySymbol(ctx))
                     .append("** is gone forever...");
         }
-        getRestJDA().sendMessage(ctx.getChannel(), sb.toString()).queue();
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), sb.toString());
     }
     
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Command(names = {"items", "inventory"}, desc = "View your items.", usage = "items", examples = "items")
     public void items(final CommandContext ctx) {
         final Player user = ctx.getPlayer();
@@ -341,14 +342,15 @@ public class PluginEconomy extends BasePlugin {
             final String str = sb.toString();
             final String sb2 = str.substring(0, str.length() - 2) + "\n\nWeight: `" +
                     user.calculateInventoryWeight() + "`/`" + MAX_INV_WEIGHT + "`\n";
-            b.addField("Items", sb2.trim(), false);
+            b.field("Items", sb2.trim(), false);
         } else {
-            b.setTitle("Items").setDescription("You have nothing!");
+            b.title("Items").description("You have nothing!");
         }
-        getRestJDA().sendMessage(ctx.getChannel(), b.build()).queue();
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), b.build());
     }
     
     //@Command(names = {"boxes", "boxen"}, desc = "View your boxes.", usage = "boxes", examples = "boxes")
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void boxes(final CommandContext ctx) {
         final Player user = ctx.getPlayer();
         final EmbedBuilder b = new EmbedBuilder();
@@ -360,11 +362,11 @@ public class PluginEconomy extends BasePlugin {
             Lists.partition(new ArrayList<>(inv.keySet()), 2)
                     .forEach(e -> e.forEach(i -> sb.append(i.getName()).append(" `x").append(inv.get(i)).append("`, ")));
             final String str = sb.toString();
-            b.addField("Boxes", str.substring(0, str.length() - 2).trim(), false);
+            b.field("Boxes", str.substring(0, str.length() - 2).trim(), false);
         } else {
-            b.setTitle("Boxes").setDescription("You have no boxes!");
+            b.title("Boxes").description("You have no boxes!");
         }
-        getRestJDA().sendMessage(ctx.getChannel(), b.build()).queue();
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), b.build());
     }
     
     /*
@@ -374,7 +376,7 @@ public class PluginEconomy extends BasePlugin {
         user.addToBoxes(Arrays.asList(Box.values()));
         getDatabase().savePlayer(user);
         
-        getRestJDA().sendMessage(ctx.getChannel(), "thumbsup").queue();
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "thumbsup");
     }
     */
     
@@ -400,19 +402,19 @@ public class PluginEconomy extends BasePlugin {
                     sb.append(", ");
                 }
         }
-        final EmbedBuilder b = new EmbedBuilder().addField("Market", sb.toString().trim(), false)
-                .addField("", String.format("You can buy and sell items with `%sbuy` and `%ssell`.", ctx.getPrefix(), ctx.getPrefix()),
+        final EmbedBuilder b = new EmbedBuilder().field("Market", sb.toString().trim(), false)
+                .field("", String.format("You can buy and sell items with `%sbuy` and `%ssell`.", ctx.getPrefix(), ctx.getPrefix()),
                         false);
-        getRestJDA().sendMessage(ctx.getChannel(), b.build()).queue();
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), b.build());
     }
     
     @Command(names = "buy", desc = "Buy some items.", usage = "buy <item name> [amount]",
             examples = {"buy pickaxe", "buy burger 10"})
     public void buy(final CommandContext ctx) {
         if(isWeighedDown(ctx.getPlayer())) {
-            getRestJDA().sendMessage(ctx.getChannel(),
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
                     "Your inventory is full! Try selling some stuff first.")
-                    .queue();
+                    ;
             return;
         }
         final List<String> args = ctx.getArgs();
@@ -435,8 +437,8 @@ public class PluginEconomy extends BasePlugin {
                                 throw new IllegalArgumentException();
                             }
                         } catch(final Exception e) {
-                            getRestJDA().sendMessage(ctx.getChannel(),
-                                    String.format("%s isn't a valid number", args.get(0))).queue();
+                            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                                    String.format("%s isn't a valid number", args.get(0)));
                             return;
                         }
                     }
@@ -448,17 +450,17 @@ public class PluginEconomy extends BasePlugin {
                         // Money taken, add item(s)
                         player.addAllToInventory(ImmutableMap.of(item, amount));
                         getDatabase().savePlayer(player);
-                        getRestJDA().sendMessage(ctx.getChannel(), String.format("You bought %s %s for %s%s.",
-                                amount, item.getName(), cost, helper.getCurrencySymbol(ctx))).queue();
+                        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), String.format("You bought %s %s for %s%s.",
+                                amount, item.getName(), cost, helper.getCurrencySymbol(ctx)));
                     }
                 } else {
-                    getRestJDA().sendMessage(ctx.getChannel(), "That item cannot be bought.").queue();
+                    getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "That item cannot be bought.");
                 }
             } else {
-                getRestJDA().sendMessage(ctx.getChannel(), "That item doesn't exist.").queue();
+                getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "That item doesn't exist.");
             }
         } else {
-            getRestJDA().sendMessage(ctx.getChannel(), "You have to tell me what to buy.").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You have to tell me what to buy.");
         }
     }
     
@@ -483,8 +485,8 @@ public class PluginEconomy extends BasePlugin {
                             throw new IllegalArgumentException();
                         }
                     } catch(final Exception e) {
-                        getRestJDA().sendMessage(ctx.getChannel(),
-                                String.format("%s isn't a valid number", args.get(0))).queue();
+                        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                                String.format("%s isn't a valid number", args.get(0)));
                         return;
                     }
                 }
@@ -496,19 +498,19 @@ public class PluginEconomy extends BasePlugin {
                         ctx.getPlayer().removeAllFromInventory(ImmutableMap.of(item, amount));
                         ctx.getPlayer().incrementBalance(payment);
                         getDatabase().savePlayer(ctx.getPlayer());
-                        getRestJDA().sendMessage(ctx.getChannel(), String.format("You sold %s %s for %s%s.",
-                                amount, item.getName(), payment, helper.getCurrencySymbol(ctx))).queue();
+                        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), String.format("You sold %s %s for %s%s.",
+                                amount, item.getName(), payment, helper.getCurrencySymbol(ctx)));
                     } else {
-                        getRestJDA().sendMessage(ctx.getChannel(), "You don't have enough of that item.").queue();
+                        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You don't have enough of that item.");
                     }
                 } else {
-                    getRestJDA().sendMessage(ctx.getChannel(), "You don't have that item.").queue();
+                    getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You don't have that item.");
                 }
             } else {
-                getRestJDA().sendMessage(ctx.getChannel(), "That item doesn't exist.").queue();
+                getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "That item doesn't exist.");
             }
         } else {
-            getRestJDA().sendMessage(ctx.getChannel(), "You have to tell me what to sell.").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You have to tell me what to sell.");
         }
     }
     
@@ -516,34 +518,34 @@ public class PluginEconomy extends BasePlugin {
     @Command(names = "mine", desc = "Go mining for shines!", usage = "mine", examples = "mine")
     public void mine(final CommandContext ctx) {
         if(isWeighedDown(ctx.getPlayer())) {
-            getRestJDA().sendMessage(ctx.getChannel(),
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
                     "Your inventory is full! Try selling some stuff first.")
-                    .queue();
+                    ;
             return;
         }
         if(!ctx.getPlayer().hasItem(Item.PICKAXE)) {
-            getRestJDA().sendMessage(ctx.getChannel(),
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
                     String.format("You don't have a `pickaxe`, so you can't mine. Perhaps you should `%sbuy` one...",
                             ctx.getPrefix()))
-                    .queue();
+                    ;
             return;
         }
         if(LootTables.chance(5)) {
             ctx.getPlayer().removeOneFromInventory(Item.PICKAXE);
             getDatabase().savePlayer(ctx.getPlayer());
-            getRestJDA().sendMessage(ctx.getChannel(), "Oh no! Your pickaxe broke when you tried to use it!").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Oh no! Your pickaxe broke when you tried to use it!");
             return;
         }
         final List<Item> loot = LootTables.generateLoot(LootTables.GEMS, 0, 2);
         if(loot.isEmpty()) {
-            getRestJDA().sendMessage(ctx.getChannel(), "You mined all day, but found nothing but dust.").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You mined all day, but found nothing but dust.");
         } else {
             final StringBuilder sb = new StringBuilder();
             final Map<Item, Long> count = lootToMap(loot);
             count.keySet().forEach(e -> sb.append(e.getEmote()).append(" `x").append(count.get(e)).append("`\n"));
             ctx.getPlayer().addAllToInventory(count);
             getDatabase().savePlayer(ctx.getPlayer());
-            getRestJDA().sendMessage(ctx.getChannel(), "You dug up:\n" + sb).queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You dug up:\n" + sb);
         }
     }
     
@@ -551,34 +553,34 @@ public class PluginEconomy extends BasePlugin {
     @Command(names = "fish", desc = "Go fishing for tasty fish!", usage = "fish", examples = "fish")
     public void fish(final CommandContext ctx) {
         if(isWeighedDown(ctx.getPlayer())) {
-            getRestJDA().sendMessage(ctx.getChannel(),
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
                     "Your inventory is full! Try selling some stuff first.")
-                    .queue();
+                    ;
             return;
         }
         if(!ctx.getPlayer().hasItem(Item.FISHING_ROD)) {
-            getRestJDA().sendMessage(ctx.getChannel(),
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
                     String.format("You don't have a `fishingrod`, so you can't fish. Perhaps you should `%sbuy` one...",
                             ctx.getPrefix()))
-                    .queue();
+                    ;
             return;
         }
         if(LootTables.chance(5)) {
             ctx.getPlayer().removeOneFromInventory(Item.FISHING_ROD);
             getDatabase().savePlayer(ctx.getPlayer());
-            getRestJDA().sendMessage(ctx.getChannel(), "Oh no! Your fishing rod broke when you tried to use it!").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Oh no! Your fishing rod broke when you tried to use it!");
             return;
         }
         final List<Item> loot = LootTables.generateLoot(LootTables.FISHING, 1, 3);
         if(loot.isEmpty()) {
-            getRestJDA().sendMessage(ctx.getChannel(), "You fished all day, but found nothing but empty water.").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You fished all day, but found nothing but empty water.");
         } else {
             final StringBuilder sb = new StringBuilder();
             final Map<Item, Long> count = lootToMap(loot);
             count.keySet().forEach(e -> sb.append(e.getEmote()).append(" `x").append(count.get(e)).append("`\n"));
             ctx.getPlayer().addAllToInventory(count);
             getDatabase().savePlayer(ctx.getPlayer());
-            getRestJDA().sendMessage(ctx.getChannel(), "You fished up:\n" + sb).queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You fished up:\n" + sb);
         }
     }
     

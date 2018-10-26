@@ -25,30 +25,36 @@ public final class CurrencyHelper {
         final String symbol = getCurrencySymbol(ctx);
         switch(check.left) {
             case BAD_EMPTY: {
-                mewna.getRestJDA().sendMessage(ctx.getChannel(), "You can't pay nothing!").queue();
+                mewna.getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                        "You can't pay nothing!");
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_NOT_NUM: {
-                mewna.getRestJDA().sendMessage(ctx.getChannel(), String.format("`%s` isn't a number!", maybeAmount)).queue();
+                mewna.getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                        String.format("`%s` isn't a number!", maybeAmount));
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_POOR_NO_BAL: {
-                mewna.getRestJDA().sendMessage(ctx.getChannel(), "You don't have any money!").queue();
+                mewna.getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                        "You don't have any money!");
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_POOR: {
-                mewna.getRestJDA().sendMessage(ctx.getChannel(), String.format("You tried to spend %s%s, but you only have %s%s!",
-                        maybeAmount, symbol, ctx.getPlayer().getBalance(), symbol)).queue();
+                mewna.getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                        String.format("You tried to spend %s%s, but you only have %s%s!",
+                                maybeAmount, symbol, ctx.getPlayer().getBalance(), symbol));
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_CHEAP: {
-                mewna.getRestJDA().sendMessage(ctx.getChannel(), String.format("You tried to spend %s%s, but you need to spend at least %s%s!",
-                        maybeAmount, symbol, min, symbol)).queue();
+                mewna.getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                        String.format("You tried to spend %s%s, but you need to spend at least %s%s!",
+                                maybeAmount, symbol, min, symbol));
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_MUCH: {
-                mewna.getRestJDA().sendMessage(ctx.getChannel(), String.format("You tried to spend %s%s, but you can only spend up to %s%s!",
-                        maybeAmount, symbol, max, symbol)).queue();
+                mewna.getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                        String.format("You tried to spend %s%s, but you can only spend up to %s%s!",
+                                maybeAmount, symbol, max, symbol));
                 return ImmutablePair.of(false, -1L);
             }
             case OK: {
@@ -64,7 +70,8 @@ public final class CurrencyHelper {
     }
     
     @SuppressWarnings("WeakerAccess")
-    public final ImmutablePair<PaymentResult, Long> checkPayment(final Player player, final String maybeAmount, final long min, final long max) {
+    public final ImmutablePair<PaymentResult, Long> checkPayment(final Player player, final String maybeAmount,
+                                                                 final long min, final long max) {
         final long balance = player.getBalance();
         final long payment;
         try {

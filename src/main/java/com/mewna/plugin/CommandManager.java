@@ -17,10 +17,10 @@ import com.mewna.plugin.metadata.Ratelimit;
 import com.mewna.plugin.plugins.settings.BehaviourSettings;
 import com.mewna.util.Time;
 import io.sentry.Sentry;
+import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import lombok.Value;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,9 +110,9 @@ public class CommandManager {
         return commands.values().stream().filter(e -> e.getPlugin().getClass().equals(pluginClass)).collect(Collectors.toList());
     }
     
-    public void tryExecCommand(final JSONObject data) {
+    public void tryExecCommand(final JsonObject data) {
         try {
-            if(!data.has("guild_id") || data.isNull("guild_id")) {
+            if(!data.getMap().containsKey("guild_id") || data.getString("guild_id") == null) {
                 return;
             }
             final String channelId = data.getString("channel_id");
@@ -120,9 +120,9 @@ public class CommandManager {
             // Note this isn't in the docs yet, but should be at some point (hopefully soon)
             final String guildId = data.getString("guild_id");
             
-            final JSONObject author = data.getJSONObject("author");
+            final JsonObject author = data.getJsonObject("author");
             final String userId = author.getString("id");
-            if(data.has("bot") && data.getBoolean("bot")) {
+            if(data.getBoolean("bot", false)) {
                 return;
             }
             if(guildId == null) {
@@ -169,8 +169,8 @@ public class CommandManager {
             }
             
             final List<User> mentions = new ArrayList<>();
-            for(final Object o : data.getJSONArray("mentions")) {
-                final JSONObject j = (JSONObject) o;
+            for(final Object o : data.getJsonArray("mentions")) {
+                final JsonObject j = (JsonObject) o;
                 // TODO: Build this from the JSON object instead of hitting the cache all the time?
                 mentions.add(mewna.getCache().getUser(j.getString("id")));
             }
@@ -229,7 +229,7 @@ public class CommandManager {
                         final Map<String, CommandSettings> commandSettings = settings.getCommandSettings();
                         if(commandSettings.containsKey(cmd.getBaseName())) {
                             if(!commandSettings.get(cmd.getBaseName()).isEnabled()) {
-                                mewna.getRestJDA().sendMessage(channel, "Sorry, but that command is disabled here.").queue();
+                                mewna.getCatnip().rest().channel().sendMessage(channelId, "Sorry, but that command is disabled here.");
                                 return;
                             }
                         } else {
@@ -265,10 +265,11 @@ public class CommandManager {
                                 baseName + ':' + ratelimitKey,
                                 TimeUnit.SECONDS.toMillis(cmd.getRatelimit().time()));
                         if(check.left) {
-                            mewna.getStatsClient().count("discord.backend.commands.ratelimit", 1, "name:" + cmd.getName());
-                            mewna.getRestJDA().sendMessage(channelId,
+                            mewna.getStatsClient().count("discord.backend.commands.ratelimit", 1,
+                                    "name:" + cmd.getName());
+                            mewna.getCatnip().rest().channel().sendMessage(channelId,
                                     String.format("You're using that command too fast! Try again in **%s**.",
-                                            Time.toHumanReadableDuration(check.right))).queue();
+                                            Time.toHumanReadableDuration(check.right)));
                             return;
                         }
                     }
@@ -289,7 +290,8 @@ public class CommandManager {
                         if(account.isBanned()) {
                             mewna.getStatsClient().count("discord.backend.commands.banned", 1);
                             logger.warn("Denying command from banned account {}: {}", account.getId(), account.getBanReason());
-                            mewna.getRestJDA().sendMessage(channel, "Banned from Mewna. Reason: " + account.getBanReason()).queue();
+                            mewna.getCatnip().rest().channel().sendMessage(channelId, "Banned from Mewna. Reason: "
+                                    + account.getBanReason());
                             return;
                         }
                     }

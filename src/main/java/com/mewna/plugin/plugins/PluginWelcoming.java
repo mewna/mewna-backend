@@ -12,7 +12,7 @@ import com.mewna.plugin.event.guild.member.GuildMemberAddEvent;
 import com.mewna.plugin.event.guild.member.GuildMemberRemoveEvent;
 import com.mewna.plugin.plugins.settings.WelcomingSettings;
 import com.mewna.util.Templater;
-import org.json.JSONObject;
+import io.vertx.core.json.JsonObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,13 +25,13 @@ import java.util.Map;
 public class PluginWelcoming extends BasePlugin {
     private Templater map(final Guild guild, final User user) {
         final Map<String, String> data = new HashMap<>();
-        final JSONObject jGuild = new JSONObject(guild);
-        for(final String key : jGuild.keySet()) {
-            data.put("server." + key, jGuild.get(key).toString());
+        final JsonObject jGuild = JsonObject.mapFrom(guild);
+        for(final String key : jGuild.fieldNames()) {
+            data.put("server." + key, jGuild.getMap().get(key).toString());
         }
-        final JSONObject jUser = new JSONObject(user);
-        for(final String key : jUser.keySet()) {
-            data.put("user." + key, jUser.get(key).toString());
+        final JsonObject jUser = JsonObject.mapFrom(user);
+        for(final String key : jUser.fieldNames()) {
+            data.put("user." + key, jUser.getMap().get(key).toString());
         }
         data.put("user.mention", "<@" + user.getId() + '>');
         return Templater.fromMap(data);
@@ -49,7 +49,7 @@ public class PluginWelcoming extends BasePlugin {
                 final Channel channel = getMewna().getCache().getChannel(messageChannel);
                 if(channel != null) {
                     final Templater templater = map(event.getGuild(), getMewna().getCache().getUser(event.getMember().getId()));
-                    getRestJDA().sendMessage(settings.getMessageChannel(), templater.render(settings.getWelcomeMessage())).queue();
+                    getCatnip().rest().channel().sendMessage(settings.getMessageChannel(), templater.render(settings.getWelcomeMessage()));
                 } else {
                     getLogger().warn("Welcoming messageChannel {} in {} no longer valid, nulling...", messageChannel, guildId);
                     settings.setMessageChannel(null);
@@ -62,7 +62,7 @@ public class PluginWelcoming extends BasePlugin {
             // Validate that it exists
             final Role joinRole = getMewna().getCache().getRole(roleId);
             if(joinRole != null) {
-                getRestJDA().addRoleToMember(guild, event.getMember(), joinRole).queue();
+                getCatnip().rest().guild().addGuildMemberRole(guildId, event.getMember().getId(), roleId);
             } else {
                 getLogger().warn("Welcoming joinRole {} in {} no longer valid, nulling...", roleId, guildId);
                 settings.setMessageChannel(null);
@@ -82,7 +82,7 @@ public class PluginWelcoming extends BasePlugin {
                 final Channel channel = getMewna().getCache().getChannel(messageChannel);
                 if(channel != null) {
                     final Templater templater = map(event.getGuild(), event.getUser());
-                    getRestJDA().sendMessage(settings.getMessageChannel(), templater.render(settings.getGoodbyeMessage())).queue();
+                    getCatnip().rest().channel().sendMessage(settings.getMessageChannel(), templater.render(settings.getGoodbyeMessage()));
                 } else {
                     getLogger().warn("Welcoming messageChannel {} in {} no longer valid, nulling...", messageChannel, guild.getId());
                     settings.setMessageChannel(null);

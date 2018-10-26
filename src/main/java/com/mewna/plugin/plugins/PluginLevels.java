@@ -5,6 +5,9 @@ import com.mewna.accounts.Account;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.Member;
 import com.mewna.cache.entity.User;
+import com.mewna.catnip.entity.builder.EmbedBuilder;
+import com.mewna.catnip.entity.message.MessageOptions;
+import com.mewna.catnip.rest.guild.MemberData;
 import com.mewna.data.Player;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Command;
@@ -20,15 +23,13 @@ import com.mewna.plugin.plugins.settings.LevelsSettings;
 import com.mewna.plugin.util.Emotes;
 import com.mewna.plugin.util.Renderer;
 import com.mewna.util.Templater;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.MessageBuilder;
+import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.json.JSONObject;
 
+import java.awt.*;
 import java.sql.ResultSet;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -125,13 +126,13 @@ public class PluginLevels extends BasePlugin {
         final Guild guild = event.getGuild();
         final User user = event.getUser();
         final Map<String, String> data = new HashMap<>();
-        final JSONObject jGuild = new JSONObject(guild);
-        for(final String key : jGuild.keySet()) {
-            data.put("server." + key, jGuild.get(key).toString());
+        final JsonObject jGuild = JsonObject.mapFrom(guild);
+        for(final String key : jGuild.fieldNames()) {
+            data.put("server." + key, jGuild.getMap().get(key).toString());
         }
-        final JSONObject jUser = new JSONObject(user);
-        for(final String key : jUser.keySet()) {
-            data.put("user." + key, jUser.get(key).toString());
+        final JsonObject jUser = JsonObject.mapFrom(user);
+        for(final String key : jUser.fieldNames()) {
+            data.put("user." + key, jUser.getMap().get(key).toString());
         }
         data.put("user.mention", user.asMention());
         data.put("level", event.getLevel() + "");
@@ -163,7 +164,7 @@ public class PluginLevels extends BasePlugin {
         if(settings.isLevelsEnabled()) {
             if(settings.isLevelUpMessagesEnabled()) {
                 final String message = map(event).render(settings.getLevelUpMessage());
-                getRestJDA().sendMessage(event.getChannel(), message).queue();
+                getCatnip().rest().channel().sendMessage(event.getChannel().getId(), message);
             }
         }
     }
@@ -177,21 +178,29 @@ public class PluginLevels extends BasePlugin {
             // If we have some, remove lower roles then add in the rest
             final List<String> removeRoles = settings.getLevelRoleRewards().entrySet().stream()
                     .filter(e -> e.getValue() < level).map(Entry::getKey).collect(Collectors.toList());
-            if(removeRoles.isEmpty()) {
-                getRestJDA().addManyRolesToMember(guild, member, rewards.toArray(new String[0])).queue(__ -> callback.run());
-            } else {
-                getRestJDA().addAndRemoveManyRolesForMember(guild, member, rewards, removeRoles).queue(__ -> callback.run());
-            }
+            final Collection<String> endRoles = new HashSet<>(member.getRoles());
+            endRoles.addAll(rewards);
+            endRoles.removeAll(removeRoles);
+            final MemberData memberData = new MemberData();
+            //noinspection ResultOfMethodCallIgnored
+            endRoles.forEach(memberData::addRole);
+            getCatnip().rest().guild().modifyGuildMember(guild.getId(), member.getId(), memberData)
+                    .thenAccept(__ -> callback.run());
         }
     }
     
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private void addRoleRewards(final LevelsSettings settings, final Guild guild, final Member member, final long level,
                                 final Runnable callback) {
         // Check for roles at or below this level
         final List<String> rewards = settings.getLevelRoleRewards().entrySet().stream()
                 .filter(e -> e.getValue() <= level).map(Entry::getKey).collect(Collectors.toList());
         if(!rewards.isEmpty()) {
-            getRestJDA().addManyRolesToMember(guild, member, rewards.toArray(new String[0])).queue(__ -> callback.run());
+            final MemberData memberData = new MemberData();
+            member.getRoles().forEach(memberData::addRole);
+            rewards.forEach(memberData::addRole);
+            getCatnip().rest().guild().modifyGuildMember(guild.getId(), member.getId(), memberData)
+                    .thenAccept(__ -> callback.run());
         }
     }
     
@@ -218,7 +227,7 @@ public class PluginLevels extends BasePlugin {
                     case 100: {
                         getMewna().getPluginManager().processEvent(EventType.PLAYER_EVENT,
                                 new PlayerEvent(SystemUserEventType.GLOBAL_LEVEL, player,
-                                        new JSONObject().put("level", level)));
+                                        new JsonObject().put("level", level)));
                         break;
                     }
                     default: {
@@ -248,9 +257,12 @@ public class PluginLevels extends BasePlugin {
             if(isLevelUp(oldXp, oldXp + xp)) {
                 getLogger().debug("{} in {}: Level up to {}", author.getId(), guild.getId(), xpToLevel(oldXp + xp));
                 // Emit level-up event so we can process it
-                getMewna().getNats().pushBackendEvent(EventType.LEVEL_UP, new JSONObject().put("user", author.getId())
+                // TODO: Singyeong messages
+                /*
+                getMewna().getNats().pushBackendEvent(EventType.LEVEL_UP, new JsonObject().put("user", author.getId())
                         .put("guild", guild.getId()).put("level", xpToLevel(oldXp + xp)).put("xp", oldXp + xp)
                         .put("channel", event.getChannel().getId()));
+                        */
             }
         } else {
             getLogger().debug("Local XP: {} in {} ratelimited ({}ms)", author.getId(), guild.getId(),
@@ -265,7 +277,9 @@ public class PluginLevels extends BasePlugin {
         final Guild guild = ctx.getGuild();
         final LevelsSettings settings = getMewna().getDatabase().getOrBaseSettings(LevelsSettings.class, guild.getId());
         if(!settings.isLevelsEnabled()) {
-            getRestJDA().sendMessage(ctx.getChannel(), "Levels are not enabled in this server. The server owner (or administrators) should enable them in the dashboard: <https://mewna.com/>").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Levels are not enabled in this server. " +
+                    "The server owner (or administrators) should enable them in the dashboard: <https://mewna.com/>")
+            ;
             return;
         }
         final User user;
@@ -279,31 +293,35 @@ public class PluginLevels extends BasePlugin {
         }
         
         if(user.isBot()) {
-            getRestJDA().sendMessage(ctx.getChannel(), "Bots can't have levels!").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Bots can't have levels!");
             return;
         }
         
-        getRestJDA().sendMessage(ctx.getChannel(), Emotes.LOADING_ICON + " Generating rank card (this will take a few seconds)")
-                .queue(message -> getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
-                    // lol
-                    // we do everything possible to guarantee that this should be safe
-                    // without doing a check here
-                    //noinspection ConstantConditions
-                    final Account account = getDatabase().getAccountByDiscordId(user.getId()).get();
-                    final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.getId();
-                    
-                    final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
-                    final EmbedBuilder builder = new EmbedBuilder()
-                            .setTitle("**" + user.getName() + "**'s rank card", null)
-                            .setImage("attachment://rank.png")
-                            .setColor(Renderer.PRIMARY_COLOUR)
-                            .setDescription(String.format("[View full profile](%s)", profileUrl))
-                            .setFooter("You can change your background on your profile.", null);
-                    getRestJDA().deleteMessageById(ctx.getChannel(), message.getId())
-                            .queue(___ -> getRestJDA().sendFile(ctx.getChannel(), cardBytes, "rank.png",
-                                    new MessageBuilder().setEmbed(builder.build()).build())
-                                    .queue());
-                }));
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                Emotes.LOADING_ICON + " Generating rank card (this will take a few seconds)")
+                .thenAccept(message -> getCatnip().rest().channel().triggerTypingIndicator(ctx.getChannel().getId())
+                        .thenAccept(__ -> {
+                            // lol
+                            // we do everything possible to guarantee that this should be safe
+                            // without doing a check here
+                            //noinspection ConstantConditions,OptionalGetWithoutIsPresent
+                            final Account account = getDatabase().getAccountByDiscordId(user.getId()).get();
+                            final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.getId();
+                            
+                            final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
+                            final EmbedBuilder builder = new EmbedBuilder()
+                                    .title("**" + user.getName() + "**'s rank card")
+                                    .image("attachment://rank.png")
+                                    .color(new Color(Renderer.PRIMARY_COLOUR))
+                                    .description(String.format("[View full profile](%s)", profileUrl))
+                                    .footer("You can change your background on your profile.", null);
+                            getCatnip().rest().channel().deleteMessage(ctx.getChannel().getId(), message.id())
+                                    .thenAccept(___ -> getCatnip().rest().channel()
+                                            .sendMessage(ctx.getChannel().getId(),
+                                                    new MessageOptions().addFile("rank.png", cardBytes)
+                                                            .embed(builder.build()))
+                                    );
+                        }));
     }
     
     @Command(names = "profile", desc = "Check your profile card, or someone else's.", usage = "profile [@mention]",
@@ -320,32 +338,37 @@ public class PluginLevels extends BasePlugin {
         }
         
         if(user.isBot()) {
-            getRestJDA().sendMessage(ctx.getChannel(), "Bots can't have profiles!").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Bots can't have profiles!");
             return;
         }
         
-        getRestJDA().sendMessage(ctx.getChannel(), Emotes.LOADING_ICON + " Generating profile card (this will take a few seconds)")
-                .queue(message ->
-                        getRestJDA().sendTyping(ctx.getChannel()).queue(__ -> {
-                            // lol
-                            // we do everything possible to guarantee that this should be safe
-                            // without doing a check here
-                            //noinspection ConstantConditions
-                            final Account account = getDatabase().getAccountByDiscordId(user.getId()).get();
-                            final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.getId();
-                            
-                            final byte[] cardBytes = Renderer.generateProfileCard(user, player);
-                            final EmbedBuilder builder = new EmbedBuilder()
-                                    .setTitle("**" + user.getName() + "**'s profile card", null)
-                                    .setImage("attachment://profile.png")
-                                    .setColor(Renderer.PRIMARY_COLOUR)
-                                    .setDescription(String.format("[View full profile](%s)", profileUrl))
-                                    .setFooter("You can change your description and background on your profile.", null);
-                            getRestJDA().deleteMessageById(ctx.getChannel(), message.getId()).queue(___ ->
-                                    getRestJDA().sendFile(ctx.getChannel(), cardBytes, "profile.png",
-                                            new MessageBuilder().setEmbed(builder.build()).build())
-                                            .queue());
-                        }));
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                Emotes.LOADING_ICON + " Generating profile card (this will take a few seconds)")
+                .thenAccept(message ->
+                        getCatnip().rest().channel().triggerTypingIndicator(ctx.getChannel().getId())
+                                .thenAccept(__ -> {
+                                    // lol
+                                    // we do everything possible to guarantee that this should be safe
+                                    // without doing a check here
+                                    //noinspection ConstantConditions,OptionalGetWithoutIsPresent
+                                    final Account account = getDatabase().getAccountByDiscordId(user.getId()).get();
+                                    final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.getId();
+                                    
+                                    final byte[] cardBytes = Renderer.generateProfileCard(user, player);
+                                    final EmbedBuilder builder = new EmbedBuilder()
+                                            .title("**" + user.getName() + "**'s profile card")
+                                            .image("attachment://profile.png")
+                                            .color(new Color(Renderer.PRIMARY_COLOUR))
+                                            .description(String.format("[View full profile](%s)", profileUrl))
+                                            .footer("You can change your description and background on your profile.", null);
+                                    getCatnip().rest().channel().deleteMessage(ctx.getChannel().getId(), message.id())
+                                            .thenApply(___ ->
+                                                    getCatnip().rest().channel()
+                                                            .sendMessage(ctx.getChannel().getId(),
+                                                                    new MessageOptions().addFile("profile.png", cardBytes)
+                                                                            .embed(builder.build()))
+                                            );
+                                }));
     }
     
     @Command(names = "score", desc = "Check your score, or someone else's.", usage = "score [@mention]",
@@ -361,7 +384,8 @@ public class PluginLevels extends BasePlugin {
             player = getDatabase().getPlayer(user);
         }
         
-        getRestJDA().sendMessage(ctx.getChannel(), String.format("**%s**'s score: **%s**", user.getName(), player.calculateScore())).queue();
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                String.format("**%s**'s score: **%s**", user.getName(), player.calculateScore()));
     }
     
     @Command(names = {"leaderboards", "ranks", "levels", "leaderboard", "rankings"}, desc = "View the guild leaderboards.",
@@ -370,10 +394,14 @@ public class PluginLevels extends BasePlugin {
         final Guild guild = ctx.getGuild();
         final LevelsSettings settings = getMewna().getDatabase().getOrBaseSettings(LevelsSettings.class, guild.getId());
         if(!settings.isLevelsEnabled()) {
-            getRestJDA().sendMessage(ctx.getChannel(), "Levels are not enabled in this server. The server owner (or administrators) should enable them in the dashboard: <https://mewna.com/>").queue();
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Levels are not enabled in this server. " +
+                    "The server owner (or administrators) should enable them in the dashboard: <https://mewna.com/>")
+            ;
             return;
         }
-        getRestJDA().sendMessage(ctx.getChannel(), System.getenv("DOMAIN") + "/discord/leaderboards/" + guild.getId()).queue();
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                System.getenv("DOMAIN") + "/discord/leaderboards/" + guild.getId())
+        ;
     }
     
     private long getXp(final Player player) {

@@ -7,8 +7,8 @@ import com.mewna.accounts.timeline.TimelinePost;
 import com.mewna.cache.entity.User;
 import com.mewna.data.Player;
 import com.mewna.plugin.util.Snowflakes;
+import io.vertx.core.json.JsonObject;
 import lombok.RequiredArgsConstructor;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +50,8 @@ public class AccountManager {
         mewna.getDatabase().saveAccount(account);
     }
     
-    public void createOrUpdateDiscordOAuthLinkedAccount(final JSONObject data) {
-        final String id = data.has("id") && !data.isNull("id") && data.getString("id").matches("\\d+")
+    public void createOrUpdateDiscordOAuthLinkedAccount(final JsonObject data) {
+        final String id = data.containsKey("id") && data.getString("id", "").matches("\\d+")
                 ? data.getString("id")
                 : Snowflakes.getNewSnowflake();
         final AccountBuilder builder = mewna.getDatabase().getAccountById(id).map(Account::toBuilder)
@@ -59,32 +59,32 @@ public class AccountManager {
                 .orElseGet(() -> new Account(id).toBuilder());
         builder.id(id);
         
-        if(data.has("username") && !data.isNull("username")) {
-            final String username = data.optString("username");
+        if(data.containsKey("username") && data.getString("username", null) != null) {
+            final String username = data.getString("username", null);
             if(username != null && !username.isEmpty()) {
                 builder.username(username);
             }
         }
-        if(data.has("email") && !data.isNull("email")) {
-            final String email = data.optString("email");
+        if(data.containsKey("email") && data.getString("email", null) != null) {
+            final String email = data.getString("email", null);
             if(email != null && !email.isEmpty()) {
                 builder.email(email);
             }
         }
-        if(data.has("displayName") && !data.isNull("displayName")) {
-            final String displayName = data.optString("displayName");
+        if(data.containsKey("displayName") && data.getString("displayName", null) != null) {
+            final String displayName = data.getString("displayName", null);
             if(displayName != null && !displayName.isEmpty()) {
                 builder.displayName(displayName);
             }
         }
-        if(data.has("avatar") && !data.isNull("avatar")) {
-            final String avatar = data.optString("avatar");
+        if(data.containsKey("avatar") && data.getString("avatar", null) != null) {
+            final String avatar = data.getString("avatar", null);
             if(avatar != null && !avatar.isEmpty()) {
                 builder.avatar(avatar);
             }
         }
-        if(data.has("discordAccountId") && !data.isNull("discordAccountId")) {
-            final String discordAccountId = data.optString("discordAccountId");
+        if(data.containsKey("discordAccountId") && data.getString("discordAccountId", null) != null) {
+            final String discordAccountId = data.getString("discordAccountId", null);
             if(discordAccountId != null && !discordAccountId.isEmpty()) {
                 builder.discordAccountId(discordAccountId);
             }
@@ -92,8 +92,8 @@ public class AccountManager {
         mewna.getDatabase().saveAccount(builder.build());
     }
     
-    public void updateAccountSettings(final JSONObject data) {
-        final String id = data.optString("id");
+    public void updateAccountSettings(final JsonObject data) {
+        final String id = data.getString("id", null);
         if(id != null && !id.isEmpty()) {
             final Optional<Account> maybeAccount = mewna.getDatabase().getAccountById(id);
             if(maybeAccount.isPresent()) {

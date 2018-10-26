@@ -8,13 +8,13 @@ import com.mewna.plugin.plugins.PluginTwitch;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.*;
@@ -60,11 +60,11 @@ public class TwitchSettings implements PluginSettings {
     }
     
     @Override
-    public boolean validateSettings(final JSONObject data) {
-        for(final String key : data.keySet()) {
+    public boolean validateSettings(final JsonObject data) {
+        for(final String key : data.fieldNames()) {
             switch(key) {
                 case "twitchWebhookChannel": {
-                    final String id = data.optString(key, null);
+                    final String id = data.getString(key, null);
                     if(id != null) {
                         if(!id.matches("\\d{16,21}")) {
                             return false;
@@ -73,12 +73,12 @@ public class TwitchSettings implements PluginSettings {
                     break;
                 }
                 case "twitchStreamers": {
-                    final JSONArray streamers = data.optJSONArray(key);
+                    final JsonArray streamers = data.getJsonArray(key, null);
                     if(streamers == null) {
                         return false;
                     }
                     for(final Object o : streamers) {
-                        final JSONObject streamer = (JSONObject) o;
+                        final JsonObject streamer = (JsonObject) o;
                         try {
                             // If this fails, it's bad JSON or some shit, so reject it
                             MAPPER.readValue(streamer.toString(), TwitchStreamerConfig.class);
@@ -97,16 +97,14 @@ public class TwitchSettings implements PluginSettings {
     }
     
     @Override
-    public boolean updateSettings(final Database database, final JSONObject data) {
-        if(data.optString("twitchWebhookChannel") != null) {
-            if(!data.isNull("twitchWebhookChannel")) {
-                twitchWebhookChannel = data.getString("twitchWebhookChannel");
-            }
+    public boolean updateSettings(final Database database, final JsonObject data) {
+        if(data.getString("twitchWebhookChannel", null) != null) {
+            twitchWebhookChannel = data.getString("twitchWebhookChannel");
         }
-        final JSONArray streamersJson = data.getJSONArray("twitchStreamers");
+        final JsonArray streamersJson = data.getJsonArray("twitchStreamers");
         final Collection<TwitchStreamerConfig> streamers = new ArrayList<>();
         for(final Object o : streamersJson) {
-            final JSONObject streamer = (JSONObject) o;
+            final JsonObject streamer = (JsonObject) o;
             try {
                 // If this fails, it's bad JSON or some shit, but it shouldn't have passed the validation steps anyway
                 final TwitchStreamerConfig twitchStreamer = MAPPER.readValue(streamer.toString(), TwitchStreamerConfig.class);
@@ -134,16 +132,22 @@ public class TwitchSettings implements PluginSettings {
             if(twitchStreamers.stream().noneMatch(e -> e.id.equals(streamer.id))) {
                 if(streamer.isStreamStartMessagesEnabled() || streamer.isStreamEndMessagesEnabled()) {
                     // Sub to up/down messages
-                    Mewna.getInstance().getNats().pushTwitchEvent("TWITCH_SUBSCRIBE", new JSONObject()
+                    // TODO: Singyeong messages
+                    /*
+                    Mewna.getInstance().getNats().pushTwitchEvent("TWITCH_SUBSCRIBE", new JsonObject()
                             .put("id", streamer.getId()).put("topic", "streams"));
+                            */
                 }
             } else {
                 for(final TwitchStreamerConfig e : twitchStreamers) {
                     if(e.id.equals(streamer.id)) {
                         if(e.streamEndMessagesEnabled != streamer.streamEndMessagesEnabled
                                 || e.streamStartMessagesEnabled != streamer.streamStartMessagesEnabled) {
-                            Mewna.getInstance().getNats().pushTwitchEvent("TWITCH_SUBSCRIBE", new JSONObject()
+                            // TODO: Singyeong messages
+                            /*
+                            Mewna.getInstance().getNats().pushTwitchEvent("TWITCH_SUBSCRIBE", new JsonObject()
                                     .put("id", streamer.getId()).put("topic", "streams"));
+                                    */
                         }
                     }
                 }

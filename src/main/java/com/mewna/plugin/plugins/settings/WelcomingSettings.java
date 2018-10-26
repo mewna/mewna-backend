@@ -3,17 +3,16 @@ package com.mewna.plugin.plugins.settings;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
-import com.mewna.plugin.plugins.PluginBehaviour;
 import com.mewna.plugin.plugins.PluginWelcoming;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
+import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -58,12 +57,12 @@ public class WelcomingSettings implements PluginSettings {
     }
     
     @Override
-    public boolean validateSettings(final JSONObject data) {
-        for(final String key : data.keySet()) {
+    public boolean validateSettings(final JsonObject data) {
+        for(final String key : data.fieldNames()) {
             switch(key) {
                 case "welcomeMessage":
                 case "goodbyeMessage": {
-                    final Optional<String> maybeData = Optional.ofNullable(data.optString(key));
+                    final Optional<String> maybeData = Optional.ofNullable(data.getString(key, null));
                     if(maybeData.isPresent()) {
                         final String s = maybeData.get();
                         if(s.isEmpty() || s.length() > DISCORD_MAX_MESSAGE_SIZE) {
@@ -85,23 +84,23 @@ public class WelcomingSettings implements PluginSettings {
     }
     
     @Override
-    public boolean updateSettings(final Database database, final JSONObject data) {
+    public boolean updateSettings(final Database database, final JsonObject data) {
         try {
-            String messageChannel = data.optString("messageChannel");
+            String messageChannel = data.getString("messageChannel", null);
             if(messageChannel != null && messageChannel.isEmpty()) {
                 // non-null but empty should be nulled so that things work right
                 messageChannel = null;
             }
             this.messageChannel = messageChannel;
             
-            String joinRoleId = data.optString("joinRoleId");
+            String joinRoleId = data.getString("joinRoleId", null);
             if(joinRoleId != null && joinRoleId.isEmpty()) {
                 // non-null but empty should be nulled so that things work right
                 joinRoleId = null;
             }
             this.joinRoleId = joinRoleId;
-            enableWelcomeMessages = data.optBoolean("enableWelcomeMessages", false);
-            enableGoodbyeMessages = data.optBoolean("enableGoodbyeMessages", false);
+            enableWelcomeMessages = data.getBoolean("enableWelcomeMessages", false);
+            enableGoodbyeMessages = data.getBoolean("enableGoodbyeMessages", false);
             // Trigger exception if not present
             data.getString("welcomeMessage");
             data.getString("goodbyeMessage");

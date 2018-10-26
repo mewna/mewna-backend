@@ -1,7 +1,7 @@
 package com.mewna.queue;
 
+import io.vertx.core.json.JsonObject;
 import lombok.Value;
-import org.json.JSONObject;
 
 /**
  * @author amy
@@ -10,7 +10,7 @@ import org.json.JSONObject;
 @Value
 public class SocketEvent {
     private final String type;
-    private final JSONObject data;
+    private final JsonObject data;
     private final long timestamp;
     private final int shard;
     private final int limit;

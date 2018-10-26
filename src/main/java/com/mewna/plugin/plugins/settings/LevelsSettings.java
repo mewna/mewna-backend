@@ -9,13 +9,12 @@ import com.mewna.plugin.plugins.PluginLevels;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
+import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.*;
 
@@ -75,11 +74,11 @@ public class LevelsSettings implements PluginSettings {
     }
     
     @Override
-    public boolean validateSettings(final JSONObject data) {
-        for(final String key : data.keySet()) {
+    public boolean validateSettings(final JsonObject data) {
+        for(final String key : data.fieldNames()) {
             switch(key) {
                 case "levelUpMessage": {
-                    final Optional<String> maybeData = Optional.ofNullable(data.optString(key));
+                    final Optional<String> maybeData = Optional.ofNullable(data.getString(key, null));
                     if(maybeData.isPresent()) {
                         final String s = maybeData.get();
                         if(s.isEmpty() || s.length() > DISCORD_MAX_MESSAGE_SIZE) {
@@ -98,23 +97,23 @@ public class LevelsSettings implements PluginSettings {
     }
     
     @Override
-    public boolean updateSettings(final Database database, final JSONObject data) {
+    public boolean updateSettings(final Database database, final JsonObject data) {
         try {
             // Trigger exception if not present
             data.getString("levelUpMessage");
-            String levelUpMessage = data.optString("levelUpMessage");
+            String levelUpMessage = data.getString("levelUpMessage", null);
             if(levelUpMessage == null) {
                 levelUpMessage = "";
             }
             this.levelUpMessage = levelUpMessage;
-            levelsEnabled = data.optBoolean("levelsEnabled", false);
-            levelUpMessagesEnabled = data.optBoolean("levelUpMessagesEnabled", false);
-            removePreviousRoleRewards = data.optBoolean("removePreviousRoleRewards", false);
+            levelsEnabled = data.getBoolean("levelsEnabled", false);
+            levelUpMessagesEnabled = data.getBoolean("levelUpMessagesEnabled", false);
+            removePreviousRoleRewards = data.getBoolean("removePreviousRoleRewards", false);
             
             // Basically just copy the object into a map as-is, converting data types to make sure it works
-            final JSONObject rewards = data.getJSONObject("levelRoleRewards");
+            final JsonObject rewards = data.getJsonObject("levelRoleRewards");
             final Map<String, Long> roleRewards = new HashMap<>();
-            for(final String key : rewards.keySet()) {
+            for(final String key : rewards.fieldNames()) {
                 roleRewards.put(key, rewards.getLong(key));
             }
             // Clean out empty levels
@@ -130,7 +129,7 @@ public class LevelsSettings implements PluginSettings {
             commandSettings.putAll(commandSettingsFromJson(data));
             database.saveSettings(this);
             return true;
-        } catch(final JSONException e) {
+        } catch(final Exception e) {
             return false;
         }
     }

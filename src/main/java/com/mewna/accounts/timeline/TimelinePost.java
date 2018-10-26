@@ -5,8 +5,8 @@ import com.mewna.plugin.util.Snowflakes;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
+import io.vertx.core.json.JsonObject;
 import lombok.*;
-import org.json.JSONObject;
 
 import java.util.Map;
 
@@ -48,7 +48,7 @@ public class TimelinePost {
     
     public static TimelinePost create(final String author, final boolean system, final String text) {
         return new TimelinePost(Snowflakes.getNewSnowflake(), author, system,
-                system ? new PostContent(null, new JSONObject(text).toMap())
+                system ? new PostContent(null, new JsonObject(text).getMap())
                         : new PostContent(text, null));
     }
     

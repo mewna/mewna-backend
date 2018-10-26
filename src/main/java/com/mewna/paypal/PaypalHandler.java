@@ -9,8 +9,8 @@ import com.paypal.api.payments.*;
 import com.paypal.base.rest.APIContext;
 import com.paypal.base.rest.PayPalRESTException;
 import io.sentry.Sentry;
+import io.vertx.core.json.JsonObject;
 import lombok.*;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +59,7 @@ public class PaypalHandler {
         return skus.stream().filter(e -> e.sku.equalsIgnoreCase(sku)).findFirst();
     }
     
-    public JSONObject startPayment(final String userId, final String skuId) {
+    public JsonObject startPayment(final String userId, final String skuId) {
         final Optional<SKU> sku = getSku(skuId);
         if(sku.isPresent()) {
             final String paymentAmount = String.format("%.2f", sku.get().getCents() / 100D);
@@ -90,28 +90,28 @@ public class PaypalHandler {
                 for(final Links link : createdPayment.getLinks()) {
                     if(link.getRel().equalsIgnoreCase("approval_url")) {
                         // REDIRECT USER TO link.getHref()
-                        return new JSONObject().put("status", "success").put("redirect", link.getHref());
+                        return new JsonObject().put("status", "success").put("redirect", link.getHref());
                     }
                 }
-                return new JSONObject().put("status", "error").put("error", "Couldn't find approval url!?");
+                return new JsonObject().put("status", "error").put("error", "Couldn't find approval url!?");
             } catch(final PayPalRESTException e) {
                 logger.error("COULDN'T CREATE PAYPAL TRANSACTION:");
                 logger.error("{}", e.getDetails());
                 e.printStackTrace();
                 Sentry.capture(e);
-                return new JSONObject().put("status", "error").put("error", e.getMessage());
+                return new JsonObject().put("status", "error").put("error", e.getMessage());
             } catch(final IllegalArgumentException e) {
                 logger.error("COULDN'T CREATE PAYPAL TRANSACTION:", e);
                 e.printStackTrace();
                 Sentry.capture(e);
-                return new JSONObject().put("status", "error").put("error", e.getMessage());
+                return new JsonObject().put("status", "error").put("error", e.getMessage());
             }
         } else {
-            return new JSONObject().put("status", "error").put("error", "no sku");
+            return new JsonObject().put("status", "error").put("error", "no sku");
         }
     }
     
-    public JSONObject finishPayment(final String userId, final String paymentId, final String payerId) {
+    public JsonObject finishPayment(final String userId, final String paymentId, final String payerId) {
         final APIContext context = new APIContext(CLIENT, SECRET, MODE);
         final Payment payment = new Payment();
         payment.setId(paymentId);
@@ -150,12 +150,12 @@ public class PaypalHandler {
             }
             
             logger.info("Completed Paypal transaction for USD ${}: {}", amount, createdPayment);
-            return new JSONObject().put("status", "success");
+            return new JsonObject().put("status", "success");
         } catch(final PayPalRESTException e) {
             logger.info("COULDN'T COMPLETE PAYPAL TRANSACTION:");
             logger.error("{}", e.getDetails());
             e.printStackTrace();
-            return new JSONObject().put("status", "error").put("error", e.getMessage());
+            return new JsonObject().put("status", "error").put("error", e.getMessage());
         }
     }
     

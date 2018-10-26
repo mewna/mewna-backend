@@ -1,9 +1,7 @@
 package com.mewna.plugin.plugins;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
 import com.mewna.cache.entity.Guild;
+import com.mewna.catnip.entity.message.MessageOptions;
 import com.mewna.data.Webhook;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Plugin;
@@ -17,15 +15,9 @@ import com.mewna.plugin.plugins.settings.TwitchSettings;
 import com.mewna.plugin.plugins.settings.TwitchSettings.TwitchStreamerConfig;
 import com.mewna.util.Templater;
 import io.sentry.Sentry;
-import net.dv8tion.jda.core.exceptions.HttpException;
-import net.dv8tion.jda.webhook.WebhookClient;
-import net.dv8tion.jda.webhook.WebhookClientBuilder;
-import net.dv8tion.jda.webhook.WebhookMessageBuilder;
 
 import java.sql.ResultSet;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 /**
  * TODO: HEAVY caching...
@@ -39,15 +31,6 @@ import java.util.concurrent.TimeUnit;
  */
 @Plugin(name = "Twitch", desc = "Get alerts when your favourite streamers go live.", settings = TwitchSettings.class)
 public class PluginTwitch extends BasePlugin {
-    private final Cache<String, WebhookClient> webhookCache = CacheBuilder.newBuilder()
-            .expireAfterAccess(1, TimeUnit.DAYS)
-            .removalListener((RemovalListener<String, WebhookClient>) notification -> {
-                if(notification.getValue() != null) {
-                    notification.getValue().close();
-                }
-            })
-            .build();
-    
     @Event(EventType.TWITCH_STREAM_START)
     public void handleStreamStart(final TwitchStreamStartEvent event) {
         handleHook(event, "stream-start");
@@ -126,54 +109,27 @@ public class PluginTwitch extends BasePlugin {
                                     final Optional<Webhook> maybeHook = getDatabase().getWebhook(settings.getTwitchWebhookChannel());
                                     if(maybeHook.isPresent()) {
                                         final Webhook webhook = maybeHook.get();
+                                        final Templater templater = map(event);
+                                        final MessageOptions messageOptions = new MessageOptions();
                                         try {
-                                            final WebhookClient client = webhookCache.get(webhook.getId(),
-                                                    () -> new WebhookClientBuilder(Long.parseLong(webhook.getId()), webhook.getSecret())
-                                                            .build());
-                                            
-                                            final Templater templater = map(event);
-                                            final WebhookMessageBuilder msgBuilder = new WebhookMessageBuilder();
-                                            try {
-                                                switch(mode) {
-                                                    case "stream-start": {
-                                                        client.send(msgBuilder.setContent(
-                                                                templater.render(streamerConfig.getStreamStartMessage())
-                                                        ).build());
-                                                        break;
-                                                    }
-                                                    case "stream-end": {
-                                                        client.send(msgBuilder.setContent(
-                                                                templater.render(streamerConfig.getStreamEndMessage())
-                                                        ).build());
-                                                        break;
-                                                    }
-                                                    case "follow": {
-                                                        client.send(msgBuilder.setContent(
-                                                                templater.render(streamerConfig.getFollowMessage())
-                                                        ).build());
-                                                        break;
-                                                    }
+                                            switch(mode) {
+                                                case "stream-start": {
+                                                    messageOptions.content(templater.render(streamerConfig.getStreamStartMessage()));
+                                                    break;
                                                 }
-                                            } catch(final HttpException e) {
-                                                // I cannot believe I have to do this.
-                                                final String message = e.getMessage();
-                                                // Extracts HTTP response code from the error message, because APPARENTLY
-                                                // it's not necessary to expose it here...
-                                                final String code = message
-                                                        .replace("Request returned failure ", "")
-                                                        .trim().split(" ", 2)[0];
-                                                if(code.equalsIgnoreCase("404")) {
-                                                    // Bad hook, delet
-                                                    getLogger().warn("Deleting bad webhook {} on {}", webhook.getId(), webhook.getChannel());
-                                                    getDatabase().deleteWebhook(webhook.getChannel());
-                                                } else {
-                                                    // TODO: Capture more info?
-                                                    Sentry.capture(e);
+                                                case "stream-end": {
+                                                    messageOptions.content(templater.render(streamerConfig.getStreamEndMessage()));
+                                                    break;
+                                                }
+                                                case "follow": {
+                                                    messageOptions.content(templater.render(streamerConfig.getFollowMessage()));
+                                                    break;
                                                 }
                                             }
-                                        } catch(final ExecutionException e) {
+                                            //noinspection ResultOfMethodCallIgnored
+                                            getCatnip().rest().webhook().executeWebhook(webhook.getId(), webhook.getSecret(), messageOptions);
+                                        } catch(final Exception e) {
                                             Sentry.capture(e);
-                                            e.printStackTrace();
                                         }
                                     }
                                 }

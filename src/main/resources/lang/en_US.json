@@ -1,0 +1,47 @@
+{
+  "commands": {
+    "economy": {
+      "balance": "Check your balance, or someone else's balance.",
+      "pay": "Send money to another user.",
+      "daily": "Collect some money once a day.",
+      "crime": "Shake down some people for some money.",
+      "heist": "Execute a daring raid on the impenetrable Fort Knick-Knacks.",
+      "slots": "Gamble your life away at the slot machines.",
+      "baltop": "See the 10 richest users.",
+      "gamble": "Bet big on the Wumpus Races.",
+      "items": "View your items.",
+      "market": "Show available items.",
+      "buy": "Buy some items.",
+      "sell": "Sell some items.",
+      "mine": "Go mining for shines!",
+      "fish": "Go fishing for tasty fish!"
+    },
+    "emotes": "Fun little emote commands. You need to mention someone to use them.",
+    "levels": {
+      "rank": "Check your rank, or someone else's rank.",
+      "profile": "Check your profile card, or someone else's.",
+      "score": "Check your score, or someone else's.",
+      "leaderboards": "View the server leaderboards."
+    },
+    "misc": {
+      "cat": "Get a random cat picture.",
+      "dog": "Get a random dog picture.",
+      "catgirl": "Get a random (SFW) catgirl picture.",
+      "rubeface": "Rubeface, the perfect meme for every situation.",
+      "memetext": "Convert stuff to big characters.",
+      "snowman": "Do you want to build a snowman?",
+      "bootlegcat": "See a bootleg cat, for when mew.cat doesn't work.",
+      "clappify": "👏 Clap 👏 some 👏 text 👏 (or 🍞, or 🥔, whatever)",
+      "help": "Get links to helpful information.",
+      "roll": "Roll some dice, D&D style.",
+      "ping": "Check if Mewna's still working.",
+      "tato": "Mewna Miner - Like Cookie Clicker, but tato-flavoured.",
+      "dnd": "Get useful information for your D&D 5e game."
+    }
+  },
+  "plugins": {
+    "economy": {
+
+    }
+  }
+}

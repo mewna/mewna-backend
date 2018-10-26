@@ -271,7 +271,7 @@ public class PluginLevels extends BasePlugin {
         }
     }
     
-    @Command(names = {"rank", "level"}, desc = "Check your rank, or someone else's rank.", usage = "rank [@mention]",
+    @Command(names = {"rank", "level"}, desc = "commands.levels.rank", usage = "rank [@mention]",
             examples = {"rank", "rank @someone"})
     public void rank(final CommandContext ctx) {
         final Guild guild = ctx.getGuild();
@@ -324,7 +324,7 @@ public class PluginLevels extends BasePlugin {
                         }));
     }
     
-    @Command(names = "profile", desc = "Check your profile card, or someone else's.", usage = "profile [@mention]",
+    @Command(names = "profile", desc = "commands.levels.profile", usage = "profile [@mention]",
             examples = {"profile", "profile @someone"})
     public void profile(final CommandContext ctx) {
         final User user;
@@ -371,7 +371,7 @@ public class PluginLevels extends BasePlugin {
                                 }));
     }
     
-    @Command(names = "score", desc = "Check your score, or someone else's.", usage = "score [@mention]",
+    @Command(names = "score", desc = "commands.levels.score", usage = "score [@mention]",
             examples = {"score", "score @someone"})
     public void score(final CommandContext ctx) {
         final User user;
@@ -388,7 +388,7 @@ public class PluginLevels extends BasePlugin {
                 String.format("**%s**'s score: **%s**", user.getName(), player.calculateScore()));
     }
     
-    @Command(names = {"leaderboards", "ranks", "levels", "leaderboard", "rankings"}, desc = "View the guild leaderboards.",
+    @Command(names = {"leaderboards", "ranks", "levels", "leaderboard", "rankings"}, desc = "commands.levels.leaderboards",
             usage = "leaderboards", examples = "leaderboards")
     public void ranks(final CommandContext ctx) {
         final Guild guild = ctx.getGuild();

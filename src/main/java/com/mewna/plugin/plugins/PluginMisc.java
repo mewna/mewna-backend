@@ -192,7 +192,7 @@ public class PluginMisc extends BasePlugin {
         return list;
     }
     
-    @Command(names = "cat", desc = "Get a random cat picture.", usage = "cat", examples = "cat")
+    @Command(names = "cat", desc = "commands.misc.cat", usage = "cat", examples = "cat")
     public void cat(final CommandContext ctx) {
         try {
             @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
@@ -207,7 +207,7 @@ public class PluginMisc extends BasePlugin {
         }
     }
     
-    @Command(names = "dog", desc = "Get a random dog picture.", usage = "dog", examples = "dog")
+    @Command(names = "dog", desc = "commands.misc.dog", usage = "dog", examples = "dog")
     public void dog(final CommandContext ctx) {
         try {
             @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
@@ -223,7 +223,7 @@ public class PluginMisc extends BasePlugin {
     }
     
     @Ratelimit(type = RatelimitType.GUILD, time = 5)
-    @Command(names = "catgirl", desc = "Get a random (SFW) catgirl picture.", usage = "catgirl", examples = "catgirl")
+    @Command(names = "catgirl", desc = "commands.misc.catgirl", usage = "catgirl", examples = "catgirl")
     public void catgirl(final CommandContext ctx) {
         try {
             @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
@@ -238,14 +238,14 @@ public class PluginMisc extends BasePlugin {
         }
     }
     
-    @Command(names = {"rubeface", "rf"}, desc = "Rubeface, the perfect meme for every situation.", usage = "rubeface",
+    @Command(names = {"rubeface", "rf"}, desc = "commands.misc.rubeface", usage = "rubeface",
             examples = "rubeface")
     public void rubeface(final CommandContext ctx) {
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
                 new EmbedBuilder().title("Rubeface").image(rubeface[getRandom().nextInt(rubeface.length)]).build());
     }
     
-    @Command(names = {"memetext", "bigtext", "mt"}, desc = "Convert stuff to big characters.", usage = "memetext <input>",
+    @Command(names = {"memetext", "bigtext", "mt"}, desc = "commands.misc.memetext", usage = "memetext <input>",
             examples = "memetext some text I want to be big!")
     public void memetext(final CommandContext ctx) {
         if(ctx.getArgstr().trim().isEmpty()) {
@@ -263,12 +263,12 @@ public class PluginMisc extends BasePlugin {
                         .replace("@here", "[haha very funny]"));
     }
     
-    @Command(names = "snowman", desc = "Do you want to build a snowman?", usage = "snowman", examples = "snowman")
+    @Command(names = "snowman", desc = "commands.misc.snowman", usage = "snowman", examples = "snowman")
     public void snowman(final CommandContext ctx) {
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "<:snowman:496314615144251392>");
     }
     
-    @Command(names = {"bootlegcat", "blc"}, desc = "See a bootleg cat, for when mew.cat doesn't work.", usage = "bootlegcat",
+    @Command(names = {"bootlegcat", "blc"}, desc = "commands.misc.bootlegcat", usage = "bootlegcat",
             examples = "bootlegcat")
     public void bootlegcat(final CommandContext ctx) {
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Do any of these describe YOU?\n" +
@@ -297,7 +297,7 @@ public class PluginMisc extends BasePlugin {
                     "breadify",
                     "potatofy"
             },
-            desc = "\uD83D\uDC4F Clap \uD83D\uDC4F some \uD83D\uDC4F text \uD83D\uDC4F (or \uD83C\uDF5E, or \uD83E\uDD54, whatever)",
+            desc = "commands.misc.clappify",
             usage = {
                     "clappify <text>",
                     "breadify <text>",
@@ -345,7 +345,8 @@ public class PluginMisc extends BasePlugin {
                 .replace(ctx.getGuild().getId(), "haha no"));
     }
     
-    @Command(names = {"help", "?"}, desc = "Get links to helpful information.", usage = "help", examples = "help")
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Command(names = {"help", "?"}, desc = "commands.misc.help", usage = "help", examples = "help")
     public void help(final CommandContext ctx) {
         final EmbedBuilder builder = new EmbedBuilder();
         builder.title("Mewna help")
@@ -358,7 +359,7 @@ public class PluginMisc extends BasePlugin {
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), builder.build());
     }
     
-    @Command(names = {"roll", "r"}, desc = "Roll some dice, D&D style", usage = "roll <dice expression>",
+    @Command(names = {"roll", "r"}, desc = "commands.misc.roll", usage = "roll <dice expression>",
             examples = {"roll 5d6", "roll 5d6+2", "roll 1d20 + 5d6 - 10"})
     public void roll(final CommandContext ctx) {
         String message;
@@ -372,7 +373,7 @@ public class PluginMisc extends BasePlugin {
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), message);
     }
     
-    @Command(names = "ping", desc = "Check if Mewna's still working.", usage = "ping", examples = "ping")
+    @Command(names = "ping", desc = "commands.misc.ping", usage = "ping", examples = "ping")
     public void ping(final CommandContext ctx) {
         final long start = System.currentTimeMillis();
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Pinging...").thenAccept(msg -> {
@@ -383,7 +384,7 @@ public class PluginMisc extends BasePlugin {
     }
     
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    @Command(names = {"tato", "miner"}, desc = "Mewna Miner - Like Cookie Clicker, but tato-flavoured.",
+    @Command(names = {"tato", "miner"}, desc = "commands.misc.tato",
             usage = {"tato", "tato help", "tato upgrade [buy <upgrade>]", "tato building [buy <building>]"/*,
                     "tato food [food[,food,...]]"*/},
             examples = {"tato", "tato upgrade", "tato building", "tato help"})
@@ -636,7 +637,7 @@ public class PluginMisc extends BasePlugin {
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), ctx.getUser().asMention() + "'s tato stats:\n" + stats);
     }
     
-    @Command(names = "dnd", desc = "Get useful information for your D&D 5e game.", usage = {
+    @Command(names = "dnd", desc = "commands.misc.dnd", usage = {
             "dnd spell <spell name>",
             "dnd spell <class name> <level>",
             "dnd item <item name>",

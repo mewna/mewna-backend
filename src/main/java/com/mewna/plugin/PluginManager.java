@@ -128,7 +128,7 @@ public class PluginManager {
                     return;
                 }
                 logger.info("Loading plugin {}: {}", pluginAnnotation.name(), pluginAnnotation.desc());
-                final Object pluginInstance = c.newInstance();
+                final Object pluginInstance = c.getDeclaredConstructor().newInstance();
                 inject(pluginInstance);
                 
                 for(final Method m : c.getDeclaredMethods()) {
@@ -145,7 +145,7 @@ public class PluginManager {
                     pluginMetadata.add(new PluginMetadata(pluginAnnotation.name(), pluginAnnotation.desc(), c, pluginAnnotation.settings()));
                 }
                 logger.info("Finished loading plugin {}: {}", pluginAnnotation.name(), pluginAnnotation.desc());
-            } catch(final InstantiationException | IllegalAccessException e) {
+            } catch(final InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
                 Sentry.capture(e);
                 e.printStackTrace();
             }

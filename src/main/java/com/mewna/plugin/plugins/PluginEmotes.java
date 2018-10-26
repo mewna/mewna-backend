@@ -13,7 +13,7 @@ import com.mewna.plugin.plugins.settings.EmotesSettings;
 @Plugin(name = "Emotes", desc = "Fun little emotes for your server.", settings = EmotesSettings.class)
 public class PluginEmotes extends BasePlugin {
     @Command(names = {"bap", "chew", "cookie", "hug", "lick", "nom", "pat", "poke", "prod", "shoot", "stab", "tickle"},
-            desc = "Fun little emote commands. You need to mention someone to use them.", usage = "<command> <person>",
+            desc = "commands.emotes", usage = "<command> <person>",
             examples = {"bap someone", "stab someone else", "poke everyone"}, aliased = false)
     public void emote(final CommandContext ctx) {
         if(ctx.getArgstr().isEmpty()) {

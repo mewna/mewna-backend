@@ -4,6 +4,7 @@ import com.mewna.Mewna;
 import com.mewna.cache.entity.User;
 import com.mewna.data.Player;
 import com.mewna.util.CacheUtil;
+import com.mewna.util.IOUtils;
 import io.sentry.Sentry;
 import lombok.Getter;
 import org.slf4j.Logger;
@@ -18,9 +19,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
 
 /**
  * Manages textures. duh.
@@ -59,41 +57,12 @@ public final class TextureManager {
         return BACKGROUNDS.stream().anyMatch(e -> e.name.equals(name) && e.pack.equals(pack));
     }
     
-    private static void scan(@SuppressWarnings("SameParameterValue") final String path, final Consumer<JarEntry> callback) {
-        try {
-            final URL url = Renderer.class.getProtectionDomain().getCodeSource().getLocation();
-            try(final InputStream is = url.openStream()) {
-                final JarInputStream stream = new JarInputStream(is);
-                JarEntry entry;
-                while((entry = stream.getNextJarEntry()) != null) {
-                    if(entry.getName().startsWith(path)) {
-                        callback.accept(entry);
-                    }
-                }
-            }
-        } catch(final IOException e) {
-            Sentry.capture(e);
-            e.printStackTrace();
-        }
-    }
-    
-    private static byte[] readFully(final InputStream stream) throws IOException {
-        final byte[] buffer = new byte[1024];
-        try(final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            int readAmount;
-            while((readAmount = stream.read(buffer)) != -1) {
-                bos.write(buffer, 0, readAmount);
-            }
-            return bos.toByteArray();
-        }
-    }
-    
     public static void preload(final Mewna mewna) {
         if(preloaded) {
             return;
         }
         preloaded = true;
-        scan("backgrounds", e -> {
+        IOUtils.scan("backgrounds", e -> {
             if(!e.isDirectory() && e.getName().toLowerCase().endsWith(".png") && !e.getName().contains("thumbs")) {
                 final String path = '/' + e.getName();
                 final Background bg = new Background(path);
@@ -105,7 +74,7 @@ public final class TextureManager {
             }
         });
         try(final InputStream is = CacheUtil.class.getResourceAsStream("/backgrounds/manifest.json")) {
-            final String json = new String(readFully(is));
+            final String json = new String(IOUtils.readFully(is));
             mewna.getPaypalHandler().loadBackgroundManifest(json);
         } catch(final IOException e) {
             Sentry.capture(e);

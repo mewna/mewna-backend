@@ -56,7 +56,7 @@ public class PluginEconomy extends BasePlugin {
     @Inject
     private CurrencyHelper helper;
     
-    @Command(names = {"balance", "bal"}, desc = "Check your balance, or someone else's balance.", usage = "balance [player]",
+    @Command(names = {"balance", "bal"}, desc = "commands.economy.balance", usage = "balance [player]",
             examples = {"balance", "balance @someone"})
     public void balance(final CommandContext ctx) {
         if(ctx.getMentions().isEmpty()) {
@@ -73,7 +73,7 @@ public class PluginEconomy extends BasePlugin {
         }
     }
     
-    @Command(names = "pay", desc = "Send money to another user.", usage = "pay <mention> <amount>",
+    @Command(names = "pay", desc = "commands.economy.pay", usage = "pay <mention> <amount>",
             examples = "pay @someone 100")
     public void pay(final CommandContext ctx) {
         if(ctx.getMentions().isEmpty()) {
@@ -99,7 +99,7 @@ public class PluginEconomy extends BasePlugin {
         }
     }
     
-    @Command(names = "daily", desc = "Collect some money once a day.", usage = "daily", examples = "daily")
+    @Command(names = "daily", desc = "commands.economy.daily", usage = "daily", examples = "daily")
     public void daily(final CommandContext ctx) {
         final Player player = ctx.getPlayer();
         final Guild guild = ctx.getGuild();
@@ -137,7 +137,7 @@ public class PluginEconomy extends BasePlugin {
     }
     
     @Ratelimit(time = 20)
-    @Command(names = "crime", desc = "Shake down some people for some money.", usage = "crime", examples = "crime")
+    @Command(names = "crime", desc = "commands.economy.crime", usage = "crime", examples = "crime")
     public void crime(final CommandContext ctx) {
         final int choice = getRandom().nextInt(10) + 1;
         final int amount = getRandom().nextInt(Math.toIntExact(CRIME_BASE_COST)) + 1;
@@ -195,7 +195,7 @@ public class PluginEconomy extends BasePlugin {
     
     @Payment(min = HEIST_BASE_COST)
     @Ratelimit(time = 5 * 60)
-    @Command(names = "heist", desc = "Execute a daring raid on the impenetrable Fort Knick-Knacks.", usage = "heist",
+    @Command(names = "heist", desc = "commands.economy.heist", usage = "heist",
             examples = "heist")
     public void heist(final CommandContext ctx) {
         final int chance = getRandom().nextInt(1000);
@@ -216,7 +216,7 @@ public class PluginEconomy extends BasePlugin {
     
     @Payment(min = 5, max = 1000, fromFirstArg = true)
     @Ratelimit(time = 10)
-    @Command(names = "slots", desc = "Gamble your life away at the slot machines.", usage = "slots [amount]",
+    @Command(names = "slots", desc = "commands.economy.slots", usage = "slots [amount]",
             examples = {"slots", "slots 100"})
     public void slots(final CommandContext ctx) {
         final User user = ctx.getUser();
@@ -277,7 +277,7 @@ public class PluginEconomy extends BasePlugin {
     }
     
     @Ratelimit(time = 20)
-    @Command(names = "baltop", desc = "See the 10 richest users.", usage = "baltop", examples = "baltop")
+    @Command(names = "baltop", desc = "commands.economy.baltop", usage = "baltop", examples = "baltop")
     public void baltop(final CommandContext ctx) {
         getDatabase().getStore().sql("SELECT * FROM players ORDER BY (data->>'balance')::integer DESC LIMIT 10;", p -> {
             final ResultSet res = p.executeQuery();
@@ -300,7 +300,7 @@ public class PluginEconomy extends BasePlugin {
     
     @Payment(min = 20, max = 1000, fromFirstArg = true)
     @Ratelimit(time = 60)
-    @Command(names = "gamble", desc = "Bet big on the Wumpus Races.", usage = "gamble [amount]",
+    @Command(names = "gamble", desc = "commands.economy.gamble", usage = "gamble [amount]",
             examples = {"gamble", "gamble 100"})
     public void gamble(final CommandContext ctx) {
         // TODO: Allow a way for a player to choose this
@@ -327,7 +327,7 @@ public class PluginEconomy extends BasePlugin {
     }
     
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    @Command(names = {"items", "inventory"}, desc = "View your items.", usage = "items", examples = "items")
+    @Command(names = {"items", "inventory"}, desc = "commands.economy.items", usage = "items", examples = "items")
     public void items(final CommandContext ctx) {
         final Player user = ctx.getPlayer();
         final EmbedBuilder b = new EmbedBuilder();
@@ -380,7 +380,7 @@ public class PluginEconomy extends BasePlugin {
     }
     */
     
-    @Command(names = "market", desc = "Show available items", usage = "market", examples = "market")
+    @Command(names = "market", desc = "commands.economy.market", usage = "market", examples = "market")
     public void market(final CommandContext ctx) {
         final StringBuilder sb = new StringBuilder();
         for(int i = 0; i < Item.values().length; i++) {
@@ -408,7 +408,7 @@ public class PluginEconomy extends BasePlugin {
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), b.build());
     }
     
-    @Command(names = "buy", desc = "Buy some items.", usage = "buy <item name> [amount]",
+    @Command(names = "buy", desc = "commands.economy.buy", usage = "buy <item name> [amount]",
             examples = {"buy pickaxe", "buy burger 10"})
     public void buy(final CommandContext ctx) {
         if(isWeighedDown(ctx.getPlayer())) {
@@ -464,7 +464,7 @@ public class PluginEconomy extends BasePlugin {
         }
     }
     
-    @Command(names = "sell", desc = "Sell some items.", usage = "sell <item name> [amount]",
+    @Command(names = "sell", desc = "commands.economy.sell", usage = "sell <item name> [amount]",
             examples = {"sell pickaxe", "sell burger 10"})
     public void sell(final CommandContext ctx) {
         final List<String> args = ctx.getArgs();
@@ -515,7 +515,7 @@ public class PluginEconomy extends BasePlugin {
     }
     
     @Ratelimit(time = 20)
-    @Command(names = "mine", desc = "Go mining for shines!", usage = "mine", examples = "mine")
+    @Command(names = "mine", desc = "commands.economy.mine", usage = "mine", examples = "mine")
     public void mine(final CommandContext ctx) {
         if(isWeighedDown(ctx.getPlayer())) {
             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
@@ -550,7 +550,7 @@ public class PluginEconomy extends BasePlugin {
     }
     
     @Ratelimit(time = 10)
-    @Command(names = "fish", desc = "Go fishing for tasty fish!", usage = "fish", examples = "fish")
+    @Command(names = "fish", desc = "commands.economy.fish", usage = "fish", examples = "fish")
     public void fish(final CommandContext ctx) {
         if(isWeighedDown(ctx.getPlayer())) {
             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),

@@ -124,6 +124,50 @@
           "success": "You fished up:"
         }
       }
+    },
+    "emotes": {
+      "base": "**$target**, you were just $action by **$user**!",
+      "commands": {
+        "bap": "bapped",
+        "chew": "chewed on",
+        "cookie": "given a :cookie:",
+        "hug": "hugged",
+        "lick": "licked",
+        "nom": "nommed on",
+        "pat": "were lovingly patted <:blobhyperpat:352487540785414155>",
+        "poke": "poked",
+        "prod": "prodded",
+        "shoot": "shot :gun:",
+        "stab": "stabbed :knife:",
+        "tickle": "tickled"
+      }
+    },
+    "levels": {
+      "not-enabled": "Levels are not enabled in this server. The server owner (or administrators) can enable levels in the dashboard: <https://mewna.com/>",
+      "bot": "Bots can't have levels!",
+      "change-background": "You can change your background on your profile.",
+      "change-background-description": "You can change your description and background on your profile.",
+      "view-full-profile": "View full profile",
+      "commands": {
+        "rank": {
+          "generating": {
+            "self": "$mention > Generating your rank card (this will take a few seconds)...",
+            "other": "$mention > Generating **$target**'s rank card (this will take a few seconds)..."
+          }
+        },
+        "profile": {
+          "generating": {
+            "self": "$mention > Generating your profile card (this will take a few seconds)...",
+            "other": "$mention > Generating **$target**'s profile card (this will take a few seconds)..."
+          }
+        },
+        "score": "**$target**'s score: **$score**"
+      }
+    },
+    "misc": {
+      "commands": {
+
+      }
     }
   }
 }

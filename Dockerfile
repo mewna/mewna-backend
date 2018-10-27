@@ -1,4 +1,4 @@
-FROM maven:3
+FROM maven:3-jdk-10-slim
 
 COPY . /app
 WORKDIR /app

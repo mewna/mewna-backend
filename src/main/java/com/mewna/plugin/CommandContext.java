@@ -28,4 +28,5 @@ public class CommandContext {
     private Account account;
     private long cost;
     private String prefix;
+    private String language;
 }

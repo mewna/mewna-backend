@@ -265,7 +265,7 @@ public class PluginMisc extends BasePlugin {
     
     @Command(names = "snowman", desc = "commands.misc.snowman", usage = "snowman", examples = "snowman")
     public void snowman(final CommandContext ctx) {
-        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "<:snowman:496314615144251392>");
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "☃");
     }
     
     @Command(names = {"bootlegcat", "blc"}, desc = "commands.misc.bootlegcat", usage = "bootlegcat",

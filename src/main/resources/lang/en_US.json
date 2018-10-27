@@ -41,7 +41,89 @@
   },
   "plugins": {
     "economy": {
-
+      "commands": {
+        "balance": {
+          "self": "**You** have **$amount$symbol**.",
+          "other": "**$target** has **$amount$symbol**."
+        },
+        "pay": {
+          "needs-mention": "You need to mention someone to pay.",
+          "needs-mention-amount": "You need to mention someone to pay, and specify an amount to pay.",
+          "no-self-pay": "You can't pay yourself!",
+          "success": "**$user**, you sent **$amount$symbol** to **$target**."
+        },
+        "daily": {
+          "failure-wait": "You can collect your daily again in **$time**.",
+          "collect-base": "You collect your daily **$amount$symbol**.",
+          "collect-streak": "Streak up! New streak: `$streak`, bonus: **$amount$symbol**.",
+          "streak-break": "It's been more than 2 days since you last collected your daily $symbol, so your streak has reset."
+        },
+        "crime": {
+          "1": "You steal candy from a baby and sell it back to him, netting you **$amount$symbol**.",
+          "2": "You sell someone a shiny (but worthless) rock for **$amount$symbol**.",
+          "3": "You pretend to get hit by someone's Wumpus, and scam Bamboozle Insurance:tm: out of **$amount$symbol**.",
+          "4": "You successfully steal a cash register, and take the **$amount$symbol** inside.",
+          "5": "You sell someone a rotten :potato: for **$amount$symbol**.",
+          "6": "You robbed the Society of Schmoogaloo and ended up in a lake, but still managed to steal **$amount$symbol**.",
+          "7": "You start the Cult of Wumpus, and scam the cult members out of **$amount$symbol**.",
+          "8": "You kidnap someone's pet Wumpus, only returning it after they pay the ransom of **$amount$symbol**.",
+          "9": "You sell candy to young school children, bringing in **$amount$symbol**.",
+          "10": "You sell a Wumpus to the circus for **$amount$symbol**."
+        },
+        "heist": {
+          "success": "You break into Fort Knick-Knacks and steal **$amount$symbol** from inside.",
+          "failure": "Oh no! The guards caught you! They take **$amount$symbol** from you and let you go."
+        },
+        "slots": {
+          "result": "The slot machines rolled up:",
+          "nothing": "The slot machine paid out nothing...",
+          "win": "You won **$amount$symbol**!",
+          "boom": "Oh no! The slot machine exploded! You pay out **$amount$symbol** to cover the repair cost."
+        },
+        "baltop": "The 10 richest users are:",
+        "gamble": {
+          "result": "You head off to the Wumpus Races to gamble your life away. You bet **$amount$symbol** on wumpus **#$number**.",
+          "winner": "And the winner is wumpus **#$number**!",
+          "success": "You bet on the right one! You win **$amount$symbol** for betting right.",
+          "failure": "You bet on a loser! Your **$amount$symbol** is gone forever..."
+        },
+        "inventory": {
+          "empty": "You have nothing!"
+        },
+        "market": {
+          "buy-sell": "You can buy and sell items with the `buy` and `sell`."
+        },
+        "buy": {
+          "full-inventory": "Your inventory is full! Try selling some stuff first...",
+          "invalid-number": "**$number** isn't a valid number...",
+          "buy-success": "You bought **$number $thing** for **$amount$symbol**.",
+          "cant-buy": "That item cannot be bought.",
+          "item-doesnt-exist": "That item doesn't exist.",
+          "no-item": "You have to tell me what to buy."
+        },
+        "sell": {
+          "invalid-number": "**$number** isn't a valid number...",
+          "sell-success": "You sold **$number $thing** for **$amount$symbol**.",
+          "not-enough-item": "You don't have enough of that to sell.",
+          "cant-sell": "You don't have that item.",
+          "item-doesnt-exist": "That item doesn't exist.",
+          "no-item": "You have to tell me what to sell."
+        },
+        "mine": {
+          "full-inventory": "Your inventory is full! Try selling some stuff first.",
+          "no-pick": "You don't have a `pickaxe`, so you can't mine. Perhaps you should `buy` one...",
+          "pick-break": "Oh no! Your pickaxe broke when you tried to use it!",
+          "got-dust": "You mined all day, but found nothing but dust.",
+          "success": "You dug up:"
+        },
+        "fish": {
+          "full-inventory": "Your inventory is full! Try selling some stuff first.",
+          "no-rod": "You don't have a `fishingrod`, so you can't mine. Perhaps you should `buy` one...",
+          "pick-break": "Oh no! Your fishing rod broke when you tried to use it!",
+          "got-water": "You fished all day, but found nothing but empty water.",
+          "success": "You fished up:"
+        }
+      }
     }
   }
 }

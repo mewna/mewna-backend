@@ -298,7 +298,7 @@ public class CommandManager {
                     long cost = 0L;
                     // Commands may require payment before running
                     final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr, guild, channel,
-                            mentions, player, maybeAccount.get(), 0L, prefix);
+                            mentions, player, maybeAccount.get(), 0L, prefix, "en_US"); // TODO: Proper per-guild settings
                     if(cmd.getPayment() != null) {
                         // By default, try to make the minimum payment
                         String maybePayment = cmd.getPayment().min() + "";

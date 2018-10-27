@@ -10,24 +10,23 @@ import com.mewna.cache.entity.Channel;
 import com.mewna.cache.entity.Guild;
 import com.mewna.cache.entity.User;
 import com.mewna.catnip.entity.message.MessageType;
-import com.mewna.queue.SocketEvent;
 import com.mewna.plugin.event.audio.AudioTrackEvent;
 import com.mewna.plugin.event.audio.AudioTrackEvent.AudioTrackInfo;
 import com.mewna.plugin.event.guild.member.GuildMemberAddEvent;
 import com.mewna.plugin.event.guild.member.GuildMemberRemoveEvent;
-import com.mewna.plugin.event.message.MessageDeleteBulkEvent;
-import com.mewna.plugin.event.message.MessageDeleteEvent;
 import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import com.mewna.plugin.event.plugin.twitch.*;
+import com.mewna.queue.SocketEvent;
 import io.sentry.Sentry;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import static com.mewna.plugin.event.EventType.*;
@@ -77,12 +76,12 @@ public class EventManager {
             if(guild.getId() == null) {
                 return;
             }
-    
+            
             final JsonObject u = data.getJsonObject("user");
             final User user = new User(u.getString("id"), u.getString("username"), u.getString("discriminator"),
                     u.containsKey("avatar") ? u.getString("avatar", null) : null,
                     u.containsKey("bot") && u.getBoolean("bot", false));
-    
+            
             mewna.getPluginManager().processEvent(event.getType(), new GuildMemberRemoveEvent(guild, user));
         });
 
@@ -115,6 +114,7 @@ public class EventManager {
             // This will pass down to the event handler, so we don't need to worry about it here
             mewna.getCommandManager().tryExecCommand(data);
         });
+        /*
         handlers.put(MESSAGE_DELETE, (event, data) -> {
             // Would have to cache messages...
             mewna.getPluginManager().processEvent(event.getType(), new MessageDeleteEvent(data.getString("id"),
@@ -131,7 +131,7 @@ public class EventManager {
         handlers.put(MESSAGE_UPDATE, (event, data) -> {
             // How to model this?
         });
-        
+        */
         // Audio
         /*
         handlers.put(AUDIO_TRACK_START, (event, data) -> {

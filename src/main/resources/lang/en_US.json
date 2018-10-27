@@ -42,6 +42,12 @@
   "plugins": {
     "economy": {
       "commands": {
+        "empty-payment": "You can't pay nothing!",
+        "payment-not-number": "`$number` isn't a number!",
+        "poor-no-money": "You don't have any money!",
+        "poor-not-enough": "You tried to spend **$amount$symbol**, but only have **$balance$symbol**.",
+        "too-cheap": "You tried to spend **$amount$symbol**, but you need to spend at least **$minAmount$symbol**.",
+        "too-much": "You tried to spend **$amount$symbol**, but you can only spend up to **$maxAmount$symbol**.",
         "balance": {
           "self": "**You** have **$amount$symbol**.",
           "other": "**$target** has **$amount$symbol**."

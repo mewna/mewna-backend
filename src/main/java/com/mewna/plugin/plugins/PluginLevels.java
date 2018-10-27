@@ -34,6 +34,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.mewna.util.Translator.$;
+
 /**
  * @author amy
  * @since 5/19/18.
@@ -277,28 +279,38 @@ public class PluginLevels extends BasePlugin {
         final Guild guild = ctx.getGuild();
         final LevelsSettings settings = getMewna().getDatabase().getOrBaseSettings(LevelsSettings.class, guild.getId());
         if(!settings.isLevelsEnabled()) {
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Levels are not enabled in this server. " +
-                    "The server owner (or administrators) should enable them in the dashboard: <https://mewna.com/>")
-            ;
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), $(ctx.getLanguage(), "plugins.levels.not-enabled"));
             return;
         }
         final User user;
         final Player player;
-        if(ctx.getMentions().isEmpty()) {
+        final boolean self;
+        if(ctx.getMentions().isEmpty() || ctx.getMentions().get(0).getId().equals(ctx.getUser().getId())) {
             user = ctx.getUser();
             player = ctx.getPlayer();
+            self = true;
         } else {
             user = ctx.getMentions().get(0);
             player = getDatabase().getPlayer(user);
+            self = false;
         }
         
         if(user.isBot()) {
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Bots can't have levels!");
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), $(ctx.getLanguage(), "plugins.levels.bot"));
             return;
         }
         
+        String generating;
+        if(self) {
+            generating = $(ctx.getLanguage(), "plugins.levels.commands.rank.generating.self");
+        } else {
+            generating = $(ctx.getLanguage(), "plugins.levels.commands.rank.generating.other")
+                    .replace("$target", user.getName());
+        }
+        generating = generating.replace("$mention", ctx.getUser().asMention());
+        
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                Emotes.LOADING_ICON + " Generating rank card (this will take a few seconds)")
+                Emotes.LOADING_ICON + ' ' + generating)
                 .thenAccept(message -> getCatnip().rest().channel().triggerTypingIndicator(ctx.getChannel().getId())
                         .thenAccept(__ -> {
                             // lol
@@ -313,8 +325,8 @@ public class PluginLevels extends BasePlugin {
                                     .title("**" + user.getName() + "**'s rank card")
                                     .image("attachment://rank.png")
                                     .color(new Color(Renderer.PRIMARY_COLOUR))
-                                    .description(String.format("[View full profile](%s)", profileUrl))
-                                    .footer("You can change your background on your profile.", null);
+                                    .description('[' + $(ctx.getLanguage(), "plugins.levels.view-full-profile") + "](" + profileUrl + ')')
+                                    .footer($(ctx.getLanguage(), "plugins.levels.change-background"), null);
                             getCatnip().rest().channel().deleteMessage(ctx.getChannel().getId(), message.id())
                                     .thenAccept(___ -> getCatnip().rest().channel()
                                             .sendMessage(ctx.getChannel().getId(),
@@ -329,21 +341,33 @@ public class PluginLevels extends BasePlugin {
     public void profile(final CommandContext ctx) {
         final User user;
         final Player player;
-        if(ctx.getMentions().isEmpty()) {
+        final boolean self;
+        if(ctx.getMentions().isEmpty() || ctx.getMentions().get(0).getId().equals(ctx.getUser().getId())) {
             user = ctx.getUser();
             player = ctx.getPlayer();
+            self = true;
         } else {
             user = ctx.getMentions().get(0);
             player = getDatabase().getPlayer(user);
+            self = false;
         }
         
         if(user.isBot()) {
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Bots can't have profiles!");
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), $(ctx.getLanguage(), "plugins.levels.bot"));
             return;
         }
         
+        String generating;
+        if(self) {
+            generating = $(ctx.getLanguage(), "plugins.levels.commands.profile.generating.self");
+        } else {
+            generating = $(ctx.getLanguage(), "plugins.levels.commands.profile.generating.other")
+                    .replace("$target", user.getName());
+        }
+        generating = generating.replace("$mention", ctx.getUser().asMention());
+        
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                Emotes.LOADING_ICON + " Generating profile card (this will take a few seconds)")
+                Emotes.LOADING_ICON + ' ' + generating)
                 .thenAccept(message ->
                         getCatnip().rest().channel().triggerTypingIndicator(ctx.getChannel().getId())
                                 .thenAccept(__ -> {
@@ -359,8 +383,8 @@ public class PluginLevels extends BasePlugin {
                                             .title("**" + user.getName() + "**'s profile card")
                                             .image("attachment://profile.png")
                                             .color(new Color(Renderer.PRIMARY_COLOUR))
-                                            .description(String.format("[View full profile](%s)", profileUrl))
-                                            .footer("You can change your description and background on your profile.", null);
+                                            .description('[' + $(ctx.getLanguage(), "plugins.levels.view-full-profile") + "](" + profileUrl + ')')
+                                            .footer($(ctx.getLanguage(), "plugins.levels.change-background-description"), null);
                                     getCatnip().rest().channel().deleteMessage(ctx.getChannel().getId(), message.id())
                                             .thenApply(___ ->
                                                     getCatnip().rest().channel()
@@ -383,9 +407,10 @@ public class PluginLevels extends BasePlugin {
             user = ctx.getMentions().get(0);
             player = getDatabase().getPlayer(user);
         }
-        
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                String.format("**%s**'s score: **%s**", user.getName(), player.calculateScore()));
+                $(ctx.getLanguage(), "plugins.levels.commands.score")
+                        .replace("$target", user.getName())
+                        .replace("$score", player.calculateScore() + ""));
     }
     
     @Command(names = {"leaderboards", "ranks", "levels", "leaderboard", "rankings"}, desc = "commands.levels.leaderboards",
@@ -394,9 +419,7 @@ public class PluginLevels extends BasePlugin {
         final Guild guild = ctx.getGuild();
         final LevelsSettings settings = getMewna().getDatabase().getOrBaseSettings(LevelsSettings.class, guild.getId());
         if(!settings.isLevelsEnabled()) {
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Levels are not enabled in this server. " +
-                    "The server owner (or administrators) should enable them in the dashboard: <https://mewna.com/>")
-            ;
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), $(ctx.getLanguage(), "plugins.levels.not-enabled"));
             return;
         }
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),

@@ -49,6 +49,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import static com.mewna.util.Translator.$;
+
 /**
  * @author amy
  * @since 5/19/18.
@@ -203,7 +205,7 @@ public class PluginMisc extends BasePlugin {
                     new EmbedBuilder().title("Cat").image(json.getString("file")).build());
         } catch(final IOException e) {
             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                    "Couldn't find cat :(");
+                    $(ctx.getLanguage(), "plugins.misc.commands.cat.invalid"));
         }
     }
     
@@ -218,7 +220,7 @@ public class PluginMisc extends BasePlugin {
                     new EmbedBuilder().title("Dog").image(json.getString("url")).build());
         } catch(final IOException e) {
             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                    "Couldn't find dog :(");
+                    $(ctx.getLanguage(), "plugins.misc.commands.dog.invalid"));
         }
     }
     
@@ -234,7 +236,7 @@ public class PluginMisc extends BasePlugin {
                     new EmbedBuilder().title("Catgirl").image(json.getString("neko")).build());
         } catch(final IOException e) {
             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                    "Couldn't find catgirl :(");
+                    $(ctx.getLanguage(), "plugins.misc.commands.catgirl.invalid"));
         }
     }
     
@@ -250,7 +252,7 @@ public class PluginMisc extends BasePlugin {
     public void memetext(final CommandContext ctx) {
         if(ctx.getArgstr().trim().isEmpty()) {
             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                    "You need to give me something to meme!");
+                    $(ctx.getLanguage(), "plugins.misc.commands.memetext.invalid"));
             return;
         }
         final StringBuilder sb = new StringBuilder();
@@ -271,24 +273,24 @@ public class PluginMisc extends BasePlugin {
     @Command(names = {"bootlegcat", "blc"}, desc = "commands.misc.bootlegcat", usage = "bootlegcat",
             examples = "bootlegcat")
     public void bootlegcat(final CommandContext ctx) {
-        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Do any of these describe YOU?\n" +
-                '\n' +
-                Emotes.YES + " Slow internet speeds?\n" +
-                Emotes.YES + " Limited cellular data plan?\n" +
-                Emotes.YES + " Too lazy to click a cat image?\n" +
-                "`bootlegcat` has you covered! \uD83C\uDF89\uD83C\uDF89\uD83C\uDF89\n" +
-                '\n' +
-                "```\n" +
-                "___|____|____|____|____|____|__\n" +
-                "__|____|____|____|____|____|___\n" +
-                "|____|___|_         ____|____|\n" +
-                "___|___|    (\\.-./)  _|____|__\n" +
-                "_|____|_  = (^ Y ^) =  _|____|\n" +
-                "__|____|___ /`---`\\ __|____|___\n" +
-                "|____|____|_U___|_U|____|____\n" +
-                "___|____|____|____|____|____|__\n" +
-                "__|____|____|____|____|____|____\n" +
-                "```");
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                $(ctx.getLanguage(), "plugins.misc.commands.bootlegcat.base") + "\n\n" +
+                        Emotes.YES + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.bootlegcat.1") + '\n' +
+                        Emotes.YES + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.bootlegcat.2") + '\n' +
+                        Emotes.YES + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.bootlegcat.3") + '\n' +
+                        Emotes.YES + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.bootlegcat.4") + '\n' +
+                        '\n' +
+                        "```\n" +
+                        "___|____|____|____|____|____|__\n" +
+                        "__|____|____|____|____|____|___\n" +
+                        "|____|___|_         ____|____|\n" +
+                        "___|___|    (\\.-./)  _|____|__\n" +
+                        "_|____|_  = (^ Y ^) =  _|____|\n" +
+                        "__|____|___ /`---`\\ __|____|___\n" +
+                        "|____|____|_U___|_U|____|____\n" +
+                        "___|____|____|____|____|____|__\n" +
+                        "__|____|____|____|____|____|____\n" +
+                        "```");
     }
     
     @Command(
@@ -312,8 +314,8 @@ public class PluginMisc extends BasePlugin {
     public void emojify(final CommandContext ctx) {
         if(ctx.getArgstr() == null || ctx.getArgstr().isEmpty()) {
             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                    String.format("You need to give me something to %s!", ctx.getCommand().toLowerCase()))
-            ;
+                    $(ctx.getLanguage(), "plugins.misc.commands.emojify.invalid")
+                            .replace("$category", ctx.getCommand().toLowerCase()));
             return;
         }
         final String emoji;
@@ -365,10 +367,11 @@ public class PluginMisc extends BasePlugin {
         String message;
         try {
             final DiceNotationExpression expr = parser.parse(ctx.getArgstr());
-            
-            message = String.format("Input: %s\nOutput: %s", ctx.getArgstr(), expr.getValue());
+            message =
+                    $(ctx.getLanguage(), "plugins.misc.commands.roll.input") + ": " + ctx.getArgstr() + '\n'
+                            + $(ctx.getLanguage(), "plugins.misc.commands.roll.output") + ": " + expr.getValue();
         } catch(final Exception e) {
-            message = "Invalid dice expression.";
+            message = $(ctx.getLanguage(), "plugins.misc.commands.roll.invalid");
         }
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), message);
     }
@@ -396,13 +399,13 @@ public class PluginMisc extends BasePlugin {
             final String subCmd = args.remove(0);
             switch(subCmd.toLowerCase()) {
                 case "help": {
-                    final String m = "__Mewna Miner Help__\n\n" +
-                            "- Get this info with `tato help`.\n" +
-                            "- Check your stats by running `tato`.\n" +
-                            "- View upgrades, or buy them, with `tato upgrade [buy <name>]`.\n" +
-                            "- View or buy buildings with `tato build [buy <name>]`.\n" +
-                            //"- Feed your Mewna Miners with `tato food`.\n" +
-                            "- Remember to check back regularly to get your tato!";
+                    final String m = "__" + $(ctx.getLanguage(), "plugins.misc.commands.tato.help.1") + "__\n\n" +
+                            $(ctx.getLanguage(), "plugins.misc.commands.tato.help.2") + '\n' +
+                            $(ctx.getLanguage(), "plugins.misc.commands.tato.help.3") + '\n' +
+                            $(ctx.getLanguage(), "plugins.misc.commands.tato.help.4") + '\n' +
+                            $(ctx.getLanguage(), "plugins.misc.commands.tato.help.5") + '\n' +
+                            $(ctx.getLanguage(), "plugins.misc.commands.tato.help.6");
+                    //"- Feed your Mewna Miners with `tato food`.\n" +
                     getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), m);
                     break;
                 }
@@ -411,14 +414,17 @@ public class PluginMisc extends BasePlugin {
                     if(args.isEmpty()) {
                         // List
                         final EmbedBuilder builder = new EmbedBuilder()
-                                .description("__**Upgrades**__\nUpgrades can be bought exactly once.");
+                                .description(
+                                        "__**" + $(ctx.getLanguage(), "plugins.misc.commands.tato.upgrades.upgrades") + "**__\n" +
+                                                $(ctx.getLanguage(), "plugins.misc.commands.tato.upgrades.only-once")
+                                );
                         for(final ClickerUpgrades u : ClickerUpgrades.values()) {
                             final String body = u.getFlowers() + " " + currencyHelper.getCurrencySymbol(ctx);
                             final String check = data.getUpgrades().contains(u) ? Emotes.YES + ' ' : "";
                             final StringBuilder sb = new StringBuilder();
                             final Item[] items = u.getItems();
                             if(items.length > 0) {
-                                sb.append(" and ");
+                                sb.append(' ').append($(ctx.getLanguage(), "plugins.misc.commands.tato.and")).append(' ');
                                 for(final Item item : items) {
                                     sb.append(item.getEmote()).append(' ');
                                 }
@@ -435,16 +441,19 @@ public class PluginMisc extends BasePlugin {
                             case "b": {
                                 if(args.isEmpty()) {
                                     getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                                            Emotes.NO + " You need to tell me what upgrade you want to buy!");
+                                            Emotes.NO + ' '
+                                                    + $(ctx.getLanguage(), "plugins.misc.commands.tato.upgrades.buy.no-upgrade"));
                                 } else {
                                     final String type = args.remove(0);
                                     final ClickerUpgrades upgrade = ClickerUpgrades.byName(type);
                                     if(upgrade == null) {
                                         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                                                Emotes.NO + " That's not a real upgrade!");
+                                                Emotes.NO + ' '
+                                                        + $(ctx.getLanguage(), "plugins.misc.commands.tato.upgrades.buy.invalid-upgrade"));
                                     } else if(data.getUpgrades().contains(upgrade)) {
                                         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                                                Emotes.NO + " You already have that upgrade, silly!");
+                                                Emotes.NO + ' '
+                                                        + $(ctx.getLanguage(), "plugins.misc.commands.tato.upgrades.buy.already-owned"));
                                     } else {
                                         // We check items first so that we don't take money on a failure
                                         final boolean hasItems = Arrays.stream(upgrade.getItems())
@@ -460,11 +469,14 @@ public class PluginMisc extends BasePlugin {
                                                 ctx.getPlayer().setClickerData(data);
                                                 getDatabase().savePlayer(ctx.getPlayer());
                                                 getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                                                        Emotes.YES + " You bought the `" + upgrade.getName() + "` upgrade.");
+                                                        Emotes.YES + ' '
+                                                                + $(ctx.getLanguage(), "plugins.misc.commands.tato.buy.success")
+                                                                .replace("$upgrade", upgrade.getName()));
                                             }
                                         } else {
                                             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                                                    Emotes.NO + " You don't have the items needed to buy that!");
+                                                    Emotes.NO + ' '
+                                                            + $(ctx.getLanguage(), "plugins.misc.commands.tato.upgrades.buy.need-items"));
                                         }
                                     }
                                 }
@@ -481,22 +493,30 @@ public class PluginMisc extends BasePlugin {
                     if(args.isEmpty()) {
                         // List
                         final EmbedBuilder builder = new EmbedBuilder()
-                                .description("__**Buildings**__\nBuildings can be bought many times.");
+                                .description(
+                                        "__**" + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.buildings") + "**__\n" +
+                                                $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.many-times")
+                                );
                         for(final ClickerBuildings u : ClickerBuildings.values()) {
                             final String body = u.getFlowers() + " " + currencyHelper.getCurrencySymbol(ctx);
                             final long amount = data.getBuildings().getOrDefault(u, 0L);
                             final StringBuilder sb = new StringBuilder();
                             final Item[] items = u.getItems();
                             if(items.length > 0) {
-                                sb.append(" and ");
+                                sb.append(' ').append($(ctx.getLanguage(), "plugins.misc.commands.tato.and")).append(' ');
                                 for(final Item item : items) {
                                     sb.append(item.getEmote()).append(' ');
                                 }
                             }
                             
                             // lol
-                            builder.field(u.getName() + " (you have: " + amount + ')', body + sb + "\n*"
-                                    + u.getDesc() + "*\nOutput: " + u.getOutput() + " tato per second", false);
+                            builder.field(u.getName() + " ("
+                                    + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.you-have")
+                                    .replace("$count", amount + "")
+                                    + ')', body + sb + "\n*"
+                                    + u.getDesc()
+                                    + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.output")
+                                    .replace("$tato", "" + u.getOutput()), false);
                         }
                         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), builder.build());
                         break;
@@ -507,13 +527,15 @@ public class PluginMisc extends BasePlugin {
                             case "b": {
                                 if(args.isEmpty()) {
                                     getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                                            Emotes.NO + " You need to tell me what building you want to buy!");
+                                            Emotes.NO + ' '
+                                                    + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.buy.no-building"));
                                 } else {
                                     final String type = args.remove(0);
                                     final ClickerBuildings building = ClickerBuildings.byName(type);
                                     if(building == null) {
                                         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                                                Emotes.NO + " That's not a real building!");
+                                                Emotes.NO + ' '
+                                                        + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.buy.invalid-building"));
                                     } else {
                                         // We check items first so that we don't take money on a failure
                                         final boolean hasItems = Arrays.stream(building.getItems())
@@ -533,11 +555,14 @@ public class PluginMisc extends BasePlugin {
                                                 ctx.getPlayer().setClickerData(data);
                                                 getDatabase().savePlayer(ctx.getPlayer());
                                                 getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                                                        Emotes.YES + " You bought a `" + building.getName() + "`.");
+                                                        Emotes.YES + ' '
+                                                                + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.buy.success")
+                                                                .replace("$building", building.getName()));
                                             }
                                         } else {
                                             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                                                    Emotes.NO + " You don't have the items needed to buy that!");
+                                                    Emotes.NO + ' '
+                                                            + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.buy.need-items"));
                                         }
                                     }
                                 }
@@ -554,7 +579,7 @@ public class PluginMisc extends BasePlugin {
                 */
                 case "top": {
                     getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), Emotes.LOADING_ICON
-                            + " Counting tato (this will take a few seconds)")
+                            + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.tato.top.loading"))
                             .thenAccept(msg -> pool.execute(() -> {
                                 final String query = "SELECT id, (data->'clickerData'->>'totalClicks') AS clicks FROM players " +
                                         "WHERE (data->'clickerData'->>'totalClicks')::bigint > 0 " +
@@ -577,7 +602,8 @@ public class PluginMisc extends BasePlugin {
                     break;
                 }
                 default: {
-                    getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), Emotes.NO + " I don't know how to do that...");
+                    getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), Emotes.NO + ' '
+                            + $(ctx.getLanguage(), "plugins.misc.commands.tato.unknown"));
                     break;
                 }
             }
@@ -610,13 +636,13 @@ public class PluginMisc extends BasePlugin {
         
         final StringBuilder upgradeSB = new StringBuilder();
         if(data.getUpgrades().isEmpty()) {
-            upgradeSB.append("No upgrades!\n");
+            upgradeSB.append($(ctx.getLanguage(), "plugins.misc.commands.tato.no-upgrades")).append('\n');
         } else {
             data.getUpgrades().forEach(e -> upgradeSB.append('.').append(e.getName()).append('\n'));
         }
         final StringBuilder buildingSB = new StringBuilder();
         if(data.getBuildings().isEmpty()) {
-            buildingSB.append("No buildings!\n");
+            buildingSB.append($(ctx.getLanguage(), "plugins.misc.commands.tato.no-buildings")).append('\n');
         } else {
             data.getBuildings().forEach((b, c) -> buildingSB.append('.').append(b.getName()).append(" x").append(c).append('\n'));
         }
@@ -631,10 +657,13 @@ public class PluginMisc extends BasePlugin {
                 .append("[Upgrades]\n").append(upgradeSB.substring(0, upgradeSB.length() - 1)).append("\n\n")
                 .append("[Buildings]\n").append(buildingSB.substring(0, buildingSB.length() - 1)).append(" \n")
                 .append("```\n\n")
-                .append("(Try `").append(ctx.getPrefix()).append(ctx.getCommand()).append(" help` if you're confused)");
+                .append($(ctx.getLanguage(), "plugins.misc.commands.tato.try-help").replace("$command", ctx.getCommand()));
         
         // Finally, display
-        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), ctx.getUser().asMention() + "'s tato stats:\n" + stats);
+        
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                $(ctx.getLanguage(), "plugins.misc.commands.tato.stats-header")
+                        .replace("target", ctx.getUser().asMention()) + ":\n" + stats);
     }
     
     @Command(names = "dnd", desc = "commands.misc.dnd", usage = {
@@ -657,7 +686,7 @@ public class PluginMisc extends BasePlugin {
     public void dnd(final CommandContext ctx) {
         final List<String> args = ctx.getArgs();
         if(args.size() < 2) {
-            sendResponse(ctx, "Not enough arguments provided.");
+            sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.not-enough-args"));
             return;
         }
         
@@ -672,12 +701,12 @@ public class PluginMisc extends BasePlugin {
             case "race":
                 break;
             default:
-                sendResponse(ctx, "Invalid search type.");
+                sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search-type"));
         }
         
         final String search = String.join(" ", args);
         if(search.length() < 3) {
-            sendResponse(ctx, "Search queries must be at least 3 characters long.");
+            sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search-length"));
         }
         
         switch(searchType) {
@@ -696,14 +725,14 @@ public class PluginMisc extends BasePlugin {
                             return;
                         }
                     }
-                    final StringBuilder sb = new StringBuilder("Too many possible matches:\n");
+                    final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.misc.commands.dnd.too-many-matches") + ":\n");
                     for(final XMonster match : monsters) {
                         sb.append(" * ").append(match.getName()).append('\n');
                     }
                     sendResponse(ctx, sb.toString());
                     return;
                 } else {
-                    sendResponse(ctx, "Invalid search");
+                    sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
                     return;
                 }
             case "spell":
@@ -751,7 +780,7 @@ public class PluginMisc extends BasePlugin {
                         .filter(e -> e.getName().toLowerCase().contains(search.toLowerCase()))
                         .collect(Collectors.toList());
                 if(spells.isEmpty()) {
-                    sendResponse(ctx, "Invalid search");
+                    sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
                     return;
                 } else if(spells.size() == 1) {
                     final XSpell spell = spells.get(0);
@@ -764,7 +793,7 @@ public class PluginMisc extends BasePlugin {
                             return;
                         }
                     }
-                    final StringBuilder sb = new StringBuilder("Too many possible matches:\n");
+                    final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.misc.commands.dnd.too-many-matches") + ":\n");
                     for(final XSpell match : spells) {
                         sb.append(" * ").append(match.getName()).append('\n');
                     }
@@ -776,7 +805,7 @@ public class PluginMisc extends BasePlugin {
                         .filter(e -> e.getName().toLowerCase().contains(search.toLowerCase()))
                         .collect(Collectors.toList());
                 if(magicItems.isEmpty()) {
-                    sendResponse(ctx, "Invalid search");
+                    sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
                     return;
                 } else if(magicItems.size() == 1) {
                     final XMagicItem magicItem = magicItems.get(0);
@@ -789,7 +818,7 @@ public class PluginMisc extends BasePlugin {
                             return;
                         }
                     }
-                    final StringBuilder sb = new StringBuilder("Too many possible matches:\n");
+                    final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.misc.commands.dnd.too-many-matches") + ":\n");
                     for(final XMagicItem match : magicItems) {
                         sb.append(" * ").append(match.getName()).append('\n');
                     }
@@ -801,7 +830,7 @@ public class PluginMisc extends BasePlugin {
                         .filter(e -> e.getName().toLowerCase().contains(search.toLowerCase()))
                         .collect(Collectors.toList());
                 if(items.isEmpty()) {
-                    sendResponse(ctx, "Invalid search");
+                    sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
                     return;
                 } else if(items.size() == 1) {
                     final XItem item = items.get(0);
@@ -814,7 +843,7 @@ public class PluginMisc extends BasePlugin {
                             return;
                         }
                     }
-                    final StringBuilder sb = new StringBuilder("Too many possible matches:\n");
+                    final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.misc.commands.dnd.too-many-matches") + ":\n");
                     for(final XItem match : items) {
                         sb.append(" * ").append(match.getName()).append('\n');
                     }
@@ -826,7 +855,7 @@ public class PluginMisc extends BasePlugin {
                         .filter(e -> e.getName().toLowerCase().contains(search.toLowerCase()))
                         .collect(Collectors.toList());
                 if(feats.isEmpty()) {
-                    sendResponse(ctx, "Invalid search");
+                    sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
                     return;
                 } else if(feats.size() == 1) {
                     final XFeat feat = feats.get(0);
@@ -839,7 +868,7 @@ public class PluginMisc extends BasePlugin {
                             return;
                         }
                     }
-                    final StringBuilder sb = new StringBuilder("Too many possible matches:\n");
+                    final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.misc.commands.dnd.too-many-matches") + ":\n");
                     for(final XFeat match : feats) {
                         sb.append(" * ").append(match.getName()).append('\n');
                     }
@@ -851,7 +880,7 @@ public class PluginMisc extends BasePlugin {
                         .filter(e -> e.getName().toLowerCase().contains(search.toLowerCase()))
                         .collect(Collectors.toList());
                 if(races.isEmpty()) {
-                    sendResponse(ctx, "Invalid search");
+                    sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
                 } else if(races.size() == 1) {
                     sendEmbedResponse(ctx, sendRace(races.get(0)));
                 } else {
@@ -861,7 +890,7 @@ public class PluginMisc extends BasePlugin {
                             return;
                         }
                     }
-                    final StringBuilder sb = new StringBuilder("Too many possible matches:\n");
+                    final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.misc.commands.dnd.too-many-matches") + ":\n");
                     for(final XRace match : races) {
                         sb.append(" * ").append(match.getName()).append('\n');
                     }

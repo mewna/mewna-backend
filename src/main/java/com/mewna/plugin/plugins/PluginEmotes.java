@@ -6,6 +6,8 @@ import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.Plugin;
 import com.mewna.plugin.plugins.settings.EmotesSettings;
 
+import static com.mewna.util.Translator.$;
+
 /**
  * @author amy
  * @since 5/19/18.
@@ -20,52 +22,16 @@ public class PluginEmotes extends BasePlugin {
             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You need to tell me who you're doing that to.");
             return;
         }
-        final String action;
-        switch(ctx.getCommand()) {
-            case "bap":
-                action = "bapped";
-                break;
-            case "chew":
-                action = "chewed on";
-                break;
-            case "cookie":
-                action = "given a :cookie:";
-                break;
-            case "hug":
-                action = "hugged";
-                break;
-            case "lick":
-                action = "licked";
-                break;
-            case "nom":
-                action = "nommed on";
-                break;
-            case "pat":
-                action = "were lovingly patted <:blobhyperpat:352487540785414155>";
-                break;
-            case "poke":
-                action = "poked";
-                break;
-            case "prod":
-                action = "prodded";
-                break;
-            case "shoot":
-                action = "shot :gun:";
-                break;
-            case "stab":
-                action = "stabbed :knife:";
-                break;
-            case "tickle":
-                action = "tickled";
-                break;
-            default:
-                action = "hit by an unknown action";
-                break;
-        }
-        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), String.format("%s, you were %s by %s!",
-                ctx.getArgstr().replaceAll("@everyone", "very funny")
-                        .replaceAll("@here", "nice try")
-                        .replaceAll(ctx.getGuild().getId(), "haha no"),
-                action, ctx.getUser().getName()));
+        
+        final String action = $(ctx.getLanguage(), "plugins.emotes.commands."+ctx.getCommand());
+        final String base = $(ctx.getLanguage(), "plugins.emotes.base");
+        final String out = base
+                .replace("$target", ctx.getArgstr())
+                .replace("$user", ctx.getUser().getName())
+                .replace("$action", action)
+                .replace("@everyone", "very funny")
+                .replace("@here", "very funny");
+
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), out);
     }
 }

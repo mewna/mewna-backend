@@ -166,7 +166,82 @@
     },
     "misc": {
       "commands": {
-
+        "cat": {
+          "invalid": "Couldn't find cat :("
+        },
+        "dog": {
+          "invalid": "Couldn't find dog :("
+        },
+        "catgirl": {
+          "invalid": "Couldn't find catgirl :("
+        },
+        "memetext": {
+          "invalid": "You need to give me something to meme!"
+        },
+        "bootlegcat": {
+          "base": "Do any of these describe YOU?",
+          "1": "Slow internet speeds?",
+          "2": "Limited cellular data plan?",
+          "3": "Too lazy to click a cat image?",
+          "4": "`bootlegcat` has you covered! 🎉🎉🎉"
+        },
+        "emojify": {
+          "invalid": "You need to give me something to $category!"
+        },
+        "roll": {
+          "input": "Input",
+          "output": "Output",
+          "invalid": "Invalid dice expression."
+        },
+        "tato": {
+          "and": "and",
+          "unknown": "I don't know how to do that...",
+          "no-upgrades": "No upgrades!",
+          "no-buildings": "No buildings!",
+          "try-help": "(Try `$command help` if you're confused)",
+          "stats-header": "**$target**'s tato stats",
+          "help": {
+            "1": "Mewna Miner Help",
+            "2": "- Get this info with `tato help`.",
+            "3": "- Check your stats by running `tato`.\n",
+            "4": "- View upgrades, or buy them, with `tato upgrade [buy <name>]`.\n",
+            "5": "- View or buy buildings with `tato build [buy <name>]`.\n",
+            "6": "- Remember to check back regularly to get your tato!"
+          },
+          "upgrades": {
+            "upgrades": "Upgrades",
+            "only-once": "Upgrades can be bought exactly once.",
+            "buy": {
+              "no-upgrade": "You need to tell me what upgrade you want to buy!",
+              "invalid-upgrade": "That's not a real upgrade!",
+              "already-owned": "You already own that upgrade!",
+              "need-items": "You don't have the items needed to buy that!",
+              "success": "You bought the **$upgrade** upgrade."
+            }
+          },
+          "buildings": {
+            "buildings": "Buildings",
+            "many-times": "Buildings can be bought many times.",
+            "you-have": "You have: **$count**",
+            "output": "Output: $tato tato per second",
+            "buy": {
+              "no-upgrade": "You need to tell me what building you want to buy!",
+              "invalid-upgrade": "That's not a real building!",
+              "need-items": "You don't have the items needed to buy that!",
+              "success": "You bought a **$upgrade** building."
+            }
+          },
+          "top": {
+            "loading": "Counting tato (this will take a few seconds)"
+          }
+        },
+        "dnd": {
+          "not-enough-args": "Not enough arguments provided.",
+          "invalid-search-type": "Invalid search type.",
+          "invalid-search": "Invalid search.",
+          "invalid-length": "Searches must be at least 3 characters long.",
+          "too-many-matches": "Too many possible matches"
+        }
       }
     }
   }

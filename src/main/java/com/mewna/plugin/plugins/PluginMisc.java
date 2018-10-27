@@ -507,7 +507,7 @@ public class PluginMisc extends BasePlugin {
                             case "b": {
                                 if(args.isEmpty()) {
                                     getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                                            Emotes.NO + " You need to tell me what upgrade you want to buy!");
+                                            Emotes.NO + " You need to tell me what building you want to buy!");
                                 } else {
                                     final String type = args.remove(0);
                                     final ClickerBuildings building = ClickerBuildings.byName(type);

@@ -9,6 +9,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import javax.inject.Inject;
 
 import static com.mewna.plugin.util.CurrencyHelper.PaymentResult.*;
+import static com.mewna.util.Translator.$;
 
 /**
  * @author amy
@@ -26,35 +27,42 @@ public final class CurrencyHelper {
         switch(check.left) {
             case BAD_EMPTY: {
                 mewna.getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                        "You can't pay nothing!");
+                        $(ctx.getLanguage(), "plugins.economy.commands.empty-payment"));
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_NOT_NUM: {
                 mewna.getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                        String.format("`%s` isn't a number!", maybeAmount));
+                        $(ctx.getLanguage(), "plugins.economy.commands.payment-not-number")
+                                .replace("$number", maybeAmount));
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_POOR_NO_BAL: {
                 mewna.getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                        "You don't have any money!");
+                        $(ctx.getLanguage(), "poor-no-money"));
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_POOR: {
                 mewna.getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                        String.format("You tried to spend %s%s, but you only have %s%s!",
-                                maybeAmount, symbol, ctx.getPlayer().getBalance(), symbol));
+                        $(ctx.getLanguage(), "poor-not-enough")
+                            .replace("$amount", maybeAmount)
+                        .replace("$balance", ctx.getPlayer().getBalance()+"")
+                        .replace("$symbol", symbol));
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_CHEAP: {
                 mewna.getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                        String.format("You tried to spend %s%s, but you need to spend at least %s%s!",
-                                maybeAmount, symbol, min, symbol));
+                        $(ctx.getLanguage(), "too-cheap")
+                        .replace("$amount", maybeAmount)
+                        .replace("$symbol", symbol)
+                        .replace("$minAmount", min+""));
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_MUCH: {
                 mewna.getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                        String.format("You tried to spend %s%s, but you can only spend up to %s%s!",
-                                maybeAmount, symbol, max, symbol));
+                        $(ctx.getLanguage(), "too-much")
+                                .replace("$amount", maybeAmount)
+                                .replace("$symbol", symbol)
+                                .replace("$maxAmount", max+""));
                 return ImmutablePair.of(false, -1L);
             }
             case OK: {

@@ -81,7 +81,7 @@
           "failure": "Oh no! The guards caught you! They take **$amount$symbol** from you and let you go."
         },
         "slots": {
-          "result": "The slot machines rolled up:",
+          "result": "The slot machines rolled up",
           "nothing": "The slot machine paid out nothing...",
           "win": "You won **$amount$symbol**!",
           "boom": "Oh no! The slot machine exploded! You pay out **$amount$symbol** to cover the repair cost."
@@ -125,7 +125,7 @@
         "fish": {
           "full-inventory": "Your inventory is full! Try selling some stuff first.",
           "no-rod": "You don't have a `fishingrod`, so you can't mine. Perhaps you should `buy` one...",
-          "pick-break": "Oh no! Your fishing rod broke when you tried to use it!",
+          "rod-break": "Oh no! Your fishing rod broke when you tried to use it!",
           "got-water": "You fished all day, but found nothing but empty water.",
           "success": "You fished up:"
         }

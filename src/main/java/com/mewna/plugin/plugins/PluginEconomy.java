@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 
 import static com.mewna.data.Player.MAX_INV_WEIGHT;
 import static com.mewna.plugin.plugins.PluginEconomy.ReelSymbol.*;
+import static com.mewna.util.Translator.$;
 
 /**
  * @author amy
@@ -63,13 +64,18 @@ public class PluginEconomy extends BasePlugin {
             final Player player = ctx.getPlayer();
             final long balance = player.getBalance();
             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                    String.format("**You** have **%s%s**.", balance, helper.getCurrencySymbol(ctx)));
+                    $(ctx.getLanguage(), "plugins.economy.commands.balance.self")
+                            .replace("$amount", balance + "")
+                            .replace("$symbol", helper.getCurrencySymbol(ctx)));
         } else {
             final User m = ctx.getMentions().get(0);
             final Player player = getDatabase().getPlayer(m);
             final long balance = player.getBalance();
             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                    String.format("**%s** has **%s%s**.", m.getName(), balance, helper.getCurrencySymbol(ctx)));
+                    $(ctx.getLanguage(), "plugins.economy.commands.balance.self")
+                            .replace("$target", m.getName())
+                            .replace("$amount", "" + balance)
+                            .replace("$symbol", helper.getCurrencySymbol(ctx)));
         }
     }
     
@@ -77,25 +83,30 @@ public class PluginEconomy extends BasePlugin {
             examples = "pay @someone 100")
     public void pay(final CommandContext ctx) {
         if(ctx.getMentions().isEmpty()) {
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You need to mention someone to pay.");
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), $(ctx.getLanguage(), "plugins.economy.commands.pay.needs-mention"));
             return;
         }
         if(ctx.getArgs().size() < 2) {
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You need to mention someone to pay, and specify an amount to pay.");
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), $(ctx.getLanguage(), "plugins.economy.commands.pay.needs-mention-amount"));
             return;
         }
         final Player sender = ctx.getPlayer();
         final Player target = getDatabase().getPlayer(ctx.getMentions().get(0));
         if(target.getId().equalsIgnoreCase(sender.getId())) {
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Nice try ;)");
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), $(ctx.getLanguage(), "plugins.economy.commands.pay.no-self-pay"));
             return;
         }
         final ImmutablePair<Boolean, Long> res = helper.handlePayment(ctx, ctx.getArgs().get(1), 1, Long.MAX_VALUE);
         if(res.left) {
             target.incrementBalance(res.right);
             getDatabase().savePlayer(target);
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), String.format("**%s**, you sent **%s%s** to **%s**.",
-                    ctx.getUser().getName(), res.right, helper.getCurrencySymbol(ctx), ctx.getMentions().get(0).getName()));
+            
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    $(ctx.getLanguage(), "plugins.economy.commands.pay.success")
+                            .replace("$amount", "" + res.right)
+                            .replace("$symbol", helper.getCurrencySymbol(ctx))
+                            .replace("$target", ctx.getMentions().get(0).getName())
+                            .replace("$user", ctx.getUser().getName()));
         }
     }
     
@@ -111,29 +122,37 @@ public class PluginEconomy extends BasePlugin {
             final long nextMillis = TimeUnit.SECONDS.toMillis(last.toLocalDate().plusDays(1).atStartOfDay(zone).toEpochSecond());
             final long nowMillis = TimeUnit.SECONDS.toMillis(now.toEpochSecond(zone.getRules().getOffset(now)));
             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                    String.format("You can collect your daily again in **%s**.",
-                            Time.toHumanReadableDuration(nextMillis - nowMillis)));
+                    $(ctx.getLanguage(), "plugins.economy.commands.daily.failure-wait")
+                            .replace("$time", Time.toHumanReadableDuration(nextMillis - nowMillis)));
             return;
         }
         final boolean streak;
         // check streak
         streak = last.toLocalDate().plusDays(2).toEpochDay() >= now.toLocalDate().toEpochDay();
+        
+        String msg = $(ctx.getLanguage(), "plugins.economy.commands.daily.collect-base")
+                .replace("$amount", "" + DAILY_BASE_REWARD)
+                .replace("$symbol", helper.getCurrencySymbol(ctx))
+                + "\n\n";
+        
         if(streak) {
             player.incrementDailyStreak();
             final long bonus = 100 + 10 * (player.getDailyStreak() - 1);
             player.incrementBalance(DAILY_BASE_REWARD + bonus);
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), String.format("You collect your daily **%s%s**.\n\nStreak up! New streak: `%sx`, bonus: %s%s.",
-                    DAILY_BASE_REWARD, helper.getCurrencySymbol(ctx), player.getDailyStreak(), bonus, helper.getCurrencySymbol(ctx)));
+            msg += $(ctx.getLanguage(), "plugins.economy.commands.daily.collect-streak")
+                    .replace("$amount", "" + bonus)
+                    .replace("$symbol", helper.getCurrencySymbol(ctx))
+                    .replace("$streak", "" + player.getDailyStreak());
         } else {
             player.resetDailyStreak();
             player.incrementBalance(DAILY_BASE_REWARD);
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), String.format("You collect your daily **%s%s**." +
-                            "\n\nIt's been more than 2 days since you last collected your %sdaily, so your streak has been reset.",
-                    DAILY_BASE_REWARD, helper.getCurrencySymbol(ctx), ctx.getPrefix()));
+            msg += $(ctx.getLanguage(), "plugins.economy.commands.daily.streak-break")
+                    .replace("$symbol", helper.getCurrencySymbol(ctx));
         }
         
         player.updateLastDaily();
         getDatabase().savePlayer(player);
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), msg);
     }
     
     @Ratelimit(time = 20)
@@ -141,53 +160,10 @@ public class PluginEconomy extends BasePlugin {
     public void crime(final CommandContext ctx) {
         final int choice = getRandom().nextInt(10) + 1;
         final int amount = getRandom().nextInt(Math.toIntExact(CRIME_BASE_COST)) + 1;
-        final String text;
-        switch(choice) {
-            case 1: {
-                text = String.format("You steal candy from a baby and sell it back to him, netting %s%s.", amount, helper.getCurrencySymbol(ctx));
-                break;
-            }
-            case 2: {
-                text = String.format("You sell someone a shiny (but worthless) rock for %s%s.", amount, helper.getCurrencySymbol(ctx));
-                break;
-            }
-            case 3: {
-                text = String.format("You pretend to get hit by someone's Wumpus, and scam Bamboozle Insurance:tm: out of %s%s.", amount, helper.getCurrencySymbol(ctx));
-                break;
-            }
-            case 4: {
-                text = String.format("You successfully steal a cash register, and take the %s%s inside.", amount, helper.getCurrencySymbol(ctx));
-                break;
-            }
-            case 5: {
-                text = String.format("You sell someone a rotten :potato: for %s%s.", amount, helper.getCurrencySymbol(ctx));
-                break;
-            }
-            case 6: {
-                text = String.format("You robbed the Society of Schmoogaloo and ended up in a lake, but still managed to steal %s%s.", amount, helper.getCurrencySymbol(ctx));
-                break;
-            }
-            case 7: {
-                text = String.format("You start the Cult of Wumpus, and scam the cult members out of %s%s.", amount, helper.getCurrencySymbol(ctx));
-                break;
-            }
-            case 8: {
-                text = String.format("You kidnap someone's pet Wumpus, only returning it after they pay the ransom of %s%s.", amount, helper.getCurrencySymbol(ctx));
-                break;
-            }
-            case 9: {
-                text = String.format("You sell candy to young school children, bringing in %s%s.", amount, helper.getCurrencySymbol(ctx));
-                break;
-            }
-            case 10: {
-                text = String.format("You sell a Wumpus to the circus for %s%s.", amount, helper.getCurrencySymbol(ctx));
-                break;
-            }
-            default: {
-                text = ":fire:";
-                break;
-            }
-        }
+        final String text = $(ctx.getLanguage(), "plugins.economy.commands.crime." + choice)
+                .replace("$amount", "")
+                .replace("$symbol", helper.getCurrencySymbol(ctx));
+        
         ctx.getPlayer().incrementBalance(amount);
         getDatabase().savePlayer(ctx.getPlayer());
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), text);
@@ -205,12 +181,16 @@ public class PluginEconomy extends BasePlugin {
             ctx.getPlayer().incrementBalance(reward);
             getDatabase().savePlayer(ctx.getPlayer());
             
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), String.format("You break into Fort Knick-Knacks and steal %s%s from inside.",
-                    reward, helper.getCurrencySymbol(ctx)));
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    $(ctx.getLanguage(), "plugins.economy.commands.heist.success")
+                            .replace("$amount", "" + reward)
+                            .replace("$symbol", helper.getCurrencySymbol(ctx)));
         } else {
             // lose
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), String.format("Oh no! The guards caught you! They take %s%s from you and let you go.",
-                    HEIST_BASE_COST, helper.getCurrencySymbol(ctx)));
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    $(ctx.getLanguage(), "plugins.economy.commands.heist.success")
+                            .replace("$amount", "" + HEIST_BASE_COST)
+                            .replace("$symbol", helper.getCurrencySymbol(ctx)));
         }
     }
     
@@ -240,7 +220,7 @@ public class PluginEconomy extends BasePlugin {
         
         final boolean win = roll[1][0] == roll[1][1] && roll[1][0] == roll[1][2];
         
-        final StringBuilder sb = new StringBuilder("The slot machines rolled up:\n");
+        final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.economy.commands.slots.result") + ":\n");
         int counter = 0;
         for(final ReelSymbol[] row : roll) {
             for(final ReelSymbol col : row) {
@@ -248,11 +228,11 @@ public class PluginEconomy extends BasePlugin {
             }
             if(counter == 1) {
                 sb.append('⬅');
-                
             }
             sb.append('\n');
             ++counter;
         }
+        sb.append('\n');
         
         if(win) {
             // calc payment and send messages
@@ -264,16 +244,21 @@ public class PluginEconomy extends BasePlugin {
             
             //noinspection UnnecessarilyQualifiedStaticallyImportedElement
             if(roll[1][0] == ReelSymbol.BOOM) {
-                sb.append("\nOh no! The slot machine exploded! You pay out **").append(-payout).append(helper.getCurrencySymbol(ctx))
-                        .append("** to cover the repair cost.");
+                
+                sb.append($(ctx.getLanguage(), "plugins.economy.commands.slots.boom")
+                        .replace("$amount", -payout + "")
+                        .replace("$symbol", helper.getCurrencySymbol(ctx)));
             } else {
-                sb.append("\nYou won **").append(payout).append(helper.getCurrencySymbol(ctx)).append("**!");
+                sb.append($(ctx.getLanguage(), "plugins.economy.commands.slots.win")
+                        .replace("$amount", "" + payout)
+                        .replace("$symbol", helper.getCurrencySymbol(ctx)));
             }
             
             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), sb.toString());
         } else {
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), sb.append("\nThe slot machine paid out nothing...").toString());
+            sb.append($(ctx.getLanguage(), "plugins.economy.commands.slots.nothing"));
         }
+        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), sb.toString());
     }
     
     @Ratelimit(time = 20)
@@ -281,7 +266,7 @@ public class PluginEconomy extends BasePlugin {
     public void baltop(final CommandContext ctx) {
         getDatabase().getStore().sql("SELECT * FROM players ORDER BY (data->>'balance')::integer DESC LIMIT 10;", p -> {
             final ResultSet res = p.executeQuery();
-            final StringBuilder sb = new StringBuilder("The 10 richest users are:\n\n");
+            final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.economy.commands.baltop") + "\n\n");
             while(res.next()) {
                 try {
                     final String id = res.getString("id");
@@ -307,21 +292,29 @@ public class PluginEconomy extends BasePlugin {
         final int playerWumpus = getRandom().nextInt(GAMBLE_WUMPUS_COUNT) + 1;
         final int winningWumpus = getRandom().nextInt(GAMBLE_WUMPUS_COUNT) + 1;
         
-        final StringBuilder sb = new StringBuilder("You head off to the Wumpus Races to gamble your life away. ");
-        sb.append("You bet **").append(ctx.getCost()).append(helper.getCurrencySymbol(ctx)).append("** on Wumpus **#")
-                .append(playerWumpus).append("**.\n\n");
-        sb.append("And the winner is Wumpus **#").append(winningWumpus).append("**!\n\n");
+        final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.economy.commands.gamble.result")
+                .replace("$amount", "" + ctx.getCost())
+                .replace("$symbol", helper.getCurrencySymbol(ctx))
+                .replace("$number", playerWumpus + ""))
+                .append('\n')
+                .append($(ctx.getLanguage(), "plugins.economy.commands.gamble.winner")
+                        .replace("number", "" + winningWumpus));
+        
+        sb.append("\n\n");
         
         if(playerWumpus == winningWumpus) {
             // Winners get 3x payout
             final long payout = ctx.getCost() * 3;
             ctx.getPlayer().incrementBalance(payout);
             getDatabase().savePlayer(ctx.getPlayer());
-            sb.append("You bet on the right one! You win **").append(payout).append(helper.getCurrencySymbol(ctx))
-                    .append("** for betting right!");
+            
+            sb.append($(ctx.getLanguage(), "plugins.economy.commands.gamble.success")
+                    .replace("$amount", "" + payout)
+                    .replace("$symbol", helper.getCurrencySymbol(ctx)));
         } else {
-            sb.append("You bet on a loser! Your **").append(ctx.getCost()).append(helper.getCurrencySymbol(ctx))
-                    .append("** is gone forever...");
+            sb.append($(ctx.getLanguage(), "plugins.economy.commands.gamble.failure")
+                    .replace("$amount", "" + ctx.getCost())
+                    .replace("$symbol", helper.getCurrencySymbol(ctx)));
         }
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), sb.toString());
     }
@@ -344,7 +337,7 @@ public class PluginEconomy extends BasePlugin {
                     user.calculateInventoryWeight() + "`/`" + MAX_INV_WEIGHT + "`\n";
             b.field("Items", sb2.trim(), false);
         } else {
-            b.title("Items").description("You have nothing!");
+            b.title("Items").description($(ctx.getLanguage(), "plugins.economy.commands.inventory.empty"));
         }
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), b.build());
     }
@@ -403,7 +396,7 @@ public class PluginEconomy extends BasePlugin {
                 }
         }
         final EmbedBuilder b = new EmbedBuilder().field("Market", sb.toString().trim(), false)
-                .field("", String.format("You can buy and sell items with `%sbuy` and `%ssell`.", ctx.getPrefix(), ctx.getPrefix()),
+                .field("", $(ctx.getLanguage(), "plugins.economy.commands.market.buy-sell"),
                         false);
         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), b.build());
     }
@@ -411,10 +404,11 @@ public class PluginEconomy extends BasePlugin {
     @Command(names = "buy", desc = "commands.economy.buy", usage = "buy <item name> [amount]",
             examples = {"buy pickaxe", "buy burger 10"})
     public void buy(final CommandContext ctx) {
+        final String channelId = ctx.getChannel().getId();
         if(isWeighedDown(ctx.getPlayer())) {
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                    "Your inventory is full! Try selling some stuff first.")
-                    ;
+            getCatnip().rest().channel().sendMessage(channelId,
+                    $(ctx.getLanguage(), "plugins.economy.commands.buy.full-inventory"))
+            ;
             return;
         }
         final List<String> args = ctx.getArgs();
@@ -437,8 +431,9 @@ public class PluginEconomy extends BasePlugin {
                                 throw new IllegalArgumentException();
                             }
                         } catch(final Exception e) {
-                            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                                    String.format("%s isn't a valid number", args.get(0)));
+                            getCatnip().rest().channel().sendMessage(channelId,
+                                    $(ctx.getLanguage(), "plugins.economy.commands.buy.invalid-number")
+                                            .replace("$number", args.get(0)));
                             return;
                         }
                     }
@@ -450,17 +445,21 @@ public class PluginEconomy extends BasePlugin {
                         // Money taken, add item(s)
                         player.addAllToInventory(ImmutableMap.of(item, amount));
                         getDatabase().savePlayer(player);
-                        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), String.format("You bought %s %s for %s%s.",
-                                amount, item.getName(), cost, helper.getCurrencySymbol(ctx)));
+                        getCatnip().rest().channel().sendMessage(channelId,
+                                $(ctx.getLanguage(), "plugins.economy.commands.buy.buy-success")
+                                        .replace("$number", "" + amount)
+                                        .replace("$thing", item.getName())
+                                        .replace("$amount", "" + cost)
+                                        .replace("$symbol", helper.getCurrencySymbol(ctx)));
                     }
                 } else {
-                    getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "That item cannot be bought.");
+                    getCatnip().rest().channel().sendMessage(channelId, $(ctx.getLanguage(), "plugins.economy.commands.buy.cant-buy"));
                 }
             } else {
-                getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "That item doesn't exist.");
+                getCatnip().rest().channel().sendMessage(channelId, $(ctx.getLanguage(), "plugins.economy.commands.buy.item-doesnt-exist"));
             }
         } else {
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You have to tell me what to buy.");
+            getCatnip().rest().channel().sendMessage(channelId, $(ctx.getLanguage(), "plugins.economy.commands.buy.no-item"));
         }
     }
     
@@ -486,7 +485,8 @@ public class PluginEconomy extends BasePlugin {
                         }
                     } catch(final Exception e) {
                         getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                                String.format("%s isn't a valid number", args.get(0)));
+                                $(ctx.getLanguage(), "plugins.economy.commands.sell.invalid-number")
+                                        .replace("$number", args.get(0)));
                         return;
                     }
                 }
@@ -498,19 +498,28 @@ public class PluginEconomy extends BasePlugin {
                         ctx.getPlayer().removeAllFromInventory(ImmutableMap.of(item, amount));
                         ctx.getPlayer().incrementBalance(payment);
                         getDatabase().savePlayer(ctx.getPlayer());
-                        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), String.format("You sold %s %s for %s%s.",
-                                amount, item.getName(), payment, helper.getCurrencySymbol(ctx)));
+                        
+                        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                                $(ctx.getLanguage(), "plugins.economy.commands.sell.sell-success")
+                                        .replace("$number", "" + amount)
+                                        .replace("$thing", item.getName())
+                                        .replace("$amount", "" + payment)
+                                        .replace("$symbol", helper.getCurrencySymbol(ctx)));
                     } else {
-                        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You don't have enough of that item.");
+                        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                                $(ctx.getLanguage(), "plugins.economy.commands.sell.not-enough-item"));
                     }
                 } else {
-                    getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You don't have that item.");
+                    getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                            $(ctx.getLanguage(), "plugins.economy.commands.sell.cant-sell"));
                 }
             } else {
-                getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "That item doesn't exist.");
+                getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                        $(ctx.getLanguage(), "plugins.economy.commands.sell.item-doesnt-exist"));
             }
         } else {
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You have to tell me what to sell.");
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    $(ctx.getLanguage(), "plugins.economy.commands.sell.no-item"));
         }
     }
     
@@ -519,33 +528,33 @@ public class PluginEconomy extends BasePlugin {
     public void mine(final CommandContext ctx) {
         if(isWeighedDown(ctx.getPlayer())) {
             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                    "Your inventory is full! Try selling some stuff first.")
-                    ;
+                    $(ctx.getLanguage(), "plugins.economy.commands.mine.full-inventory"));
             return;
         }
         if(!ctx.getPlayer().hasItem(Item.PICKAXE)) {
             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                    String.format("You don't have a `pickaxe`, so you can't mine. Perhaps you should `%sbuy` one...",
-                            ctx.getPrefix()))
-                    ;
+                    $(ctx.getLanguage(), "plugins.economy.commands.mine.no-pick"));
             return;
         }
         if(LootTables.chance(5)) {
             ctx.getPlayer().removeOneFromInventory(Item.PICKAXE);
             getDatabase().savePlayer(ctx.getPlayer());
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Oh no! Your pickaxe broke when you tried to use it!");
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    $(ctx.getLanguage(), "plugins.economy.commands.mine.pick-break"));
             return;
         }
         final List<Item> loot = LootTables.generateLoot(LootTables.GEMS, 0, 2);
         if(loot.isEmpty()) {
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You mined all day, but found nothing but dust.");
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    $(ctx.getLanguage(), "plugins.economy.commands.mine.got-dust"));
         } else {
             final StringBuilder sb = new StringBuilder();
             final Map<Item, Long> count = lootToMap(loot);
             count.keySet().forEach(e -> sb.append(e.getEmote()).append(" `x").append(count.get(e)).append("`\n"));
             ctx.getPlayer().addAllToInventory(count);
             getDatabase().savePlayer(ctx.getPlayer());
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You dug up:\n" + sb);
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    $(ctx.getLanguage(), "plugins.economy.commands.mine.success") + ":\n" + sb);
         }
     }
     
@@ -554,33 +563,35 @@ public class PluginEconomy extends BasePlugin {
     public void fish(final CommandContext ctx) {
         if(isWeighedDown(ctx.getPlayer())) {
             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                    "Your inventory is full! Try selling some stuff first.")
-                    ;
+                    $(ctx.getLanguage(), "plugins.economy.commands.fish.full-inventory"))
+            ;
             return;
         }
         if(!ctx.getPlayer().hasItem(Item.FISHING_ROD)) {
             getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
-                    String.format("You don't have a `fishingrod`, so you can't fish. Perhaps you should `%sbuy` one...",
-                            ctx.getPrefix()))
-                    ;
+                    $(ctx.getLanguage(), "plugins.economy.commands.fish.no-rod"))
+            ;
             return;
         }
         if(LootTables.chance(5)) {
             ctx.getPlayer().removeOneFromInventory(Item.FISHING_ROD);
             getDatabase().savePlayer(ctx.getPlayer());
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "Oh no! Your fishing rod broke when you tried to use it!");
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    $(ctx.getLanguage(), "plugins.economy.commands.fish.rod-break"));
             return;
         }
         final List<Item> loot = LootTables.generateLoot(LootTables.FISHING, 1, 3);
         if(loot.isEmpty()) {
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You fished all day, but found nothing but empty water.");
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    $(ctx.getLanguage(), "plugins.economy.commands.fish.got-water"));
         } else {
             final StringBuilder sb = new StringBuilder();
             final Map<Item, Long> count = lootToMap(loot);
             count.keySet().forEach(e -> sb.append(e.getEmote()).append(" `x").append(count.get(e)).append("`\n"));
             ctx.getPlayer().addAllToInventory(count);
             getDatabase().savePlayer(ctx.getPlayer());
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You fished up:\n" + sb);
+            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(),
+                    $(ctx.getLanguage(), "plugins.economy.commands.fish.success") + ":\n" + sb);
         }
     }
     

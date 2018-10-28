@@ -12,6 +12,7 @@ import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
 import io.vertx.core.json.JsonObject;
 import lombok.*;
+import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,6 +24,7 @@ import java.util.List;
  */
 @Getter
 @Setter
+@Accessors(fluent = true)
 @AllArgsConstructor
 @RequiredArgsConstructor
 @Table("accounts")
@@ -41,16 +43,24 @@ public class Account {
     private String email = "";
     @JsonProperty("username")
     private String username = "";
+    @JsonProperty("displayName")
     private String displayName = "";
     @JsonProperty("discordAccountId")
     private String discordAccountId = "";
+    @JsonProperty("avatar")
     private String avatar = "";
     
+    @JsonProperty("aboutText")
     private String aboutText = "A mysterious stranger.";
+    @JsonProperty("customBackground")
     private String customBackground = "/backgrounds/default/plasma";
+    @JsonProperty("ownedBackgroundPacks")
     private List<String> ownedBackgroundPacks = new ArrayList<>(Collections.singletonList("default"));
+    @JsonProperty("inBeta")
     private boolean isInBeta;
+    @JsonProperty("banned")
     private boolean isBanned;
+    @JsonProperty("banReason")
     private String banReason;
     
     @SuppressWarnings("WeakerAccess")

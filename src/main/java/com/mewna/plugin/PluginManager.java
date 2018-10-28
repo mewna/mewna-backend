@@ -2,10 +2,8 @@ package com.mewna.plugin;
 
 import com.google.common.collect.ImmutableMap;
 import com.mewna.Mewna;
-import com.mewna.cache.DiscordCache;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
-import com.mewna.plugin.event.BaseEvent;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.util.CurrencyHelper;
 import com.mewna.util.UserAgentInterceptor;
@@ -74,7 +72,6 @@ public class PluginManager {
                 .put(Random.class, __ -> new Random())
                 .put(CurrencyHelper.class, __ -> currencyHelper)
                 .put(OkHttpClient.class, __ -> okHttpClient)
-                .put(DiscordCache.class, __ -> this.mewna.getCache())
                 .build();
     }
     
@@ -152,7 +149,7 @@ public class PluginManager {
         }
     }
     
-    public <T extends BaseEvent> void processEvent(final String type, final T event) {
+    public <T> void processEvent(final String type, final T event) {
         Optional.ofNullable(discordEventHandlers.get(type)).ifPresent(x -> x.forEach(h -> {
             try {
                 h.getHandle().invoke(h.getHolder(), event);

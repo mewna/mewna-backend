@@ -1,7 +1,6 @@
 package com.mewna.plugin.plugins.settings;
 
 import com.mewna.Mewna;
-import com.mewna.cache.entity.Role;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
@@ -64,10 +63,13 @@ public class LevelsSettings implements PluginSettings {
     public PluginSettings otherRefresh() {
         final Collection<String> bad = new ArrayList<>();
         levelRoleRewards.keySet().forEach(e -> {
+            // TODO: Cache accesses
+            /*
             final Role role = Mewna.getInstance().getCache().getRole(e);
             if(role == null || role.getId() == null || role.getGuildId() == null || role.getName() == null) {
                 bad.add(e);
             }
+            */
         });
         bad.forEach(levelRoleRewards::remove);
         return this;

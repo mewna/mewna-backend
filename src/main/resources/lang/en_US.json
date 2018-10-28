@@ -40,6 +40,7 @@
     }
   },
   "plugins": {
+    "disabled-command": "Sorry, but that command is disabled here.",
     "economy": {
       "commands": {
         "empty-payment": "You can't pay nothing!",

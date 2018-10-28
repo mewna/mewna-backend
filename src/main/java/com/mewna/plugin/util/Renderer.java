@@ -1,8 +1,8 @@
 package com.mewna.plugin.util;
 
 import com.mewna.Mewna;
-import com.mewna.cache.entity.Guild;
-import com.mewna.cache.entity.User;
+import com.mewna.catnip.entity.guild.Guild;
+import com.mewna.catnip.entity.user.User;
 import com.mewna.data.Player;
 import com.mewna.plugin.plugins.PluginLevels;
 import com.mewna.plugin.util.TextureManager.Background;
@@ -165,7 +165,7 @@ public final class Renderer {
             // Username
             // centered string at y=246
             setRenderHints(g2);
-            drawCenteredString(g2, user.getName().toUpperCase(),
+            drawCenteredString(g2, user.username().toUpperCase(),
                     new Rectangle(10, 202, 580, USERNAME_FONT.getSize()), USERNAME_FONT, Color.WHITE);
             
             g2.setFont(ABOUT_ME_FONT);
@@ -174,7 +174,7 @@ public final class Renderer {
             final FontMetrics aboutMeFontMetrics = g2.getFontMetrics(ABOUT_ME_FONT);
             // 32, 268
             // 536x122
-            final List<String> wrap = wrap(player.getAccount().getAboutText(), aboutMeFontMetrics, 536);
+            final List<String> wrap = wrap(player.getAccount().aboutText(), aboutMeFontMetrics, 536);
             int y = 268;
             for(final String line : wrap) {
                 g2.drawString(line, 32, y + ABOUT_ME_FONT.getSize());
@@ -294,7 +294,7 @@ public final class Renderer {
             g2.setPaint(Color.WHITE);
             g2.setFont(USERNAME_FONT);
             setRenderHints(g2);
-            g2.drawString(user.getName().toUpperCase(), 187, 70);
+            g2.drawString(user.username().toUpperCase(), 187, 70);
             
             // Stats
             

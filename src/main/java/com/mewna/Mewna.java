@@ -1,20 +1,21 @@
 package com.mewna;
 
 import com.mewna.accounts.AccountManager;
-import com.mewna.cache.DiscordCache;
 import com.mewna.catnip.Catnip;
 import com.mewna.catnip.CatnipOptions;
 import com.mewna.data.Database;
-import com.mewna.event.EventManager;
+import com.mewna.event.SingyeongEventManager;
 import com.mewna.paypal.PaypalHandler;
 import com.mewna.plugin.CommandManager;
 import com.mewna.plugin.PluginManager;
 import com.mewna.plugin.util.TextureManager;
 import com.mewna.util.Ratelimiter;
+import com.mewna.util.Translator;
 import com.timgroup.statsd.NoOpStatsDClient;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
 import gg.amy.singyeong.SingyeongClient;
+import gg.amy.singyeong.SingyeongType;
 import io.sentry.Sentry;
 import io.vertx.core.Vertx;
 import lombok.Getter;
@@ -31,7 +32,7 @@ public final class Mewna {
     private static final Mewna INSTANCE = new Mewna();
     
     @Getter
-    private final EventManager eventManager = new EventManager(this);
+    private final SingyeongEventManager singyeongEventManager = new SingyeongEventManager(this);
     @Getter
     private final PluginManager pluginManager = new PluginManager(this);
     @Getter
@@ -70,7 +71,6 @@ public final class Mewna {
         INSTANCE.start();
     }
     
-    @SuppressWarnings("unused")
     public static Mewna getInstance() {
         return INSTANCE;
     }
@@ -78,18 +78,15 @@ public final class Mewna {
     private void start() {
         logger.info("Starting Mewna backend...");
         Sentry.init();
+        Translator.preload();
         TextureManager.preload(this);
-        eventManager.getCache().connect();
         database.init();
         pluginManager.init();
         new API(this).start();
         catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN")), vertx);
         singyeong.connect()
+                .thenAccept(__ -> singyeong.onEvent(singyeongEventManager::handle))
+                .thenAccept(__ -> singyeong.updateMetadata("backend-key", SingyeongType.STRING, "mewna-backend"))
                 .thenAccept(__ -> logger.info("Finished starting!"));
-    }
-    
-    @SuppressWarnings("WeakerAccess")
-    public DiscordCache getCache() {
-        return eventManager.getCache();
     }
 }

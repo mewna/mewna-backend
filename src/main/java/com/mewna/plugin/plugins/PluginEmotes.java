@@ -19,7 +19,7 @@ public class PluginEmotes extends BasePlugin {
             examples = {"bap someone", "stab someone else", "poke everyone"}, aliased = false)
     public void emote(final CommandContext ctx) {
         if(ctx.getArgstr().isEmpty()) {
-            getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), "You need to tell me who you're doing that to.");
+            getCatnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "You need to tell me who you're doing that to.");
             return;
         }
         
@@ -27,11 +27,11 @@ public class PluginEmotes extends BasePlugin {
         final String base = $(ctx.getLanguage(), "plugins.emotes.base");
         final String out = base
                 .replace("$target", ctx.getArgstr())
-                .replace("$user", ctx.getUser().getName())
+                .replace("$user", ctx.getUser().username())
                 .replace("$action", action)
                 .replace("@everyone", "very funny")
                 .replace("@here", "very funny");
 
-        getCatnip().rest().channel().sendMessage(ctx.getChannel().getId(), out);
+        getCatnip().rest().channel().sendMessage(ctx.getMessage().channelId(), out);
     }
 }

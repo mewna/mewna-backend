@@ -32,15 +32,17 @@ public final class Translator {
         
         IOUtils.scan("lang", e -> {
             if(e.getName().endsWith(".json")) {
-                try(final InputStream is = CacheUtil.class.getResourceAsStream("/lang/" + e.getName())) {
+                try(final InputStream is = Translator.class.getResourceAsStream('/' + e.getName())) {
                     final String json = new String(IOUtils.readFully(is));
-                    loadTranslation(e.getName().replace(".json", ""), new JsonObject(json));
+                    loadTranslation(e.getName().replace(".json", "").replace("lang/", ""),
+                            new JsonObject(json));
                 } catch(final IOException err) {
                     Sentry.capture(err);
                     throw new RuntimeException(err);
                 }
             }
         });
+        System.out.println(LANGS.keySet());
         LOGGER.info("Loaded {} translations.", LANGS.size());
     }
     
@@ -57,10 +59,14 @@ public final class Translator {
                     return translations.getString(key);
                 } else {
                     // Try to fetch with en_US
-                    try {
-                        return translate("en_US", key);
-                    } catch(final Exception e) {
-                        throw new IllegalArgumentException('`' + key + "` is not a valid key for `" + lang + "`!");
+                    if(!lang.equals("en_US")) {
+                        try {
+                            return translate("en_US", key);
+                        } catch(final Exception e) {
+                            throw new IllegalArgumentException('`' + key + "` is not a valid key for `" + lang + "`!");
+                        }
+                    } else {
+                        throw new IllegalArgumentException('`' + key + "` is not a valid key for `" + lang + "` or `en_US`!");
                     }
                 }
             } else {

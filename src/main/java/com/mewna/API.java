@@ -3,14 +3,9 @@ package com.mewna;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.mewna.accounts.Account;
-import com.mewna.cache.entity.Channel;
-import com.mewna.cache.entity.Guild;
-import com.mewna.cache.entity.Role;
-import com.mewna.cache.entity.User;
 import com.mewna.data.Player;
 import com.mewna.data.PluginSettings;
 import com.mewna.data.Webhook;
-import com.mewna.plugin.plugins.PluginLevels;
 import com.mewna.plugin.util.TextureManager;
 import io.sentry.Sentry;
 import io.vertx.core.json.JsonArray;
@@ -42,6 +37,8 @@ class API {
     void start() {
         logger.info("Starting API server...");
         port(Integer.parseInt(Optional.ofNullable(System.getenv("PORT")).orElse("80")));
+        // TODO: Cache accesses
+        /*
         path("/cache", () -> {
             get("/user/:id", (req, res) -> {
                 final User user = mewna.getCache().getUser(req.params(":id"));
@@ -97,6 +94,7 @@ class API {
                 }
             });
         });
+        */
         path("/data", () -> {
             path("/account", () -> {
                 path("/:id", () -> {
@@ -109,7 +107,7 @@ class API {
                             final Account account = maybeAccount.get();
                             final JsonObject data = new JsonObject();
                             data
-                                    .put("discord", account.getDiscordAccountId())
+                                    .put("discord", account.discordAccountId())
                             ;
                             return data;
                         } else {
@@ -121,13 +119,13 @@ class API {
                         if(maybeAccount.isPresent()) {
                             final Account account = maybeAccount.get();
                             final JsonObject data = new JsonObject();
-                            data.put("id", account.getId())
-                                    .put("username", account.getUsername())
-                                    .put("displayName", account.getDisplayName())
-                                    .put("avatar", account.getAvatar())
-                                    .put("aboutText", account.getAboutText())
-                                    .put("customBackground", account.getCustomBackground())
-                                    .put("ownedBackgroundPacks", account.getOwnedBackgroundPacks())
+                            data.put("id", account.id())
+                                    .put("username", account.username())
+                                    .put("displayName", account.discordAccountId())
+                                    .put("avatar", account.avatar())
+                                    .put("aboutText", account.aboutText())
+                                    .put("customBackground", account.customBackground())
+                                    .put("ownedBackgroundPacks", account.ownedBackgroundPacks())
                                     .put("isInBeta", account.isInBeta())
                             ;
                             return data;
@@ -223,7 +221,8 @@ class API {
                                     try {
                                         final Player player = MAPPER.readValue(resultSet.getString("player"), Player.class);
                                         final Account account = MAPPER.readValue(resultSet.getString("account"), Account.class);
-                                        
+                                        // TODO: Cache accesses
+                                        /*
                                         final User user = mewna.getCache().getUser(player.getId());
                                         final long userXp = player.getXp(id);
                                         final long userLevel = PluginLevels.xpToLevel(userXp);
@@ -246,6 +245,7 @@ class API {
                                                 .put("customBackground", account.getCustomBackground())
                                                 .put("accountId", account.getId())
                                         );
+                                        */
                                     } catch(final IOException e) {
                                         Sentry.capture(e);
                                         e.printStackTrace();
@@ -324,7 +324,8 @@ class API {
                     return data;
                 });
             });
-            get("/player/:id", (req, res) -> JsonObject.mapFrom(mewna.getDatabase().getPlayer(req.params(":id"))));
+            // TODO: Proper accesses
+            get("/player/:id", (req, res) -> JsonObject.mapFrom(mewna.getDatabase().getOptionalPlayer(req.params(":id")).get()));
         });
     }
 }

@@ -1,8 +1,8 @@
 package com.mewna.plugin.event.audio;
 
-import com.mewna.cache.entity.Channel;
-import com.mewna.cache.entity.Guild;
-import com.mewna.cache.entity.User;
+import com.mewna.catnip.entity.channel.Channel;
+import com.mewna.catnip.entity.guild.Guild;
+import com.mewna.catnip.entity.user.User;
 import com.mewna.plugin.event.BaseEvent;
 import com.mewna.plugin.event.EventType;
 import io.vertx.core.json.JsonObject;

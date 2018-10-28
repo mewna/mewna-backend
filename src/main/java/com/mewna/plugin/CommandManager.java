@@ -2,22 +2,19 @@ package com.mewna.plugin;
 
 import com.mewna.Mewna;
 import com.mewna.accounts.Account;
-import com.mewna.cache.ChannelType;
-import com.mewna.cache.entity.Channel;
-import com.mewna.cache.entity.Guild;
-import com.mewna.cache.entity.User;
+import com.mewna.catnip.entity.guild.Guild;
+import com.mewna.catnip.entity.user.User;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Player;
 import com.mewna.data.PluginSettings;
+import com.mewna.event.discord.DiscordMessageCreate;
 import com.mewna.plugin.PluginManager.PluginMetadata;
 import com.mewna.plugin.event.EventType;
-import com.mewna.plugin.event.message.MessageCreateEvent;
 import com.mewna.plugin.metadata.Payment;
 import com.mewna.plugin.metadata.Ratelimit;
 import com.mewna.plugin.plugins.settings.BehaviourSettings;
 import com.mewna.util.Time;
 import io.sentry.Sentry;
-import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import lombok.Value;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -29,6 +26,8 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.mewna.util.Translator.$;
 
 /**
  * @author amy
@@ -95,7 +94,7 @@ public class CommandManager {
     private List<String> getAllPrefixes(final Guild guild) {
         //noinspection UnnecessaryLocalVariable
         final List<String> prefixes = new ArrayList<>();
-        final BehaviourSettings settings = mewna.getDatabase().getOrBaseSettings(BehaviourSettings.class, guild.getId());
+        final BehaviourSettings settings = mewna.getDatabase().getOrBaseSettings(BehaviourSettings.class, guild.id());
         if(settings.getPrefix() != null && !settings.getPrefix().isEmpty() && settings.getPrefix().length() <= 16) {
             prefixes.add(settings.getPrefix());
         } else {
@@ -110,73 +109,18 @@ public class CommandManager {
         return commands.values().stream().filter(e -> e.getPlugin().getClass().equals(pluginClass)).collect(Collectors.toList());
     }
     
-    public void tryExecCommand(final JsonObject data) {
+    public void tryExecCommand(final DiscordMessageCreate event) {
         try {
-            if(!data.getMap().containsKey("guild_id") || data.getString("guild_id") == null) {
-                return;
-            }
-            final String channelId = data.getString("channel_id");
-            // See https://github.com/discordapp/discord-api-docs/issues/582
-            // Note this isn't in the docs yet, but should be at some point (hopefully soon)
-            final String guildId = data.getString("guild_id");
-            
-            final JsonObject author = data.getJsonObject("author");
-            final String userId = author.getString("id");
-            if(data.getBoolean("bot", false)) {
-                return;
-            }
-            if(guildId == null) {
-                logger.warn("Ignoring DM: user {}, channel {}, message {}, content {}", userId, channelId,
-                        data.getString("id"), data.getString("content"));
+            final User user = event.message().author(); // mewna.getCache().getUser(userId);
+            if(user.bot()) {
                 return;
             }
             
-            final User user = mewna.getCache().getUser(userId);
-            if(user == null) {
-                logger.error("Got message from unknown (uncached) user {}!?", userId);
-                Sentry.capture("Uncached user: " + userId);
-                return;
-            }
-            if(user.isBot()) {
-                return;
-            }
-            
-            final Channel channel = mewna.getCache().getChannel(channelId);
-            if(channel == null) {
-                logger.error("Got message from unknown (uncached) channel {}!?", channelId);
-                Sentry.capture("Uncached channel: " + channelId);
-                return;
-            }
-            if(channel.getType() != ChannelType.GUILD_TEXT.getType()) {
-                // Ignore it if it's not a guild message
-                return;
-            }
-            if(channel.getId() == null) {
-                return;
-            }
-            
-            // Collect cache data
-            final Guild guild = mewna.getCache().getGuild(guildId);
-            if(guild == null) {
-                logger.error("Got message from unknown (uncached) guild {}!?", guildId);
-                Sentry.capture("Uncached guild: " + guildId);
-                return;
-            }
-            if(guild.getId() == null) {
-                logger.error("Got message from unknown (uncached) guild {}!?", guildId);
-                Sentry.capture("Uncached guild: " + guildId);
-                return;
-            }
-            
-            final List<User> mentions = new ArrayList<>();
-            for(final Object o : data.getJsonArray("mentions")) {
-                final JsonObject j = (JsonObject) o;
-                // TODO: Build this from the JSON object instead of hitting the cache all the time?
-                mentions.add(mewna.getCache().getUser(j.getString("id")));
-            }
+            final Guild guild = event.guild();
+            final String channelId = event.message().channelId();
             
             if(System.getenv("DEBUG") != null) {
-                if(!user.getId().equals("128316294742147072")) {
+                if(!user.id().equals("128316294742147072")) {
                     /*
                     mewna.getPluginManager().processEvent("MESSAGE_CREATE", new MessageCreateEvent(user, channel, guild, mentions,
                             data.getString("content"), data.getBoolean("mention_everyone")));
@@ -186,7 +130,7 @@ public class CommandManager {
             }
             
             // Parse prefixes
-            String content = data.getString("content");
+            String content = event.message().content();
             String prefix = null;
             boolean found = false;
             for(final String p : getAllPrefixes(guild)) {
@@ -198,11 +142,12 @@ public class CommandManager {
                 }
             }
             // TODO: There's gotta be a way to refactor this out into smaller methods...
+            final List<User> mentions = new ArrayList<>(event.message().mentionedUsers());
             if(found) {
                 final boolean mentionPrefix = prefix.equals("<@" + CLIENT_ID + '>')
                         || prefix.equals("<@!" + CLIENT_ID + '>');
                 if(mentionPrefix) {
-                    mentions.removeIf(u -> u.getId().equalsIgnoreCase(CLIENT_ID));
+                    mentions.removeIf(u -> u.id().equalsIgnoreCase(CLIENT_ID));
                 }
                 content = content.substring(prefix.length()).trim();
                 if(content.isEmpty()) {
@@ -217,7 +162,7 @@ public class CommandManager {
                         .collect(Collectors.toCollection(ArrayList::new));
                 if(commands.containsKey(commandName)) {
                     final CommandWrapper cmd = commands.get(commandName);
-                    if(cmd.isOwner() && !user.getId().equalsIgnoreCase("128316294742147072")) {
+                    if(cmd.isOwner() && !user.id().equalsIgnoreCase("128316294742147072")) {
                         return;
                     }
                     // Make sure it's not disabled
@@ -225,15 +170,17 @@ public class CommandManager {
                             .filter(e -> e.getPluginClass().equals(cmd.getPlugin().getClass())).findFirst();
                     if(first.isPresent()) {
                         final Class<? extends PluginSettings> settingsClass = first.get().getSettingsClass();
-                        final PluginSettings settings = mewna.getDatabase().getOrBaseSettings(settingsClass, guild.getId());
+                        final PluginSettings settings = mewna.getDatabase().getOrBaseSettings(settingsClass, guild.id());
                         final Map<String, CommandSettings> commandSettings = settings.getCommandSettings();
                         if(commandSettings.containsKey(cmd.getBaseName())) {
                             if(!commandSettings.get(cmd.getBaseName()).isEnabled()) {
-                                mewna.getCatnip().rest().channel().sendMessage(channelId, "Sorry, but that command is disabled here.");
+                                mewna.getCatnip().rest().channel().sendMessage(channelId,
+                                        // TODO: Collect guild language properly
+                                        $("en_US", "plugins.disabled-command"));
                                 return;
                             }
                         } else {
-                            logger.warn("Adding missing command {} to {} for {}", cmd.getBaseName(), settings.getClass().getSimpleName(), guild.getId());
+                            logger.warn("Adding missing command {} to {} for {}", cmd.getBaseName(), settings.getClass().getSimpleName(), guild.id());
                             settings.getCommandSettings().put(cmd.getBaseName(), new CommandSettings(true));
                             mewna.getDatabase().saveSettings(settings);
                         }
@@ -248,20 +195,20 @@ public class CommandManager {
                         final String ratelimitKey;
                         switch(cmd.getRatelimit().type()) {
                             case GUILD:
-                                ratelimitKey = guildId;
+                                ratelimitKey = guild.id();
                                 break;
                             case GLOBAL:
-                                ratelimitKey = user.getId();
+                                ratelimitKey = user.id();
                                 break;
                             case CHANNEL:
                                 ratelimitKey = channelId;
                                 break;
                             default:
-                                ratelimitKey = user.getId();
+                                ratelimitKey = user.id();
                                 break;
                         }
                         
-                        final ImmutablePair<Boolean, Long> check = mewna.getRatelimiter().checkUpdateRatelimit(user.getId(),
+                        final ImmutablePair<Boolean, Long> check = mewna.getRatelimiter().checkUpdateRatelimit(user.id(),
                                 baseName + ':' + ratelimitKey,
                                 TimeUnit.SECONDS.toMillis(cmd.getRatelimit().time()));
                         if(check.left) {
@@ -274,30 +221,30 @@ public class CommandManager {
                         }
                     }
                     final Player player = mewna.getDatabase().getPlayer(user);
-                    Optional<Account> maybeAccount = mewna.getAccountManager().getAccountByLinkedDiscord(user.getId());
+                    Optional<Account> maybeAccount = mewna.getAccountManager().getAccountByLinkedDiscord(user.id());
                     if(!maybeAccount.isPresent()) {
-                        logger.error("No account present for Discord account {}!!!", user.getId());
-                        //Sentry.capture("No account present for Discord account: " + user.getId());
+                        logger.error("No account present for Discord account {}!!!", user.id());
+                        //Sentry.capture("No account present for Discord account: " + user.id());
                         mewna.getAccountManager().createNewDiscordLinkedAccount(player, user);
-                        maybeAccount = mewna.getAccountManager().getAccountByLinkedDiscord(user.getId());
+                        maybeAccount = mewna.getAccountManager().getAccountByLinkedDiscord(user.id());
                         if(!maybeAccount.isPresent()) {
-                            logger.error("No account present for Discord account {} after creation!?", user.getId());
-                            Sentry.capture("No account present for Discord account despite creation: " + user.getId());
+                            logger.error("No account present for Discord account {} after creation!?", user.id());
+                            Sentry.capture("No account present for Discord account despite creation: " + user.id());
                             return;
                         }
                     } else {
                         final Account account = maybeAccount.get();
                         if(account.isBanned()) {
                             mewna.getStatsClient().count("discord.backend.commands.banned", 1);
-                            logger.warn("Denying command from banned account {}: {}", account.getId(), account.getBanReason());
+                            logger.warn("Denying command from banned account {}: {}", account.id(), account.banReason());
                             mewna.getCatnip().rest().channel().sendMessage(channelId, "Banned from Mewna. Reason: "
-                                    + account.getBanReason());
+                                    + account.banReason());
                             return;
                         }
                     }
                     long cost = 0L;
                     // Commands may require payment before running
-                    final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr, guild, channel,
+                    final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr, guild, event.message(),
                             mentions, player, maybeAccount.get(), 0L, prefix, "en_US"); // TODO: Proper per-guild settings
                     if(cmd.getPayment() != null) {
                         // By default, try to make the minimum payment
@@ -327,8 +274,8 @@ public class CommandManager {
                     final CommandContext ctx = paymentCtx.toBuilder().cost(cost).build();
                     
                     try {
-                        logger.info("Command: {}#{} ({}, account: {}) in {}#{}-{}: {} {}", user.getName(), user.getDiscriminator(),
-                                user.getId(), ctx.getAccount().getId(), guild.getId(), channel.getId(), data.getString("id"), commandName, argstr);
+                        logger.info("Command: {}#{} ({}, account: {}) in {}#{}-{}: {} {}", user.username(), user.discriminator(),
+                                user.id(), ctx.getAccount().id(), guild.id(), channelId, event.message().id(), commandName, argstr);
                         mewna.getStatsClient().count("discord.backend.commands.run", 1, "name:" + cmd.getName());
                         cmd.getMethod().invoke(cmd.getPlugin(), ctx);
                     } catch(final IllegalAccessException | InvocationTargetException e) {
@@ -338,8 +285,7 @@ public class CommandManager {
                 }
             } else {
                 // No prefix found, pass it down as an event
-                mewna.getPluginManager().processEvent(EventType.MESSAGE_CREATE, new MessageCreateEvent(user, channel, guild, mentions,
-                        data.getString("content"), data.getBoolean("mention_everyone")));
+                mewna.getPluginManager().processEvent(EventType.MESSAGE_CREATE, event);
             }
         } catch(final Throwable t) {
             Sentry.capture(t);

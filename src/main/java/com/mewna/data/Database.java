@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
 import com.mewna.accounts.Account;
 import com.mewna.accounts.timeline.TimelinePost;
-import com.mewna.cache.entity.User;
+import com.mewna.catnip.entity.user.User;
 import com.mewna.plugin.Plugin;
 import gg.amy.pgorm.PgStore;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
@@ -202,41 +202,27 @@ public class Database {
         store.mapSync((Class<T>) settings.getClass()).save(settings);
     }
     
-    public Player getPlayer(final User src) {
-        return getPlayer(src.getId());
-    }
-    
     /////////////
     // Players //
     /////////////
     
-    /**
-     * {@link #getPlayer(String)} will create a new player if one does not
-     * exist. This is not always the correct thing to do, so we give a way to
-     * just directly get an {@code Optional<Player>} instead of creating a new
-     * one and returning that. This method is mainly useful for read-only
-     * operations.
-     *
-     * @param id The player id to search for
-     *
-     * @return An {@link Optional} that might contain a {@link Player}.
-     */
+    /*
+    public Player getPlayer(final User src) {
+        return getPlayer(src.id());
+    }
+    */
+
     public Optional<Player> getOptionalPlayer(final String id) {
         return store.mapSync(Player.class).load(id);
     }
     
-    public Player getPlayer(final String id) {
-        return getOptionalPlayer(id).orElseGet(() -> {
-            final Player base = Player.base(id);
+    public Player getPlayer(final User user) {
+        return getOptionalPlayer(user.id()).orElseGet(() -> {
+            final Player base = Player.base(user.id());
             savePlayer(base);
             // If we don't have a player, then we also need to create an account for them
-            if(!mewna.getAccountManager().getAccountByLinkedDiscord(id).isPresent()) {
-                final User user = mewna.getCache().getUser(id);
-                if(user != null) {
-                    mewna.getAccountManager().createNewDiscordLinkedAccount(base, user);
-                } else {
-                    throw new IllegalStateException("Couldn't create account for " + id + ": Missing in cache!?");
-                }
+            if(!mewna.getAccountManager().getAccountByLinkedDiscord(user.id()).isPresent()) {
+                mewna.getAccountManager().createNewDiscordLinkedAccount(base, user);
             }
             return base;
         });

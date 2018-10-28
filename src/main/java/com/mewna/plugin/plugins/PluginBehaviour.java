@@ -30,7 +30,7 @@ public class PluginBehaviour extends BasePlugin {
     }
     
     private void handle(final Account account, final SystemUserEventType type, final JsonObject data) {
-        final TimelinePost post = TimelinePost.create(account.getId(), true, data
+        final TimelinePost post = TimelinePost.create(account.id(), true, data
                 .put("type", type.getEventId()).toString());
         getDatabase().savePost(post);
         // TODO: Announce in Discord or what? :V

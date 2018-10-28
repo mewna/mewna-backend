@@ -1,9 +1,9 @@
 package com.mewna.plugin;
 
 import com.mewna.accounts.Account;
-import com.mewna.cache.entity.Channel;
-import com.mewna.cache.entity.Guild;
-import com.mewna.cache.entity.User;
+import com.mewna.catnip.entity.guild.Guild;
+import com.mewna.catnip.entity.message.Message;
+import com.mewna.catnip.entity.user.User;
 import com.mewna.data.Player;
 import lombok.Builder;
 import lombok.Value;
@@ -22,7 +22,7 @@ public class CommandContext {
     private List<String> args;
     private String argstr;
     private Guild guild;
-    private Channel channel;
+    private Message message;
     private List<User> mentions;
     private Player player;
     private Account account;

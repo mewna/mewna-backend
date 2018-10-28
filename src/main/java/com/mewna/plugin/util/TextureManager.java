@@ -1,7 +1,8 @@
 package com.mewna.plugin.util;
 
 import com.mewna.Mewna;
-import com.mewna.cache.entity.User;
+import com.mewna.catnip.entity.user.User;
+import com.mewna.catnip.entity.util.ImageOptions;
 import com.mewna.data.Player;
 import com.mewna.util.CacheUtil;
 import com.mewna.util.IOUtils;
@@ -46,7 +47,9 @@ public final class TextureManager {
     
     @SuppressWarnings("WeakerAccess")
     public static Optional<Background> getBackground(final Player player) {
-        return BACKGROUNDS.stream().filter(e -> e.path.equalsIgnoreCase(player.getAccount().getCustomBackground() + ".png")).findFirst();
+        return BACKGROUNDS.stream()
+                .filter(e -> e.path.equalsIgnoreCase(player.getAccount().customBackground() + ".png"))
+                .findFirst();
     }
     
     public static Map<String, List<Background>> getPacks() {
@@ -90,14 +93,14 @@ public final class TextureManager {
     }
     
     private static void cacheAvatar(final User user) {
-        final BufferedImage avatar = downloadAvatar(user.getAvatarURL().replaceAll("gif", "png") + "?size=128");
+        final BufferedImage avatar = downloadAvatar(user.avatarUrl(new ImageOptions().png().size(128)));
         try {
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(avatar, "png", baos);
             final byte[] bytes = baos.toByteArray();
             baos.close();
-            Mewna.getInstance().getDatabase().redis(r -> r.set(String.format(AVATAR_CACHE_KEY, user.getId()).getBytes(), bytes));
-            expireAvatar(user.getId());
+            Mewna.getInstance().getDatabase().redis(r -> r.set(String.format(AVATAR_CACHE_KEY, user.id()).getBytes(), bytes));
+            expireAvatar(user.id());
         } catch(final IOException e) {
             Sentry.capture(e);
             throw new IllegalStateException(e);
@@ -114,10 +117,10 @@ public final class TextureManager {
         final BufferedImage[] avatar = {null};
         
         Mewna.getInstance().getDatabase().redis(r -> {
-            if(r.exists(String.format(AVATAR_CACHE_KEY, user.getId()))) {
+            if(r.exists(String.format(AVATAR_CACHE_KEY, user.id()))) {
                 // Exists, return it
                 try {
-                    final byte[] bytes = r.get(String.format(AVATAR_CACHE_KEY, user.getId()).getBytes());
+                    final byte[] bytes = r.get(String.format(AVATAR_CACHE_KEY, user.id()).getBytes());
                     final ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
                     avatar[0] = ImageIO.read(bais);
                     bais.close();

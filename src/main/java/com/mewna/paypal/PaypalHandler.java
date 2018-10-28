@@ -134,7 +134,7 @@ public class PaypalHandler {
             final Optional<Account> maybeAccount = mewna.getAccountManager().getAccountById(userId);
             if(maybeAccount.isPresent()) {
                 final Account account = maybeAccount.get();
-                final List<String> packs = new ArrayList<>(account.getOwnedBackgroundPacks());
+                final List<String> packs = new ArrayList<>(account.ownedBackgroundPacks());
                 for(final String skuId : skus) {
                     if(skuId.startsWith("Background-Pack-")) {
                         final String pack = skuId.replace("Background-Pack-", "").toLowerCase();
@@ -145,7 +145,7 @@ public class PaypalHandler {
                         }
                     }
                 }
-                account.setOwnedBackgroundPacks(packs);
+                account.ownedBackgroundPacks(packs);
                 mewna.getDatabase().saveAccount(account);
             }
             

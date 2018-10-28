@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mewna.Mewna;
 import com.mewna.accounts.Account;
-import com.mewna.cache.entity.Guild;
+import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.plugins.economy.Box;
 import com.mewna.plugin.plugins.economy.Item;
@@ -108,7 +108,7 @@ public class Player {
     }
     
     public long getXp(final Guild guild) {
-        return getXp(guild.getId());
+        return getXp(guild.id());
     }
     
     public long getXp(final CommandContext ctx) {
@@ -124,7 +124,7 @@ public class Player {
     }
     
     public void incrementLocalXp(final Guild guild, final long amount) {
-        incrementLocalXp(guild.getId(), amount);
+        incrementLocalXp(guild.id(), amount);
     }
     
     public void incrementGlobalXp(final long amount) {

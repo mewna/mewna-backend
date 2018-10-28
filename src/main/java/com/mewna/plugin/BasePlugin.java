@@ -1,7 +1,6 @@
 package com.mewna.plugin;
 
 import com.mewna.Mewna;
-import com.mewna.cache.DiscordCache;
 import com.mewna.catnip.Catnip;
 import com.mewna.data.Database;
 import lombok.AccessLevel;
@@ -29,9 +28,6 @@ public abstract class BasePlugin {
     @Inject
     @Getter(AccessLevel.PROTECTED)
     private Random random;
-    @Inject
-    @Getter(AccessLevel.PROTECTED)
-    private DiscordCache cache;
     
     protected final Catnip getCatnip() {
         return getMewna().getCatnip();

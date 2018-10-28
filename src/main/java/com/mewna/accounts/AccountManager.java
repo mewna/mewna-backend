@@ -4,7 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
 import com.mewna.accounts.Account.AccountBuilder;
 import com.mewna.accounts.timeline.TimelinePost;
-import com.mewna.cache.entity.User;
+import com.mewna.catnip.entity.user.User;
+import com.mewna.catnip.entity.util.ImageOptions;
 import com.mewna.data.Player;
 import com.mewna.plugin.util.Snowflakes;
 import io.vertx.core.json.JsonObject;
@@ -36,16 +37,16 @@ public class AccountManager {
     
     public String checkDiscordLinkedAccountExists(final String id) {
         final Optional<Account> account = getAccountByLinkedDiscord(id);
-        return account.map(Account::getId).orElse("null");
+        return account.map(Account::id).orElse("null");
     }
     
     public void createNewDiscordLinkedAccount(final Player player, final User user) {
         final String snowflake = Snowflakes.getNewSnowflake();
         final Account account = new Account(snowflake);
         
-        account.setDiscordAccountId(user.getId());
-        account.setDisplayName(user.getName());
-        account.setAvatar(user.getAvatarURL());
+        account.discordAccountId(user.id());
+        account.displayName(user.username());
+        account.avatar(user.effectiveAvatarUrl(new ImageOptions().png()));
         
         mewna.getDatabase().saveAccount(account);
     }

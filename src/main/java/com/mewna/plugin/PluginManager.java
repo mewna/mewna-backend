@@ -68,7 +68,7 @@ public class PluginManager {
         injectionClasses = ImmutableMap.<Class<?>, Function<Class<?>, Object>>builder()
                 .put(Mewna.class, __ -> this.mewna)
                 .put(Logger.class, LoggerFactory::getLogger)
-                .put(Database.class, __ -> this.mewna.getDatabase())
+                .put(Database.class, __ -> this.mewna.database())
                 .put(Random.class, __ -> new Random())
                 .put(CurrencyHelper.class, __ -> currencyHelper)
                 .put(OkHttpClient.class, __ -> okHttpClient)
@@ -131,7 +131,7 @@ public class PluginManager {
                 for(final Method m : c.getDeclaredMethods()) {
                     m.setAccessible(true);
                     if(m.isAnnotationPresent(Command.class)) {
-                        mewna.getCommandManager().loadCommandsFromMethod(pluginInstance, pluginAnnotation, c, m);
+                        mewna.commandManager().loadCommandsFromMethod(pluginInstance, pluginAnnotation, c, m);
                     } else if(m.isAnnotationPresent(Event.class)) {
                         loadEventHandler(pluginInstance, m);
                     }

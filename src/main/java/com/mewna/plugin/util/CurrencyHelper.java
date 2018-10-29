@@ -26,23 +26,23 @@ public final class CurrencyHelper {
         final String symbol = getCurrencySymbol(ctx);
         switch(check.left) {
             case BAD_EMPTY: {
-                mewna.getCatnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                mewna.catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                         $(ctx.getLanguage(), "plugins.economy.commands.empty-payment"));
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_NOT_NUM: {
-                mewna.getCatnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                mewna.catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                         $(ctx.getLanguage(), "plugins.economy.commands.payment-not-number")
                                 .replace("$number", maybeAmount));
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_POOR_NO_BAL: {
-                mewna.getCatnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                mewna.catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                         $(ctx.getLanguage(), "plugins.economy.commands.poor-no-money"));
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_POOR: {
-                mewna.getCatnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                mewna.catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                         $(ctx.getLanguage(), "plugins.economy.commands.poor-not-enough")
                             .replace("$amount", maybeAmount)
                         .replace("$balance", ctx.getPlayer().getBalance()+"")
@@ -50,7 +50,7 @@ public final class CurrencyHelper {
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_CHEAP: {
-                mewna.getCatnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                mewna.catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                         $(ctx.getLanguage(), "plugins.economy.commands.too-cheap")
                         .replace("$amount", maybeAmount)
                         .replace("$symbol", symbol)
@@ -58,7 +58,7 @@ public final class CurrencyHelper {
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_MUCH: {
-                mewna.getCatnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                mewna.catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                         $(ctx.getLanguage(), "plugins.economy.commands.too-much")
                                 .replace("$amount", maybeAmount)
                                 .replace("$symbol", symbol)
@@ -66,9 +66,9 @@ public final class CurrencyHelper {
                 return ImmutablePair.of(false, -1L);
             }
             case OK: {
-                mewna.getStatsClient().count("discord.backend.money.spent", check.right);
+                mewna.statsClient().count("discord.backend.money.spent", check.right);
                 ctx.getPlayer().incrementBalance(-check.right);
-                mewna.getDatabase().savePlayer(ctx.getPlayer());
+                mewna.database().savePlayer(ctx.getPlayer());
                 return ImmutablePair.of(true, check.right);
             }
             default: {
@@ -111,7 +111,7 @@ public final class CurrencyHelper {
     }
     
     public final String getCurrencySymbol(final CommandContext ctx) {
-        final String c = mewna.getDatabase().getOrBaseSettings(EconomySettings.class, ctx.getGuild().id()).getCurrencySymbol();
+        final String c = mewna.database().getOrBaseSettings(EconomySettings.class, ctx.getGuild().id()).getCurrencySymbol();
         return c == null || c.isEmpty() ? CURRENCY_SYMBOL : c;
     }
     

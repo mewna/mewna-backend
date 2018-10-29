@@ -269,7 +269,7 @@ public class Player {
         if(clickerData == null) {
             clickerData = new ClickerData();
             // Save it to the DB now because it matters xux;;;
-            Mewna.getInstance().getDatabase().savePlayer(this);
+            Mewna.getInstance().database().savePlayer(this);
         }
         return clickerData;
     }
@@ -296,7 +296,7 @@ public class Player {
     @JsonIgnore
     public Account getAccount() {
         //noinspection ConstantConditions
-        return Mewna.getInstance().getDatabase().getAccountByDiscordId(id).get();
+        return Mewna.getInstance().database().getAccountByDiscordId(id).get();
     }
     
     // Inner classes

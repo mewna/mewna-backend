@@ -94,7 +94,7 @@ public class CommandManager {
     private List<String> getAllPrefixes(final Guild guild) {
         //noinspection UnnecessaryLocalVariable
         final List<String> prefixes = new ArrayList<>();
-        final BehaviourSettings settings = mewna.getDatabase().getOrBaseSettings(BehaviourSettings.class, guild.id());
+        final BehaviourSettings settings = mewna.database().getOrBaseSettings(BehaviourSettings.class, guild.id());
         if(settings.getPrefix() != null && !settings.getPrefix().isEmpty() && settings.getPrefix().length() <= 16) {
             prefixes.add(settings.getPrefix());
         } else {
@@ -166,15 +166,15 @@ public class CommandManager {
                         return;
                     }
                     // Make sure it's not disabled
-                    final Optional<PluginMetadata> first = mewna.getPluginManager().getPluginMetadata().stream()
+                    final Optional<PluginMetadata> first = mewna.pluginManager().getPluginMetadata().stream()
                             .filter(e -> e.getPluginClass().equals(cmd.getPlugin().getClass())).findFirst();
                     if(first.isPresent()) {
                         final Class<? extends PluginSettings> settingsClass = first.get().getSettingsClass();
-                        final PluginSettings settings = mewna.getDatabase().getOrBaseSettings(settingsClass, guild.id());
+                        final PluginSettings settings = mewna.database().getOrBaseSettings(settingsClass, guild.id());
                         final Map<String, CommandSettings> commandSettings = settings.getCommandSettings();
                         if(commandSettings.containsKey(cmd.getBaseName())) {
                             if(!commandSettings.get(cmd.getBaseName()).isEnabled()) {
-                                mewna.getCatnip().rest().channel().sendMessage(channelId,
+                                mewna.catnip().rest().channel().sendMessage(channelId,
                                         // TODO: Collect guild language properly
                                         $("en_US", "plugins.disabled-command"));
                                 return;
@@ -182,7 +182,7 @@ public class CommandManager {
                         } else {
                             logger.warn("Adding missing command {} to {} for {}", cmd.getBaseName(), settings.getClass().getSimpleName(), guild.id());
                             settings.getCommandSettings().put(cmd.getBaseName(), new CommandSettings(true));
-                            mewna.getDatabase().saveSettings(settings);
+                            mewna.database().saveSettings(settings);
                         }
                     } else {
                         logger.warn("No plugin metadata for command {}!?", cmd.getBaseName());
@@ -208,25 +208,25 @@ public class CommandManager {
                                 break;
                         }
                         
-                        final ImmutablePair<Boolean, Long> check = mewna.getRatelimiter().checkUpdateRatelimit(user.id(),
+                        final ImmutablePair<Boolean, Long> check = mewna.ratelimiter().checkUpdateRatelimit(user.id(),
                                 baseName + ':' + ratelimitKey,
                                 TimeUnit.SECONDS.toMillis(cmd.getRatelimit().time()));
                         if(check.left) {
-                            mewna.getStatsClient().count("discord.backend.commands.ratelimit", 1,
+                            mewna.statsClient().count("discord.backend.commands.ratelimit", 1,
                                     "name:" + cmd.getName());
-                            mewna.getCatnip().rest().channel().sendMessage(channelId,
+                            mewna.catnip().rest().channel().sendMessage(channelId,
                                     String.format("You're using that command too fast! Try again in **%s**.",
                                             Time.toHumanReadableDuration(check.right)));
                             return;
                         }
                     }
-                    final Player player = mewna.getDatabase().getPlayer(user);
-                    Optional<Account> maybeAccount = mewna.getAccountManager().getAccountByLinkedDiscord(user.id());
+                    final Player player = mewna.database().getPlayer(user);
+                    Optional<Account> maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());
                     if(!maybeAccount.isPresent()) {
                         logger.error("No account present for Discord account {}!!!", user.id());
                         //Sentry.capture("No account present for Discord account: " + user.id());
-                        mewna.getAccountManager().createNewDiscordLinkedAccount(player, user);
-                        maybeAccount = mewna.getAccountManager().getAccountByLinkedDiscord(user.id());
+                        mewna.accountManager().createNewDiscordLinkedAccount(player, user);
+                        maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());
                         if(!maybeAccount.isPresent()) {
                             logger.error("No account present for Discord account {} after creation!?", user.id());
                             Sentry.capture("No account present for Discord account despite creation: " + user.id());
@@ -235,9 +235,9 @@ public class CommandManager {
                     } else {
                         final Account account = maybeAccount.get();
                         if(account.isBanned()) {
-                            mewna.getStatsClient().count("discord.backend.commands.banned", 1);
+                            mewna.statsClient().count("discord.backend.commands.banned", 1);
                             logger.warn("Denying command from banned account {}: {}", account.id(), account.banReason());
-                            mewna.getCatnip().rest().channel().sendMessage(channelId, "Banned from Mewna. Reason: "
+                            mewna.catnip().rest().channel().sendMessage(channelId, "Banned from Mewna. Reason: "
                                     + account.banReason());
                             return;
                         }
@@ -260,7 +260,7 @@ public class CommandManager {
                             }
                         }
                         
-                        final ImmutablePair<Boolean, Long> res = mewna.getPluginManager().getCurrencyHelper().handlePayment(paymentCtx,
+                        final ImmutablePair<Boolean, Long> res = mewna.pluginManager().getCurrencyHelper().handlePayment(paymentCtx,
                                 maybePayment, cmd.getPayment().min(), cmd.getPayment().max());
                         // If we can make the payment, set the cost and continue
                         // Otherwise, return early (the payment-handler sends error messages for us)
@@ -276,7 +276,7 @@ public class CommandManager {
                     try {
                         logger.info("Command: {}#{} ({}, account: {}) in {}#{}-{}: {} {}", user.username(), user.discriminator(),
                                 user.id(), ctx.getAccount().id(), guild.id(), channelId, event.message().id(), commandName, argstr);
-                        mewna.getStatsClient().count("discord.backend.commands.run", 1, "name:" + cmd.getName());
+                        mewna.statsClient().count("discord.backend.commands.run", 1, "name:" + cmd.getName());
                         cmd.getMethod().invoke(cmd.getPlugin(), ctx);
                     } catch(final IllegalAccessException | InvocationTargetException e) {
                         Sentry.capture(e);
@@ -285,7 +285,7 @@ public class CommandManager {
                 }
             } else {
                 // No prefix found, pass it down as an event
-                mewna.getPluginManager().processEvent(EventType.MESSAGE_CREATE, event);
+                mewna.pluginManager().processEvent(EventType.MESSAGE_CREATE, event);
             }
         } catch(final Throwable t) {
             Sentry.capture(t);

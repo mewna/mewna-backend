@@ -19,6 +19,7 @@ import gg.amy.singyeong.SingyeongType;
 import io.sentry.Sentry;
 import io.vertx.core.Vertx;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +28,7 @@ import org.slf4j.LoggerFactory;
  * @since 4/8/18.
  */
 @SuppressWarnings("Singleton")
+@Accessors(fluent = true)
 public final class Mewna {
     @SuppressWarnings("StaticVariableOfConcreteClass")
     private static final Mewna INSTANCE = new Mewna();

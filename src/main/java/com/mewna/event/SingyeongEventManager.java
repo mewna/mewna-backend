@@ -27,31 +27,31 @@ public class SingyeongEventManager {
         switch(data.getString("type")) {
             case Raw.MESSAGE_CREATE: {
                 final var event = DiscordMessageCreate.builder()
-                        .guild(Entity.fromJson(mewna.getCatnip(), GuildImpl.class, data.getJsonObject("guild")))
-                        .member(Entity.fromJson(mewna.getCatnip(), MemberImpl.class, data.getJsonObject("member")))
-                        .user(Entity.fromJson(mewna.getCatnip(), UserImpl.class, data.getJsonObject("user")))
-                        .message(Entity.fromJson(mewna.getCatnip(), MessageImpl.class, data.getJsonObject("message")))
+                        .guild(Entity.fromJson(mewna.catnip(), GuildImpl.class, data.getJsonObject("guild")))
+                        .member(Entity.fromJson(mewna.catnip(), MemberImpl.class, data.getJsonObject("member")))
+                        .user(Entity.fromJson(mewna.catnip(), UserImpl.class, data.getJsonObject("user")))
+                        .message(Entity.fromJson(mewna.catnip(), MessageImpl.class, data.getJsonObject("message")))
                         .build();
                 // mewna.getPluginManager().processEvent(data.getString("type"), event);
-                mewna.getCommandManager().tryExecCommand(event);
+                mewna.commandManager().tryExecCommand(event);
                 break;
             }
             case Raw.GUILD_MEMBER_ADD: {
                 final var event = DiscordGuildMemberAdd.builder()
-                        .guild(Entity.fromJson(mewna.getCatnip(), GuildImpl.class, data.getJsonObject("guild")))
-                        .member(Entity.fromJson(mewna.getCatnip(), MemberImpl.class, data.getJsonObject("member")))
-                        .user(Entity.fromJson(mewna.getCatnip(), UserImpl.class, data.getJsonObject("user")))
+                        .guild(Entity.fromJson(mewna.catnip(), GuildImpl.class, data.getJsonObject("guild")))
+                        .member(Entity.fromJson(mewna.catnip(), MemberImpl.class, data.getJsonObject("member")))
+                        .user(Entity.fromJson(mewna.catnip(), UserImpl.class, data.getJsonObject("user")))
                         .build();
-                mewna.getPluginManager().processEvent(data.getString("type"), event);
+                mewna.pluginManager().processEvent(data.getString("type"), event);
                 break;
             }
             case Raw.GUILD_MEMBER_REMOVE: {
                 final var event = DiscordGuildMemberRemove.builder()
-                        .guild(Entity.fromJson(mewna.getCatnip(), GuildImpl.class, data.getJsonObject("guild")))
-                        .member(Entity.fromJson(mewna.getCatnip(), MemberImpl.class, data.getJsonObject("member")))
-                        .user(Entity.fromJson(mewna.getCatnip(), UserImpl.class, data.getJsonObject("user")))
+                        .guild(Entity.fromJson(mewna.catnip(), GuildImpl.class, data.getJsonObject("guild")))
+                        .member(Entity.fromJson(mewna.catnip(), MemberImpl.class, data.getJsonObject("member")))
+                        .user(Entity.fromJson(mewna.catnip(), UserImpl.class, data.getJsonObject("user")))
                         .build();
-                mewna.getPluginManager().processEvent(data.getString("type"), event);
+                mewna.pluginManager().processEvent(data.getString("type"), event);
                 break;
             }
         }

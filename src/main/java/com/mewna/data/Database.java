@@ -221,8 +221,8 @@ public class Database {
             final Player base = Player.base(user.id());
             savePlayer(base);
             // If we don't have a player, then we also need to create an account for them
-            if(!mewna.getAccountManager().getAccountByLinkedDiscord(user.id()).isPresent()) {
-                mewna.getAccountManager().createNewDiscordLinkedAccount(base, user);
+            if(!mewna.accountManager().getAccountByLinkedDiscord(user.id()).isPresent()) {
+                mewna.accountManager().createNewDiscordLinkedAccount(base, user);
             }
             return base;
         });

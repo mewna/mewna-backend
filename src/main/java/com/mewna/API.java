@@ -99,10 +99,10 @@ class API {
             path("/account", () -> {
                 path("/:id", () -> {
                     get("/", (req, res) -> {
-                        return JsonObject.mapFrom(mewna.getDatabase().getAccountById(req.params(":id")));
+                        return JsonObject.mapFrom(mewna.database().getAccountById(req.params(":id")));
                     });
                     get("/links", (req, res) -> {
-                        final Optional<Account> maybeAccount = mewna.getAccountManager().getAccountById(req.params(":id"));
+                        final Optional<Account> maybeAccount = mewna.accountManager().getAccountById(req.params(":id"));
                         if(maybeAccount.isPresent()) {
                             final Account account = maybeAccount.get();
                             final JsonObject data = new JsonObject();
@@ -115,7 +115,7 @@ class API {
                         }
                     });
                     get("/profile", (req, res) -> {
-                        final Optional<Account> maybeAccount = mewna.getAccountManager().getAccountById(req.params(":id"));
+                        final Optional<Account> maybeAccount = mewna.accountManager().getAccountById(req.params(":id"));
                         if(maybeAccount.isPresent()) {
                             final Account account = maybeAccount.get();
                             final JsonObject data = new JsonObject();
@@ -134,25 +134,25 @@ class API {
                         }
                     });
                     get("/posts/all", (req, res) -> {
-                        return new JsonArray(mewna.getDatabase().getAllTimelinePosts(req.params(":id")));
+                        return new JsonArray(mewna.database().getAllTimelinePosts(req.params(":id")));
                     });
                     get("/posts", (req, res) -> {
-                        return new JsonArray(mewna.getDatabase().getLast100TimelinePosts(req.params(":id")));
+                        return new JsonArray(mewna.database().getLast100TimelinePosts(req.params(":id")));
                     });
                 });
                 post("/update", (req, res) -> {
-                    mewna.getAccountManager().updateAccountSettings(JsonObject.mapFrom(req.body()));
+                    mewna.accountManager().updateAccountSettings(JsonObject.mapFrom(req.body()));
                     return new JsonObject();
                 });
                 post("/update/oauth", (req, res) -> {
-                    mewna.getAccountManager().createOrUpdateDiscordOAuthLinkedAccount(JsonObject.mapFrom(req.body()));
+                    mewna.accountManager().createOrUpdateDiscordOAuthLinkedAccount(JsonObject.mapFrom(req.body()));
                     return new JsonObject();
                 });
                 
                 path("/links", () -> {
                     path("/discord", () -> {
                         get("/:id", (req, res) -> {
-                            return mewna.getAccountManager().checkDiscordLinkedAccountExists(req.params(":id"));
+                            return mewna.accountManager().checkDiscordLinkedAccountExists(req.params(":id"));
                         });
                     });
                 });
@@ -161,15 +161,15 @@ class API {
                 path("/:id", () -> {
                     path("/config", () -> {
                         get("/:type", (req, res) -> {
-                            final PluginSettings settings = mewna.getDatabase().getOrBaseSettings(req.params(":type"), req.params(":id"));
+                            final PluginSettings settings = mewna.database().getOrBaseSettings(req.params(":type"), req.params(":id"));
                             return MAPPER.writeValueAsString(settings);
                         });
                         post("/:type", (req, res) -> {
                             final JsonObject data = JsonObject.mapFrom(req.body());
-                            final PluginSettings settings = mewna.getDatabase().getOrBaseSettings(req.params(":type"), req.params(":id"));
+                            final PluginSettings settings = mewna.database().getOrBaseSettings(req.params(":type"), req.params(":id"));
                             if(settings.validate(data)) {
                                 try {
-                                    if(settings.updateSettings(mewna.getDatabase(), data)) {
+                                    if(settings.updateSettings(mewna.database(), data)) {
                                         // All good, update and return
                                         logger.info("Updated {} settings for {}", req.params(":type"), req.params(":id"));
                                         return new JsonObject().put("status", "ok");
@@ -212,7 +212,7 @@ class API {
                                         "    ORDER BY (players.data->'guildXp'->>'%s')::integer DESC LIMIT 100;",
                                 id, id, id
                         );
-                        mewna.getDatabase().getStore().sql(query, p -> {
+                        mewna.database().getStore().sql(query, p -> {
                             //noinspection Convert2MethodRef
                             final ResultSet resultSet = p.executeQuery();
                             if(resultSet.isBeforeFirst()) {
@@ -256,14 +256,14 @@ class API {
                         });
                         return new JsonArray(results);
                     });
-                    get("/webhooks", (req, res) -> new JsonArray(mewna.getDatabase().getAllWebhooks(req.params(":id")).stream().map(e -> {
+                    get("/webhooks", (req, res) -> new JsonArray(mewna.database().getAllWebhooks(req.params(":id")).stream().map(e -> {
                         final JsonObject j = JsonObject.mapFrom(e);
                         j.remove("secret");
                         return j;
                     }).collect(Collectors.toList())));
                     get("/webhooks/:channel_id", (req, res) -> {
                         final String channel = req.params(":channel_id");
-                        final Optional<Webhook> webhook = mewna.getDatabase().getWebhook(channel);
+                        final Optional<Webhook> webhook = mewna.database().getWebhook(channel);
                         final JsonObject hook = webhook.map(JsonObject::mapFrom).orElseGet(JsonObject::new);
                         if(hook.containsKey("secret")) {
                             hook.remove("secret");
@@ -272,7 +272,7 @@ class API {
                     });
                     post("/webhooks/add", (req, res) -> {
                         final Webhook hook = Webhook.fromJson(JsonObject.mapFrom(req.body()));
-                        mewna.getDatabase().addWebhook(hook);
+                        mewna.database().addWebhook(hook);
                         return new JsonObject();
                     });
                 });
@@ -287,26 +287,26 @@ class API {
                 path("/checkout", () -> {
                     post("/start", (req, res) -> {
                         final JsonObject body = JsonObject.mapFrom(req.body());
-                        return mewna.getPaypalHandler().startPayment(
+                        return mewna.paypalHandler().startPayment(
                                 body.getString("userId"),
                                 body.getString("sku")
                         );
                     });
                     post("/confirm", (req, res) -> {
                         final JsonObject body = JsonObject.mapFrom(req.body());
-                        return mewna.getPaypalHandler().finishPayment(
+                        return mewna.paypalHandler().finishPayment(
                                 body.getString("userId"),
                                 body.getString("paymentId"),
                                 body.getString("payerId")
                         );
                     });
                 });
-                get("/manifest", (req, res) -> new JsonArray(ImmutableList.copyOf(mewna.getPaypalHandler().getSkus())));
+                get("/manifest", (req, res) -> new JsonArray(ImmutableList.copyOf(mewna.paypalHandler().getSkus())));
             });
             
             path("/commands", () -> {
                 // More shit goes here
-                get("/metadata", (req, res) -> new JsonArray(ImmutableList.copyOf(mewna.getCommandManager().getCommandMetadata())));
+                get("/metadata", (req, res) -> new JsonArray(ImmutableList.copyOf(mewna.commandManager().getCommandMetadata())));
             });
             
             path("/plugins", () -> {
@@ -314,7 +314,7 @@ class API {
                 //noinspection TypeMayBeWeakened
                 get("/metadata", (req, res) -> {
                     @SuppressWarnings("TypeMayBeWeakened")
-                    final JsonArray data = new JsonArray(ImmutableList.copyOf(mewna.getPluginManager().getPluginMetadata()));
+                    final JsonArray data = new JsonArray(ImmutableList.copyOf(mewna.pluginManager().getPluginMetadata()));
                     data.forEach(e -> {
                         // ;-;
                         // TODO: Find better solution
@@ -325,7 +325,7 @@ class API {
                 });
             });
             // TODO: Proper accesses
-            get("/player/:id", (req, res) -> JsonObject.mapFrom(mewna.getDatabase().getOptionalPlayer(req.params(":id")).get()));
+            get("/player/:id", (req, res) -> JsonObject.mapFrom(mewna.database().getOptionalPlayer(req.params(":id")).get()));
         });
     }
 }

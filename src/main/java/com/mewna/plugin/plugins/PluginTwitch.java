@@ -69,7 +69,7 @@ public class PluginTwitch extends BasePlugin {
         // TODO: Detect when nobody subscribes to stream up OR down for unsubbing
         final String streamerId = event.getStreamer().getId();
         // Oh god...
-        getMewna().getDatabase().getStore().sql("SELECT id FROM settings_twitch " +
+        database().getStore().sql("SELECT id FROM settings_twitch " +
                 "WHERE data->'twitchStreamers' @> '[{\"id\": \"" + streamerId + "\"}]';", p -> {
             final ResultSet resultSet = p.executeQuery();
             if(resultSet.isBeforeFirst()) {
@@ -86,7 +86,7 @@ public class PluginTwitch extends BasePlugin {
                 */
                 if(!webhookGuilds.isEmpty()) {
                     webhookGuilds.forEach(guildId -> {
-                        final TwitchSettings settings = getDatabase().getOrBaseSettings(TwitchSettings.class, guildId);
+                        final TwitchSettings settings = database().getOrBaseSettings(TwitchSettings.class, guildId);
                         final Optional<TwitchStreamerConfig> maybeStreamer = settings.getTwitchStreamers().stream()
                                 .filter(e -> e.getId().equals(streamerId)).findFirst();
                         if(maybeStreamer.isPresent()) {
@@ -108,7 +108,7 @@ public class PluginTwitch extends BasePlugin {
                             }
                             if(canHook) {
                                 if(settings.getTwitchWebhookChannel() != null) {
-                                    final Optional<Webhook> maybeHook = getDatabase().getWebhook(settings.getTwitchWebhookChannel());
+                                    final Optional<Webhook> maybeHook = database().getWebhook(settings.getTwitchWebhookChannel());
                                     if(maybeHook.isPresent()) {
                                         final Webhook webhook = maybeHook.get();
                                         final Templater templater = map(event);
@@ -129,7 +129,7 @@ public class PluginTwitch extends BasePlugin {
                                                 }
                                             }
                                             //noinspection ResultOfMethodCallIgnored
-                                            getCatnip().rest().webhook().executeWebhook(webhook.getId(), webhook.getSecret(), messageOptions);
+                                            catnip().rest().webhook().executeWebhook(webhook.getId(), webhook.getSecret(), messageOptions);
                                         } catch(final Exception e) {
                                             Sentry.capture(e);
                                         }

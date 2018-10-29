@@ -78,7 +78,7 @@ public final class TextureManager {
         });
         try(final InputStream is = CacheUtil.class.getResourceAsStream("/backgrounds/manifest.json")) {
             final String json = new String(IOUtils.readFully(is));
-            mewna.getPaypalHandler().loadBackgroundManifest(json);
+            mewna.paypalHandler().loadBackgroundManifest(json);
         } catch(final IOException e) {
             Sentry.capture(e);
             throw new RuntimeException(e);
@@ -99,7 +99,7 @@ public final class TextureManager {
             ImageIO.write(avatar, "png", baos);
             final byte[] bytes = baos.toByteArray();
             baos.close();
-            Mewna.getInstance().getDatabase().redis(r -> r.set(String.format(AVATAR_CACHE_KEY, user.id()).getBytes(), bytes));
+            Mewna.getInstance().database().redis(r -> r.set(String.format(AVATAR_CACHE_KEY, user.id()).getBytes(), bytes));
             expireAvatar(user.id());
         } catch(final IOException e) {
             Sentry.capture(e);
@@ -109,14 +109,14 @@ public final class TextureManager {
     
     private static void expireAvatar(final String id) {
         // expire in 1 day
-        Mewna.getInstance().getDatabase().redis(r -> r.expire(String.format(AVATAR_CACHE_KEY, id), 3600 * 24));
+        Mewna.getInstance().database().redis(r -> r.expire(String.format(AVATAR_CACHE_KEY, id), 3600 * 24));
     }
     
     @SuppressWarnings("WeakerAccess")
     public static BufferedImage getCachedAvatar(final User user) {
         final BufferedImage[] avatar = {null};
         
-        Mewna.getInstance().getDatabase().redis(r -> {
+        Mewna.getInstance().database().redis(r -> {
             if(r.exists(String.format(AVATAR_CACHE_KEY, user.id()))) {
                 // Exists, return it
                 try {

@@ -113,7 +113,7 @@ public class Account {
         int changes = 0;
         if(data.getMap().containsKey("aboutText")) {
             if(!builder.aboutText.equals(data.getString("aboutText"))) {
-                Mewna.getInstance().getPluginManager().processEvent(EventType.ACCOUNT_EVENT,
+                Mewna.getInstance().pluginManager().processEvent(EventType.ACCOUNT_EVENT,
                         new AccountEvent(SystemUserEventType.DESCRIPTION, this,
                                 new JsonObject()
                                         .put("old", builder.aboutText)
@@ -125,7 +125,7 @@ public class Account {
         }
         if(data.getMap().containsKey("customBackground")) {
             if(!builder.customBackground.equals("/backgrounds/" + data.getString("customBackground"))) {
-                Mewna.getInstance().getPluginManager().processEvent(EventType.ACCOUNT_EVENT,
+                Mewna.getInstance().pluginManager().processEvent(EventType.ACCOUNT_EVENT,
                         new AccountEvent(SystemUserEventType.BACKGROUND, this,
                                 new JsonObject().put("bg", "/backgrounds/" + data.getString("customBackground"))));
             }

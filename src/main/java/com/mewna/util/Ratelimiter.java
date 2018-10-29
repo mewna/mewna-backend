@@ -30,7 +30,7 @@ public class Ratelimiter {
     public ImmutablePair<Boolean, Long> checkUpdateRatelimit(final String id, final String type, final long ms) {
         final ImmutablePair<Boolean, Long> ratelimited = isRatelimited(id, type, ms);
         if(!ratelimited.left) {
-            mewna.getDatabase().redis(j -> {
+            mewna.database().redis(j -> {
                 final String key = id + ':' + type + ":ratelimit";
                 j.set(key, String.valueOf(System.currentTimeMillis()));
             });
@@ -40,7 +40,7 @@ public class Ratelimiter {
     
     public long getRatelimitTime(final String id, final String type, final long ms) {
         final long[] res = {0};
-        mewna.getDatabase().redis(j -> {
+        mewna.database().redis(j -> {
             final String key = id + ':' + type + ":ratelimit";
             if(j.exists(key)) {
                 final String v = j.get(key);
@@ -60,7 +60,7 @@ public class Ratelimiter {
         final ImmutablePair[] pair = {null};
     
         final long finalMs = ms;
-        mewna.getDatabase().redis(j -> {
+        mewna.database().redis(j -> {
             final String key = id + ':' + type + ":ratelimit";
             if(j.exists(key)) {
                 final String v = j.get(key);

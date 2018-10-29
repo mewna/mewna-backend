@@ -28,11 +28,11 @@ public class AccountManager {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     
     public Optional<Account> getAccountById(final String id) {
-        return mewna.getDatabase().getAccountById(id);
+        return mewna.database().getAccountById(id);
     }
     
     public Optional<Account> getAccountByLinkedDiscord(final String discordId) {
-        return mewna.getDatabase().getAccountByDiscordId(discordId);
+        return mewna.database().getAccountByDiscordId(discordId);
     }
     
     public String checkDiscordLinkedAccountExists(final String id) {
@@ -48,14 +48,14 @@ public class AccountManager {
         account.displayName(user.username());
         account.avatar(user.effectiveAvatarUrl(new ImageOptions().png()));
         
-        mewna.getDatabase().saveAccount(account);
+        mewna.database().saveAccount(account);
     }
     
     public void createOrUpdateDiscordOAuthLinkedAccount(final JsonObject data) {
         final String id = data.containsKey("id") && data.getString("id", "").matches("\\d+")
                 ? data.getString("id")
                 : Snowflakes.getNewSnowflake();
-        final AccountBuilder builder = mewna.getDatabase().getAccountById(id).map(Account::toBuilder)
+        final AccountBuilder builder = mewna.database().getAccountById(id).map(Account::toBuilder)
                 // We do this to get the default values so that we don't have to do extra work here later.
                 .orElseGet(() -> new Account(id).toBuilder());
         builder.id(id);
@@ -90,17 +90,17 @@ public class AccountManager {
                 builder.discordAccountId(discordAccountId);
             }
         }
-        mewna.getDatabase().saveAccount(builder.build());
+        mewna.database().saveAccount(builder.build());
     }
     
     public void updateAccountSettings(final JsonObject data) {
         final String id = data.getString("id", null);
         if(id != null && !id.isEmpty()) {
-            final Optional<Account> maybeAccount = mewna.getDatabase().getAccountById(id);
+            final Optional<Account> maybeAccount = mewna.database().getAccountById(id);
             if(maybeAccount.isPresent()) {
                 final Account account = maybeAccount.get();
                 if(account.validateSettings(data)) {
-                    account.updateSettings(mewna.getDatabase(), data);
+                    account.updateSettings(mewna.database(), data);
                     logger.info("Updated account {}", id);
                 } else {
                     logger.warn("Can't update account {}: Failed validateSettings, data {}", id, data);
@@ -114,6 +114,6 @@ public class AccountManager {
     }
     
     public List<TimelinePost> getAllPosts(final String id) {
-        return mewna.getDatabase().getAllTimelinePosts(id);
+        return mewna.database().getAllTimelinePosts(id);
     }
 }

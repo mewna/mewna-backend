@@ -5,6 +5,7 @@ import com.mewna.catnip.Catnip;
 import com.mewna.data.Database;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -15,6 +16,7 @@ import java.util.Random;
  * @since 4/8/18.
  */
 @SuppressWarnings("unused")
+@Accessors(fluent = true)
 public abstract class BasePlugin {
     @Inject
     @Getter(AccessLevel.PROTECTED)
@@ -29,7 +31,7 @@ public abstract class BasePlugin {
     @Getter(AccessLevel.PROTECTED)
     private Random random;
     
-    protected final Catnip getCatnip() {
-        return getMewna().getCatnip();
+    protected final Catnip catnip() {
+        return mewna().catnip();
     }
 }

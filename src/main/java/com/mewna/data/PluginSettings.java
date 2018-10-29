@@ -25,7 +25,7 @@ public interface PluginSettings {
     ObjectMapper MAPPER = new ObjectMapper();
     
     static <T> List<String> commandsOwnedByPlugin(final Class<T> cls) {
-        return Mewna.getInstance().getCommandManager().getCommandsForPlugin(cls).stream().map(CommandWrapper::getBaseName)
+        return Mewna.getInstance().commandManager().getCommandsForPlugin(cls).stream().map(CommandWrapper::getBaseName)
                 .distinct().collect(Collectors.toList());
     }
     

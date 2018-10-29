@@ -131,7 +131,7 @@ public class PaypalHandler {
                 amount += (long) (Double.parseDouble(t.getAmount().getTotal()) * 100L);
             }
             
-            final Optional<Account> maybeAccount = mewna.getAccountManager().getAccountById(userId);
+            final Optional<Account> maybeAccount = mewna.accountManager().getAccountById(userId);
             if(maybeAccount.isPresent()) {
                 final Account account = maybeAccount.get();
                 final List<String> packs = new ArrayList<>(account.ownedBackgroundPacks());
@@ -146,7 +146,7 @@ public class PaypalHandler {
                     }
                 }
                 account.ownedBackgroundPacks(packs);
-                mewna.getDatabase().saveAccount(account);
+                mewna.database().saveAccount(account);
             }
             
             logger.info("Completed Paypal transaction for USD ${}: {}", amount, createdPayment);

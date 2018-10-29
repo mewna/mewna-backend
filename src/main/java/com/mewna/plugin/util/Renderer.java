@@ -133,7 +133,7 @@ public final class Renderer {
     }
     
     public static byte[] generateProfileCard(final User user, final Player player) {
-        Mewna.getInstance().getStatsClient().count("discord.backend.cards.rendered", 1, "type:profile");
+        Mewna.getInstance().statsClient().count("discord.backend.cards.rendered", 1, "type:profile");
         final BufferedImage card = new BufferedImage(600, 600, BufferedImage.TYPE_INT_ARGB);
         try {
             final Graphics2D g2 = card.createGraphics();
@@ -261,7 +261,7 @@ public final class Renderer {
     }
     
     public static byte[] generateRankCard(final Guild guild, final User user, final Player player) {
-        Mewna.getInstance().getStatsClient().count("discord.backend.cards.rendered", 1, "type:rank");
+        Mewna.getInstance().statsClient().count("discord.backend.cards.rendered", 1, "type:rank");
         final BufferedImage card = new BufferedImage(800, 200, BufferedImage.TYPE_INT_ARGB);
         try {
             final Graphics2D g2 = card.createGraphics();

@@ -76,7 +76,7 @@ public class PluginLevels extends BasePlugin {
     
     public static int getAllRankedPlayersInGuild(final Guild guild) {
         final int[] count = {0};
-        Mewna.getInstance().getDatabase().getStore().sql("SELECT COUNT(*) AS count FROM players WHERE data->'guildXp'->'"
+        Mewna.getInstance().database().getStore().sql("SELECT COUNT(*) AS count FROM players WHERE data->'guildXp'->'"
                 + guild.id() + "' IS NOT NULL;", p -> {
             final ResultSet resultSet = p.executeQuery();
             if(resultSet.isBeforeFirst()) {
@@ -91,7 +91,7 @@ public class PluginLevels extends BasePlugin {
         final int[] rank = {-1};
         final String guildId = guild.id();
         final String playerId = player.id();
-        Mewna.getInstance().getDatabase().getStore().sql("SELECT rank FROM (SELECT row_number() OVER (" +
+        Mewna.getInstance().database().getStore().sql("SELECT rank FROM (SELECT row_number() OVER (" +
                 "ORDER BY (data->'guildXp'->>'" + guildId + "')::integer DESC" +
                 ") AS rank, data FROM players " +
                 "WHERE data->'guildXp'->'" + guildId + "' IS NOT NULL " +
@@ -111,7 +111,7 @@ public class PluginLevels extends BasePlugin {
     public static int getPlayerRankGlobally(final User player) {
         final int[] rank = {-1};
         final String playerId = player.id();
-        Mewna.getInstance().getDatabase().getStore().sql("SELECT rank FROM (SELECT row_number() OVER (" +
+        Mewna.getInstance().database().getStore().sql("SELECT rank FROM (SELECT row_number() OVER (" +
                 "ORDER BY (data->>'globalXp')::integer DESC" +
                 ") AS rank, data FROM players) AS _q " +
                 "WHERE data->>'id' = '" + playerId + "';", p -> {
@@ -147,8 +147,8 @@ public class PluginLevels extends BasePlugin {
     @Event(EventType.LEVEL_UP)
     public void handleLevelUp(final LevelUpEvent event) {
         final Guild guild = event.guild();
-        getMewna().getStatsClient().count("discord.backend.levelups", 1);
-        final LevelsSettings settings = getMewna().getDatabase().getOrBaseSettings(LevelsSettings.class, guild.id());
+        mewna().statsClient().count("discord.backend.levelups", 1);
+        final LevelsSettings settings = database().getOrBaseSettings(LevelsSettings.class, guild.id());
         if(settings.isLevelsEnabled()) {
             final Member member = event.member();
             if(settings.isRemovePreviousRoleRewards()) {
@@ -166,7 +166,7 @@ public class PluginLevels extends BasePlugin {
         if(settings.isLevelsEnabled()) {
             if(settings.isLevelUpMessagesEnabled()) {
                 final String message = map(event).render(settings.getLevelUpMessage());
-                getCatnip().rest().channel().sendMessage(event.channel().id(), message);
+                catnip().rest().channel().sendMessage(event.channel().id(), message);
             }
         }
     }
@@ -186,7 +186,7 @@ public class PluginLevels extends BasePlugin {
             final MemberData memberData = new MemberData();
             //noinspection ResultOfMethodCallIgnored
             endRoles.forEach(memberData::addRole);
-            getCatnip().rest().guild().modifyGuildMember(guild.id(), member.id(), memberData)
+            catnip().rest().guild().modifyGuildMember(guild.id(), member.id(), memberData)
                     .thenAccept(__ -> callback.run());
         }
     }
@@ -201,7 +201,7 @@ public class PluginLevels extends BasePlugin {
             final MemberData memberData = new MemberData();
             member.roleIds().forEach(memberData::addRole);
             rewards.forEach(memberData::addRole);
-            getCatnip().rest().guild().modifyGuildMember(guild.id(), member.id(), memberData)
+            catnip().rest().guild().modifyGuildMember(guild.id(), member.id(), memberData)
                     .thenAccept(__ -> callback.run());
         }
     }
@@ -209,15 +209,15 @@ public class PluginLevels extends BasePlugin {
     @Event(Raw.MESSAGE_CREATE)
     public void handleChatMessage(final DiscordMessageCreate event) {
         final User author = event.message().author();
-        final Player player = getDatabase().getPlayer(author);
-        final ImmutablePair<Boolean, Long> globalRes = getMewna().getRatelimiter()
+        final Player player = database().getPlayer(author);
+        final ImmutablePair<Boolean, Long> globalRes = mewna().ratelimiter()
                 .checkUpdateRatelimit(author.id(), "chat-xp-global", TimeUnit.MINUTES.toMillis(10));
         if(!globalRes.left) {
             final long oldXp = player.getGlobalXp();
             final long xp = getXp(player);
-            getMewna().getStatsClient().count("discord.backend.xpgained.global", xp);
+            mewna().statsClient().count("discord.backend.xpgained.global", xp);
             player.incrementGlobalXp(getXp(player));
-            getDatabase().savePlayer(player);
+            database().savePlayer(player);
             // Level-up notifications here?
             if(isLevelUp(oldXp, oldXp + xp)) {
                 final long level = xpToLevel(oldXp + xp);
@@ -227,7 +227,7 @@ public class PluginLevels extends BasePlugin {
                     case 25:
                     case 50:
                     case 100: {
-                        getMewna().getPluginManager().processEvent(EventType.PLAYER_EVENT,
+                        mewna().pluginManager().processEvent(EventType.PLAYER_EVENT,
                                 new PlayerEvent(SystemUserEventType.GLOBAL_LEVEL, player,
                                         new JsonObject().put("level", level)));
                         break;
@@ -240,35 +240,35 @@ public class PluginLevels extends BasePlugin {
         }
         
         final Guild guild = event.guild();
-        final LevelsSettings settings = getMewna().getDatabase().getOrBaseSettings(LevelsSettings.class, guild.id());
+        final LevelsSettings settings = database().getOrBaseSettings(LevelsSettings.class, guild.id());
         if(!settings.isLevelsEnabled()) {
             return;
         }
-        getLogger().trace("Handling chat message for player {} in {}", author.id(), guild.id());
+        logger().trace("Handling chat message for player {} in {}", author.id(), guild.id());
         
-        final ImmutablePair<Boolean, Long> localRes = getMewna().getRatelimiter()
+        final ImmutablePair<Boolean, Long> localRes = mewna().ratelimiter()
                 .checkUpdateRatelimit(event.message().author().id(), "chat-xp-local:" + guild.id(),
                         TimeUnit.MINUTES.toMillis(1));
         if(!localRes.left) {
             final long oldXp = player.getXp(guild);
             final long xp = getXp(player);
-            getMewna().getStatsClient().count("discord.backend.xpgained.local", xp);
+            mewna().statsClient().count("discord.backend.xpgained.local", xp);
             player.incrementLocalXp(guild, xp);
-            getDatabase().savePlayer(player);
-            getLogger().debug("Local XP: {} in {}: {} -> {}", author.id(), guild.id(), oldXp, oldXp + xp);
+            database().savePlayer(player);
+            logger().debug("Local XP: {} in {}: {} -> {}", author.id(), guild.id(), oldXp, oldXp + xp);
             if(isLevelUp(oldXp, oldXp + xp)) {
-                getLogger().debug("{} in {}: Level up to {}", author.id(), guild.id(), xpToLevel(oldXp + xp));
+                logger().debug("{} in {}: Level up to {}", author.id(), guild.id(), xpToLevel(oldXp + xp));
                 // Emit level-up event so we can process it
                 // TODO: Singyeong messages
                 /*
-                getMewna().getNats().pushBackendEvent(EventType.LEVEL_UP, new JsonObject().put("user", author.id())
+                mewna().getNats().pushBackendEvent(EventType.LEVEL_UP, new JsonObject().put("user", author.id())
                         .put("guild", guild.id()).put("level", xpToLevel(oldXp + xp)).put("xp", oldXp + xp)
                         .put("channel", event.getChannel().id()));
                         */
             }
         } else {
-            getLogger().debug("Local XP: {} in {} ratelimited ({}ms)", author.id(), guild.id(),
-                    getMewna().getRatelimiter().getRatelimitTime(author.id(), "chat-xp-local:" + guild.id(),
+            logger().debug("Local XP: {} in {} ratelimited ({}ms)", author.id(), guild.id(),
+                    mewna().ratelimiter().getRatelimitTime(author.id(), "chat-xp-local:" + guild.id(),
                             TimeUnit.MINUTES.toMillis(1)));
         }
     }
@@ -277,9 +277,9 @@ public class PluginLevels extends BasePlugin {
             examples = {"rank", "rank @someone"})
     public void rank(final CommandContext ctx) {
         final Guild guild = ctx.getGuild();
-        final LevelsSettings settings = getMewna().getDatabase().getOrBaseSettings(LevelsSettings.class, guild.id());
+        final LevelsSettings settings = database().getOrBaseSettings(LevelsSettings.class, guild.id());
         if(!settings.isLevelsEnabled()) {
-            getCatnip().rest().channel().sendMessage(ctx.getMessage().channelId(), $(ctx.getLanguage(), "plugins.levels.not-enabled"));
+            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), $(ctx.getLanguage(), "plugins.levels.not-enabled"));
             return;
         }
         final User user;
@@ -291,12 +291,12 @@ public class PluginLevels extends BasePlugin {
             self = true;
         } else {
             user = ctx.getMentions().get(0);
-            player = getDatabase().getPlayer(user);
+            player = database().getPlayer(user);
             self = false;
         }
         
         if(user.bot()) {
-            getCatnip().rest().channel().sendMessage(ctx.getMessage().channelId(), $(ctx.getLanguage(), "plugins.levels.bot"));
+            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), $(ctx.getLanguage(), "plugins.levels.bot"));
             return;
         }
         
@@ -309,15 +309,15 @@ public class PluginLevels extends BasePlugin {
         }
         generating = generating.replace("$mention", ctx.getUser().asMention());
         
-        getCatnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                 Emotes.LOADING_ICON + ' ' + generating)
-                .thenAccept(message -> getCatnip().rest().channel().triggerTypingIndicator(ctx.getMessage().channelId())
+                .thenAccept(message -> catnip().rest().channel().triggerTypingIndicator(ctx.getMessage().channelId())
                         .thenAccept(__ -> {
                             // lol
                             // we do everything possible to guarantee that this should be safe
                             // without doing a check here
                             //noinspection ConstantConditions,OptionalGetWithoutIsPresent
-                            final Account account = getDatabase().getAccountByDiscordId(user.id()).get();
+                            final Account account = database().getAccountByDiscordId(user.id()).get();
                             final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.id();
                             
                             final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
@@ -327,8 +327,8 @@ public class PluginLevels extends BasePlugin {
                                     .color(new Color(Renderer.PRIMARY_COLOUR))
                                     .description('[' + $(ctx.getLanguage(), "plugins.levels.view-full-profile") + "](" + profileUrl + ')')
                                     .footer($(ctx.getLanguage(), "plugins.levels.change-background"), null);
-                            getCatnip().rest().channel().deleteMessage(ctx.getMessage().channelId(), message.id())
-                                    .thenAccept(___ -> getCatnip().rest().channel()
+                            catnip().rest().channel().deleteMessage(ctx.getMessage().channelId(), message.id())
+                                    .thenAccept(___ -> catnip().rest().channel()
                                             .sendMessage(ctx.getMessage().channelId(),
                                                     new MessageOptions().addFile("rank.png", cardBytes)
                                                             .embed(builder.build()))
@@ -348,12 +348,12 @@ public class PluginLevels extends BasePlugin {
             self = true;
         } else {
             user = ctx.getMentions().get(0);
-            player = getDatabase().getPlayer(user);
+            player = database().getPlayer(user);
             self = false;
         }
         
         if(user.bot()) {
-            getCatnip().rest().channel().sendMessage(ctx.getMessage().channelId(), $(ctx.getLanguage(), "plugins.levels.bot"));
+            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), $(ctx.getLanguage(), "plugins.levels.bot"));
             return;
         }
         
@@ -366,16 +366,16 @@ public class PluginLevels extends BasePlugin {
         }
         generating = generating.replace("$mention", ctx.getUser().asMention());
         
-        getCatnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                 Emotes.LOADING_ICON + ' ' + generating)
                 .thenAccept(message ->
-                        getCatnip().rest().channel().triggerTypingIndicator(ctx.getMessage().channelId())
+                        catnip().rest().channel().triggerTypingIndicator(ctx.getMessage().channelId())
                                 .thenAccept(__ -> {
                                     // lol
                                     // we do everything possible to guarantee that this should be safe
                                     // without doing a check here
                                     //noinspection ConstantConditions,OptionalGetWithoutIsPresent
-                                    final Account account = getDatabase().getAccountByDiscordId(user.id()).get();
+                                    final Account account = database().getAccountByDiscordId(user.id()).get();
                                     final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.id();
                                     
                                     final byte[] cardBytes = Renderer.generateProfileCard(user, player);
@@ -385,9 +385,9 @@ public class PluginLevels extends BasePlugin {
                                             .color(new Color(Renderer.PRIMARY_COLOUR))
                                             .description('[' + $(ctx.getLanguage(), "plugins.levels.view-full-profile") + "](" + profileUrl + ')')
                                             .footer($(ctx.getLanguage(), "plugins.levels.change-background-description"), null);
-                                    getCatnip().rest().channel().deleteMessage(ctx.getMessage().channelId(), message.id())
+                                    catnip().rest().channel().deleteMessage(ctx.getMessage().channelId(), message.id())
                                             .thenApply(___ ->
-                                                    getCatnip().rest().channel()
+                                                    catnip().rest().channel()
                                                             .sendMessage(ctx.getMessage().channelId(),
                                                                     new MessageOptions().addFile("profile.png", cardBytes)
                                                                             .embed(builder.build()))
@@ -405,9 +405,9 @@ public class PluginLevels extends BasePlugin {
             player = ctx.getPlayer();
         } else {
             user = ctx.getMentions().get(0);
-            player = getDatabase().getPlayer(user);
+            player = database().getPlayer(user);
         }
-        getCatnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                 $(ctx.getLanguage(), "plugins.levels.commands.score")
                         .replace("$target", user.username())
                         .replace("$score", player.calculateScore() + ""));
@@ -417,17 +417,17 @@ public class PluginLevels extends BasePlugin {
             usage = "leaderboards", examples = "leaderboards")
     public void ranks(final CommandContext ctx) {
         final Guild guild = ctx.getGuild();
-        final LevelsSettings settings = getMewna().getDatabase().getOrBaseSettings(LevelsSettings.class, guild.id());
+        final LevelsSettings settings = database().getOrBaseSettings(LevelsSettings.class, guild.id());
         if(!settings.isLevelsEnabled()) {
-            getCatnip().rest().channel().sendMessage(ctx.getMessage().channelId(), $(ctx.getLanguage(), "plugins.levels.not-enabled"));
+            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), $(ctx.getLanguage(), "plugins.levels.not-enabled"));
             return;
         }
-        getCatnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                 System.getenv("DOMAIN") + "/discord/leaderboards/" + guild.id())
         ;
     }
     
     private long getXp(final Player player) {
-        return 10 + getRandom().nextInt(10);
+        return 10 + random().nextInt(10);
     }
 }

@@ -39,7 +39,7 @@ public class PluginWelcoming extends BasePlugin {
     public void onUserJoin(final DiscordGuildMemberAdd event) {
         final Guild guild = event.guild();
         final String guildId = guild.id();
-        final WelcomingSettings settings = getMewna().getDatabase().getOrBaseSettings(WelcomingSettings.class, guildId);
+        final WelcomingSettings settings = database().getOrBaseSettings(WelcomingSettings.class, guildId);
         if(settings.isEnableWelcomeMessages()) {
             final String messageChannel = settings.getMessageChannel();
             // Have to validate that the chosen channel exists
@@ -47,7 +47,7 @@ public class PluginWelcoming extends BasePlugin {
                 //final Channel channel = getMewna().getCache().getChannel(messageChannel);
                 //if(channel != null) {
                 final Templater templater = map(event.guild(), event.user());
-                getCatnip().rest().channel().sendMessage(settings.getMessageChannel(), templater.render(settings.getWelcomeMessage()));
+                catnip().rest().channel().sendMessage(settings.getMessageChannel(), templater.render(settings.getWelcomeMessage()));
                 /*} else {
                     getLogger().warn("Welcoming messageChannel {} in {} no longer valid, nulling...", messageChannel, guildId);
                     settings.setMessageChannel(null);
@@ -60,7 +60,7 @@ public class PluginWelcoming extends BasePlugin {
             // Validate that it exists
             /*final Role joinRole = getMewna().getCache().getRole(roleId);
             if(joinRole != null) {*/
-            getCatnip().rest().guild().addGuildMemberRole(guildId, event.member().id(), roleId);
+            catnip().rest().guild().addGuildMemberRole(guildId, event.member().id(), roleId);
             /*} else {
                 getLogger().warn("Welcoming joinRole {} in {} no longer valid, nulling...", roleId, guildId);
                 settings.setMessageChannel(null);
@@ -72,7 +72,7 @@ public class PluginWelcoming extends BasePlugin {
     @Event(Raw.GUILD_MEMBER_REMOVE)
     public void onUserLeave(final DiscordGuildMemberRemove event) {
         final Guild guild = event.guild();
-        final WelcomingSettings settings = getMewna().getDatabase().getOrBaseSettings(WelcomingSettings.class, guild.id());
+        final WelcomingSettings settings = database().getOrBaseSettings(WelcomingSettings.class, guild.id());
         if(settings.isEnableGoodbyeMessages()) {
             final String messageChannel = settings.getMessageChannel();
             // Have to validate that the chosen channel exists
@@ -80,7 +80,7 @@ public class PluginWelcoming extends BasePlugin {
                 /*final Channel channel = getMewna().getCache().getChannel(messageChannel);
                 if(channel != null) {*/
                 final Templater templater = map(event.guild(), event.user());
-                getCatnip().rest().channel().sendMessage(settings.getMessageChannel(), templater.render(settings.getGoodbyeMessage()));
+                catnip().rest().channel().sendMessage(settings.getMessageChannel(), templater.render(settings.getGoodbyeMessage()));
                 /*} else {
                     getLogger().warn("Welcoming messageChannel {} in {} no longer valid, nulling...", messageChannel, guild.getId());
                     settings.setMessageChannel(null);

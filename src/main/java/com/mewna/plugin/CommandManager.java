@@ -4,12 +4,12 @@ import com.mewna.Mewna;
 import com.mewna.accounts.Account;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.user.User;
+import com.mewna.catnip.shard.DiscordEvent.Raw;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Player;
 import com.mewna.data.PluginSettings;
 import com.mewna.event.discord.DiscordMessageCreate;
 import com.mewna.plugin.PluginManager.PluginMetadata;
-import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.metadata.Payment;
 import com.mewna.plugin.metadata.Ratelimit;
 import com.mewna.plugin.plugins.settings.BehaviourSettings;
@@ -186,7 +186,7 @@ public class CommandManager {
                         }
                     } else {
                         logger.warn("No plugin metadata for command {}!?", cmd.getBaseName());
-                        Sentry.capture("Command with no plugin metadata: " + cmd.getBaseName());
+                        //Sentry.capture("Command with no plugin metadata: " + cmd.getBaseName());
                     }
                     
                     if(cmd.getRatelimit() != null) {
@@ -285,7 +285,7 @@ public class CommandManager {
                 }
             } else {
                 // No prefix found, pass it down as an event
-                mewna.pluginManager().processEvent(EventType.MESSAGE_CREATE, event);
+                mewna.pluginManager().processEvent(Raw.MESSAGE_CREATE, event);
             }
         } catch(final Throwable t) {
             Sentry.capture(t);

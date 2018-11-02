@@ -11,8 +11,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <catnip.version>18726f6</catnip.version>
-        <singyeong.version>4ea9e20</singyeong.version>
+        <catnip.version>c136ad5</catnip.version>
+        <singyeong.version>c3c0292</singyeong.version>
 
         <fcps.version>3.1.0</fcps.version>
         <guava.version>26.0-jre</guava.version>
@@ -302,8 +302,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>10</source>
-                    <target>10</target>
+                    <source>11</source>
+                    <target>11</target>
                 </configuration>
                 <version>3.6.1</version>
             </plugin>

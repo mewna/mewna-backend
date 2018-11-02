@@ -4,6 +4,7 @@ import com.mewna.accounts.AccountManager;
 import com.mewna.catnip.Catnip;
 import com.mewna.catnip.CatnipOptions;
 import com.mewna.data.Database;
+import com.mewna.data.DiscordCache;
 import com.mewna.event.SingyeongEventManager;
 import com.mewna.paypal.PaypalHandler;
 import com.mewna.plugin.CommandManager;
@@ -89,6 +90,7 @@ public final class Mewna {
         singyeong.connect()
                 .thenAccept(__ -> singyeong.onEvent(singyeongEventManager::handle))
                 .thenAccept(__ -> singyeong.updateMetadata("backend-key", SingyeongType.STRING, "mewna-backend"))
+                .thenAccept(__ -> DiscordCache.setup())
                 .thenAccept(__ -> logger.info("Finished starting!"));
     }
 }

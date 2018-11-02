@@ -1,190 +1,183 @@
 package com.mewna.plugin.plugins;
 
+import com.mewna.catnip.entity.builder.EmbedBuilder;
+import com.mewna.catnip.entity.guild.Guild;
+import com.mewna.catnip.entity.user.User;
+import com.mewna.data.DiscordCache;
 import com.mewna.plugin.BasePlugin;
+import com.mewna.plugin.Command;
+import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.Plugin;
+import com.mewna.plugin.event.Event;
+import com.mewna.plugin.event.EventType;
+import com.mewna.plugin.event.audio.NekoTrackEvent;
+import com.mewna.plugin.plugins.music.NekoTrackContext;
 import com.mewna.plugin.plugins.settings.MusicSettings;
+import com.mewna.plugin.util.Emotes;
+import com.mewna.util.Time;
+import gg.amy.singyeong.QueryBuilder;
+import io.sentry.Sentry;
+import io.vertx.core.Future;
+import io.vertx.core.json.JsonObject;
+import me.escoffier.vertx.completablefuture.VertxCompletableFuture;
+
+import java.util.concurrent.CompletionStage;
 
 /**
  * @author amy
  * @since 5/19/18.
  */
-@Plugin(name = "Music", desc = "Control the way music is played in your server.", settings = MusicSettings.class,
-        enabled = false)
+@Plugin(name = "Music", desc = "Control the way music is played in your server.", settings = MusicSettings.class)
 public class PluginMusic extends BasePlugin {
-    /*
-    @Event(EventType.AUDIO_TRACK_QUEUE)
-    public void handleTrackQueue(final AudioTrackEvent event) {
-        final Channel channel = event.getChannel();
-        final EmbedBuilder builder = new EmbedBuilder();
-        builder.setTitle(Emotes.YES + " Song queued")
-                .addField("Title", event.getInfo().getTitle(), true)
-                .addBlankField(true)
-                .addField("Artist", event.getInfo().getAuthor(), true)
-                .addField("Length", Time.toHumanReadableDuration(event.getInfo().getLength()), true);
-        getCatnip().sendMessage(channel, builder.build()).queue();
-    }
-    
-    @Event(EventType.AUDIO_TRACK_START)
-    public void handleTrackStart(final AudioTrackEvent event) {
-        final Channel channel = event.getChannel();
-        final EmbedBuilder builder = new EmbedBuilder();
-        builder.setTitle(Emotes.YES + " Song started")
-                .addField("Title", event.getInfo().getTitle(), true)
-                .addBlankField(true)
-                .addField("Artist", event.getInfo().getAuthor(), true)
-                .addField("Length", Time.toHumanReadableDuration(event.getInfo().getLength()), true);
-        getCatnip().sendMessage(channel, builder.build()).queue();
-    }
-    
-    @Event(EventType.AUDIO_QUEUE_END)
-    public void handleQueueEnd(final AudioTrackEvent event) {
-        final Channel channel = event.getChannel();
-        final EmbedBuilder builder = new EmbedBuilder();
-        builder.setTitle(Emotes.YES + " Queue ended");
-        getCatnip().sendMessage(channel, builder.build()).queue();
-    }
-    
-    @Event(EventType.AUDIO_TRACK_NOW_PLAYING)
-    public void handleNowPlaying(final AudioTrackEvent event) {
-        final Channel channel = event.getChannel();
-        final EmbedBuilder builder = new EmbedBuilder();
-        builder.setTitle(Emotes.YES + " Now playing")
-                .addField("Title", event.getInfo().getTitle(), true)
-                .addBlankField(true)
-                .addField("Artist", event.getInfo().getAuthor(), true)
-                .addField("Length", Time.toHumanReadableDuration(event.getInfo().getLength()), true);
-        getCatnip().sendMessage(channel, builder.build()).queue();
-    }
+    // TODO: Fill out shit with localization
     
     @Command(names = "join", desc = "Bring Mewna into a voice channel with you.", usage = "join", examples = "join")
     public void join(final CommandContext ctx) {
-        final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
-        if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-            getCatnip().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
-        } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE || check == VoiceCheck.SELF_AND_USER_IN_SAME_VOICE) {
-            getCatnip().sendMessage(ctx.getChannel(), "I'm already in a voice channel! If this isn't right, try doing `"
-                    + ctx.getPrefix() + "leave --force`.").queue();
-        } else {
-            final VoiceState state = getMewna().getCache().getVoiceState(ctx.getUser().getId());
-            getCatnip().sendMessage(ctx.getChannel(), "Connecting to voice channel #"
-                    + ctx.getChannel().getName()).queue();
-            getLogger().info("Attempting join -> voice channel {}#{}", ctx.getGuild().getId(),
-                    state.getChannel().getId());
-            // Tell shards to join, which will then tell audio server to connect
-            getMewna().getNats().pushShardEvent("AUDIO_CONNECT", new JSONObject()
-                    .put("guild_id", ctx.getGuild().getId())
-                    .put("channel_id", state.getChannel().getId()));
-        }
-    }
-    
-    @Command(names = "leave", desc = "Make Mewna leave the voice channel she's in.", usage = "leave [-f|--force]",
-            examples = {"leave -f", "leave --force"})
-    public void leave(final CommandContext ctx) {
-        if(!ctx.getArgs().isEmpty()) {
-            final String arg = ctx.getArgs().get(0);
-            if(arg.equalsIgnoreCase("-f") || arg.equalsIgnoreCase("--force")) {
-                getLogger().info("Forcing leave -> guild voice {}", ctx.getGuild().getId());
-                getMewna().getCache().deleteSelfVoiceState(ctx.getGuild().getId());
-                // Tell audio server to disconnect, which will then tell shards to leave
-                getMewna().getNats().pushAudioEvent("AUDIO_DISCONNECT", new JSONObject()
-                        .put("guild_id", ctx.getGuild().getId()));
-                return;
-            }
-        }
-        final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
-        if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-            getCatnip().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
-        } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-            getCatnip().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
-        } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-            getCatnip().sendMessage(ctx.getChannel(), "I'm not in a voice channel! If this isn't right, try doing `"
-                    + ctx.getPrefix() + "leave --force`.").queue();
-        } else {
-            final VoiceState state = getMewna().getCache().getSelfVoiceState(ctx.getGuild().getId());
-            getLogger().info("Attempting leave -> voice channel {}#{}", ctx.getGuild().getId(),
-                    state.getChannel().getId());
-            // Tell audio server to disconnect, which will then tell shards to leave
-            getMewna().getNats().pushAudioEvent("AUDIO_DISCONNECT", new JSONObject()
-                    .put("guild_id", ctx.getGuild().getId()));
-        }
-    }
-    
-    @Command(names = {"queue", "q"}, desc = "Queue up a song for Mewna to play.", usage = "queue <song>",
-            examples = {"q rick astley", "queue darude sandstorm"})
-    public void queue(final CommandContext ctx) {
-        final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
-        if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-            getCatnip().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
-        } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-            getCatnip().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
-        } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-            getCatnip().sendMessage(ctx.getChannel(), "I'm not in a voice channel!").queue();
-        } else {
-            if(ctx.getArgs().isEmpty()) {
-                getCatnip().sendMessage(ctx.getChannel(), "You need to give me something to queue!").queue();
+        final Guild guild = ctx.getGuild();
+        final String guildId = guild.id();
+        checkState(guild, ctx.getUser()).thenAccept(check -> {
+            if(check == VoiceCheck.USER_NOT_IN_VOICE) {
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "You're not in a voice channel!");
+            } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE || check == VoiceCheck.SELF_AND_USER_IN_SAME_VOICE) {
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "I'm already in a voice channel!");
             } else {
-                getMewna().getNats().pushAudioEvent("AUDIO_QUEUE", new JSONObject()
-                        .put("ctx", ctxToAudioCtx(ctx)).put("track", String.join(" ", ctx.getArgs())));
+                DiscordCache.voiceState(guildId, ctx.getUser().id())
+                        .thenAccept(state -> {
+                            mewna().singyeong().send("mewna-shard",
+                                    new QueryBuilder().contains("guilds", guildId).build(),
+                                    new JsonObject().put("type", "VOICE_JOIN")
+                                            .put("guild_id", guildId)
+                                            .put("channel_id", state.channelId()));
+                            DiscordCache.voiceChannel(guildId, state.channelId())
+                                    .thenAccept(ch -> catnip().rest().channel()
+                                            .sendMessage(ctx.getMessage().channelId(),
+                                                    "Joined \uD83D\uDD0A" + ch.name()));
+                        });
             }
-        }
+        });
     }
     
-    @Command(names = "skip", desc = "Skip the currently-playing song", usage = "skip", examples = "skip")
-    public void skip(final CommandContext ctx) {
-        final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
-        if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-            getCatnip().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
-        } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-            getCatnip().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
-        } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-            getCatnip().sendMessage(ctx.getChannel(), "I'm not in a voice channel!").queue();
-        } else {
-            getMewna().getNats().pushAudioEvent("AUDIO_PLAY", new JSONObject()
-                    .put("ctx", ctxToAudioCtx(ctx)).put("track", String.join(" ", ctx.getArgs())));
-        }
+    @Command(names = "leave", desc = "Make Mewna leave the voice channel she's in.", usage = "leave", examples = "leave")
+    public void leave(final CommandContext ctx) {
+        final Guild guild = ctx.getGuild();
+        final String guildId = guild.id();
+        checkState(guild, ctx.getUser()).thenAccept(check -> {
+            if(check == VoiceCheck.USER_NOT_IN_VOICE) {
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "You're not in a voice channel!");
+            } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "You're not in this voice channel!");
+            } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "I'm not in a voice channel!");
+            } else {
+                DiscordCache.voiceState(guildId, ctx.getUser().id())
+                        .thenAccept(state -> {
+                            mewna().singyeong().send("mewna-shard",
+                                    new QueryBuilder().contains("guilds", guildId).build(),
+                                    new JsonObject().put("type", "VOICE_JOIN")
+                                            .put("guild_id", guildId)
+                                            .put("channel_id", state.channelId()));
+                            DiscordCache.voiceChannel(guildId, state.channelId())
+                                    .thenAccept(ch -> {
+                                        catnip().rest().channel()
+                                                .sendMessage(ctx.getMessage().channelId(),
+                                                        "Left \uD83D\uDD0A" + ch.name());
+                                        mewna().singyeong().send("mewna-shard", new QueryBuilder().contains("guilds", guildId).build(),
+                                                new JsonObject().put("type", "VOICE_LEAVE").put("guild_id", guildId));
+                                    });
+                        });
+            }
+        });
     }
     
-    @Command(names = "play", desc = "Start playing the songs that have been queued up.", usage = "play", examples = "play")
+    @Command(names = {"queue", "q"}, desc = "", usage = "", examples = "")
+    public void queue(final CommandContext ctx) {
+        final NekoTrackContext context = new NekoTrackContext(
+                ctx.getUser().id(),
+                ctx.getMessage().channelId(),
+                ctx.getMessage().guildId()
+        );
+        mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
+                new JsonObject().put("type", "VOICE_QUEUE")
+                        .put("url", ctx.getArgstr())
+                        .put("context", JsonObject.mapFrom(context)));
+    }
+    
+    @Command(names = {"play", "p"}, desc = "", usage = "", examples = "")
     public void play(final CommandContext ctx) {
-        final VoiceCheck check = checkState(ctx.getGuild(), ctx.getUser());
-        if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-            getCatnip().sendMessage(ctx.getChannel(), "You're not in a voice channel!").queue();
-        } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-            getCatnip().sendMessage(ctx.getChannel(), "You're not in this voice channel!").queue();
-        } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-            getCatnip().sendMessage(ctx.getChannel(), "I'm not in a voice channel!").queue();
-        } else {
-            getMewna().getNats().pushAudioEvent("AUDIO_PLAY", new JSONObject()
-                    .put("ctx", ctxToAudioCtx(ctx)).put("track", String.join(" ", ctx.getArgs())));
-        }
+        mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
+                new JsonObject().put("type", "VOICE_PLAY")
+                        .put("guild_id", ctx.getGuild().id()));
     }
     
-    @Command(names = {"np", "nowplaying"}, desc = "Show the currently-playing song", usage = "np", examples = "np")
-    public void np(final CommandContext ctx) {
-        getMewna().getNats().pushAudioEvent("AUDIO_NOW_PLAYING", new JSONObject()
-                .put("ctx", ctxToAudioCtx(ctx)).put("track", String.join(" ", ctx.getArgs())));
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Event(EventType.AUDIO_TRACK_QUEUE)
+    public void handleTrackQueue(final NekoTrackEvent event) {
+        final EmbedBuilder builder = new EmbedBuilder();
+        builder.title(Emotes.YES + " Song queued")
+                .field("Title", event.track().title(), true)
+                .field("\u200B", "\u200B", true)
+                .field("Artist", event.track().author(), true)
+                .field("Length", Time.toHumanReadableDuration(event.track().length()), true);
+        catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
     }
     
-    private JSONObject ctxToAudioCtx(final CommandContext ctx) {
-        return new JSONObject().put("guild_id", ctx.getGuild().getId())
-                .put("channel_id", ctx.getChannel().getId())
-                .put("user_id", ctx.getUser().getId());
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Event(EventType.AUDIO_TRACK_START)
+    public void handleTrackStart(final NekoTrackEvent event) {
+        final EmbedBuilder builder = new EmbedBuilder();
+        builder.title(Emotes.YES + " Song started")
+                .field("Title", event.track().title(), true)
+                .field("\u200B", "\u200B", true)
+                .field("Artist", event.track().author(), true)
+                .field("Length", Time.toHumanReadableDuration(event.track().length()), true);
+        catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
     }
     
-    private VoiceCheck checkState(final Guild guild, final User user) {
-        final VoiceState selfState = getMewna().getCache().getSelfVoiceState(guild.getId());
-        final VoiceState userState = getMewna().getCache().getVoiceState(user.getId());
-        if(userState == null || userState.getChannel() == null) {
-            return VoiceCheck.USER_NOT_IN_VOICE;
-        }
-        if(selfState == null || selfState.getChannel() == null) {
-            return VoiceCheck.SELF_NOT_IN_VOICE;
-        }
-        if(userState.getChannel().getId().equalsIgnoreCase(selfState.getChannel().getId())) {
-            return VoiceCheck.SELF_AND_USER_IN_SAME_VOICE;
-        } else {
-            return VoiceCheck.USER_IN_DIFFERENT_VOICE;
-        }
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Event(EventType.AUDIO_QUEUE_END)
+    public void handleQueueEnd(final NekoTrackEvent event) {
+        final EmbedBuilder builder = new EmbedBuilder();
+        builder.title(Emotes.YES + " Queue ended");
+        catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
+    }
+    
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Event(EventType.AUDIO_TRACK_NOW_PLAYING)
+    public void handleNowPlaying(final NekoTrackEvent event) {
+        final EmbedBuilder builder = new EmbedBuilder();
+        builder.title(Emotes.YES + " Now playing")
+                .field("Title", event.track().title(), true)
+                .field("\u200B", "\u200B", true)
+                .field("Artist", event.track().author(), true)
+                .field("Length", Time.toHumanReadableDuration(event.track().length()), true);
+        catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
+    }
+    
+    @SuppressWarnings("ConstantConditions")
+    private CompletionStage<VoiceCheck> checkState(final Guild guild, final User user) {
+        final Future<VoiceCheck> future = Future.future();
+        
+        final var selfStateFuture = DiscordCache.voiceState(guild.id(), System.getenv("CLIENT_ID")).exceptionally(e -> null);
+        final var userStateFuture = DiscordCache.voiceState(guild.id(), user.id()).exceptionally(e -> null);
+        
+        selfStateFuture.thenAcceptBoth(userStateFuture, (selfState, userState) -> {
+            if(userState == null || userState.channelId() == null) {
+                future.complete(VoiceCheck.USER_NOT_IN_VOICE);
+            } else if(selfState == null || selfState.channelId() == null) {
+                future.complete(VoiceCheck.SELF_NOT_IN_VOICE);
+            } else if(userState.channelId().equals(selfState.channelId())) {
+                // This ^ Should:tm: be safe, but yeahhhh...
+                future.complete(VoiceCheck.SELF_AND_USER_IN_SAME_VOICE);
+            } else {
+                future.complete(VoiceCheck.USER_IN_DIFFERENT_VOICE);
+            }
+        }).exceptionally(e -> {
+            e.printStackTrace();
+            Sentry.capture(e);
+            return null;
+        });
+        
+        return VertxCompletableFuture.from(mewna().vertx(), future);
     }
     
     private enum VoiceCheck {
@@ -193,5 +186,4 @@ public class PluginMusic extends BasePlugin {
         USER_IN_DIFFERENT_VOICE,
         SELF_AND_USER_IN_SAME_VOICE,
     }
-    */
 }

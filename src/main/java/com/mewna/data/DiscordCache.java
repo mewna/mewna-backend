@@ -2,6 +2,9 @@ package com.mewna.data;
 
 import com.mewna.Mewna;
 import com.mewna.catnip.entity.Entity;
+import com.mewna.catnip.entity.channel.Channel;
+import com.mewna.catnip.entity.channel.Channel.ChannelType;
+import com.mewna.catnip.entity.channel.GuildChannel;
 import com.mewna.catnip.entity.channel.TextChannel;
 import com.mewna.catnip.entity.channel.VoiceChannel;
 import com.mewna.catnip.entity.guild.Guild;
@@ -12,16 +15,23 @@ import com.mewna.catnip.entity.user.VoiceState;
 import gg.amy.singyeong.QueryBuilder;
 import io.sentry.Sentry;
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.Value;
 import lombok.experimental.Accessors;
 import me.escoffier.vertx.completablefuture.VertxCompletableFuture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * @author amy
@@ -30,6 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @SuppressWarnings("unused")
 public final class DiscordCache {
     private static final Map<String, PendingFetch<?>> PENDING = new ConcurrentHashMap<>();
+    private static final Logger LOGGER = LoggerFactory.getLogger(DiscordCache.class);
     
     private static boolean SETUP;
     
@@ -48,6 +59,43 @@ public final class DiscordCache {
                 final JsonObject data = dispatch.data();
                 if(data.isEmpty()) {
                     p.future.fail("Not available in cache!");
+                } else if(data.containsKey("_type")) {
+                    final JsonArray array = data.getJsonArray("_data");
+                    switch(data.getString("_type")) {
+                        case "channels": {
+                            final List<Channel> channels = array.stream()
+                                    .map(e -> (JsonObject) e)
+                                    .filter(e -> {
+                                        final int channelType = e.getInteger("type");
+                                        return channelType == ChannelType.TEXT.getKey()
+                                                || channelType == ChannelType.VOICE.getKey();
+                                    })
+                                    .map(e -> {
+                                        final int channelType = e.getInteger("type");
+                                        if(channelType == ChannelType.TEXT.getKey()) {
+                                            return Entity.fromJson(Mewna.getInstance().catnip(), TextChannel.class, e);
+                                        } else {
+                                            return Entity.fromJson(Mewna.getInstance().catnip(), VoiceChannel.class, e);
+                                        }
+                                    })
+                                    .collect(Collectors.toList());
+                            //noinspection unchecked
+                            p.future.complete(channels);
+                            break;
+                        }
+                        case "roles": {
+                            final List<Role> channels = array.stream()
+                                    .map(e -> (JsonObject) e)
+                                    .map(e -> Entity.fromJson(Mewna.getInstance().catnip(), Role.class, e))
+                                    .collect(Collectors.toList());
+                            //noinspection unchecked
+                            p.future.complete(channels);
+                            break;
+                        }
+                        default: {
+                            LOGGER.warn("Unknown cache collection type {}", data.getString("_type"));
+                        }
+                    }
                 } else {
                     try {
                         // y i k e s
@@ -62,7 +110,7 @@ public final class DiscordCache {
         });
     }
     
-    private static <T> CompletionStage<T> fetch(@Nonnull final Class<T> cls, @Nonnull final String mode,
+    private static <T> CompletionStage<T> fetch(@Nullable final Class<T> cls, @Nonnull final String mode,
                                                 @Nonnull final JsonObject query) {
         final Future<T> future = Future.future();
         final String nonce = UUID.randomUUID().toString();
@@ -93,8 +141,16 @@ public final class DiscordCache {
         return fetch(VoiceChannel.class, "channel", new JsonObject().put("guild", guild).put("id", id));
     }
     
+    public static CompletionStage<Collection<Channel>> channels(final String guild) {
+        return fetch(null, "channels", new JsonObject().put("id", guild));
+    }
+    
     public static CompletionStage<Role> role(final String guild, final String id) {
         return fetch(Role.class, "role", new JsonObject().put("guild", guild).put("id", id));
+    }
+    
+    public static CompletionStage<Collection<Role>> roles(final String guild) {
+        return fetch(null, "roles", new JsonObject().put("id", guild));
     }
     
     public static CompletionStage<Member> member(final String guild, final String id) {

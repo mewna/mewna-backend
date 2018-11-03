@@ -3,13 +3,18 @@ package com.mewna;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.mewna.accounts.Account;
+import com.mewna.catnip.entity.user.User;
+import com.mewna.data.DiscordCache;
 import com.mewna.data.Player;
 import com.mewna.data.PluginSettings;
 import com.mewna.data.Webhook;
+import com.mewna.plugin.plugins.PluginLevels;
 import com.mewna.plugin.util.TextureManager;
 import io.sentry.Sentry;
+import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Router;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,8 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static spark.Spark.*;
 
 /**
  * @author amy
@@ -36,296 +39,331 @@ class API {
     @SuppressWarnings({"CodeBlock2Expr", "UnnecessarilyQualifiedInnerClassAccess"})
     void start() {
         logger.info("Starting API server...");
-        port(Integer.parseInt(Optional.ofNullable(System.getenv("PORT")).orElse("80")));
-        // TODO: Cache accesses
-        /*
-        path("/cache", () -> {
-            get("/user/:id", (req, res) -> {
-                final User user = mewna.getCache().getUser(req.params(":id"));
-                if(user != null) {
-                    return JsonObject.mapFrom(user);
+        
+        final HttpServer server = mewna.vertx().createHttpServer();
+        
+        final Router router = Router.router(mewna.vertx());
+        
+        // Cache
+        {
+            router.get("/cache/user/:id").handler(ctx -> {
+                final String id = ctx.request().getParam("id");
+                DiscordCache.user(id).thenAccept(user -> {
+                    ctx.response().putHeader("Content-Type", "application/json")
+                            .end(user.toJson().encode());
+                }).exceptionally(e -> {
+                    ctx.response().putHeader("Content-Type", "application/json")
+                            .setStatusCode(404)
+                            .end(new JsonObject().encode());
+                    return null;
+                });
+            });
+            router.get("/cache/guild/:id").handler(ctx -> {
+                final String id = ctx.request().getParam("id");
+                DiscordCache.guild(id).thenAccept(guild -> {
+                    ctx.response().putHeader("Content-Type", "application/json")
+                            .end(guild.toJson().encode());
+                }).exceptionally(e -> {
+                    ctx.response().putHeader("Content-Type", "application/json")
+                            .setStatusCode(404)
+                            .end(new JsonObject().encode());
+                    return null;
+                });
+            });
+            router.get("/cache/guild/:id/channels").handler(ctx -> {
+                final String id = ctx.request().getParam("id");
+                DiscordCache.channels(id).thenAccept(channels -> {
+                    ctx.response().putHeader("Content-Type", "application/json")
+                            .end(new JsonArray(new ArrayList<>(channels)).encode());
+                }).exceptionally(e -> {
+                    ctx.response().putHeader("Content-Type", "application/json")
+                            .setStatusCode(404)
+                            .end(new JsonArray().encode());
+                    return null;
+                });
+            });
+            router.get("/cache/guild/:id/roles").handler(ctx -> {
+                final String id = ctx.request().getParam("id");
+                DiscordCache.roles(id).thenAccept(roles -> {
+                    ctx.response().putHeader("Content-Type", "application/json")
+                            .end(new JsonArray(new ArrayList<>(roles)).encode());
+                }).exceptionally(e -> {
+                    ctx.response().putHeader("Content-Type", "application/json")
+                            .setStatusCode(404)
+                            .end(new JsonArray().encode());
+                    return null;
+                });
+            });
+        }
+        
+        // Data
+        {
+            // Accounts
+            router.get("/data/account/:id").blockingHandler(ctx -> {
+                final String id = ctx.request().getParam("id");
+                ctx.response().putHeader("Content-Type", "application/json")
+                        .end(JsonObject.mapFrom(mewna.database().getAccountById(id)).encode());
+            });
+            router.get("/data/account/:id/links").blockingHandler(ctx -> {
+                final String id = ctx.request().getParam("id");
+                ctx.response().putHeader("Content-Type", "application/json");
+                final Optional<Account> maybeAccount = mewna.accountManager().getAccountById(id);
+                if(maybeAccount.isPresent()) {
+                    final Account account = maybeAccount.get();
+                    final JsonObject data = new JsonObject();
+                    data.put("discord", account.discordAccountId());
+                    ctx.response().end(data.encode());
                 } else {
-                    res.status(404);
-                    return new JsonObject();
+                    ctx.response().end(new JsonObject().put("error", "no links").encode());
                 }
             });
-            get("/guild/:id", (req, res) -> {
-                final Guild guild = mewna.getCache().getGuild(req.params(":id"));
-                if(guild != null && guild.getId() != null) {
-                    return JsonObject.mapFrom(guild);
+            router.get("/data/account/:id/profile").blockingHandler(ctx -> {
+                final String id = ctx.request().getParam("id");
+                ctx.response().putHeader("Content-Type", "application/json");
+                final Optional<Account> maybeAccount = mewna.accountManager().getAccountById(id);
+                if(maybeAccount.isPresent()) {
+                    final Account account = maybeAccount.get();
+                    final JsonObject data = new JsonObject();
+                    data.put("id", account.id())
+                            .put("username", account.username())
+                            .put("displayName", account.discordAccountId())
+                            .put("avatar", account.avatar())
+                            .put("aboutText", account.aboutText())
+                            .put("customBackground", account.customBackground())
+                            .put("ownedBackgroundPacks", account.ownedBackgroundPacks())
+                            .put("isInBeta", account.isInBeta())
+                    ;
+                    ctx.response().end(data.encode());
                 } else {
-                    res.status(404);
-                    return new JsonObject();
+                    ctx.response().end(new JsonObject().put("error", "no account").encode());
                 }
             });
-            get("/guild/:id/channels", (req, res) -> {
-                final List<Channel> channels = mewna.getCache().getGuildChannels(req.params(":id"));
-                if(channels != null && !channels.isEmpty()) {
-                    return new JsonArray(channels);
-                } else {
-                    res.status(404);
-                    return new JsonArray();
-                }
+            router.get("/data/account/:id/posts").blockingHandler(ctx -> {
+                final String id = ctx.request().getParam("id");
+                ctx.response().putHeader("Content-Type", "application/json")
+                        .end(new JsonArray(mewna.database().getLast100TimelinePosts(id)
+                                .stream()
+                                .map(JsonObject::mapFrom)
+                                .collect(Collectors.toList()))
+                                .encode());
             });
-            get("/guild/:id/roles", (req, res) -> {
-                final List<Role> roles = mewna.getCache().getGuildRoles(req.params(":id"));
-                if(roles != null && !roles.isEmpty()) {
-                    return new JsonArray(roles);
-                } else {
-                    res.status(404);
-                    return new JsonArray();
-                }
+            router.get("/data/account/:id/posts/all").blockingHandler(ctx -> {
+                final String id = ctx.request().getParam("id");
+                ctx.response().putHeader("Content-Type", "application/json")
+                        .end(new JsonArray(mewna.database().getAllTimelinePosts(id)
+                                .stream()
+                                .map(JsonObject::mapFrom)
+                                .collect(Collectors.toList()))
+                                .encode());
             });
-            get("/channel/:id", (req, res) -> {
-                final Channel channel = mewna.getCache().getChannel(req.params(":id"));
-                if(channel != null) {
-                    return JsonObject.mapFrom(channel);
-                } else {
-                    res.status(404);
-                    return new JsonObject();
-                }
+            router.post("/data/account/update").blockingHandler(ctx -> {
+                final JsonObject body = ctx.getBodyAsJson();
+                mewna.accountManager().updateAccountSettings(body);
+                ctx.response().putHeader("Content-Type", "application/json").end(new JsonObject().encode());
             });
-            get("/role/:id", (req, res) -> {
-                final Role role = mewna.getCache().getRole(req.params(":id"));
-                if(role != null) {
-                    return JsonObject.mapFrom(role);
-                } else {
-                    return new JsonObject();
-                }
+            router.post("/data/account/update/oauth").blockingHandler(ctx -> {
+                final JsonObject body = ctx.getBodyAsJson();
+                mewna.accountManager().createOrUpdateDiscordOAuthLinkedAccount(body);
+                ctx.response().putHeader("Content-Type", "application/json").end(new JsonObject().encode());
             });
-        });
-        */
-        path("/data", () -> {
-            path("/account", () -> {
-                path("/:id", () -> {
-                    get("/", (req, res) -> {
-                        return JsonObject.mapFrom(mewna.database().getAccountById(req.params(":id")));
-                    });
-                    get("/links", (req, res) -> {
-                        final Optional<Account> maybeAccount = mewna.accountManager().getAccountById(req.params(":id"));
-                        if(maybeAccount.isPresent()) {
-                            final Account account = maybeAccount.get();
-                            final JsonObject data = new JsonObject();
-                            data
-                                    .put("discord", account.discordAccountId())
-                            ;
-                            return data;
+            router.get("/data/account/links/discord/:id").blockingHandler(ctx -> {
+                ctx.response().end(mewna.accountManager().checkDiscordLinkedAccountExists(ctx.request().getParam("id")));
+            });
+            // Guilds
+            router.get("/data/guild/:id/config/:type").blockingHandler(ctx -> {
+                final String id = ctx.request().getParam("id");
+                final String type = ctx.request().getParam("type");
+                final PluginSettings settings = mewna.database().getOrBaseSettings(type, id);
+                ctx.response().putHeader("Content-Type", "application/json")
+                        .end(JsonObject.mapFrom(settings).encode());
+            });
+            router.post("/data/guild/:id/config/:type").blockingHandler(ctx -> {
+                final String type = ctx.request().getParam("type");
+                final String id = ctx.request().getParam("id");
+                final JsonObject data = ctx.getBodyAsJson();
+                final PluginSettings settings = mewna.database().getOrBaseSettings(type, id);
+                ctx.response().putHeader("Content-Type", "application/json");
+                if(settings.validate(data)) {
+                    try {
+                        if(settings.updateSettings(mewna.database(), data)) {
+                            // All good, update and return
+                            logger.info("Updated {} settings for {}", type, id);
+                            ctx.response().end(new JsonObject().put("status", "ok").encode());
                         } else {
-                            return new JsonObject().put("error", "no links");
+                            logger.info("{} settings for {} failed updateSettings", type, id);
+                            ctx.response().end(new JsonObject().put("status", "error").put("error", "invalid config").encode());
                         }
-                    });
-                    get("/profile", (req, res) -> {
-                        final Optional<Account> maybeAccount = mewna.accountManager().getAccountById(req.params(":id"));
-                        if(maybeAccount.isPresent()) {
-                            final Account account = maybeAccount.get();
-                            final JsonObject data = new JsonObject();
-                            data.put("id", account.id())
-                                    .put("username", account.username())
-                                    .put("displayName", account.discordAccountId())
-                                    .put("avatar", account.avatar())
-                                    .put("aboutText", account.aboutText())
-                                    .put("customBackground", account.customBackground())
-                                    .put("ownedBackgroundPacks", account.ownedBackgroundPacks())
-                                    .put("isInBeta", account.isInBeta())
-                            ;
-                            return data;
-                        } else {
-                            return new JsonObject().put("error", "no account");
+                    } catch(final RuntimeException e) {
+                        logger.error("{} settings for {} failed updateSettings expectedly", type, id);
+                        e.printStackTrace();
+                        Sentry.capture(e);
+                        ctx.response().end(new JsonObject().put("status", "error").put("error", "invalid config").encode());
+                    } catch(final Exception e) {
+                        logger.error("{} settings for {} failed updateSettings unexpectedly", type, id);
+                        logger.error("Caught unknown exception updating:");
+                        e.printStackTrace();
+                        Sentry.capture(e);
+                        ctx.response().end(new JsonObject().put("status", "error").put("error", "very invalid config").encode());
+                    }
+                } else {
+                    logger.error("{} settings for {} failed validate", type, id);
+                    // :fire: :blobcatfireeyes:, send back an error
+                    ctx.response().end(new JsonObject().put("status", "error").put("error", "invalid config").encode());
+                }
+            });
+            router.get("/data/guild/:id/levels").blockingHandler(ctx -> {
+                final String id = ctx.request().getParam("id");
+                // This makes me feel better about not using a prepared query
+                if(!id.matches("\\d{17,20}")) {
+                    ctx.response().end(new JsonObject().encode());
+                    return;
+                }
+                // This is gonna be ugly
+                final List<JsonObject> results = new ArrayList<>();
+                final String query = String.format(
+                        "SELECT players.data AS player, accounts.data AS account FROM players\n" +
+                                "    JOIN accounts ON accounts.data->>'discordAccountId' = players.id\n" +
+                                "    WHERE players.data->'guildXp' ?? '%s'\n" +
+                                "        AND (players.data->'guildXp'->>'%s')::integer > 0\n" +
+                                "    ORDER BY (players.data->'guildXp'->>'%s')::integer DESC LIMIT 100;",
+                        id, id, id
+                );
+                mewna.database().getStore().sql(query, p -> {
+                    //noinspection Convert2MethodRef
+                    final ResultSet resultSet = p.executeQuery();
+                    if(resultSet.isBeforeFirst()) {
+                        int counter = 1;
+                        while(resultSet.next()) {
+                            try {
+                                final Player player = MAPPER.readValue(resultSet.getString("player"), Player.class);
+                                final Account account = MAPPER.readValue(resultSet.getString("account"), Account.class);
+                                
+                                final User user = DiscordCache.user(player.getId()).toCompletableFuture().join();
+                                final long userXp = player.getXp(id);
+                                final long userLevel = PluginLevels.xpToLevel(userXp);
+                                final long nextLevel = userLevel + 1;
+                                final long currentLevelXp = PluginLevels.fullLevelToXp(userLevel);
+                                final long nextLevelXp = PluginLevels.fullLevelToXp(nextLevel);
+                                final long xpNeeded = PluginLevels.nextLevelXp(userXp);
+                                
+                                results.add(new JsonObject()
+                                        .put("name", user.username())
+                                        .put("discrim", user.discriminator())
+                                        .put("avatar", user.effectiveAvatarUrl())
+                                        .put("userXp", userXp)
+                                        .put("userLevel", userLevel)
+                                        .put("nextLevel", nextLevel)
+                                        .put("playerRank", (long) counter)
+                                        .put("currentLevelXp", currentLevelXp)
+                                        .put("xpNeeded", xpNeeded)
+                                        .put("nextLevelXp", nextLevelXp)
+                                        .put("customBackground", account.customBackground())
+                                        .put("accountId", account.id())
+                                );
+                            } catch(final IOException e) {
+                                Sentry.capture(e);
+                                e.printStackTrace();
+                            }
+                            ++counter;
                         }
-                    });
-                    get("/posts/all", (req, res) -> {
-                        return new JsonArray(mewna.database().getAllTimelinePosts(req.params(":id")));
-                    });
-                    get("/posts", (req, res) -> {
-                        return new JsonArray(mewna.database().getLast100TimelinePosts(req.params(":id")));
-                    });
+                    }
                 });
-                post("/update", (req, res) -> {
-                    mewna.accountManager().updateAccountSettings(JsonObject.mapFrom(req.body()));
-                    return new JsonObject();
-                });
-                post("/update/oauth", (req, res) -> {
-                    mewna.accountManager().createOrUpdateDiscordOAuthLinkedAccount(JsonObject.mapFrom(req.body()));
-                    return new JsonObject();
-                });
+                ctx.response().putHeader("Content-Type", "application/json")
+                        .end(new JsonArray(results).encode());
+            });
+            router.post("/data/guild/:id/webhooks").blockingHandler(ctx -> {
+                final JsonArray arr = new JsonArray(
+                        mewna.database()
+                                .getAllWebhooks(ctx.request().getParam("id"))
+                                .stream()
+                                .map(e -> {
+                                    final JsonObject j = JsonObject.mapFrom(e);
+                                    j.remove("secret");
+                                    return j;
+                                })
+                                .collect(Collectors.toList())
+                );
                 
-                path("/links", () -> {
-                    path("/discord", () -> {
-                        get("/:id", (req, res) -> {
-                            return mewna.accountManager().checkDiscordLinkedAccountExists(req.params(":id"));
-                        });
-                    });
-                });
+                ctx.response().putHeader("Content-Type", "application/json")
+                        .end(arr.encode());
             });
-            path("/guild", () -> {
-                path("/:id", () -> {
-                    path("/config", () -> {
-                        get("/:type", (req, res) -> {
-                            final PluginSettings settings = mewna.database().getOrBaseSettings(req.params(":type"), req.params(":id"));
-                            return MAPPER.writeValueAsString(settings);
-                        });
-                        post("/:type", (req, res) -> {
-                            final JsonObject data = JsonObject.mapFrom(req.body());
-                            final PluginSettings settings = mewna.database().getOrBaseSettings(req.params(":type"), req.params(":id"));
-                            if(settings.validate(data)) {
-                                try {
-                                    if(settings.updateSettings(mewna.database(), data)) {
-                                        // All good, update and return
-                                        logger.info("Updated {} settings for {}", req.params(":type"), req.params(":id"));
-                                        return new JsonObject().put("status", "ok");
-                                    } else {
-                                        logger.info("{} settings for {} failed updateSettings", req.params(":type"), req.params(":id"));
-                                        return new JsonObject().put("status", "error").put("error", "invalid config");
-                                    }
-                                } catch(final RuntimeException e) {
-                                    logger.error("{} settings for {} failed updateSettings expectedly", req.params(":type"), req.params(":id"));
-                                    e.printStackTrace();
-                                    Sentry.capture(e);
-                                    return new JsonObject().put("status", "error").put("error", "invalid config");
-                                } catch(final Exception e) {
-                                    logger.error("{} settings for {} failed updateSettings unexpectedly", req.params(":type"), req.params(":id"));
-                                    logger.error("Caught unknown exception updating:");
-                                    e.printStackTrace();
-                                    Sentry.capture(e);
-                                    return new JsonObject().put("status", "error").put("error", "very invalid config");
-                                }
-                            } else {
-                                logger.error("{} settings for {} failed validate", req.params(":type"), req.params(":id"));
-                                // :fire: :blobcatfireeyes:, send back an error
-                                return new JsonObject().put("status", "error").put("error", "invalid config");
-                            }
-                        });
-                    });
-                    get("/levels", (req, res) -> {
-                        final String id = req.params(":id");
-                        // This makes me feel better about not using a prepared query
-                        if(!id.matches("\\d{17,20}")) {
-                            return new JsonObject();
-                        }
-                        // This is gonna be ugly
-                        final List<JsonObject> results = new ArrayList<>();
-                        final String query = String.format(
-                                "SELECT players.data AS player, accounts.data AS account FROM players\n" +
-                                        "    JOIN accounts ON accounts.data->>'discordAccountId' = players.id\n" +
-                                        "    WHERE players.data->'guildXp' ?? '%s'\n" +
-                                        "        AND (players.data->'guildXp'->>'%s')::integer > 0\n" +
-                                        "    ORDER BY (players.data->'guildXp'->>'%s')::integer DESC LIMIT 100;",
-                                id, id, id
-                        );
-                        mewna.database().getStore().sql(query, p -> {
-                            //noinspection Convert2MethodRef
-                            final ResultSet resultSet = p.executeQuery();
-                            if(resultSet.isBeforeFirst()) {
-                                int counter = 1;
-                                while(resultSet.next()) {
-                                    try {
-                                        final Player player = MAPPER.readValue(resultSet.getString("player"), Player.class);
-                                        final Account account = MAPPER.readValue(resultSet.getString("account"), Account.class);
-                                        // TODO: Cache accesses
-                                        /*
-                                        final User user = mewna.getCache().getUser(player.getId());
-                                        final long userXp = player.getXp(id);
-                                        final long userLevel = PluginLevels.xpToLevel(userXp);
-                                        final long nextLevel = userLevel + 1;
-                                        final long currentLevelXp = PluginLevels.fullLevelToXp(userLevel);
-                                        final long nextLevelXp = PluginLevels.fullLevelToXp(nextLevel);
-                                        final long xpNeeded = PluginLevels.nextLevelXp(userXp);
-                                        
-                                        results.add(new JsonObject()
-                                                .put("name", user.getName())
-                                                .put("discrim", user.getDiscriminator())
-                                                .put("avatar", user.getAvatarURL())
-                                                .put("userXp", userXp)
-                                                .put("userLevel", userLevel)
-                                                .put("nextLevel", nextLevel)
-                                                .put("playerRank", (long) counter)
-                                                .put("currentLevelXp", currentLevelXp)
-                                                .put("xpNeeded", xpNeeded)
-                                                .put("nextLevelXp", nextLevelXp)
-                                                .put("customBackground", account.getCustomBackground())
-                                                .put("accountId", account.getId())
-                                        );
-                                        */
-                                    } catch(final IOException e) {
-                                        Sentry.capture(e);
-                                        e.printStackTrace();
-                                    }
-                                    ++counter;
-                                }
-                            }
-                        });
-                        return new JsonArray(results);
-                    });
-                    get("/webhooks", (req, res) -> new JsonArray(mewna.database().getAllWebhooks(req.params(":id")).stream().map(e -> {
-                        final JsonObject j = JsonObject.mapFrom(e);
-                        j.remove("secret");
-                        return j;
-                    }).collect(Collectors.toList())));
-                    get("/webhooks/:channel_id", (req, res) -> {
-                        final String channel = req.params(":channel_id");
-                        final Optional<Webhook> webhook = mewna.database().getWebhook(channel);
-                        final JsonObject hook = webhook.map(JsonObject::mapFrom).orElseGet(JsonObject::new);
-                        if(hook.containsKey("secret")) {
-                            hook.remove("secret");
-                        }
-                        return hook;
-                    });
-                    post("/webhooks/add", (req, res) -> {
-                        final Webhook hook = Webhook.fromJson(JsonObject.mapFrom(req.body()));
-                        mewna.database().addWebhook(hook);
-                        return new JsonObject();
-                    });
-                });
+            router.get("/data/guild/:id/webhooks/:channel_id").blockingHandler(ctx -> {
+                final String channel = ctx.request().getParam("channel_id");
+                final Optional<Webhook> webhook = mewna.database().getWebhook(channel);
+                final JsonObject hook = webhook.map(JsonObject::mapFrom).orElseGet(JsonObject::new);
+                if(hook.containsKey("secret")) {
+                    hook.remove("secret");
+                }
+                ctx.response().putHeader("Content-Type", "application/json")
+                        .end(hook.encode());
             });
-            
-            path("/backgrounds", () -> {
-                // More shit goes here
-                get("/packs", (req, res) -> JsonObject.mapFrom(TextureManager.getPacks()));
+            router.post("/data/guild/:id/webhooks/add").blockingHandler(ctx -> {
+                final Webhook hook = Webhook.fromJson(ctx.getBodyAsJson());
+                mewna.database().addWebhook(hook);
+                ctx.response().putHeader("Content-Type", "application/json")
+                        .end(new JsonObject().encode());
             });
-            
-            path("/store", () -> {
-                path("/checkout", () -> {
-                    post("/start", (req, res) -> {
-                        final JsonObject body = JsonObject.mapFrom(req.body());
-                        return mewna.paypalHandler().startPayment(
+            // Backgrounds
+            router.get("/data/backgrounds/packs").handler(ctx -> {
+                ctx.response().end(JsonObject.mapFrom(TextureManager.getPacks()).encode());
+            });
+            // Store
+            router.post("/data/store/checkout/start").blockingHandler(ctx -> {
+                final JsonObject body = ctx.getBodyAsJson();
+                ctx.response().putHeader("Content-Type", "application/json")
+                        .end(mewna.paypalHandler().startPayment(
                                 body.getString("userId"),
                                 body.getString("sku")
-                        );
-                    });
-                    post("/confirm", (req, res) -> {
-                        final JsonObject body = JsonObject.mapFrom(req.body());
-                        return mewna.paypalHandler().finishPayment(
+                        ).encode());
+            });
+            router.post("/data/store/checkout/confirm").blockingHandler(ctx -> {
+                final JsonObject body = ctx.getBodyAsJson();
+                ctx.response().putHeader("Content-Type", "application/json")
+                        .end(mewna.paypalHandler().finishPayment(
                                 body.getString("userId"),
                                 body.getString("paymentId"),
                                 body.getString("payerId")
-                        );
-                    });
+                        ).encode());
+            });
+            router.get("/data/store/manifest").handler(ctx -> {
+                ctx.response().putHeader("Content-Type", "application/json")
+                        .end(new JsonArray(ImmutableList.copyOf(mewna.paypalHandler().getSkus())).encode());
+            });
+            // Commands
+            router.get("/data/commands/metadata").handler(ctx -> {
+                final JsonArray arr = new JsonArray(mewna.commandManager().getCommandMetadata()
+                        .stream()
+                        .map(JsonObject::mapFrom)
+                        .collect(Collectors.toList()));
+                ctx.response().putHeader("Content-Type", "application/json")
+                        .end(arr.encode());
+            });
+            // Plugins
+            router.get("/data/plugins/metadata").handler(ctx -> {
+                final JsonArray data = new JsonArray(mewna.pluginManager().getPluginMetadata().stream()
+                        .map(JsonObject::mapFrom)
+                        .collect(Collectors.toList()));
+                data.forEach(e -> {
+                    // ;-;
+                    // TODO: Find better solution
+                    ((JsonObject) e).remove("settingsClass");
+                    ((JsonObject) e).remove("pluginClass");
                 });
-                get("/manifest", (req, res) -> new JsonArray(ImmutableList.copyOf(mewna.paypalHandler().getSkus())));
+                ctx.response().putHeader("Content-Type", "application/json").end(data.encode());
             });
-            
-            path("/commands", () -> {
-                // More shit goes here
-                get("/metadata", (req, res) -> new JsonArray(ImmutableList.copyOf(mewna.commandManager().getCommandMetadata())));
+            // Player
+            router.get("/data/player/:id").blockingHandler(ctx -> {
+                final String id = ctx.request().getParam("id");
+                ctx.response().putHeader("Content-Type", "application/json")
+                        .end(mewna.database().getOptionalPlayer(id)
+                                .map(JsonObject::mapFrom)
+                                .orElse(new JsonObject())
+                                .encode());
             });
-            
-            path("/plugins", () -> {
-                // More shit goes here
-                //noinspection TypeMayBeWeakened
-                get("/metadata", (req, res) -> {
-                    @SuppressWarnings("TypeMayBeWeakened")
-                    final JsonArray data = new JsonArray(ImmutableList.copyOf(mewna.pluginManager().getPluginMetadata()));
-                    data.forEach(e -> {
-                        // ;-;
-                        // TODO: Find better solution
-                        ((JsonObject) e).remove("settingsClass");
-                        ((JsonObject) e).remove("pluginClass");
-                    });
-                    return data;
-                });
-            });
-            // TODO: Proper accesses
-            get("/player/:id", (req, res) -> JsonObject.mapFrom(mewna.database().getOptionalPlayer(req.params(":id")).get()));
-        });
+        }
+    
+        server.requestHandler(router::accept)
+                .listen(Integer.parseInt(Optional.ofNullable(System.getenv("PORT"))
+                        .orElse("80")));
     }
 }

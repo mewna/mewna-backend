@@ -313,26 +313,40 @@ public class PluginLevels extends BasePlugin {
                 Emotes.LOADING_ICON + ' ' + generating)
                 .thenAccept(message -> catnip().rest().channel().triggerTypingIndicator(ctx.getMessage().channelId())
                         .thenAccept(__ -> {
-                            // lol
-                            // we do everything possible to guarantee that this should be safe
-                            // without doing a check here
-                            //noinspection ConstantConditions,OptionalGetWithoutIsPresent
-                            final Account account = database().getAccountByDiscordId(user.id()).get();
-                            final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.id();
-                            
-                            final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
-                            final EmbedBuilder builder = new EmbedBuilder()
-                                    .title("**" + user.username() + "**'s rank card")
-                                    .image("attachment://rank.png")
-                                    .color(new Color(Renderer.PRIMARY_COLOUR))
-                                    .description('[' + $(ctx.getLanguage(), "plugins.levels.view-full-profile") + "](" + profileUrl + ')')
-                                    .footer($(ctx.getLanguage(), "plugins.levels.change-background"), null);
-                            catnip().rest().channel().deleteMessage(ctx.getMessage().channelId(), message.id())
-                                    .thenAccept(___ -> catnip().rest().channel()
-                                            .sendMessage(ctx.getMessage().channelId(),
-                                                    new MessageOptions().addFile("rank.png", cardBytes)
-                                                            .embed(builder.build()))
-                                    );
+                            try {
+                                // lol
+                                // we do everything possible to guarantee that this should be safe
+                                // without doing a check here
+                                //noinspection ConstantConditions,OptionalGetWithoutIsPresent
+                                final Account account = database().getAccountByDiscordId(user.id()).get();
+                                final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.id();
+                                
+                                final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
+                                final EmbedBuilder builder = new EmbedBuilder()
+                                        .title("**" + user.username() + "**'s rank card")
+                                        .image("attachment://rank.png")
+                                        .color(new Color(Renderer.PRIMARY_COLOUR))
+                                        .description('[' + $(ctx.getLanguage(), "plugins.levels.view-full-profile") + "](" + profileUrl + ')')
+                                        .footer($(ctx.getLanguage(), "plugins.levels.change-background"),
+                                                user.effectiveAvatarUrl());
+                                catnip().rest().channel().deleteMessage(ctx.getMessage().channelId(), message.id())
+                                        .thenAccept(___ -> catnip().rest().channel()
+                                                .sendMessage(ctx.getMessage().channelId(),
+                                                        new MessageOptions()
+                                                                .content(ctx.getUser().asMention())
+                                                                .embed(builder.build())
+                                                                .addFile("rank.png", cardBytes))
+                                                .exceptionally(e -> {
+                                                    e.printStackTrace();
+                                                    return null;
+                                                })
+                                        );
+                            } catch(final Exception e) {
+                                e.printStackTrace();
+                            }
+                        }).exceptionally(e -> {
+                            e.printStackTrace();
+                            return null;
                         }));
     }
     
@@ -389,7 +403,9 @@ public class PluginLevels extends BasePlugin {
                                             .thenApply(___ ->
                                                     catnip().rest().channel()
                                                             .sendMessage(ctx.getMessage().channelId(),
-                                                                    new MessageOptions().addFile("profile.png", cardBytes)
+                                                                    new MessageOptions()
+                                                                            .content(ctx.getUser().asMention())
+                                                                            .addFile("profile.png", cardBytes)
                                                                             .embed(builder.build()))
                                             );
                                 }));

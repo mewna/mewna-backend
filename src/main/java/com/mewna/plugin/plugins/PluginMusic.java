@@ -1,5 +1,6 @@
 package com.mewna.plugin.plugins;
 
+import com.google.common.base.Strings;
 import com.mewna.catnip.entity.builder.EmbedBuilder;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.user.User;
@@ -21,6 +22,7 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import me.escoffier.vertx.completablefuture.VertxCompletableFuture;
 
+import java.time.Duration;
 import java.util.concurrent.CompletionStage;
 
 /**
@@ -91,21 +93,50 @@ public class PluginMusic extends BasePlugin {
     
     @Command(names = {"queue", "q"}, desc = "", usage = "", examples = "")
     public void queue(final CommandContext ctx) {
-        final NekoTrackContext context = new NekoTrackContext(
-                ctx.getUser().id(),
-                ctx.getMessage().channelId(),
-                ctx.getMessage().guildId()
-        );
-        mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
-                new JsonObject().put("type", "VOICE_QUEUE")
-                        .put("url", ctx.getArgstr())
-                        .put("context", JsonObject.mapFrom(context)));
+        final Guild guild = ctx.getGuild();
+        checkState(guild, ctx.getUser()).thenAccept(check -> {
+            if(check == VoiceCheck.USER_NOT_IN_VOICE) {
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "You're not in a voice channel!");
+            } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "You're not in this voice channel!");
+            } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "I'm not in a voice channel!");
+            } else {
+                final NekoTrackContext context = new NekoTrackContext(
+                        ctx.getUser().id(),
+                        ctx.getMessage().channelId(),
+                        ctx.getMessage().guildId()
+                );
+                mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
+                        new JsonObject().put("type", "VOICE_QUEUE")
+                                .put("url", ctx.getArgstr())
+                                .put("context", JsonObject.mapFrom(context)));
+            }
+        });
     }
     
     @Command(names = {"play", "p"}, desc = "", usage = "", examples = "")
     public void play(final CommandContext ctx) {
+        final Guild guild = ctx.getGuild();
+        checkState(guild, ctx.getUser()).thenAccept(check -> {
+            if(check == VoiceCheck.USER_NOT_IN_VOICE) {
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "You're not in a voice channel!");
+            } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "You're not in this voice channel!");
+            } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "I'm not in a voice channel!");
+            } else {
+                mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
+                        new JsonObject().put("type", "VOICE_PLAY")
+                                .put("guild_id", ctx.getGuild().id()));
+            }
+        });
+    }
+    
+    @Command(names = {"np", "nowplaying"}, desc="",usage="",examples="")
+    public void np(final CommandContext ctx) {
         mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
-                new JsonObject().put("type", "VOICE_PLAY")
+                new JsonObject().put("type", "VOICE_NOW_PLAYING")
                         .put("guild_id", ctx.getGuild().id()));
     }
     
@@ -145,11 +176,37 @@ public class PluginMusic extends BasePlugin {
     @Event(EventType.AUDIO_TRACK_NOW_PLAYING)
     public void handleNowPlaying(final NekoTrackEvent event) {
         final EmbedBuilder builder = new EmbedBuilder();
+        
         builder.title(Emotes.YES + " Now playing")
                 .field("Title", event.track().title(), true)
                 .field("\u200B", "\u200B", true)
                 .field("Artist", event.track().author(), true)
                 .field("Length", Time.toHumanReadableDuration(event.track().length()), true);
+        if(event.track().position() > 0) {
+            // I want these parens to make it more obvious to myself
+            //noinspection UnnecessaryParentheses
+            final int pos = (int) (((double) event.track().position() / event.track().length()) * 10);
+            String bar = "";
+            for(int i = 0; i < 10; i++) {
+                if(i < pos) {
+                    bar += Emotes.FULL_BAR;
+                } else if(i == pos) {
+                    bar += "\uD83D\uDD18";
+                } else {
+                    bar += Emotes.EMPTY_BAR;
+                }
+            }
+            final Duration position = Duration.ofMillis(event.track().position());
+            final Duration length = Duration.ofMillis(event.track().length());
+            builder.field("Time",
+                    String.format("%s:%s / %s:%s\n%s",
+                            Strings.padStart("" + position.toMinutesPart(), 2, '0'),
+                            Strings.padStart("" + position.toSecondsPart(), 2, '0'),
+                            Strings.padStart("" + length.toMinutesPart(), 2, '0'),
+                            Strings.padStart("" + length.toSecondsPart(), 2, '0'),
+                            bar),
+                    false);
+        }
         catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
     }
     

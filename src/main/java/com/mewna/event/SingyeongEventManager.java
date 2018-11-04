@@ -59,6 +59,7 @@ public class SingyeongEventManager {
                 }
                 case EventType.AUDIO_TRACK_NOW_PLAYING:
                 case EventType.AUDIO_TRACK_START:
+                case EventType.AUDIO_QUEUE_END:
                 case EventType.AUDIO_TRACK_QUEUE: {
                     final var event = data.getJsonObject("data").mapTo(NekoTrackEvent.class);
                     mewna.pluginManager().processEvent(type, event);

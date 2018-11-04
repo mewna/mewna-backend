@@ -3,6 +3,8 @@ package com.mewna;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.mewna.accounts.Account;
+import com.mewna.catnip.entity.channel.Channel;
+import com.mewna.catnip.entity.guild.Role;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.data.DiscordCache;
 import com.mewna.data.Player;
@@ -15,6 +17,7 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.BodyHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -35,6 +39,32 @@ class API {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private final Mewna mewna;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    
+    private List<JsonObject> minifyChannels(final Collection<Channel> channels) {
+        return channels.stream()
+                .map(e -> new JsonObject()
+                        .put("id", e.id())
+                        .put("type", e.type().getKey())
+                        .put("guildId", e.asGuildChannel().guildId())
+                        .put("name", e.asGuildChannel().name())
+                        .put("position", e.asGuildChannel().position())
+                        .put("nsfw", e.isText() && e.asTextChannel().nsfw())
+                )
+                .collect(Collectors.toList());
+    }
+    
+    private List<JsonObject> minifyRoles(final Collection<Role> channels) {
+        return channels.stream()
+                .map(e -> new JsonObject()
+                        .put("id", e.id())
+                        .put("guildId", e.guildId())
+                        .put("name", e.name())
+                        .put("position", e.position())
+                        .put("color", e.color())
+                        .put("managed", e.managed())
+                )
+                .collect(Collectors.toList());
+    }
     
     @SuppressWarnings({"CodeBlock2Expr", "UnnecessarilyQualifiedInnerClassAccess"})
     void start() {
@@ -74,7 +104,7 @@ class API {
                 final String id = ctx.request().getParam("id");
                 DiscordCache.channels(id).thenAccept(channels -> {
                     ctx.response().putHeader("Content-Type", "application/json")
-                            .end(new JsonArray(new ArrayList<>(channels)).encode());
+                            .end(new JsonArray(minifyChannels(channels)).encode());
                 }).exceptionally(e -> {
                     ctx.response().putHeader("Content-Type", "application/json")
                             .setStatusCode(404)
@@ -86,7 +116,7 @@ class API {
                 final String id = ctx.request().getParam("id");
                 DiscordCache.roles(id).thenAccept(roles -> {
                     ctx.response().putHeader("Content-Type", "application/json")
-                            .end(new JsonArray(new ArrayList<>(roles)).encode());
+                            .end(new JsonArray(minifyRoles(roles)).encode());
                 }).exceptionally(e -> {
                     ctx.response().putHeader("Content-Type", "application/json")
                             .setStatusCode(404)
@@ -126,7 +156,7 @@ class API {
                     final JsonObject data = new JsonObject();
                     data.put("id", account.id())
                             .put("username", account.username())
-                            .put("displayName", account.discordAccountId())
+                            .put("displayName", account.displayName())
                             .put("avatar", account.avatar())
                             .put("aboutText", account.aboutText())
                             .put("customBackground", account.customBackground())
@@ -156,12 +186,12 @@ class API {
                                 .collect(Collectors.toList()))
                                 .encode());
             });
-            router.post("/data/account/update").blockingHandler(ctx -> {
+            router.post("/data/account/update").handler(BodyHandler.create()).blockingHandler(ctx -> {
                 final JsonObject body = ctx.getBodyAsJson();
                 mewna.accountManager().updateAccountSettings(body);
                 ctx.response().putHeader("Content-Type", "application/json").end(new JsonObject().encode());
             });
-            router.post("/data/account/update/oauth").blockingHandler(ctx -> {
+            router.post("/data/account/update/oauth").handler(BodyHandler.create()).blockingHandler(ctx -> {
                 final JsonObject body = ctx.getBodyAsJson();
                 mewna.accountManager().createOrUpdateDiscordOAuthLinkedAccount(body);
                 ctx.response().putHeader("Content-Type", "application/json").end(new JsonObject().encode());
@@ -177,9 +207,10 @@ class API {
                 ctx.response().putHeader("Content-Type", "application/json")
                         .end(JsonObject.mapFrom(settings).encode());
             });
-            router.post("/data/guild/:id/config/:type").blockingHandler(ctx -> {
+            router.post("/data/guild/:id/config/:type").handler(BodyHandler.create()).blockingHandler(ctx -> {
                 final String type = ctx.request().getParam("type");
                 final String id = ctx.request().getParam("id");
+                
                 final JsonObject data = ctx.getBodyAsJson();
                 final PluginSettings settings = mewna.database().getOrBaseSettings(type, id);
                 ctx.response().putHeader("Content-Type", "application/json");
@@ -271,7 +302,7 @@ class API {
                 ctx.response().putHeader("Content-Type", "application/json")
                         .end(new JsonArray(results).encode());
             });
-            router.post("/data/guild/:id/webhooks").blockingHandler(ctx -> {
+            router.get("/data/guild/:id/webhooks").blockingHandler(ctx -> {
                 final JsonArray arr = new JsonArray(
                         mewna.database()
                                 .getAllWebhooks(ctx.request().getParam("id"))
@@ -287,6 +318,15 @@ class API {
                 ctx.response().putHeader("Content-Type", "application/json")
                         .end(arr.encode());
             });
+            router.get("/data/guild/:guild/webhooks/:id").blockingHandler(ctx -> {
+                final Optional<Webhook> maybeHook = mewna.database().getWebhookById(ctx.request().getParam("id"));
+                ctx.response().putHeader("Content-Type", "application/json")
+                        .end(maybeHook.map(JsonObject::mapFrom).orElse(new JsonObject()).encode());
+            });
+            router.delete("/data/guild/:guild/webhooks/:id").blockingHandler(ctx -> {
+                mewna.database().deleteWebhookById(ctx.request().getParam("id"));
+                ctx.response().end();
+            });
             router.get("/data/guild/:id/webhooks/:channel_id").blockingHandler(ctx -> {
                 final String channel = ctx.request().getParam("channel_id");
                 final Optional<Webhook> webhook = mewna.database().getWebhook(channel);
@@ -297,7 +337,7 @@ class API {
                 ctx.response().putHeader("Content-Type", "application/json")
                         .end(hook.encode());
             });
-            router.post("/data/guild/:id/webhooks/add").blockingHandler(ctx -> {
+            router.post("/data/guild/:id/webhooks/add").handler(BodyHandler.create()).blockingHandler(ctx -> {
                 final Webhook hook = Webhook.fromJson(ctx.getBodyAsJson());
                 mewna.database().addWebhook(hook);
                 ctx.response().putHeader("Content-Type", "application/json")
@@ -308,7 +348,7 @@ class API {
                 ctx.response().end(JsonObject.mapFrom(TextureManager.getPacks()).encode());
             });
             // Store
-            router.post("/data/store/checkout/start").blockingHandler(ctx -> {
+            router.post("/data/store/checkout/start").handler(BodyHandler.create()).blockingHandler(ctx -> {
                 final JsonObject body = ctx.getBodyAsJson();
                 ctx.response().putHeader("Content-Type", "application/json")
                         .end(mewna.paypalHandler().startPayment(
@@ -316,7 +356,7 @@ class API {
                                 body.getString("sku")
                         ).encode());
             });
-            router.post("/data/store/checkout/confirm").blockingHandler(ctx -> {
+            router.post("/data/store/checkout/confirm").handler(BodyHandler.create()).blockingHandler(ctx -> {
                 final JsonObject body = ctx.getBodyAsJson();
                 ctx.response().putHeader("Content-Type", "application/json")
                         .end(mewna.paypalHandler().finishPayment(
@@ -361,7 +401,7 @@ class API {
                                 .encode());
             });
         }
-    
+        
         server.requestHandler(router::accept)
                 .listen(Integer.parseInt(Optional.ofNullable(System.getenv("PORT"))
                         .orElse("80")));

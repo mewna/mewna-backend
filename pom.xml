@@ -12,7 +12,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <catnip.version>c140b75</catnip.version>
-        <singyeong.version>c3c0292</singyeong.version>
+        <singyeong.version>5c53983</singyeong.version>
 
         <fcps.version>3.1.0</fcps.version>
         <guava.version>26.0-jre</guava.version>
@@ -280,10 +280,17 @@
             <version>${sentry.version}</version>
         </dependency>
 
+        <!-- vert.x web server -->
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web</artifactId>
             <version>${vertx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web</artifactId>
+            <version>${vertx.version}</version>
+            <classifier>sources</classifier>
         </dependency>
 
         <!-- JUnit -->

@@ -10,6 +10,8 @@ import gg.amy.pgorm.PgStore;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import io.sentry.Sentry;
 import lombok.Getter;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -42,6 +44,7 @@ public class Database {
     @Getter
     private PgStore store;
     private JedisPool jedisPool;
+    private final OkHttpClient client = new OkHttpClient();
     
     public Database(final Mewna mewna) {
         this.mewna = mewna;
@@ -119,6 +122,23 @@ public class Database {
         return holder.value;
     }
     
+    public Optional<Webhook> getWebhookById(final String hookId) {
+        final OptionalHolder<Webhook> holder = new OptionalHolder<>();
+        store.sql("SELECT * FROM discord_webhooks WHERE id = ?;", p -> {
+            p.setString(1, hookId);
+            final ResultSet resultSet = p.executeQuery();
+            if(resultSet.isBeforeFirst()) {
+                resultSet.next();
+                final String channel = resultSet.getString("channel");
+                final String guild = resultSet.getString("guild");
+                final String id = resultSet.getString("id");
+                final String secret = resultSet.getString("secret");
+                holder.setValue(new Webhook(channel, guild, id, secret));
+            }
+        });
+        return holder.value;
+    }
+    
     public void addWebhook(final Webhook webhook) {
         store.sql("INSERT INTO discord_webhooks (channel, guild, id, secret) VALUES (?, ?, ?, ?);", p -> {
             p.setString(1, webhook.getChannel());
@@ -152,6 +172,26 @@ public class Database {
             p.setString(1, channel);
             p.execute();
         });
+    }
+    
+    public void deleteWebhookById(final String id) {
+        final Optional<Webhook> webhookById = getWebhookById(id);
+        if(webhookById.isPresent()) {
+            final Webhook webhook = webhookById.get();
+            store.sql("DELETE FROM discord_webhooks WHERE id = ?;", p -> {
+                p.setString(1, id);
+                p.execute();
+            });
+            try {
+                //noinspection UnnecessarilyQualifiedInnerClassAccess
+                client.newCall(new Request.Builder()
+                        .delete()
+                        .url("https://discordapp.com/api/v6/webhooks/" + webhook.getId() + '/' + webhook.getSecret())
+                        .build()).execute().close();
+            } catch(final IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
     
     //////////////

@@ -66,13 +66,12 @@ public final class DiscordCache {
                             final List<Channel> channels = array.stream()
                                     .map(e -> (JsonObject) e)
                                     .filter(e -> {
-                                        final int channelType = e.getInteger("type");
-                                        return channelType == ChannelType.TEXT.getKey()
-                                                || channelType == ChannelType.VOICE.getKey();
+                                        final ChannelType channelType = ChannelType.valueOf(e.getString("type"));
+                                        return channelType == ChannelType.TEXT || channelType == ChannelType.VOICE;
                                     })
                                     .map(e -> {
-                                        final int channelType = e.getInteger("type");
-                                        if(channelType == ChannelType.TEXT.getKey()) {
+                                        final ChannelType channelType = ChannelType.valueOf(e.getString("type"));
+                                        if(channelType == ChannelType.TEXT) {
                                             return Entity.fromJson(Mewna.getInstance().catnip(), TextChannel.class, e);
                                         } else {
                                             return Entity.fromJson(Mewna.getInstance().catnip(), VoiceChannel.class, e);

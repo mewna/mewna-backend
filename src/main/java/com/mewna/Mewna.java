@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("Singleton")
 @Accessors(fluent = true)
 public final class Mewna {
+    public static final String APP_ID = "mewna-backend";
     @SuppressWarnings("StaticVariableOfConcreteClass")
     private static final Mewna INSTANCE = new Mewna();
     
@@ -58,7 +59,7 @@ public final class Mewna {
     @Getter
     private final Vertx vertx = Vertx.vertx();
     @Getter
-    private final SingyeongClient singyeong = new SingyeongClient(System.getenv("SINGYEONG_DSN"), vertx, "mewna-backend");
+    private final SingyeongClient singyeong = new SingyeongClient(System.getenv("SINGYEONG_DSN"), vertx, APP_ID);
     @Getter
     private Catnip catnip;
     

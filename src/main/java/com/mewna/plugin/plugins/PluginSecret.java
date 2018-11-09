@@ -79,39 +79,16 @@ public class PluginSecret extends BasePlugin {
         catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Casting guild " + guildId);
     }
     
-    @Command(names = "vj", desc = "secret", usage = "secret", examples = "secret", owner = true)
-    public void join(final CommandContext ctx) {
-        // TODO: Cache accesses
-        final String guildId = ctx.getGuild().id();
-        mewna().singyeong().send("mewna-shard", new QueryBuilder().contains("guilds", guildId).build(),
-                new JsonObject().put("type", "VOICE_JOIN").put("guild_id", guildId).put("channel_id", "436319633570529287"));
-    }
-    
-    @Command(names = "vl", desc = "secret", usage = "secret", examples = "secret", owner = true)
-    public void leave(final CommandContext ctx) {
-        // TODO: Cache accesses
-        final String guildId = ctx.getGuild().id();
-        mewna().singyeong().send("mewna-shard", new QueryBuilder().contains("guilds", guildId).build(),
-                new JsonObject().put("type", "VOICE_LEAVE").put("guild_id", guildId));
-    }
-    
-    @Command(names = "vs", desc = "secret", usage = "secret", examples = "secret", owner = true)
-    public void vs(final CommandContext ctx) {
-        DiscordCache.voiceState(ctx.getGuild().id(), ctx.getUser().id())
-                .thenAccept(vs -> catnip().rest().channel()
-                        .sendMessage(ctx.getMessage().channelId(), "state: " + vs))
-        .exceptionally(__ -> {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "state: No state");
+    @Command(names = "guildcheck", desc = "secret", usage = "secret", examples = "secret", owner = true)
+    public void guildcheck(final CommandContext ctx) {
+        final String guildId = String.valueOf(ctx.getGuild().idAsLong() + 1);
+        
+        DiscordCache.guild(guildId).thenAccept(g -> {
+            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Checked casted guild " + guildId + " with result " + g);
+        }).exceptionally(__ -> {
+            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Checked casted guild " + guildId + " with exception");
             return null;
         });
-    }
-    
-    @Command(names = "play", desc = "secret", usage = "secret", examples = "secret", owner = true)
-    public void play(final CommandContext ctx) {
-        // TODO: Cache accesses
-        final String guildId = ctx.getGuild().id();
-        mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", guildId).build(),
-                new JsonObject().put("type", "VOICE_PLAY").put("url", ctx.getArgstr()).put("guild_id", guildId));
     }
     
     @Command(names = "fetch", desc = "secret", usage = "secret", examples = "secret", owner = true)

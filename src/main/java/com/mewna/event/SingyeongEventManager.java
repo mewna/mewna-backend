@@ -16,6 +16,9 @@ import gg.amy.singyeong.Dispatch;
 import io.vertx.core.json.JsonObject;
 import lombok.RequiredArgsConstructor;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * @author amy
  * @since 10/27/18.
@@ -23,49 +26,53 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SingyeongEventManager {
     private final Mewna mewna;
+    // TODO: lol
+    private final ExecutorService pool = Executors.newCachedThreadPool();
     
     public void handle(final Dispatch dispatch) {
-        final JsonObject data = dispatch.data();
-        if(data.containsKey("type") && dispatch.nonce() == null) {
-            final String type = data.getString("type");
-            switch(type) {
-                case Raw.MESSAGE_CREATE: {
-                    final var event = DiscordMessageCreate.builder()
-                            .guild(Entity.fromJson(mewna.catnip(), GuildImpl.class, data.getJsonObject("guild")))
-                            .member(Entity.fromJson(mewna.catnip(), MemberImpl.class, data.getJsonObject("member")))
-                            .user(Entity.fromJson(mewna.catnip(), UserImpl.class, data.getJsonObject("user")))
-                            .message(Entity.fromJson(mewna.catnip(), MessageImpl.class, data.getJsonObject("message")))
-                            .build();
-                    mewna.commandManager().tryExecCommand(event);
-                    break;
-                }
-                case Raw.GUILD_MEMBER_ADD: {
-                    final var event = DiscordGuildMemberAdd.builder()
-                            .guild(Entity.fromJson(mewna.catnip(), GuildImpl.class, data.getJsonObject("guild")))
-                            .member(Entity.fromJson(mewna.catnip(), MemberImpl.class, data.getJsonObject("member")))
-                            .user(Entity.fromJson(mewna.catnip(), UserImpl.class, data.getJsonObject("user")))
-                            .build();
-                    mewna.pluginManager().processEvent(type, event);
-                    break;
-                }
-                case Raw.GUILD_MEMBER_REMOVE: {
-                    final var event = DiscordGuildMemberRemove.builder()
-                            .guild(Entity.fromJson(mewna.catnip(), GuildImpl.class, data.getJsonObject("guild")))
-                            .member(Entity.fromJson(mewna.catnip(), MemberImpl.class, data.getJsonObject("member")))
-                            .user(Entity.fromJson(mewna.catnip(), UserImpl.class, data.getJsonObject("user")))
-                            .build();
-                    mewna.pluginManager().processEvent(type, event);
-                    break;
-                }
-                case EventType.AUDIO_TRACK_NOW_PLAYING:
-                case EventType.AUDIO_TRACK_START:
-                case EventType.AUDIO_QUEUE_END:
-                case EventType.AUDIO_TRACK_QUEUE: {
-                    final var event = data.getJsonObject("data").mapTo(NekoTrackEvent.class);
-                    mewna.pluginManager().processEvent(type, event);
-                    break;
+        pool.execute(() -> {
+            final JsonObject data = dispatch.data();
+            if(data.containsKey("type") && dispatch.nonce() == null) {
+                final String type = data.getString("type");
+                switch(type) {
+                    case Raw.MESSAGE_CREATE: {
+                        final var event = DiscordMessageCreate.builder()
+                                .guild(Entity.fromJson(mewna.catnip(), GuildImpl.class, data.getJsonObject("guild")))
+                                .member(Entity.fromJson(mewna.catnip(), MemberImpl.class, data.getJsonObject("member")))
+                                .user(Entity.fromJson(mewna.catnip(), UserImpl.class, data.getJsonObject("user")))
+                                .message(Entity.fromJson(mewna.catnip(), MessageImpl.class, data.getJsonObject("message")))
+                                .build();
+                        mewna.commandManager().tryExecCommand(event);
+                        break;
+                    }
+                    case Raw.GUILD_MEMBER_ADD: {
+                        final var event = DiscordGuildMemberAdd.builder()
+                                .guild(Entity.fromJson(mewna.catnip(), GuildImpl.class, data.getJsonObject("guild")))
+                                .member(Entity.fromJson(mewna.catnip(), MemberImpl.class, data.getJsonObject("member")))
+                                .user(Entity.fromJson(mewna.catnip(), UserImpl.class, data.getJsonObject("user")))
+                                .build();
+                        mewna.pluginManager().processEvent(type, event);
+                        break;
+                    }
+                    case Raw.GUILD_MEMBER_REMOVE: {
+                        final var event = DiscordGuildMemberRemove.builder()
+                                .guild(Entity.fromJson(mewna.catnip(), GuildImpl.class, data.getJsonObject("guild")))
+                                .member(Entity.fromJson(mewna.catnip(), MemberImpl.class, data.getJsonObject("member")))
+                                .user(Entity.fromJson(mewna.catnip(), UserImpl.class, data.getJsonObject("user")))
+                                .build();
+                        mewna.pluginManager().processEvent(type, event);
+                        break;
+                    }
+                    case EventType.AUDIO_TRACK_NOW_PLAYING:
+                    case EventType.AUDIO_TRACK_START:
+                    case EventType.AUDIO_QUEUE_END:
+                    case EventType.AUDIO_TRACK_QUEUE: {
+                        final var event = data.getJsonObject("data").mapTo(NekoTrackEvent.class);
+                        mewna.pluginManager().processEvent(type, event);
+                        break;
+                    }
                 }
             }
-        }
+        });
     }
 }

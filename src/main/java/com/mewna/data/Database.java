@@ -168,6 +168,7 @@ public class Database {
     }
     
     public void deleteWebhook(final String channel) {
+        // TODO: Twitch settings need to be checked / updated
         store.sql("DELETE FROM discord_webhooks WHERE channel = ?;", p -> {
             p.setString(1, channel);
             p.execute();
@@ -175,6 +176,7 @@ public class Database {
     }
     
     public void deleteWebhookById(final String id) {
+        // TODO: Twitch settings need to be checked / updated
         final Optional<Webhook> webhookById = getWebhookById(id);
         if(webhookById.isPresent()) {
             final Webhook webhook = webhookById.get();

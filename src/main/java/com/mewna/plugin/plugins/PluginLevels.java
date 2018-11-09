@@ -24,6 +24,7 @@ import com.mewna.plugin.plugins.settings.LevelsSettings;
 import com.mewna.plugin.util.Emotes;
 import com.mewna.plugin.util.Renderer;
 import com.mewna.util.Templater;
+import gg.amy.singyeong.QueryBuilder;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
@@ -259,12 +260,10 @@ public class PluginLevels extends BasePlugin {
             if(isLevelUp(oldXp, oldXp + xp)) {
                 logger().debug("{} in {}: Level up to {}", author.id(), guild.id(), xpToLevel(oldXp + xp));
                 // Emit level-up event so we can process it
-                // TODO: Singyeong messages
-                /*
-                mewna().getNats().pushBackendEvent(EventType.LEVEL_UP, new JsonObject().put("user", author.id())
-                        .put("guild", guild.id()).put("level", xpToLevel(oldXp + xp)).put("xp", oldXp + xp)
-                        .put("channel", event.getChannel().id()));
-                        */
+                mewna().singyeong().send(Mewna.APP_ID, new QueryBuilder().build(),
+                        new JsonObject().put("user", author.id())
+                                .put("guild", guild.id()).put("level", xpToLevel(oldXp + xp)).put("xp", oldXp + xp)
+                                .put("channel", event.message().channelId()));
             }
         } else {
             logger().debug("Local XP: {} in {} ratelimited ({}ms)", author.id(), guild.id(),

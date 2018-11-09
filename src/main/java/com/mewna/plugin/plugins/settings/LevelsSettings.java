@@ -1,8 +1,9 @@
 package com.mewna.plugin.plugins.settings;
 
-import com.mewna.Mewna;
+import com.mewna.catnip.entity.guild.Role;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
+import com.mewna.data.DiscordCache;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.plugins.PluginLevels;
 import gg.amy.pgorm.annotations.GIndex;
@@ -16,6 +17,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author amy
@@ -62,14 +64,17 @@ public class LevelsSettings implements PluginSettings {
     @Override
     public PluginSettings otherRefresh() {
         final Collection<String> bad = new ArrayList<>();
+        
+        final List<String> roles = DiscordCache.roles(id)
+                .toCompletableFuture()
+                .join()
+                .stream()
+                .map(Role::id)
+                .collect(Collectors.toList());
         levelRoleRewards.keySet().forEach(e -> {
-            // TODO: Cache accesses
-            /*
-            final Role role = Mewna.getInstance().getCache().getRole(e);
-            if(role == null || role.getId() == null || role.getGuildId() == null || role.getName() == null) {
+            if(!roles.contains(e)) {
                 bad.add(e);
             }
-            */
         });
         bad.forEach(levelRoleRewards::remove);
         return this;

@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mewna.catnip.entity.builder.EmbedBuilder;
 import com.mewna.catnip.entity.builder.MessageBuilder;
+import com.mewna.catnip.entity.user.User;
+import com.mewna.data.DiscordCache;
 import com.mewna.data.Player.ClickerBuildings;
 import com.mewna.data.Player.ClickerData;
 import com.mewna.data.Player.ClickerTiers;
@@ -41,6 +43,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -576,8 +579,6 @@ public class PluginMisc extends BasePlugin {
                 }
                 */
                 case "top": {
-                    // TODO: Cache accesses
-                    /*
                     catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), Emotes.LOADING_ICON
                             + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.tato.top.loading"))
                             .thenAccept(msg -> pool.execute(() -> {
@@ -585,14 +586,14 @@ public class PluginMisc extends BasePlugin {
                                         "WHERE (data->'clickerData'->>'totalClicks')::bigint > 0 " +
                                         "ORDER BY (data->'clickerData'->>'totalClicks')::bigint DESC " +
                                         "LIMIT 10;";
-                                getDatabase().getStore().sql(query, p -> {
+                                database().getStore().sql(query, p -> {
                                     final ResultSet resultSet = p.executeQuery();
                                     final Collection<String> rows = new ArrayList<>();
                                     while(resultSet.next()) {
                                         final String id = resultSet.getString("id");
                                         final String clicks = resultSet.getString("clicks");
-                                        final User user = getCache().getUser(id);
-                                        rows.add("**" + user.getName() + '#' + user.getDiscriminator() + "** - " + clicks + " tato");
+                                        final User user = DiscordCache.user(id).toCompletableFuture().join();
+                                        rows.add("**" + user.username() + '#' + user.discriminator() + "** - " + clicks + " tato");
                                     }
                                     final String res = "__Mewna Miner Leaderboards__\n\n" + String.join("\n", rows);
                                     catnip().rest().channel().editMessage(ctx.getMessage().channelId(), msg.id(),
@@ -600,7 +601,6 @@ public class PluginMisc extends BasePlugin {
                                 });
                             }));
                     break;
-                    */
                 }
                 default: {
                     catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), Emotes.NO + ' '

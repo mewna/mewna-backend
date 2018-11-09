@@ -1,6 +1,8 @@
 package com.mewna.plugin.plugins;
 
+import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.message.MessageOptions;
+import com.mewna.data.DiscordCache;
 import com.mewna.data.Webhook;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Plugin;
@@ -17,6 +19,7 @@ import io.sentry.Sentry;
 
 import java.sql.ResultSet;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 /**
  * TODO: HEAVY caching...
@@ -77,13 +80,14 @@ public class PluginTwitch extends BasePlugin {
                 while(resultSet.next()) {
                     webhookGuilds.add(resultSet.getString("id"));
                 }
-                // TODO: Cache accesses
-                /*
                 webhookGuilds.removeIf(e -> {
-                    final Guild guild = getMewna().getCache().getGuild(e);
-                    return guild == null || guild.getId() == null;
+                    try {
+                        DiscordCache.guild(e).toCompletableFuture().get();
+                        return false;
+                    } catch(final Exception ignored) {
+                        return true;
+                    }
                 });
-                */
                 if(!webhookGuilds.isEmpty()) {
                     webhookGuilds.forEach(guildId -> {
                         final TwitchSettings settings = database().getOrBaseSettings(TwitchSettings.class, guildId);

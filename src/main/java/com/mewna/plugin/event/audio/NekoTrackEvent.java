@@ -59,5 +59,13 @@ public class NekoTrackEvent {
          * Queue ended
          */
         AUDIO_QUEUE_END,
+        /**
+         * No matches for track load
+         */
+        AUDIO_TRACK_NO_MATCHES,
+        /**
+         * Many tracks loaded. Track count will be encoded in the track title.
+         */
+        AUDIO_TRACK_QUEUE_MANY,
     }
 }

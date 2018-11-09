@@ -22,6 +22,8 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import me.escoffier.vertx.completablefuture.VertxCompletableFuture;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.concurrent.CompletionStage;
 
@@ -32,6 +34,15 @@ import java.util.concurrent.CompletionStage;
 @Plugin(name = "Music", desc = "Control the way music is played in your server.", settings = MusicSettings.class)
 public class PluginMusic extends BasePlugin {
     // TODO: Fill out shit with localization
+    
+    private static String getDomainName(final String url) throws URISyntaxException {
+        try {
+            final URI uri = new URI(url);
+            return uri.getHost().replaceFirst("www\\.", "");
+        } catch(final NullPointerException ignored) {
+            throw new URISyntaxException("null", "invalid uri");
+        }
+    }
     
     @Command(names = "join", desc = "Bring Mewna into a voice channel with you.", usage = "join", examples = "join")
     public void join(final CommandContext ctx) {
@@ -107,10 +118,35 @@ public class PluginMusic extends BasePlugin {
                         ctx.getMessage().channelId(),
                         ctx.getMessage().guildId()
                 );
-                mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
-                        new JsonObject().put("type", "VOICE_QUEUE")
-                                .put("url", ctx.getArgstr())
-                                .put("context", JsonObject.mapFrom(context)));
+                
+                try {
+                    final String domainName = getDomainName(ctx.getArgstr()).toLowerCase();
+                    switch(domainName) {
+                        case "youtube.com":
+                        case "youtu.be": {
+                            // YT URLs are ok, so just send it directly
+                            mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
+                                    new JsonObject().put("type", "VOICE_QUEUE")
+                                            .put("url", ctx.getArgstr())
+                                            .put("context", JsonObject.mapFrom(context)));
+                            break;
+                        }
+                        case "spotify.com": {
+                            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Mewna currently doesn't support Spotify.");
+                            break;
+                        }
+                        default: {
+                            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "That isn't a valid URL!");
+                            break;
+                        }
+                    }
+                } catch(final Exception e) {
+                    // Not a valid url, search it
+                    mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
+                            new JsonObject().put("type", "VOICE_QUEUE")
+                                    .put("search", ctx.getArgstr())
+                                    .put("context", JsonObject.mapFrom(context)));
+                }
             }
         });
     }
@@ -133,11 +169,17 @@ public class PluginMusic extends BasePlugin {
         });
     }
     
-    @Command(names = {"np", "nowplaying"}, desc="",usage="",examples="")
+    @Command(names = {"np", "nowplaying"}, desc = "", usage = "", examples = "")
     public void np(final CommandContext ctx) {
+        final NekoTrackContext context = new NekoTrackContext(
+                ctx.getUser().id(),
+                ctx.getMessage().channelId(),
+                ctx.getMessage().guildId()
+        );
         mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
                 new JsonObject().put("type", "VOICE_NOW_PLAYING")
-                        .put("guild_id", ctx.getGuild().id()));
+                        .put("guild_id", ctx.getGuild().id())
+                        .put("context", JsonObject.mapFrom(context)));
     }
     
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -175,38 +217,59 @@ public class PluginMusic extends BasePlugin {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Event(EventType.AUDIO_TRACK_NOW_PLAYING)
     public void handleNowPlaying(final NekoTrackEvent event) {
-        final EmbedBuilder builder = new EmbedBuilder();
-        
-        builder.title(Emotes.YES + " Now playing")
-                .field("Title", event.track().title(), true)
-                .field("\u200B", "\u200B", true)
-                .field("Artist", event.track().author(), true)
-                .field("Length", Time.toHumanReadableDuration(event.track().length()), true);
-        if(event.track().position() > 0) {
-            // I want these parens to make it more obvious to myself
-            //noinspection UnnecessaryParentheses
-            final int pos = (int) (((double) event.track().position() / event.track().length()) * 10);
-            String bar = "";
-            for(int i = 0; i < 10; i++) {
-                if(i < pos) {
-                    bar += Emotes.FULL_BAR;
-                } else if(i == pos) {
-                    bar += "\uD83D\uDD18";
-                } else {
-                    bar += Emotes.EMPTY_BAR;
+        if(event.track() == null || event.track().title() == null) {
+            final EmbedBuilder builder = new EmbedBuilder();
+            builder.title(Emotes.NO + " Nothing is playing!");
+            catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
+        } else {
+            final EmbedBuilder builder = new EmbedBuilder();
+            builder.title(Emotes.YES + " Now playing")
+                    .field("Title", event.track().title(), true)
+                    .field("\u200B", "\u200B", true)
+                    .field("Artist", event.track().author(), true)
+                    .field("Length", Time.toHumanReadableDuration(event.track().length()), true);
+            if(event.track().position() > 0) {
+                // I want these parens to make it more obvious to myself
+                //noinspection UnnecessaryParentheses
+                final int pos = (int) (((double) event.track().position() / event.track().length()) * 10);
+                final StringBuilder bar = new StringBuilder();
+                for(int i = 0; i < 10; i++) {
+                    if(i < pos) {
+                        bar.append(Emotes.FULL_BAR);
+                    } else if(i == pos) {
+                        bar.append("\uD83D\uDD18");
+                    } else {
+                        bar.append(Emotes.EMPTY_BAR);
+                    }
                 }
+                final Duration position = Duration.ofMillis(event.track().position());
+                final Duration length = Duration.ofMillis(event.track().length());
+                builder.field("Time",
+                        String.format("%s:%s / %s:%s\n%s",
+                                Strings.padStart("" + position.toMinutesPart(), 2, '0'),
+                                Strings.padStart("" + position.toSecondsPart(), 2, '0'),
+                                Strings.padStart("" + length.toMinutesPart(), 2, '0'),
+                                Strings.padStart("" + length.toSecondsPart(), 2, '0'),
+                                bar.toString()),
+                        false);
             }
-            final Duration position = Duration.ofMillis(event.track().position());
-            final Duration length = Duration.ofMillis(event.track().length());
-            builder.field("Time",
-                    String.format("%s:%s / %s:%s\n%s",
-                            Strings.padStart("" + position.toMinutesPart(), 2, '0'),
-                            Strings.padStart("" + position.toSecondsPart(), 2, '0'),
-                            Strings.padStart("" + length.toMinutesPart(), 2, '0'),
-                            Strings.padStart("" + length.toSecondsPart(), 2, '0'),
-                            bar),
-                    false);
+            catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
         }
+    }
+    
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Event(EventType.AUDIO_TRACK_QUEUE_MANY)
+    public void handleQueueMany(final NekoTrackEvent event) {
+        final EmbedBuilder builder = new EmbedBuilder();
+        builder.title(Emotes.YES + " Queued " + event.track().title() + " tracks.");
+        catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
+    }
+    
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Event(EventType.AUDIO_TRACK_NO_MATCHES)
+    public void handleNoMatches(final NekoTrackEvent event) {
+        final EmbedBuilder builder = new EmbedBuilder();
+        builder.title(Emotes.NO + " No songs found!");
         catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
     }
     

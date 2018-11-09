@@ -63,6 +63,8 @@ public class SingyeongEventManager {
                         mewna.pluginManager().processEvent(type, event);
                         break;
                     }
+                    case EventType.AUDIO_TRACK_NO_MATCHES:
+                    case EventType.AUDIO_TRACK_QUEUE_MANY:
                     case EventType.AUDIO_TRACK_NOW_PLAYING:
                     case EventType.AUDIO_TRACK_START:
                     case EventType.AUDIO_QUEUE_END:

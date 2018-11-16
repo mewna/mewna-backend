@@ -83,21 +83,15 @@ public class PluginMusic extends BasePlugin {
                 catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "I'm not in a voice channel!");
             } else {
                 DiscordCache.voiceState(guildId, ctx.getUser().id())
-                        .thenAccept(state -> {
-                            mewna().singyeong().send("mewna-shard",
-                                    new QueryBuilder().contains("guilds", guildId).build(),
-                                    new JsonObject().put("type", "VOICE_JOIN")
-                                            .put("guild_id", guildId)
-                                            .put("channel_id", state.channelId()));
-                            DiscordCache.voiceChannel(guildId, state.channelId())
-                                    .thenAccept(ch -> {
-                                        catnip().rest().channel()
-                                                .sendMessage(ctx.getMessage().channelId(),
-                                                        "Left \uD83D\uDD0A" + ch.name());
-                                        mewna().singyeong().send("mewna-shard", new QueryBuilder().contains("guilds", guildId).build(),
-                                                new JsonObject().put("type", "VOICE_LEAVE").put("guild_id", guildId));
-                                    });
-                        });
+                        .thenAccept(state ->
+                                DiscordCache.voiceChannel(guildId, state.channelId())
+                                        .thenAccept(ch -> {
+                                            catnip().rest().channel()
+                                                    .sendMessage(ctx.getMessage().channelId(),
+                                                            "Left \uD83D\uDD0A" + ch.name());
+                                            mewna().singyeong().send("mewna-shard", new QueryBuilder().contains("guilds", guildId).build(),
+                                                    new JsonObject().put("type", "VOICE_LEAVE").put("guild_id", guildId));
+                                        }));
             }
         });
     }

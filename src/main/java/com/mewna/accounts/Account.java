@@ -32,6 +32,7 @@ import java.util.List;
 @Builder(toBuilder = true)
 public class Account {
     public static final int MAX_ABOUT_TEXT_LENGTH = 150;
+    public static final int MAX_DISPLAY_NAME_LENGTH = 32;
     public static final String LOREM_IPSUM = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
             "Cras vehicula mi urna, nec tincidunt erat tincidunt eget. " +
             "Maecenas pretium consectetur metus.";
@@ -77,6 +78,15 @@ public class Account {
                 return false;
             }
             if(aboutText.length() > MAX_ABOUT_TEXT_LENGTH) {
+                return false;
+            }
+        }
+        if(data.getMap().containsKey("displayName")) {
+            final String displayName = data.getString("displayName", null);
+            if(displayName == null || displayName.isEmpty()) {
+                return false;
+            }
+            if(displayName.length() > MAX_DISPLAY_NAME_LENGTH) {
                 return false;
             }
         }
@@ -130,6 +140,18 @@ public class Account {
                                 new JsonObject().put("bg", "/backgrounds/" + data.getString("customBackground"))));
             }
             builder.customBackground("/backgrounds/" + data.getString("customBackground"));
+            ++changes;
+        }
+        if(data.getMap().containsKey("displayName")) {
+            if(!builder.displayName.equals(data.getString("displayName"))) {
+                Mewna.getInstance().pluginManager().processEvent(EventType.ACCOUNT_EVENT,
+                        new AccountEvent(SystemUserEventType.DISPLAY_NAME, this,
+                                new JsonObject()
+                                        .put("old", builder.displayName)
+                                        .put("new", data.getString("displayName"))
+                        ));
+            }
+            builder.displayName(data.getString("displayName"));
             ++changes;
         }
         if(changes > 0) {

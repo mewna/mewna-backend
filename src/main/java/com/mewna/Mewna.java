@@ -86,12 +86,12 @@ public final class Mewna {
         TextureManager.preload(this);
         database.init();
         pluginManager.init();
-        new API(this).start();
         catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN")), vertx);
         singyeong.connect()
-                .thenAccept(__ -> singyeong.onEvent(singyeongEventManager::handle))
                 .thenAccept(__ -> singyeong.updateMetadata("backend-key", SingyeongType.STRING, "mewna-backend"))
                 .thenAccept(__ -> DiscordCache.setup())
+                .thenAccept(__ -> singyeong.onEvent(singyeongEventManager::handle))
+                .thenAccept(__ -> new API(this).start())
                 .thenAccept(__ -> logger.info("Finished starting!"));
         singyeong.onInvalid(i -> logger.info("Singyeong invalid: {}: {}", i.nonce(), i.reason()));
     }

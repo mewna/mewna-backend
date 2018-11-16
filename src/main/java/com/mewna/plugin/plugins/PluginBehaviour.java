@@ -44,6 +44,9 @@ public class PluginBehaviour extends BasePlugin {
             case DESCRIPTION: {
                 break;
             }
+            case DISPLAY_NAME: {
+                break;
+            }
             case TWITCH_STREAM: {
                 break;
             }

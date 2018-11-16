@@ -16,6 +16,7 @@ public enum SystemUserEventType {
     
     BACKGROUND("event.account.background"),
     DESCRIPTION("event.account.description"),
+    DISPLAY_NAME("event.account.displayName"),
     
     MONEY("event.money"),;
     @Getter

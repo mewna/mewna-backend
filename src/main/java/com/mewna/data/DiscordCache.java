@@ -34,6 +34,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
+ * TODO: Implement a read-only singyeong-backed catnip cache worker
+ *
  * @author amy
  * @since 10/31/18.
  */

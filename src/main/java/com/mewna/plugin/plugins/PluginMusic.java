@@ -27,6 +27,8 @@ import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.concurrent.CompletionStage;
 
+import static com.mewna.util.Translator.$;
+
 /**
  * @author amy
  * @since 5/19/18.
@@ -44,15 +46,17 @@ public class PluginMusic extends BasePlugin {
         }
     }
     
-    @Command(names = "join", desc = "Bring Mewna into a voice channel with you.", usage = "join", examples = "join")
+    @Command(names = "join", desc = "commands.music.join", usage = "join", examples = "join")
     public void join(final CommandContext ctx) {
         final Guild guild = ctx.getGuild();
         final String guildId = guild.id();
         checkState(guild, ctx.getUser()).thenAccept(check -> {
             if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "You're not in a voice channel!");
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        $(ctx.getLanguage(), "plugins.music.user-not-in-voice"));
             } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE || check == VoiceCheck.SELF_AND_USER_IN_SAME_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "I'm already in a voice channel!");
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        $(ctx.getLanguage(), "plugins.music.bot-already-in-voice"));
             } else {
                 DiscordCache.voiceState(guildId, ctx.getUser().id())
                         .thenAccept(state -> {
@@ -64,23 +68,27 @@ public class PluginMusic extends BasePlugin {
                             DiscordCache.voiceChannel(guildId, state.channelId())
                                     .thenAccept(ch -> catnip().rest().channel()
                                             .sendMessage(ctx.getMessage().channelId(),
-                                                    "Joined \uD83D\uDD0A" + ch.name()));
+                                                    $(ctx.getLanguage(), "plugins.music.commands.join.joined")
+                                                            + " \uD83D\uDD0A" + ch.name()));
                         });
             }
         });
     }
     
-    @Command(names = "leave", desc = "Make Mewna leave the voice channel she's in.", usage = "leave", examples = "leave")
+    @Command(names = "leave", desc = "commands.music.leave", usage = "leave", examples = "leave")
     public void leave(final CommandContext ctx) {
         final Guild guild = ctx.getGuild();
         final String guildId = guild.id();
         checkState(guild, ctx.getUser()).thenAccept(check -> {
             if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "You're not in a voice channel!");
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        $(ctx.getLanguage(), "plugins.music.user-not-in-voice"));
             } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "You're not in this voice channel!");
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        $(ctx.getLanguage(), "plugins.music.user-not-in-same-voice"));
             } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "I'm not in a voice channel!");
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        $(ctx.getLanguage(), "plugins.music.bot-not-in-voice"));
             } else {
                 DiscordCache.voiceState(guildId, ctx.getUser().id())
                         .thenAccept(state ->
@@ -88,7 +96,8 @@ public class PluginMusic extends BasePlugin {
                                         .thenAccept(ch -> {
                                             catnip().rest().channel()
                                                     .sendMessage(ctx.getMessage().channelId(),
-                                                            "Left \uD83D\uDD0A" + ch.name());
+                                                            $(ctx.getLanguage(), "plugins.music.commands.leave.left") +
+                                                                    " \uD83D\uDD0A" + ch.name());
                                             mewna().singyeong().send("mewna-shard", new QueryBuilder().contains("guilds", guildId).build(),
                                                     new JsonObject().put("type", "VOICE_LEAVE").put("guild_id", guildId));
                                         }));
@@ -96,16 +105,21 @@ public class PluginMusic extends BasePlugin {
         });
     }
     
-    @Command(names = {"queue", "q"}, desc = "", usage = "", examples = "")
+    @Command(names = {"queue", "q"}, desc = "commands.music.queue",
+            usage = {"queue <song name>", "queue <youtube url>"},
+            examples = {"queue Rick Astley", "q https://www.youtube.com/watch?v=fUOVQ4KsX9U"})
     public void queue(final CommandContext ctx) {
         final Guild guild = ctx.getGuild();
         checkState(guild, ctx.getUser()).thenAccept(check -> {
             if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "You're not in a voice channel!");
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        $(ctx.getLanguage(), "plugins.music.user-not-in-voice"));
             } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "You're not in this voice channel!");
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        $(ctx.getLanguage(), "plugins.music.user-not-in-same-voice"));
             } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "I'm not in a voice channel!");
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        $(ctx.getLanguage(), "plugins.music.bot-not-in-voice"));
             } else {
                 final NekoTrackContext context = new NekoTrackContext(
                         ctx.getUser().id(),
@@ -125,12 +139,15 @@ public class PluginMusic extends BasePlugin {
                                             .put("context", JsonObject.mapFrom(context)));
                             break;
                         }
+                        case "open.spotify.com":
                         case "spotify.com": {
-                            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Mewna currently doesn't support Spotify.");
+                            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                    $(ctx.getLanguage(), "plugins.music.commands.queue.no-spotify"));
                             break;
                         }
                         default: {
-                            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "That isn't a valid URL!");
+                            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                    $(ctx.getLanguage(), "plugins.music.commands.queue.invalid-url"));
                             break;
                         }
                     }
@@ -145,16 +162,19 @@ public class PluginMusic extends BasePlugin {
         });
     }
     
-    @Command(names = {"play", "p"}, desc = "", usage = "", examples = "")
+    @Command(names = {"play", "p"}, desc = "commands.music.play", usage = "play", examples = "play")
     public void play(final CommandContext ctx) {
         final Guild guild = ctx.getGuild();
         checkState(guild, ctx.getUser()).thenAccept(check -> {
             if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "You're not in a voice channel!");
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        $(ctx.getLanguage(), "plugins.music.user-not-in-voice"));
             } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "You're not in this voice channel!");
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        $(ctx.getLanguage(), "plugins.music.user-not-in-same-voice"));
             } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "I'm not in a voice channel!");
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        $(ctx.getLanguage(), "plugins.music.bot-not-in-voice"));
             } else {
                 mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
                         new JsonObject().put("type", "VOICE_PLAY")
@@ -163,7 +183,7 @@ public class PluginMusic extends BasePlugin {
         });
     }
     
-    @Command(names = {"np", "nowplaying"}, desc = "", usage = "", examples = "")
+    @Command(names = {"np", "nowplaying"}, desc = "commands.music.np", usage = "np", examples = "np")
     public void np(final CommandContext ctx) {
         final NekoTrackContext context = new NekoTrackContext(
                 ctx.getUser().id(),
@@ -180,11 +200,14 @@ public class PluginMusic extends BasePlugin {
     @Event(EventType.AUDIO_TRACK_QUEUE)
     public void handleTrackQueue(final NekoTrackEvent event) {
         final EmbedBuilder builder = new EmbedBuilder();
-        builder.title(Emotes.YES + " Song queued")
-                .field("Title", event.track().title(), true)
+        builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.song-queued"))
+                .field($(database().language(event.track().context().guild()), "plugins.music.events.title"),
+                        event.track().title(), true)
                 .field("\u200B", "\u200B", true)
-                .field("Artist", event.track().author(), true)
-                .field("Length", Time.toHumanReadableDuration(event.track().length()), true);
+                .field($(database().language(event.track().context().guild()), "plugins.music.events.artist"),
+                        event.track().author(), true)
+                .field($(database().language(event.track().context().guild()), "plugins.music.events.length"),
+                        Time.toHumanReadableDuration(event.track().length()), true);
         catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
     }
     
@@ -192,11 +215,14 @@ public class PluginMusic extends BasePlugin {
     @Event(EventType.AUDIO_TRACK_START)
     public void handleTrackStart(final NekoTrackEvent event) {
         final EmbedBuilder builder = new EmbedBuilder();
-        builder.title(Emotes.YES + " Song started")
-                .field("Title", event.track().title(), true)
+        builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.song-started"))
+                .field($(database().language(event.track().context().guild()), "plugins.music.events.title"),
+                        event.track().title(), true)
                 .field("\u200B", "\u200B", true)
-                .field("Artist", event.track().author(), true)
-                .field("Length", Time.toHumanReadableDuration(event.track().length()), true);
+                .field($(database().language(event.track().context().guild()), "plugins.music.events.artist"),
+                        event.track().author(), true)
+                .field($(database().language(event.track().context().guild()), "plugins.music.events.length"),
+                        Time.toHumanReadableDuration(event.track().length()), true);
         catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
     }
     
@@ -204,7 +230,7 @@ public class PluginMusic extends BasePlugin {
     @Event(EventType.AUDIO_QUEUE_END)
     public void handleQueueEnd(final NekoTrackEvent event) {
         final EmbedBuilder builder = new EmbedBuilder();
-        builder.title(Emotes.YES + " Queue ended");
+        builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.queue-ended"));
         catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
     }
     
@@ -213,15 +239,18 @@ public class PluginMusic extends BasePlugin {
     public void handleNowPlaying(final NekoTrackEvent event) {
         if(event.track() == null || event.track().title() == null) {
             final EmbedBuilder builder = new EmbedBuilder();
-            builder.title(Emotes.NO + " Nothing is playing!");
+            builder.title(Emotes.NO + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.now-playing.nothing"));
             catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
         } else {
             final EmbedBuilder builder = new EmbedBuilder();
-            builder.title(Emotes.YES + " Now playing")
-                    .field("Title", event.track().title(), true)
+            builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.now-playing.now-playing"))
+                    .field($(database().language(event.track().context().guild()), "plugins.music.events.title"),
+                            event.track().title(), true)
                     .field("\u200B", "\u200B", true)
-                    .field("Artist", event.track().author(), true)
-                    .field("Length", Time.toHumanReadableDuration(event.track().length()), true);
+                    .field($(database().language(event.track().context().guild()), "plugins.music.events.artist"),
+                            event.track().author(), true)
+                    .field($(database().language(event.track().context().guild()), "plugins.music.events.length"),
+                            Time.toHumanReadableDuration(event.track().length()), true);
             if(event.track().position() > 0) {
                 // I want these parens to make it more obvious to myself
                 //noinspection UnnecessaryParentheses
@@ -238,7 +267,7 @@ public class PluginMusic extends BasePlugin {
                 }
                 final Duration position = Duration.ofMillis(event.track().position());
                 final Duration length = Duration.ofMillis(event.track().length());
-                builder.field("Time",
+                builder.field($(database().language(event.track().context().guild()), "plugins.music.events.time"),
                         String.format("%s:%s / %s:%s\n%s",
                                 Strings.padStart("" + position.toMinutesPart(), 2, '0'),
                                 Strings.padStart("" + position.toSecondsPart(), 2, '0'),
@@ -255,7 +284,8 @@ public class PluginMusic extends BasePlugin {
     @Event(EventType.AUDIO_TRACK_QUEUE_MANY)
     public void handleQueueMany(final NekoTrackEvent event) {
         final EmbedBuilder builder = new EmbedBuilder();
-        builder.title(Emotes.YES + " Queued " + event.track().title() + " tracks.");
+        builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.queue.many")
+                .replace("$amount", event.track().title()));
         catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
     }
     
@@ -263,7 +293,7 @@ public class PluginMusic extends BasePlugin {
     @Event(EventType.AUDIO_TRACK_NO_MATCHES)
     public void handleNoMatches(final NekoTrackEvent event) {
         final EmbedBuilder builder = new EmbedBuilder();
-        builder.title(Emotes.NO + " No songs found!");
+        builder.title(Emotes.NO + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.queue.no-matches"));
         catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
     }
     

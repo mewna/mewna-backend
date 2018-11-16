@@ -35,12 +35,21 @@
       "help": "Get links to helpful information.",
       "roll": "Roll some dice, D&D style.",
       "ping": "Check if Mewna's still working.",
+      "page": "Get the link to this server's page.",
       "tato": "Mewna Miner - Like Cookie Clicker, but tato-flavoured.",
       "dnd": "Get useful information for your D&D 5e game."
+    },
+    "music": {
+      "join": "Bring Mewna into a voice channel with you.",
+      "leave": "Make Mewna leave the voice channel she's in.",
+      "queue": "Queue a song for Mewna to play.",
+      "play": "Make Mewna start playing the song queue.",
+      "np": "Get the current song Mewna's playing."
     }
   },
   "plugins": {
     "disabled-command": "Sorry, but that command is disabled here.",
+    "ratelimited-command": "You're using that command too fast! Try again in **$time**.",
     "economy": {
       "commands": {
         "empty-payment": "You can't pay nothing!",
@@ -248,6 +257,41 @@
           "invalid-search": "Invalid search.",
           "invalid-length": "Searches must be at least 3 characters long.",
           "too-many-matches": "Too many possible matches"
+        }
+      }
+    },
+    "music": {
+      "user-not-in-voice": "You're not in a voice channel!",
+      "user-not-in-same-voice": "You're not in this voice channel!",
+      "bot-not-in-voice": "I'm not in a voice channel!",
+      "bot-already-in-voice": "I'm already in a voice channel!",
+      "commands": {
+        "join": {
+          "joined": "Joined"
+        },
+        "leave": {
+          "left": "Left "
+        },
+        "queue": {
+          "no-spotify": "Mewna currently doesn't support Spotify.",
+          "invalid-url": "That isn't a valid URL!"
+        }
+      },
+      "events": {
+        "song-queued": "Song queued",
+        "song-started": "Song started",
+        "queue-ended": "Queue ended",
+        "title": "Title",
+        "artist": "Artist",
+        "length": "Length",
+        "time": "Time",
+        "now-playing": {
+          "nothing": "Nothing is playing!",
+          "now-playing": "Now playing"
+        },
+        "queue": {
+          "many": "Queued $amount tracks.",
+          "no-matches": "No songs found!"
         }
       }
     }

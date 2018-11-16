@@ -121,10 +121,7 @@ public class CommandManager {
             
             if(System.getenv("DEBUG") != null) {
                 if(!user.id().equals("128316294742147072")) {
-                    /*
-                    mewna.getPluginManager().processEvent("MESSAGE_CREATE", new MessageCreateEvent(user, channel, guild, mentions,
-                            data.getString("content"), data.getBoolean("mention_everyone")));
-                            */
+                    mewna.pluginManager().processEvent(Raw.MESSAGE_CREATE, event);
                     return;
                 }
             }
@@ -215,8 +212,9 @@ public class CommandManager {
                             mewna.statsClient().count("discord.backend.commands.ratelimit", 1,
                                     "name:" + cmd.getName());
                             mewna.catnip().rest().channel().sendMessage(channelId,
-                                    String.format("You're using that command too fast! Try again in **%s**.",
-                                            Time.toHumanReadableDuration(check.right)));
+                                    // TODO: Collect guild language properly
+                                    $("en_US", "plugins.ratelimited-command")
+                                            .replace("$time", Time.toHumanReadableDuration(check.right)));
                             return;
                         }
                     }

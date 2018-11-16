@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mewna.catnip.entity.builder.EmbedBuilder;
 import com.mewna.catnip.entity.builder.MessageBuilder;
+import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.data.DiscordCache;
 import com.mewna.data.Player.ClickerBuildings;
@@ -387,6 +388,13 @@ public class PluginMisc extends BasePlugin {
         });
     }
     
+    @Command(names = {"page", "blog", "site"}, desc = "commands.misc.page", usage = "page", examples = "page")
+    public void page(final CommandContext ctx) {
+        final Guild guild = ctx.getGuild();
+        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                System.getenv("DOMAIN") + "/server/" + guild.id());
+    }
+    
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Command(names = {"tato", "miner"}, desc = "commands.misc.tato",
             usage = {"tato", "tato help", "tato upgrade [buy <upgrade>]", "tato building [buy <building>]"/*,
@@ -687,7 +695,7 @@ public class PluginMisc extends BasePlugin {
     public void dnd(final CommandContext ctx) {
         final List<String> args = ctx.getArgs();
         if(args.size() < 2) {
-            sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.not-enough-args"));
+            sendDndResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.not-enough-args"));
             return;
         }
         
@@ -702,12 +710,12 @@ public class PluginMisc extends BasePlugin {
             case "race":
                 break;
             default:
-                sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search-type"));
+                sendDndResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search-type"));
         }
         
         final String search = String.join(" ", args);
         if(search.length() < 3) {
-            sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search-length"));
+            sendDndResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search-length"));
         }
         
         switch(searchType) {
@@ -716,13 +724,13 @@ public class PluginMisc extends BasePlugin {
                         .filter(e -> e.getName().toLowerCase().contains(search.toLowerCase()))
                         .collect(Collectors.toList());
                 if(monsters.size() == 1) {
-                    sendEmbedResponse(ctx, sendMonster(monsters.get(0)));
+                    sendDndEmbedResponse(ctx, sendMonster(monsters.get(0)));
                     return;
                 } else if(monsters.size() > 1) {
                     // Check for exact match
                     for(final XMonster monster : monsters) {
                         if(monster.getName().equalsIgnoreCase(search)) {
-                            sendEmbedResponse(ctx, sendMonster(monster));
+                            sendDndEmbedResponse(ctx, sendMonster(monster));
                             return;
                         }
                     }
@@ -730,10 +738,10 @@ public class PluginMisc extends BasePlugin {
                     for(final XMonster match : monsters) {
                         sb.append(" * ").append(match.getName()).append('\n');
                     }
-                    sendResponse(ctx, sb.toString());
+                    sendDndResponse(ctx, sb.toString());
                     return;
                 } else {
-                    sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
+                    sendDndResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
                     return;
                 }
             case "spell":
@@ -772,7 +780,7 @@ public class PluginMisc extends BasePlugin {
                                 }
                                 sb.append('\n');
                             }
-                            sendEmbedResponse(ctx, builder.field("Spells", sb.toString(), false));
+                            sendDndEmbedResponse(ctx, builder.field("Spells", sb.toString(), false));
                             return;
                         }
                     }
@@ -781,16 +789,16 @@ public class PluginMisc extends BasePlugin {
                         .filter(e -> e.getName().toLowerCase().contains(search.toLowerCase()))
                         .collect(Collectors.toList());
                 if(spells.isEmpty()) {
-                    sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
+                    sendDndResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
                     return;
                 } else if(spells.size() == 1) {
                     final XSpell spell = spells.get(0);
-                    sendEmbedResponse(ctx, sendSpell(spell));
+                    sendDndEmbedResponse(ctx, sendSpell(spell));
                     return;
                 } else {
                     for(final XSpell spell : spells) {
                         if(spell.getName().equalsIgnoreCase(search)) {
-                            sendEmbedResponse(ctx, sendSpell(spell));
+                            sendDndEmbedResponse(ctx, sendSpell(spell));
                             return;
                         }
                     }
@@ -798,7 +806,7 @@ public class PluginMisc extends BasePlugin {
                     for(final XSpell match : spells) {
                         sb.append(" * ").append(match.getName()).append('\n');
                     }
-                    sendResponse(ctx, sb.toString());
+                    sendDndResponse(ctx, sb.toString());
                     return;
                 }
             case "magicitem":
@@ -806,16 +814,16 @@ public class PluginMisc extends BasePlugin {
                         .filter(e -> e.getName().toLowerCase().contains(search.toLowerCase()))
                         .collect(Collectors.toList());
                 if(magicItems.isEmpty()) {
-                    sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
+                    sendDndResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
                     return;
                 } else if(magicItems.size() == 1) {
                     final XMagicItem magicItem = magicItems.get(0);
-                    sendEmbedResponse(ctx, sendMagicItem(magicItem));
+                    sendDndEmbedResponse(ctx, sendMagicItem(magicItem));
                     return;
                 } else {
                     for(final XMagicItem magicItem : magicItems) {
                         if(magicItem.getName().equalsIgnoreCase(search)) {
-                            sendEmbedResponse(ctx, sendMagicItem(magicItem));
+                            sendDndEmbedResponse(ctx, sendMagicItem(magicItem));
                             return;
                         }
                     }
@@ -823,7 +831,7 @@ public class PluginMisc extends BasePlugin {
                     for(final XMagicItem match : magicItems) {
                         sb.append(" * ").append(match.getName()).append('\n');
                     }
-                    sendResponse(ctx, sb.toString());
+                    sendDndResponse(ctx, sb.toString());
                     return;
                 }
             case "item":
@@ -831,16 +839,16 @@ public class PluginMisc extends BasePlugin {
                         .filter(e -> e.getName().toLowerCase().contains(search.toLowerCase()))
                         .collect(Collectors.toList());
                 if(items.isEmpty()) {
-                    sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
+                    sendDndResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
                     return;
                 } else if(items.size() == 1) {
                     final XItem item = items.get(0);
-                    sendEmbedResponse(ctx, sendItem(item));
+                    sendDndEmbedResponse(ctx, sendItem(item));
                     return;
                 } else {
                     for(final XItem item : items) {
                         if(item.getName().equalsIgnoreCase(search)) {
-                            sendEmbedResponse(ctx, sendItem(item));
+                            sendDndEmbedResponse(ctx, sendItem(item));
                             return;
                         }
                     }
@@ -848,7 +856,7 @@ public class PluginMisc extends BasePlugin {
                     for(final XItem match : items) {
                         sb.append(" * ").append(match.getName()).append('\n');
                     }
-                    sendResponse(ctx, sb.toString());
+                    sendDndResponse(ctx, sb.toString());
                     return;
                 }
             case "feat":
@@ -856,16 +864,16 @@ public class PluginMisc extends BasePlugin {
                         .filter(e -> e.getName().toLowerCase().contains(search.toLowerCase()))
                         .collect(Collectors.toList());
                 if(feats.isEmpty()) {
-                    sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
+                    sendDndResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
                     return;
                 } else if(feats.size() == 1) {
                     final XFeat feat = feats.get(0);
-                    sendEmbedResponse(ctx, sendFeat(feat));
+                    sendDndEmbedResponse(ctx, sendFeat(feat));
                     return;
                 } else {
                     for(final XFeat feat : feats) {
                         if(feat.getName().equalsIgnoreCase(search)) {
-                            sendEmbedResponse(ctx, sendFeat(feat));
+                            sendDndEmbedResponse(ctx, sendFeat(feat));
                             return;
                         }
                     }
@@ -873,7 +881,7 @@ public class PluginMisc extends BasePlugin {
                     for(final XFeat match : feats) {
                         sb.append(" * ").append(match.getName()).append('\n');
                     }
-                    sendResponse(ctx, sb.toString());
+                    sendDndResponse(ctx, sb.toString());
                     return;
                 }
             case "race":
@@ -881,13 +889,13 @@ public class PluginMisc extends BasePlugin {
                         .filter(e -> e.getName().toLowerCase().contains(search.toLowerCase()))
                         .collect(Collectors.toList());
                 if(races.isEmpty()) {
-                    sendResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
+                    sendDndResponse(ctx, $(ctx.getLanguage(), "plugins.misc.commands.dnd.invalid-search"));
                 } else if(races.size() == 1) {
-                    sendEmbedResponse(ctx, sendRace(races.get(0)));
+                    sendDndEmbedResponse(ctx, sendRace(races.get(0)));
                 } else {
                     for(final XRace race : races) {
                         if(race.getName().equalsIgnoreCase(search)) {
-                            sendEmbedResponse(ctx, sendRace(race));
+                            sendDndEmbedResponse(ctx, sendRace(race));
                             return;
                         }
                     }
@@ -895,16 +903,16 @@ public class PluginMisc extends BasePlugin {
                     for(final XRace match : races) {
                         sb.append(" * ").append(match.getName()).append('\n');
                     }
-                    sendResponse(ctx, sb.toString());
+                    sendDndResponse(ctx, sb.toString());
                 }
         }
     }
     
-    private void sendResponse(final CommandContext ctx, final String res) {
+    private void sendDndResponse(final CommandContext ctx, final String res) {
         catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), res);
     }
     
-    private void sendEmbedResponse(final CommandContext ctx, final EmbedBuilder builder) {
+    private void sendDndEmbedResponse(final CommandContext ctx, final EmbedBuilder builder) {
         catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), builder.build());
     }
     

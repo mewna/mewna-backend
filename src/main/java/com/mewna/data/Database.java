@@ -365,6 +365,11 @@ public class Database {
         return posts;
     }
     
+    public String language(final String guild) {
+        // TODO: Make this return a real locale value...
+        return "en_US";
+    }
+    
     private final class OptionalHolder<T> {
         @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
         private Optional<T> value;

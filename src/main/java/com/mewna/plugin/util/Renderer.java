@@ -165,7 +165,7 @@ public final class Renderer {
             // Username
             // centered string at y=246
             setRenderHints(g2);
-            drawCenteredString(g2, user.username().toUpperCase(),
+            drawCenteredString(g2, player.getAccount().displayName().toUpperCase(),
                     new Rectangle(10, 202, 580, USERNAME_FONT.getSize()), USERNAME_FONT, Color.WHITE);
             
             g2.setFont(ABOUT_ME_FONT);

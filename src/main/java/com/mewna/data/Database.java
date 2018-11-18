@@ -6,6 +6,7 @@ import com.mewna.accounts.Account;
 import com.mewna.accounts.timeline.TimelinePost;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.plugin.Plugin;
+import com.mewna.servers.ServerBlogPost;
 import gg.amy.pgorm.PgStore;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import io.sentry.Sentry;
@@ -68,7 +69,7 @@ public class Database {
         
         mapSettingsClasses();
         
-        premap(Player.class, Account.class, TimelinePost.class);
+        premap(Player.class, Account.class, TimelinePost.class, ServerBlogPost.class);
         
         // Webhooks table is created manually, because it doesn't need to be JSON:b:
         store.sql("CREATE TABLE IF NOT EXISTS discord_webhooks (channel TEXT PRIMARY KEY NOT NULL UNIQUE, guild TEXT NOT NULL, " +
@@ -329,7 +330,7 @@ public class Database {
     
     public List<TimelinePost> getLast100TimelinePosts(final String id) {
         final List<TimelinePost> posts = new ArrayList<>();
-        store.sql("SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName() + " WHERE data->>'author' = ? ORDER BY id DESC LIMIT 100;", q -> {
+        store.sql("SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName() + " WHERE data->>'author' = ? ORDER BY id::bigint DESC LIMIT 100;", q -> {
             q.setString(1, id);
             final ResultSet resultSet = q.executeQuery();
             while(resultSet.next()) {
@@ -348,7 +349,7 @@ public class Database {
     
     public List<TimelinePost> getAllTimelinePosts(final String id) {
         final List<TimelinePost> posts = new ArrayList<>();
-        store.sql("SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName() + " WHERE data->>'author' = ? ORDER BY id DESC;", q -> {
+        store.sql("SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName() + " WHERE data->>'author' = ? ORDER BY id::bigint DESC;", q -> {
             q.setString(1, id);
             final ResultSet resultSet = q.executeQuery();
             while(resultSet.next()) {

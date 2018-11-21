@@ -199,6 +199,7 @@ class API {
             router.get("/data/account/links/discord/:id").blockingHandler(ctx -> {
                 ctx.response().end(mewna.accountManager().checkDiscordLinkedAccountExists(ctx.request().getParam("id")));
             });
+            
             // Guilds
             router.get("/data/guild/:id/config/:type").blockingHandler(ctx -> {
                 final String id = ctx.request().getParam("id");
@@ -244,7 +245,7 @@ class API {
             });
             router.get("/data/guild/:id/levels").blockingHandler(ctx -> {
                 final String id = ctx.request().getParam("id");
-                // This makes me feel better about not using a prepared query
+                // This makes me feel better about passing untrusted user input from the url parameters
                 if(!id.matches("\\d{17,20}")) {
                     ctx.response().end(new JsonObject().encode());
                     return;
@@ -343,10 +344,17 @@ class API {
                 ctx.response().putHeader("Content-Type", "application/json")
                         .end(new JsonObject().encode());
             });
+            
+            // Server pages
+            router.post("/data/server/:id/post").handler(BodyHandler.create()).blockingHandler(ctx ->{
+                // TODO
+            });
+            
             // Backgrounds
             router.get("/data/backgrounds/packs").handler(ctx -> {
                 ctx.response().end(JsonObject.mapFrom(TextureManager.getPacks()).encode());
             });
+            
             // Store
             router.post("/data/store/checkout/start").handler(BodyHandler.create()).blockingHandler(ctx -> {
                 final JsonObject body = ctx.getBodyAsJson();
@@ -369,6 +377,7 @@ class API {
                 ctx.response().putHeader("Content-Type", "application/json")
                         .end(new JsonArray(ImmutableList.copyOf(mewna.paypalHandler().getSkus())).encode());
             });
+            
             // Commands
             router.get("/data/commands/metadata").handler(ctx -> {
                 final JsonArray arr = new JsonArray(mewna.commandManager().getCommandMetadata()
@@ -378,6 +387,7 @@ class API {
                 ctx.response().putHeader("Content-Type", "application/json")
                         .end(arr.encode());
             });
+            
             // Plugins
             router.get("/data/plugins/metadata").handler(ctx -> {
                 final JsonArray data = new JsonArray(mewna.pluginManager().getPluginMetadata().stream()
@@ -391,6 +401,7 @@ class API {
                 });
                 ctx.response().putHeader("Content-Type", "application/json").end(data.encode());
             });
+            
             // Player
             router.get("/data/player/:id").blockingHandler(ctx -> {
                 final String id = ctx.request().getParam("id");

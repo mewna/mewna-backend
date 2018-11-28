@@ -92,7 +92,11 @@ public final class Mewna {
                 .thenAccept(__ -> DiscordCache.setup())
                 .thenAccept(__ -> singyeong.onEvent(singyeongEventManager::handle))
                 .thenAccept(__ -> new API(this).start())
-                .thenAccept(__ -> logger.info("Finished starting!"));
+                .thenAccept(__ -> logger.info("Finished starting!"))
+        .exceptionally(e -> {
+            e.printStackTrace();
+            return null;
+        });
         singyeong.onInvalid(i -> logger.info("Singyeong invalid: {}: {}", i.nonce(), i.reason()));
     }
 }

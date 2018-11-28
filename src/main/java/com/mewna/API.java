@@ -347,6 +347,27 @@ class API {
             
             // Server pages
             router.post("/data/server/:id/post").handler(BodyHandler.create()).blockingHandler(ctx ->{
+                // Create a post
+                // TODO
+            });
+            router.get("/data/server/:id/post/:post").handler(BodyHandler.create()).blockingHandler(ctx ->{
+                // Get a single post
+                // TODO
+            });
+            router.delete("/data/server/:id/post/:post").handler(BodyHandler.create()).blockingHandler(ctx ->{
+                // Delete a single post
+                // TODO
+            });
+            router.put("/data/server/:id/post/:post").handler(BodyHandler.create()).blockingHandler(ctx ->{
+                // Edit a single post
+                // TODO
+            });
+            router.get("/data/server/:id/posts").blockingHandler(ctx -> {
+                // Get last 100 posts for a server
+                // TODO
+            });
+            router.get("/data/server/:id/posts/all").blockingHandler(ctx -> {
+                // Get all posts for a server
                 // TODO
             });
             

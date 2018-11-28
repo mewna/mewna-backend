@@ -1,5 +1,8 @@
 package com.mewna;
 
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.mewna.accounts.AccountManager;
 import com.mewna.catnip.Catnip;
 import com.mewna.catnip.CatnipOptions;
@@ -19,6 +22,7 @@ import gg.amy.singyeong.SingyeongClient;
 import gg.amy.singyeong.SingyeongType;
 import io.sentry.Sentry;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.Json;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.slf4j.Logger;
@@ -82,6 +86,14 @@ public final class Mewna {
     private void start() {
         logger.info("Starting Mewna backend...");
         Sentry.init();
+        // Register jackson modules w/ the v. om instances
+        Json.mapper.registerModule(new JavaTimeModule())
+                .registerModule(new ParameterNamesModule())
+                .registerModule(new Jdk8Module());
+        Json.prettyMapper.registerModule(new JavaTimeModule())
+                .registerModule(new ParameterNamesModule())
+                .registerModule(new Jdk8Module());
+        // Start loading our data!
         Translator.preload();
         TextureManager.preload(this);
         database.init();

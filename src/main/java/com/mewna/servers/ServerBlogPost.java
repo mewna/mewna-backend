@@ -21,7 +21,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table("server_blog_posts")
-@GIndex({"id", "author"})
+@GIndex({"id", "author", "guild"})
 public class ServerBlogPost {
     public static final int MAX_POST_LENGTH = 10_000;
     
@@ -36,6 +36,11 @@ public class ServerBlogPost {
      * attributing posts and shit.
      */
     private String author;
+    
+    /**
+     * The GUILD ID that this post was created for. Used for obvious things.
+     */
+    private String guild;
     
     /**
      * Markdown string, 10k char max.

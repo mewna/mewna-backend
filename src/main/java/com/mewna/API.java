@@ -371,6 +371,15 @@ class API {
                 // TODO
             });
             
+            router.post("/data/server/:id/post/:post/boop").handler(BodyHandler.create()).blockingHandler(ctx -> {
+                // Boop a post for a given user
+                // TODO
+            });
+            router.delete("/data/server/:id/post/:post/boop").handler(BodyHandler.create()).blockingHandler(ctx -> {
+                // Un-boop a post for a given user
+                // TODO
+            });
+            
             // Backgrounds
             router.get("/data/backgrounds/packs").handler(ctx -> {
                 ctx.response().end(JsonObject.mapFrom(TextureManager.getPacks()).encode());

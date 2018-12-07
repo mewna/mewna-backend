@@ -13,7 +13,7 @@ jobs:
     - run: git submodule update --init --recursive --remote
 
     # build the application image
-    - run: docker build -t mewna/discord-backend:$CIRCLE_BRANCH-$CIRCLE_BUILD_NUMBER .
+    - run: docker build -t mewna/discord-backend:$CIRCLE_BRANCH-$CIRCLE_BUILD_NUM .
 
     # deploy the image
-    - run: docker push mewna/discord-backend:$CIRCLE_BRANCH-$CIRCLE_BUILD_NUMBER
+    - run: docker push mewna/discord-backend:$CIRCLE_BRANCH-$CIRCLE_BUILD_NUM

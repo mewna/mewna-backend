@@ -1,6 +1,5 @@
 package com.mewna.accounts;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
 import com.mewna.accounts.Account.AccountBuilder;
 import com.mewna.accounts.timeline.TimelinePost;
@@ -23,7 +22,6 @@ import java.util.Optional;
 @SuppressWarnings({"unused", "WeakerAccess"})
 @RequiredArgsConstructor
 public class AccountManager {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     private final Mewna mewna;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     

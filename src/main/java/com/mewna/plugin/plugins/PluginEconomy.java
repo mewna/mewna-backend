@@ -1,6 +1,5 @@
 package com.mewna.plugin.plugins;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.mewna.catnip.entity.builder.EmbedBuilder;
@@ -20,12 +19,11 @@ import com.mewna.plugin.plugins.economy.LootTables;
 import com.mewna.plugin.plugins.settings.EconomySettings;
 import com.mewna.plugin.util.CurrencyHelper;
 import com.mewna.util.Time;
-import io.sentry.Sentry;
+import io.vertx.core.json.JsonObject;
 import lombok.ToString;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import javax.inject.Inject;
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -53,7 +51,6 @@ public class PluginEconomy extends BasePlugin {
     private static final long DAILY_BASE_REWARD = 100;
     
     private static final int GAMBLE_WUMPUS_COUNT = 4;
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     private final Map<String, SlotMachine> slotsCache = new HashMap<>();
     @Inject
     private CurrencyHelper helper;
@@ -267,16 +264,11 @@ public class PluginEconomy extends BasePlugin {
             final ResultSet res = p.executeQuery();
             final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.economy.commands.baltop") + "\n\n");
             while(res.next()) {
-                try {
-                    final String id = res.getString("id");
-                    final Player player = MAPPER.readValue(res.getString("data"), Player.class);
-                    final User user = DiscordCache.user(id).toCompletableFuture().join();
-                    sb.append("- ").append(user.username()).append('#').append(user.discriminator()).append(" - ")
-                            .append(player.getBalance()).append(helper.getCurrencySymbol(ctx)).append('\n');
-                } catch(final IOException e) {
-                    Sentry.capture(e);
-                    e.printStackTrace();
-                }
+                final String id = res.getString("id");
+                final Player player = new JsonObject(res.getString("data")).mapTo(Player.class);
+                final User user = DiscordCache.user(id).toCompletableFuture().join();
+                sb.append("- ").append(user.username()).append('#').append(user.discriminator()).append(" - ")
+                        .append(player.getBalance()).append(helper.getCurrencySymbol(ctx)).append('\n');
             }
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());
         });

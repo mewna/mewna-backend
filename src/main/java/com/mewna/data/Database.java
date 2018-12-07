@@ -1,15 +1,16 @@
 package com.mewna.data;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
 import com.mewna.accounts.Account;
 import com.mewna.accounts.timeline.TimelinePost;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.plugin.Plugin;
+import com.mewna.plugin.util.Snowflakes;
 import com.mewna.servers.ServerBlogPost;
 import gg.amy.pgorm.PgStore;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import io.sentry.Sentry;
+import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -26,6 +27,8 @@ import java.sql.ResultSet;
 import java.util.*;
 import java.util.function.Consumer;
 
+import static com.mewna.data.PluginSettings.MAPPER;
+
 /**
  * Database-level abstraction
  *
@@ -34,18 +37,16 @@ import java.util.function.Consumer;
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class Database {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-    
     @Getter
     private final Mewna mewna;
     @Getter
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Map<String, Class<? extends PluginSettings>> pluginSettingsByName = new HashMap<>();
+    private final OkHttpClient client = new OkHttpClient();
     private boolean init;
     @Getter
     private PgStore store;
     private JedisPool jedisPool;
-    private final OkHttpClient client = new OkHttpClient();
     
     public Database(final Mewna mewna) {
         this.mewna = mewna;
@@ -254,7 +255,7 @@ public class Database {
         return getPlayer(src.id());
     }
     */
-
+    
     public Optional<Player> getOptionalPlayer(final String id) {
         return store.mapSync(Player.class).load(id);
     }
@@ -335,12 +336,7 @@ public class Database {
             final ResultSet resultSet = q.executeQuery();
             while(resultSet.next()) {
                 final String data = resultSet.getString("data");
-                try {
-                    posts.add(MAPPER.readValue(data, TimelinePost.class));
-                } catch(final IOException e) {
-                    Sentry.capture(e);
-                    e.printStackTrace();
-                }
+                posts.add(new JsonObject(data).mapTo(TimelinePost.class));
             }
         });
         
@@ -354,17 +350,90 @@ public class Database {
             final ResultSet resultSet = q.executeQuery();
             while(resultSet.next()) {
                 final String data = resultSet.getString("data");
-                try {
-                    posts.add(MAPPER.readValue(data, TimelinePost.class));
-                } catch(final IOException e) {
-                    Sentry.capture(e);
-                    e.printStackTrace();
-                }
+                posts.add(new JsonObject(data).mapTo(TimelinePost.class));
             }
         });
         
         return posts;
     }
+    
+    //////////////////
+    // Server blogs //
+    //////////////////
+    
+    public Optional<ServerBlogPost> getServerBlogPostById(final String id) {
+        return store.mapSync(ServerBlogPost.class).load(id);
+    }
+    
+    public String saveNewServerBlogPost(final ServerBlogPost post) {
+        post.setId(null);
+        post.setBoops(new HashSet<>());
+        if(post.validate()) {
+            post.setId(Snowflakes.getNewSnowflake());
+            store.mapSync(ServerBlogPost.class).save(post);
+            return post.getId();
+        } else {
+            return "-1";
+        }
+    }
+    
+    public String updateServerBlogPost(final ServerBlogPost post) {
+        post.setBoops(new HashSet<>());
+        if(post.validate()) {
+            final Optional<ServerBlogPost> prev = getServerBlogPostById(post.getId());
+            if(prev.isPresent()) {
+                store.mapSync(ServerBlogPost.class).save(prev.get()
+                        .toBuilder()
+                        .title(post.getTitle())
+                        .content(post.getContent())
+                        .build());
+                return post.getId();
+            } else {
+                return "-1";
+            }
+        } else {
+            return "-2";
+        }
+    }
+    
+    public void deleteServerBlogPost(final String id) {
+        store.sql("DELETE FROM " + store.mapSync(ServerBlogPost.class).getTableName() + " WHERE id = ?;", p -> {
+            p.setString(1, id);
+            p.execute();
+        });
+    }
+    
+    public List<ServerBlogPost> getLast100ServerBlogPosts(final String id) {
+        final List<ServerBlogPost> posts = new ArrayList<>();
+        store.sql("SELECT data FROM " + store.mapSync(ServerBlogPost.class).getTableName() + " WHERE data->>'author' = ? ORDER BY id::bigint DESC LIMIT 100;", q -> {
+            q.setString(1, id);
+            final ResultSet resultSet = q.executeQuery();
+            while(resultSet.next()) {
+                final String data = resultSet.getString("data");
+                posts.add(new JsonObject(data).mapTo(ServerBlogPost.class));
+            }
+        });
+        
+        return posts;
+    }
+    
+    public List<ServerBlogPost> getServerBlogPosts(final String id) {
+        final List<ServerBlogPost> posts = new ArrayList<>();
+        store.sql("SELECT data FROM " + store.mapSync(ServerBlogPost.class).getTableName() + " WHERE data->>'author' = ? ORDER BY id::bigint DESC;", q -> {
+            q.setString(1, id);
+            final ResultSet resultSet = q.executeQuery();
+            while(resultSet.next()) {
+                final String data = resultSet.getString("data");
+                posts.add(new JsonObject(data).mapTo(ServerBlogPost.class));
+            }
+        });
+        
+        return posts;
+    }
+    
+    //////////
+    // Misc //
+    //////////
     
     public String language(final String guild) {
         // TODO: Make this return a real locale value...

@@ -201,6 +201,7 @@ public class PluginMusic extends BasePlugin {
     public void handleTrackQueue(final NekoTrackEvent event) {
         final EmbedBuilder builder = new EmbedBuilder();
         builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.song-queued"))
+                .url(event.track().url())
                 .field($(database().language(event.track().context().guild()), "plugins.music.events.title"),
                         event.track().title(), true)
                 .field("\u200B", "\u200B", true)
@@ -216,6 +217,7 @@ public class PluginMusic extends BasePlugin {
     public void handleTrackStart(final NekoTrackEvent event) {
         final EmbedBuilder builder = new EmbedBuilder();
         builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.song-started"))
+                .url(event.track().url())
                 .field($(database().language(event.track().context().guild()), "plugins.music.events.title"),
                         event.track().title(), true)
                 .field("\u200B", "\u200B", true)
@@ -244,6 +246,7 @@ public class PluginMusic extends BasePlugin {
         } else {
             final EmbedBuilder builder = new EmbedBuilder();
             builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.now-playing.now-playing"))
+                    .url(event.track().url())
                     .field($(database().language(event.track().context().guild()), "plugins.music.events.title"),
                             event.track().title(), true)
                     .field("\u200B", "\u200B", true)

@@ -8,6 +8,7 @@ import com.mewna.plugin.plugins.PluginTwitch;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
+import gg.amy.singyeong.QueryBuilder;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
@@ -128,31 +129,17 @@ public class TwitchSettings implements PluginSettings {
 
         // If a streamer is in the new list, and NOT in the old list, then we
         // need to subscribe to those notifications
-        for(final TwitchStreamerConfig streamer : streamers) {
-            if(twitchStreamers.stream().noneMatch(e -> e.id.equals(streamer.id))) {
-                if(streamer.isStreamStartMessagesEnabled() || streamer.isStreamEndMessagesEnabled()) {
-                    // Sub to up/down messages
-                    // TODO: Singyeong messages
-                    /*
-                    Mewna.getInstance().getNats().pushTwitchEvent("TWITCH_SUBSCRIBE", new JsonObject()
-                            .put("id", streamer.getId()).put("topic", "streams"));
-                            */
-                }
-            } else {
-                for(final TwitchStreamerConfig e : twitchStreamers) {
-                    if(e.id.equals(streamer.id)) {
-                        if(e.streamEndMessagesEnabled != streamer.streamEndMessagesEnabled
-                                || e.streamStartMessagesEnabled != streamer.streamStartMessagesEnabled) {
-                            // TODO: Singyeong messages
-                            /*
-                            Mewna.getInstance().getNats().pushTwitchEvent("TWITCH_SUBSCRIBE", new JsonObject()
-                                    .put("id", streamer.getId()).put("topic", "streams"));
-                                    */
-                        }
-                    }
-                }
-            }
-        }
+        final Collection<TwitchStreamerConfig> copy = new ArrayList<>(streamers);
+        
+        
+        copy.removeIf(e -> twitchStreamers.stream().anyMatch(f -> f.id.equalsIgnoreCase(e.id)));
+        copy.forEach(streamer -> {
+            Mewna.getInstance().singyeong().send("telepathy",
+                    new QueryBuilder().build(),
+                    new JsonObject().put("t", "TWITCH_SUBSCRIBE")
+                            .put("d", new JsonObject().put("id", streamer.getId()).put("topic", "streams")));
+            System.out.println(streamer.getId());
+        });
         
         // We don't try to unsubscribe from webhooks because that would honestly be a nightmare x-x
 

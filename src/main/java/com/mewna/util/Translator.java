@@ -61,6 +61,7 @@ public final class Translator {
                     // Try to fetch with en_US
                     if(!lang.equals("en_US")) {
                         try {
+                            //noinspection TailRecursion
                             return translate("en_US", key);
                         } catch(final Exception e) {
                             throw new IllegalArgumentException('`' + key + "` is not a valid key for `" + lang + "`!");

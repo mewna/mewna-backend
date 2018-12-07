@@ -1,6 +1,5 @@
 package com.mewna;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.mewna.accounts.Account;
 import com.mewna.catnip.entity.channel.Channel;
@@ -12,6 +11,7 @@ import com.mewna.data.PluginSettings;
 import com.mewna.data.Webhook;
 import com.mewna.plugin.plugins.PluginLevels;
 import com.mewna.plugin.util.TextureManager;
+import com.mewna.servers.ServerBlogPost;
 import io.sentry.Sentry;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonArray;
@@ -22,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,7 +35,6 @@ import java.util.stream.Collectors;
  */
 @RequiredArgsConstructor
 class API {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     private final Mewna mewna;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     
@@ -266,36 +264,31 @@ class API {
                     if(resultSet.isBeforeFirst()) {
                         int counter = 1;
                         while(resultSet.next()) {
-                            try {
-                                final Player player = MAPPER.readValue(resultSet.getString("player"), Player.class);
-                                final Account account = MAPPER.readValue(resultSet.getString("account"), Account.class);
-                                
-                                final User user = DiscordCache.user(player.getId()).toCompletableFuture().join();
-                                final long userXp = player.getXp(id);
-                                final long userLevel = PluginLevels.xpToLevel(userXp);
-                                final long nextLevel = userLevel + 1;
-                                final long currentLevelXp = PluginLevels.fullLevelToXp(userLevel);
-                                final long nextLevelXp = PluginLevels.fullLevelToXp(nextLevel);
-                                final long xpNeeded = PluginLevels.nextLevelXp(userXp);
-                                
-                                results.add(new JsonObject()
-                                        .put("name", user.username())
-                                        .put("discrim", user.discriminator())
-                                        .put("avatar", user.effectiveAvatarUrl())
-                                        .put("userXp", userXp)
-                                        .put("userLevel", userLevel)
-                                        .put("nextLevel", nextLevel)
-                                        .put("playerRank", (long) counter)
-                                        .put("currentLevelXp", currentLevelXp)
-                                        .put("xpNeeded", xpNeeded)
-                                        .put("nextLevelXp", nextLevelXp)
-                                        .put("customBackground", account.customBackground())
-                                        .put("accountId", account.id())
-                                );
-                            } catch(final IOException e) {
-                                Sentry.capture(e);
-                                e.printStackTrace();
-                            }
+                            final Player player = new JsonObject(resultSet.getString("player")).mapTo(Player.class);
+                            final Account account = new JsonObject(resultSet.getString("account")).mapTo(Account.class);
+                            
+                            final User user = DiscordCache.user(player.getId()).toCompletableFuture().join();
+                            final long userXp = player.getXp(id);
+                            final long userLevel = PluginLevels.xpToLevel(userXp);
+                            final long nextLevel = userLevel + 1;
+                            final long currentLevelXp = PluginLevels.fullLevelToXp(userLevel);
+                            final long nextLevelXp = PluginLevels.fullLevelToXp(nextLevel);
+                            final long xpNeeded = PluginLevels.nextLevelXp(userXp);
+                            
+                            results.add(new JsonObject()
+                                    .put("name", user.username())
+                                    .put("discrim", user.discriminator())
+                                    .put("avatar", user.effectiveAvatarUrl())
+                                    .put("userXp", userXp)
+                                    .put("userLevel", userLevel)
+                                    .put("nextLevel", nextLevel)
+                                    .put("playerRank", (long) counter)
+                                    .put("currentLevelXp", currentLevelXp)
+                                    .put("xpNeeded", xpNeeded)
+                                    .put("nextLevelXp", nextLevelXp)
+                                    .put("customBackground", account.customBackground())
+                                    .put("accountId", account.id())
+                            );
                             ++counter;
                         }
                     }
@@ -346,29 +339,35 @@ class API {
             });
             
             // Server pages
-            router.post("/data/server/:id/post").handler(BodyHandler.create()).blockingHandler(ctx ->{
+            router.post("/data/server/:id/post").handler(BodyHandler.create()).blockingHandler(ctx -> {
                 // Create a post
-                // TODO
+                ctx.response().end(new JsonObject().put("id", mewna.database()
+                        .saveNewServerBlogPost(ctx.getBodyAsJson().mapTo(ServerBlogPost.class)))
+                        .encode());
             });
-            router.get("/data/server/:id/post/:post").handler(BodyHandler.create()).blockingHandler(ctx ->{
+            router.get("/data/server/:id/post/:post").handler(BodyHandler.create()).blockingHandler(ctx -> {
                 // Get a single post
-                // TODO
+                ctx.response().end(mewna.database().getServerBlogPostById(ctx.request().getParam("post"))
+                        .map(ServerBlogPost::toJson).orElse(new JsonObject()).encode());
             });
-            router.delete("/data/server/:id/post/:post").handler(BodyHandler.create()).blockingHandler(ctx ->{
+            router.delete("/data/server/:id/post/:post").handler(BodyHandler.create()).blockingHandler(ctx -> {
                 // Delete a single post
-                // TODO
+                mewna.database().deleteServerBlogPost(ctx.request().getParam("post"));
+                ctx.response().end("");
             });
-            router.put("/data/server/:id/post/:post").handler(BodyHandler.create()).blockingHandler(ctx ->{
+            router.put("/data/server/:id/post/:post").handler(BodyHandler.create()).blockingHandler(ctx -> {
                 // Edit a single post
-                // TODO
+                ctx.response().end(new JsonObject().put("id", mewna.database()
+                        .updateServerBlogPost(ctx.getBodyAsJson().mapTo(ServerBlogPost.class)))
+                        .encode());
             });
             router.get("/data/server/:id/posts").blockingHandler(ctx -> {
                 // Get last 100 posts for a server
-                // TODO
+                ctx.response().end(new JsonArray(mewna.database().getLast100ServerBlogPosts(ctx.request().getParam("id"))).encode());
             });
             router.get("/data/server/:id/posts/all").blockingHandler(ctx -> {
                 // Get all posts for a server
-                // TODO
+                ctx.response().end(new JsonArray(mewna.database().getServerBlogPosts(ctx.request().getParam("id"))).encode());
             });
             
             router.post("/data/server/:id/post/:post/boop").handler(BodyHandler.create()).blockingHandler(ctx -> {

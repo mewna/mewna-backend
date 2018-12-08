@@ -1,6 +1,5 @@
 package com.mewna.plugin.plugins;
 
-import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.message.MessageOptions;
 import com.mewna.data.DiscordCache;
 import com.mewna.data.Webhook;
@@ -19,7 +18,6 @@ import io.sentry.Sentry;
 
 import java.sql.ResultSet;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 /**
  * TODO: HEAVY caching...

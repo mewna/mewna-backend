@@ -369,6 +369,10 @@ class API {
                 // Get all posts for a server
                 ctx.response().end(new JsonArray(mewna.database().getServerBlogPosts(ctx.request().getParam("id"))).encode());
             });
+            router.get("/data/server/:id/posts/all/titles").blockingHandler(ctx -> {
+                // Get all posts for a server
+                ctx.response().end(mewna.database().getServerBlogPostTitles(ctx.request().getParam("id")).encode());
+            });
             
             router.post("/data/server/:id/post/:post/boop").handler(BodyHandler.create()).blockingHandler(ctx -> {
                 // Boop a post for a given user

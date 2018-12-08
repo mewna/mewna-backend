@@ -50,7 +50,8 @@ public class AccountManager {
     }
     
     public void createOrUpdateDiscordOAuthLinkedAccount(final JsonObject data) {
-        final String id = data.containsKey("id") && data.getString("id", "").matches("\\d+")
+        final boolean isNew = !(data.containsKey("id") && data.getString("id", "").matches("\\d+"));
+        final String id = isNew
                 ? data.getString("id")
                 : Snowflakes.getNewSnowflake();
         final AccountBuilder builder = mewna.database().getAccountById(id).map(Account::toBuilder)
@@ -70,7 +71,7 @@ public class AccountManager {
                 builder.email(email);
             }
         }
-        if(data.containsKey("displayName") && data.getString("displayName", null) != null) {
+        if(isNew && data.containsKey("displayName") && data.getString("displayName", null) != null) {
             final String displayName = data.getString("displayName", null);
             if(displayName != null && !displayName.isEmpty()) {
                 builder.displayName(displayName);

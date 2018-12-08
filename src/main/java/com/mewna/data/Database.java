@@ -10,6 +10,7 @@ import com.mewna.servers.ServerBlogPost;
 import gg.amy.pgorm.PgStore;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import io.sentry.Sentry;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import okhttp3.OkHttpClient;
@@ -405,7 +406,7 @@ public class Database {
     
     public List<ServerBlogPost> getLast100ServerBlogPosts(final String id) {
         final List<ServerBlogPost> posts = new ArrayList<>();
-        store.sql("SELECT data FROM " + store.mapSync(ServerBlogPost.class).getTableName() + " WHERE data->>'author' = ? ORDER BY id::bigint DESC LIMIT 100;", q -> {
+        store.sql("SELECT data FROM " + store.mapSync(ServerBlogPost.class).getTableName() + " WHERE data->>'guild' = ? ORDER BY id::bigint DESC LIMIT 100;", q -> {
             q.setString(1, id);
             final ResultSet resultSet = q.executeQuery();
             while(resultSet.next()) {
@@ -419,7 +420,7 @@ public class Database {
     
     public List<ServerBlogPost> getServerBlogPosts(final String id) {
         final List<ServerBlogPost> posts = new ArrayList<>();
-        store.sql("SELECT data FROM " + store.mapSync(ServerBlogPost.class).getTableName() + " WHERE data->>'author' = ? ORDER BY id::bigint DESC;", q -> {
+        store.sql("SELECT data FROM " + store.mapSync(ServerBlogPost.class).getTableName() + " WHERE data->>'guild' = ? ORDER BY id::bigint DESC;", q -> {
             q.setString(1, id);
             final ResultSet resultSet = q.executeQuery();
             while(resultSet.next()) {
@@ -429,6 +430,35 @@ public class Database {
         });
         
         return posts;
+    }
+    
+    public JsonArray getServerBlogPostTitles(final String id) {
+        final List<JsonObject> posts = new ArrayList<>();
+        store.sql("SELECT data FROM " + store.mapSync(ServerBlogPost.class).getTableName() + " WHERE data->>'guild' = ? ORDER BY id::bigint DESC;", q -> {
+            q.setString(1, id);
+            final ResultSet resultSet = q.executeQuery();
+            while(resultSet.next()) {
+                final String data = resultSet.getString("data");
+                final ServerBlogPost post = new JsonObject(data).mapTo(ServerBlogPost.class);
+                post.setContent(null);
+                final JsonObject d = JsonObject.mapFrom(post);
+                final Optional<Account> account = getAccountById(post.getAuthor());
+                final JsonObject author = new JsonObject();
+                if(account.isPresent()) {
+                    author.put("displayName", account.get().displayName())
+                            .put("avatar", account.get().avatar())
+                            .put("id", account.get().id());
+                } else {
+                    author.put("displayName", "Unknown User")
+                            .put("avatar", "https://cdn.discordapp.com/embed/avatars/0.png")
+                            .put("id", "0");
+                }
+                d.put("author", author);
+                posts.add(d);
+            }
+        });
+        
+        return new JsonArray(posts);
     }
     
     //////////

@@ -85,8 +85,9 @@ public class PluginSecret extends BasePlugin {
         
         DiscordCache.guild(guildId).thenAccept(g -> {
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Checked casted guild " + guildId + " with result " + g);
-        }).exceptionally(__ -> {
+        }).exceptionally(e -> {
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Checked casted guild " + guildId + " with exception");
+            e.printStackTrace();
             return null;
         });
     }

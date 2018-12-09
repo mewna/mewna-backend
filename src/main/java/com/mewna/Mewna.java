@@ -63,7 +63,7 @@ public final class Mewna {
     @Getter
     private final Vertx vertx = Vertx.vertx();
     @Getter
-    private final SingyeongClient singyeong = new SingyeongClient(System.getenv("SINGYEONG_DSN"), vertx, APP_ID);
+    private final SingyeongClient singyeong = SingyeongClient.create(vertx, System.getenv("SINGYEONG_DSN"));
     @Getter
     private Catnip catnip;
     

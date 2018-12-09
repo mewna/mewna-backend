@@ -358,7 +358,6 @@ public class PluginMisc extends BasePlugin {
                 .field("Commands", System.getenv("DOMAIN") + "/discord/commands", false)
                 .field("Support server", "https://discord.gg/UwdDN6r", false)
                 .field("Follow us on Twitter!", "https://twitter.com/mewnabot", false)
-                .field("", "Everything can be enabled / disabled in the dashboard.", false)
         ;
         catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), builder.build());
     }

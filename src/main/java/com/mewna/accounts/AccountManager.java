@@ -90,6 +90,11 @@ public class AccountManager {
             }
         }
         mewna.database().saveAccount(builder.build());
+        if(isNew) {
+            logger.info("Created account {}", id);
+        } else {
+            logger.info("Updated account {}", id);
+        }
     }
     
     public void updateAccountSettings(final JsonObject data) {

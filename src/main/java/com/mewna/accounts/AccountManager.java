@@ -50,7 +50,7 @@ public class AccountManager {
     }
     
     public void createOrUpdateDiscordOAuthLinkedAccount(final JsonObject data) {
-        final boolean isNew = !(data.containsKey("id") && data.getString("id", "").matches("\\d+"));
+        final boolean isNew = !data.containsKey("id") || !data.getString("id", "").matches("\\d+");
         final String id = isNew
                 ? data.getString("id")
                 : Snowflakes.getNewSnowflake();

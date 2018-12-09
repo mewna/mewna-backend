@@ -59,7 +59,6 @@ public final class DiscordCache {
             if(nonce != null && PENDING.containsKey(nonce)) {
                 final PendingFetch p = PENDING.remove(nonce);
                 final JsonObject data = dispatch.data();
-                System.out.println(data.encodePrettily());
                 if(data.isEmpty()) {
                     p.future.fail("Not available in cache!");
                 } else if(data.containsKey("_type")) {

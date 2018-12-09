@@ -81,7 +81,7 @@ public class PluginSecret extends BasePlugin {
     
     @Command(names = "guildcheck", desc = "secret", usage = "secret", examples = "secret", owner = true)
     public void guildcheck(final CommandContext ctx) {
-        final String guildId = String.valueOf(ctx.getGuild().idAsLong() + 1);
+        final String guildId = ctx.getGuild().id();
         
         DiscordCache.guild(guildId).thenAccept(g -> {
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Checked casted guild " + guildId + " with result " + g);

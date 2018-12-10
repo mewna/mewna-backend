@@ -671,7 +671,7 @@ public class PluginMisc extends BasePlugin {
         
         catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                 $(ctx.getLanguage(), "plugins.misc.commands.tato.stats-header")
-                        .replace("target", ctx.getUser().asMention()) + ":\n" + stats);
+                        .replace("$target", ctx.getUser().asMention()) + ":\n" + stats);
     }
     
     @Command(names = "dnd", desc = "commands.misc.dnd", usage = {

@@ -478,7 +478,7 @@ public class PluginMisc extends BasePlugin {
                                                 database().savePlayer(ctx.getPlayer());
                                                 catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                                                         Emotes.YES + ' '
-                                                                + $(ctx.getLanguage(), "plugins.misc.commands.tato.buy.success")
+                                                                + $(ctx.getLanguage(), "plugins.misc.commands.tato.upgrades.buy.success")
                                                                 .replace("$upgrade", upgrade.getName()));
                                             }
                                         } else {

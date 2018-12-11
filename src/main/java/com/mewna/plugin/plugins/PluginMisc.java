@@ -398,7 +398,7 @@ public class PluginMisc extends BasePlugin {
     @Command(names = "chargen", desc = "commands.misc.chargen", usage = "chargen", examples = "chargen")
     public void chargen(final CommandContext ctx) {
         final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.misc.commands.chargen.stats")).append("\n```\n");
-    
+        
         for(int i = 0; i < 6; i++) {
             final List<Integer> numbers = new ArrayList<>();
             for(int j = 0; j < 4; j++) {
@@ -406,8 +406,9 @@ public class PluginMisc extends BasePlugin {
             }
             numbers.sort(Integer::compareTo);
             final int sum = numbers.get(1) + numbers.get(2) + numbers.get(3);
-            sb.append(sum).append(" (").append(numbers.get(1)).append(", ").append(numbers.get(2)).append(", ")
-                    .append(numbers.get(3)).append(", dropped").append(numbers.get(0)).append(")\n");
+            sb.append(StringUtils.leftPad("" + sum, 2, ' '))
+                    .append(" (").append(numbers.get(1)).append(", ").append(numbers.get(2)).append(", ")
+                    .append(numbers.get(3)).append(", dropped ").append(numbers.get(0)).append(")\n");
         }
         
         sb.append("```");

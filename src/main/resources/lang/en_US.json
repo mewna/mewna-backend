@@ -34,6 +34,7 @@
       "clappify": "👏 Clap 👏 some 👏 text 👏 (or 🍞, or 🥔, whatever)",
       "help": "Get links to helpful information.",
       "roll": "Roll some dice, D&D style.",
+      "chargen": "Generate 6 stats for a D&D character.",
       "ping": "Check if Mewna's still working.",
       "page": "Get the link to this server's page.",
       "tato": "Mewna Miner - Like Cookie Clicker, but tato-flavoured.",
@@ -208,6 +209,9 @@
           "input": "Input",
           "output": "Output",
           "invalid": "Invalid dice expression."
+        },
+        "chargen": {
+          "stats": "Your stats are:"
         },
         "tato": {
           "and": "and",

@@ -49,6 +49,7 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import static com.mewna.util.Translator.$;
@@ -392,6 +393,25 @@ public class PluginMisc extends BasePlugin {
         final Guild guild = ctx.getGuild();
         catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                 System.getenv("DOMAIN") + "/server/" + guild.id());
+    }
+    
+    @Command(names = "chargen", desc = "commands.misc.chargen", usage = "chargen", examples = "chargen")
+    public void chargen(final CommandContext ctx) {
+        final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.misc.commands.chargen.stats")).append("\n```\n");
+    
+        for(int i = 0; i < 6; i++) {
+            final List<Integer> numbers = new ArrayList<>();
+            for(int j = 0; j < 4; j++) {
+                numbers.add(ThreadLocalRandom.current().nextInt(6) + 1);
+            }
+            numbers.sort(Integer::compareTo);
+            final int sum = numbers.get(1) + numbers.get(2) + numbers.get(3);
+            sb.append(sum).append(" (").append(numbers.get(1)).append(", ").append(numbers.get(2)).append(", ")
+                    .append(numbers.get(3)).append(", dropped").append(numbers.get(0)).append(")\n");
+        }
+        
+        sb.append("```");
+        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());
     }
     
     @SuppressWarnings("ResultOfMethodCallIgnored")

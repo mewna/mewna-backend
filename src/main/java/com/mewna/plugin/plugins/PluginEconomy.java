@@ -289,7 +289,7 @@ public class PluginEconomy extends BasePlugin {
                 .replace("$number", playerWumpus + ""))
                 .append('\n')
                 .append($(ctx.getLanguage(), "plugins.economy.commands.gamble.winner")
-                        .replace("number", "" + winningWumpus));
+                        .replace("$number", "" + winningWumpus));
         
         sb.append("\n\n");
         

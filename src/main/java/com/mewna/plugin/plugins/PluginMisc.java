@@ -624,8 +624,7 @@ public class PluginMisc extends BasePlugin {
                                         rows.add("**" + user.username() + '#' + user.discriminator() + "** - " + clicks + " tato");
                                     }
                                     final String res = "__Mewna Miner Leaderboards__\n\n" + String.join("\n", rows);
-                                    catnip().rest().channel().editMessage(ctx.getMessage().channelId(), msg.id(),
-                                            new MessageBuilder().content(res).build());
+                                    catnip().rest().channel().editMessage(ctx.getMessage().channelId(), msg.id(), res);
                                 });
                             }));
                     break;

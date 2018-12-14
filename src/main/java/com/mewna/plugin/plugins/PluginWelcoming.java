@@ -28,14 +28,14 @@ public class PluginWelcoming extends BasePlugin {
         System.out.println(2);
         System.out.println(jGuild.encodePrettily());
         for(final String key : jGuild.fieldNames()) {
-            data.put("server." + key, jGuild.getMap().get(key).toString());
+            data.put("server." + key, jGuild.getValue(key).toString());
         }
         System.out.println(3);
         final JsonObject jUser = user.toJson();
         System.out.println(4);
         System.out.println(jUser.encodePrettily());
         for(final String key : jUser.fieldNames()) {
-            data.put("user." + key, jUser.getMap().get(key).toString());
+            data.put("user." + key, jUser.getValue(key).toString());
         }
         System.out.println(5);
         data.put("user.mention", user.asMention());

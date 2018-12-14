@@ -78,15 +78,13 @@ public class SingyeongEventManager {
                         break;
                     }
                     case EventType.TWITCH_STREAM_START: {
-                        System.out.println(data);
-                        final var streamer = data.getJsonObject("streamer").mapTo(TwitchStreamer.class);
-                        final var stream = data.getJsonObject("streamData").mapTo(TwitchStreamData.class);
+                        final var streamer = data.getJsonObject("data").getJsonObject("streamer").mapTo(TwitchStreamer.class);
+                        final var stream = data.getJsonObject("data").getJsonObject("streamData").mapTo(TwitchStreamData.class);
                         mewna.pluginManager().processEvent(type, new TwitchStreamStartEvent(streamer, stream));
                         break;
                     }
                     case EventType.TWITCH_STREAM_END: {
-                        System.out.println(data);
-                        final var streamer = data.getJsonObject("streamer").mapTo(TwitchStreamer.class);
+                        final var streamer = data.getJsonObject("data").getJsonObject("streamer").mapTo(TwitchStreamer.class);
                         mewna.pluginManager().processEvent(type, new TwitchStreamEndEvent(streamer));
                         break;
                     }

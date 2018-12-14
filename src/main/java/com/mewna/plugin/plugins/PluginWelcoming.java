@@ -27,7 +27,7 @@ public class PluginWelcoming extends BasePlugin {
         for(final String key : jGuild.fieldNames()) {
             data.put("server." + key, jGuild.getMap().get(key).toString());
         }
-        final JsonObject jUser = JsonObject.mapFrom(user);
+        final JsonObject jUser = user.toJson();
         for(final String key : jUser.fieldNames()) {
             data.put("user." + key, jUser.getMap().get(key).toString());
         }
@@ -46,7 +46,7 @@ public class PluginWelcoming extends BasePlugin {
             if(messageChannel != null && !messageChannel.isEmpty()) {
                 //final Channel channel = getMewna().getCache().getChannel(messageChannel);
                 //if(channel != null) {
-                final Templater templater = map(event.guild(), event.user());
+                final Templater templater = map(guild, event.user());
                 catnip().rest().channel().sendMessage(settings.getMessageChannel(), templater.render(settings.getWelcomeMessage()));
                 /*} else {
                     getLogger().warn("Welcoming messageChannel {} in {} no longer valid, nulling...", messageChannel, guildId);

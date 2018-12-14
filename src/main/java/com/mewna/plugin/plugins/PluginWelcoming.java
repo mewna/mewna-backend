@@ -22,24 +22,16 @@ import java.util.Map;
 @Plugin(name = "Welcoming", desc = "Hello and goodbye to your server's members.", settings = WelcomingSettings.class)
 public class PluginWelcoming extends BasePlugin {
     private Templater map(@SuppressWarnings("TypeMayBeWeakened") final Guild guild, final User user) {
-        System.out.println(1);
         final Map<String, String> data = new HashMap<>();
         final JsonObject jGuild = guild.toJson();
-        System.out.println(2);
-        System.out.println(jGuild.encodePrettily());
         for(final String key : jGuild.fieldNames()) {
             data.put("server." + key, "" + jGuild.getValue(key));
         }
-        System.out.println(3);
         final JsonObject jUser = user.toJson();
-        System.out.println(4);
-        System.out.println(jUser.encodePrettily());
         for(final String key : jUser.fieldNames()) {
             data.put("user." + key, "" + jUser.getValue(key));
         }
-        System.out.println(5);
         data.put("user.mention", user.asMention());
-        System.out.println(6);
         return Templater.fromMap(data);
     }
     

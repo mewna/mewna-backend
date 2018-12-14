@@ -12,7 +12,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- catnip.version>bb8adf2</catnip.version -->
-        <catnip.version>0.7.3</catnip.version>
+        <catnip.version>0.8.3</catnip.version>
         <singyeong.version>03eaacc</singyeong.version>
 
         <fcps.version>3.1.0</fcps.version>

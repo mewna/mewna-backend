@@ -12,6 +12,10 @@ import com.mewna.event.discord.DiscordGuildMemberRemove;
 import com.mewna.event.discord.DiscordMessageCreate;
 import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.audio.NekoTrackEvent;
+import com.mewna.plugin.event.plugin.twitch.TwitchStreamData;
+import com.mewna.plugin.event.plugin.twitch.TwitchStreamEndEvent;
+import com.mewna.plugin.event.plugin.twitch.TwitchStreamStartEvent;
+import com.mewna.plugin.event.plugin.twitch.TwitchStreamer;
 import gg.amy.singyeong.Dispatch;
 import io.vertx.core.json.JsonObject;
 import lombok.RequiredArgsConstructor;
@@ -71,6 +75,17 @@ public class SingyeongEventManager {
                     case EventType.AUDIO_TRACK_QUEUE: {
                         final var event = data.getJsonObject("data").mapTo(NekoTrackEvent.class);
                         mewna.pluginManager().processEvent(type, event);
+                        break;
+                    }
+                    case EventType.TWITCH_STREAM_START: {
+                        final var streamer = data.getJsonObject("streamer").mapTo(TwitchStreamer.class);
+                        final var stream = data.getJsonObject("streamData").mapTo(TwitchStreamData.class);
+                        mewna.pluginManager().processEvent(type, new TwitchStreamStartEvent(streamer, stream));
+                        break;
+                    }
+                    case EventType.TWITCH_STREAM_END: {
+                        final var streamer = data.getJsonObject("streamer").mapTo(TwitchStreamer.class);
+                        mewna.pluginManager().processEvent(type, new TwitchStreamEndEvent(streamer));
                         break;
                     }
                 }

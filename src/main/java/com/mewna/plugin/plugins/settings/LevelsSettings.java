@@ -1,5 +1,8 @@
 package com.mewna.plugin.plugins.settings;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.mewna.catnip.entity.guild.Role;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
@@ -9,6 +12,7 @@ import com.mewna.plugin.plugins.PluginLevels;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
+import io.sentry.Sentry;
 import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,7 +20,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+import javax.annotation.Nonnull;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -32,6 +39,20 @@ import java.util.stream.Collectors;
 @GIndex("id")
 @SuppressWarnings("unused")
 public class LevelsSettings implements PluginSettings {
+    private static final LoadingCache<String, List<String>> ROLE_CACHE = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .expireAfterWrite(10, TimeUnit.MINUTES)
+            .build(
+                    new CacheLoader<>() {
+                        public List<String> load(@Nonnull final String guild) {
+                            return DiscordCache.roles(guild)
+                                    .toCompletableFuture()
+                                    .join()
+                                    .stream()
+                                    .map(Role::id)
+                                    .collect(Collectors.toList());
+                        }
+                    });
     private static final int DISCORD_MAX_MESSAGE_SIZE = 2000;
     @PrimaryKey
     private String id;
@@ -65,12 +86,13 @@ public class LevelsSettings implements PluginSettings {
     public PluginSettings otherRefresh() {
         final Collection<String> bad = new ArrayList<>();
         
-        final List<String> roles = DiscordCache.roles(id)
-                .toCompletableFuture()
-                .join()
-                .stream()
-                .map(Role::id)
-                .collect(Collectors.toList());
+        final List<String> roles;
+        try {
+            roles = ROLE_CACHE.get(id);
+        } catch(final ExecutionException e) {
+            Sentry.capture(e);
+            throw new IllegalStateException(e);
+        }
         levelRoleRewards.keySet().forEach(e -> {
             if(!roles.contains(e)) {
                 bad.add(e);

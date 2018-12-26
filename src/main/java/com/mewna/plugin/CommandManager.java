@@ -136,6 +136,7 @@ public class CommandManager {
                     return;
                 }
             }
+            
             // ENTER THE REALM OF THE ASYNC HELL
             
             getAllPrefixes(guild).exceptionally(e -> {
@@ -157,6 +158,9 @@ public class CommandManager {
                 // TODO: There's gotta be a way to refactor this out into smaller methods...
                 final List<User> mentions = new ArrayList<>(event.message().mentionedUsers());
                 if(found) {
+                    if(System.getenv("DEBUG") != null && user.id().equals("128316294742147072")) {
+                        logger.info("[COMMAND DEBUG] Found prefix {}", prefix);
+                    }
                     parseCommand(user, guild, mentions, prefix, content, channelId, event);
                 } else {
                     // No prefix found, pass it down as an event
@@ -188,6 +192,9 @@ public class CommandManager {
         final List<String> args = Arrays.stream(argstr.trim().split("\\s+")).filter(e -> !e.isEmpty())
                 .collect(Collectors.toCollection(ArrayList::new));
         if(commands.containsKey(commandName)) {
+            if(System.getenv("DEBUG") != null && user.id().equals("128316294742147072")) {
+                logger.info("[COMMAND DEBUG] Found command: {}", commandName);
+            }
             executeCommand(user, guild, mentions, prefix, channelId, event, commandName, argstr, args);
         }
     }
@@ -229,6 +236,9 @@ public class CommandManager {
         
         VertxCompletableFuture.from(mewna.vertx(), canExec).thenAccept(b -> {
             if(b) {
+                if(System.getenv("DEBUG") != null && user.id().equals("128316294742147072")) {
+                    logger.info("[COMMAND DEBUG] Ready to execute: {}", commandName);
+                }
                 if(cmd.getRatelimit() != null) {
                     final String baseName = cmd.getBaseName();
                     
@@ -283,7 +293,7 @@ public class CommandManager {
                         return;
                     }
                 }
-    
+                
                 final Optional<Account> finalMaybeAccount = maybeAccount;
                 mewna.database().getOrBaseSettings(EconomySettings.class, guild.id()).thenAccept(settings -> {
                     long cost = 0L;
@@ -304,7 +314,7 @@ public class CommandManager {
                                 maybePayment = args.get(0);
                             }
                         }
-        
+                        
                         final ImmutablePair<Boolean, Long> res = mewna.pluginManager().getCurrencyHelper()
                                 .handlePayment(paymentCtx, maybePayment, cmd.getPayment().min(), cmd.getPayment().max());
                         // If we can make the payment, set the cost and continue
@@ -315,9 +325,9 @@ public class CommandManager {
                             return;
                         }
                     }
-    
+                    
                     final CommandContext ctx = paymentCtx.toBuilder().cost(cost).build();
-    
+                    
                     try {
                         logger.info("Command: {}#{} ({}, account: {}) in {}#{}-{}: {} {}", user.username(), user.discriminator(),
                                 user.id(), ctx.getAccount().id(), guild.id(), channelId, event.message().id(), commandName, argstr);
@@ -328,7 +338,6 @@ public class CommandManager {
                         e.printStackTrace();
                     }
                 });
-                
             }
         });
     }

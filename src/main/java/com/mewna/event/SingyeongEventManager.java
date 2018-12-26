@@ -18,6 +18,8 @@ import com.mewna.plugin.event.plugin.twitch.TwitchStreamStartEvent;
 import com.mewna.plugin.event.plugin.twitch.TwitchStreamer;
 import gg.amy.singyeong.Dispatch;
 import io.vertx.core.json.JsonObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author amy
@@ -25,6 +27,7 @@ import io.vertx.core.json.JsonObject;
  */
 public class SingyeongEventManager {
     private final Mewna mewna;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     
     public SingyeongEventManager(final Mewna mewna) {
         this.mewna = mewna;
@@ -42,6 +45,9 @@ public class SingyeongEventManager {
                             .user(Entity.fromJson(mewna.catnip(), UserImpl.class, data.getJsonObject("user")))
                             .message(Entity.fromJson(mewna.catnip(), MessageImpl.class, data.getJsonObject("message")))
                             .build();
+                    if(System.getenv("DEBUG") != null && event.user().id().equals("128316294742147072")) {
+                        logger.info("[COMMAND DEBUG] Got message from you: {}", event.message().content());
+                    }
                     mewna.commandManager().tryExecCommand(event);
                     break;
                 }

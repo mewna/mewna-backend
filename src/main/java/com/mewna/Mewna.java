@@ -40,7 +40,7 @@ public final class Mewna {
     private static final Mewna INSTANCE = new Mewna();
     
     @Getter
-    private final SingyeongEventManager singyeongEventManager = new SingyeongEventManager(this);
+    private SingyeongEventManager singyeongEventManager;
     @Getter
     private final PluginManager pluginManager = new PluginManager(this);
     @Getter
@@ -99,6 +99,7 @@ public final class Mewna {
         database.init();
         pluginManager.init();
         catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN")), vertx);
+        singyeongEventManager = new SingyeongEventManager(this);
         singyeong.connect()
                 .thenAccept(__ -> singyeong.updateMetadata("backend-key", SingyeongType.STRING, "mewna-backend"))
                 .thenAccept(__ -> DiscordCache.setup())

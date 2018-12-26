@@ -111,8 +111,7 @@ public final class CurrencyHelper {
     }
     
     public final String getCurrencySymbol(final CommandContext ctx) {
-        final String c = mewna.database().getOrBaseSettings(EconomySettings.class, ctx.getGuild().id()).getCurrencySymbol();
-        return c == null || c.isEmpty() ? CURRENCY_SYMBOL : c;
+        return ctx.getCurrencySymbol();
     }
     
     enum PaymentResult {

@@ -40,54 +40,34 @@ public class PluginWelcoming extends BasePlugin {
     public void onUserJoin(final DiscordGuildMemberAdd event) {
         final Guild guild = event.guild();
         final String guildId = guild.id();
-        final WelcomingSettings settings = database().getOrBaseSettings(WelcomingSettings.class, guildId);
-        if(settings.isEnableWelcomeMessages()) {
-            final String messageChannel = settings.getMessageChannel();
-            // Have to validate that the chosen channel exists
-            if(messageChannel != null && !messageChannel.isEmpty()) {
-                //final Channel channel = getMewna().getCache().getChannel(messageChannel);
-                //if(channel != null) {
-                final Templater templater = map(guild, event.user());
-                catnip().rest().channel().sendMessage(settings.getMessageChannel(), templater.render(settings.getWelcomeMessage()));
-                /*} else {
-                    getLogger().warn("Welcoming messageChannel {} in {} no longer valid, nulling...", messageChannel, guildId);
-                    settings.setMessageChannel(null);
-                    getDatabase().saveSettings(settings);
-                }*/
+        database().getOrBaseSettings(WelcomingSettings.class, guildId).thenAccept(settings -> {
+            if(settings.isEnableWelcomeMessages()) {
+                final String messageChannel = settings.getMessageChannel();
+                // TODO: Have to validate that the chosen channel exists
+                if(messageChannel != null && !messageChannel.isEmpty()) {
+                    final Templater templater = map(guild, event.user());
+                    catnip().rest().channel().sendMessage(settings.getMessageChannel(), templater.render(settings.getWelcomeMessage()));
+                }
             }
-        }
-        final String roleId = settings.getJoinRoleId();
-        if(roleId != null && !roleId.isEmpty()) {
-            // Validate that it exists
-            /*final Role joinRole = getMewna().getCache().getRole(roleId);
-            if(joinRole != null) {*/
-            catnip().rest().guild().addGuildMemberRole(guildId, event.member().id(), roleId);
-            /*} else {
-                getLogger().warn("Welcoming joinRole {} in {} no longer valid, nulling...", roleId, guildId);
-                settings.setMessageChannel(null);
-                getDatabase().saveSettings(settings);
-            }*/
-        }
+            final String roleId = settings.getJoinRoleId();
+            if(roleId != null && !roleId.isEmpty()) {
+                catnip().rest().guild().addGuildMemberRole(guildId, event.member().id(), roleId);
+            }
+        });
     }
     
     @Event(Raw.GUILD_MEMBER_REMOVE)
     public void onUserLeave(final DiscordGuildMemberRemove event) {
         final Guild guild = event.guild();
-        final WelcomingSettings settings = database().getOrBaseSettings(WelcomingSettings.class, guild.id());
-        if(settings.isEnableGoodbyeMessages()) {
-            final String messageChannel = settings.getMessageChannel();
-            // Have to validate that the chosen channel exists
-            if(messageChannel != null && !messageChannel.isEmpty()) {
-                /*final Channel channel = getMewna().getCache().getChannel(messageChannel);
-                if(channel != null) {*/
-                final Templater templater = map(event.guild(), event.user());
-                catnip().rest().channel().sendMessage(settings.getMessageChannel(), templater.render(settings.getGoodbyeMessage()));
-                /*} else {
-                    getLogger().warn("Welcoming messageChannel {} in {} no longer valid, nulling...", messageChannel, guild.getId());
-                    settings.setMessageChannel(null);
-                    getDatabase().saveSettings(settings);
-                }*/
+        database().getOrBaseSettings(WelcomingSettings.class, guild.id()).thenAccept(settings -> {
+            if(settings.isEnableGoodbyeMessages()) {
+                final String messageChannel = settings.getMessageChannel();
+                // TODO: Have to validate that the chosen channel exists
+                if(messageChannel != null && !messageChannel.isEmpty()) {
+                    final Templater templater = map(event.guild(), event.user());
+                    catnip().rest().channel().sendMessage(settings.getMessageChannel(), templater.render(settings.getGoodbyeMessage()));
+                }
             }
-        }
+        });
     }
 }

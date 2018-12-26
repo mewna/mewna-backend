@@ -10,9 +10,11 @@ import com.mewna.servers.ServerBlogPost;
 import gg.amy.pgorm.PgStore;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import io.sentry.Sentry;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.Getter;
+import me.escoffier.vertx.completablefuture.VertxCompletableFuture;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.slf4j.Logger;
@@ -26,6 +28,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import static com.mewna.data.PluginSettings.MAPPER;
@@ -43,6 +46,7 @@ public class Database {
     @Getter
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Map<String, Class<? extends PluginSettings>> pluginSettingsByName = new HashMap<>();
+    @SuppressWarnings("TypeMayBeWeakened")
     private final OkHttpClient client = new OkHttpClient();
     private boolean init;
     @Getter
@@ -101,6 +105,7 @@ public class Database {
         for(final Class<?> c : clz) {
             logger.info("Premapping class: " + c.getName());
             store.mapSync(c);
+            store.mapAsync(c);
         }
     }
     
@@ -208,11 +213,11 @@ public class Database {
         return (Class<T>) pluginSettingsByName.get(type);
     }
     
-    private <T extends PluginSettings> Optional<T> getSettingsByType(final Class<T> type, final String id) {
-        return store.mapSync(type).load(id);
+    private <T extends PluginSettings> CompletableFuture<Optional<T>> getSettingsByType(final Class<T> type, final String id) {
+        return store.mapAsync(type).load(id);
     }
     
-    public <T extends PluginSettings> T getOrBaseSettings(final String type, final String id) {
+    public <T extends PluginSettings> CompletableFuture<T> getOrBaseSettings(final String type, final String id) {
         final Class<T> cls = getSettingsClassByType(type);
         if(cls == null) {
             throw new IllegalArgumentException("Type '" + type + "' not a valid settingClass.");
@@ -220,42 +225,50 @@ public class Database {
         return getOrBaseSettings(cls, id);
     }
     
-    public <T extends PluginSettings> T getOrBaseSettings(final Class<T> type, final String id) {
+    public <T extends PluginSettings> CompletableFuture<T> getOrBaseSettings(final Class<T> type, final String id) {
         if(!store.isMappedSync(type) && !store.isMappedAsync(type)) {
             throw new IllegalArgumentException("Attempted to get settings of type " + type.getName() + ", but it's not mapped!");
         }
-        final Optional<T> maybeSettings = getSettingsByType(type, id);
-        if(maybeSettings.isPresent()) {
-            final T maybe = maybeSettings.get();
-            saveSettings(maybe.refreshCommands().otherRefresh());
-            return maybe;
-        } else {
-            try {
-                final T base = type.getConstructor(String.class).newInstance(id);
-                saveSettings(base);
-                return base;
-            } catch(final IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
-                Sentry.capture(e);
-                throw new RuntimeException(e);
-            }
-        }
+        final Future<T> future = Future.future();
+        
+        getSettingsByType(type, id)
+                .exceptionally(e -> {
+                    Sentry.capture(e);
+                    return Optional.empty();
+                })
+                .thenAccept(maybeSettings -> {
+                    if(maybeSettings.isPresent()) {
+                        final T maybe = maybeSettings.get();
+                        //noinspection unchecked
+                        maybe.refreshCommands().otherRefresh().thenAccept(settings ->
+                                saveSettings(settings).exceptionally(e -> {
+                                    Sentry.capture(e);
+                                    return null;
+                                }).thenAccept(__ -> future.complete((T) settings)));
+                    } else {
+                        try {
+                            final T base = type.getConstructor(String.class).newInstance(id);
+                            saveSettings(base);
+                            future.complete(base);
+                        } catch(final IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
+                            Sentry.capture(e);
+                            throw new RuntimeException(e);
+                        }
+                    }
+                });
+        
+        return VertxCompletableFuture.from(mewna.vertx(), future);
     }
     
-    public <T extends PluginSettings> void saveSettings(final T settings) {
+    public <T extends PluginSettings> CompletableFuture<Void> saveSettings(final T settings) {
         // This is technically valid
         //noinspection unchecked
-        store.mapSync((Class<T>) settings.getClass()).save(settings);
+        return store.mapAsync((Class<T>) settings.getClass()).save(settings);
     }
     
     /////////////
     // Players //
     /////////////
-    
-    /*
-    public Player getPlayer(final User src) {
-        return getPlayer(src.id());
-    }
-    */
     
     public Optional<Player> getOptionalPlayer(final String id) {
         return store.mapSync(Player.class).load(id);

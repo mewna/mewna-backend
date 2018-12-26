@@ -1,8 +1,6 @@
 package com.mewna.plugin.plugins.settings;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.mewna.Mewna;
 import com.mewna.catnip.entity.guild.Role;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
@@ -13,17 +11,17 @@ import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
 import io.sentry.Sentry;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import me.escoffier.vertx.completablefuture.VertxCompletableFuture;
 
-import javax.annotation.Nonnull;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -39,20 +37,6 @@ import java.util.stream.Collectors;
 @GIndex("id")
 @SuppressWarnings("unused")
 public class LevelsSettings implements PluginSettings {
-    private static final LoadingCache<String, List<String>> ROLE_CACHE = CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .expireAfterWrite(10, TimeUnit.MINUTES)
-            .build(
-                    new CacheLoader<>() {
-                        public List<String> load(@Nonnull final String guild) {
-                            return DiscordCache.roles(guild)
-                                    .toCompletableFuture()
-                                    .join()
-                                    .stream()
-                                    .map(Role::id)
-                                    .collect(Collectors.toList());
-                        }
-                    });
     private static final int DISCORD_MAX_MESSAGE_SIZE = 2000;
     @PrimaryKey
     private String id;
@@ -83,23 +67,28 @@ public class LevelsSettings implements PluginSettings {
     }
     
     @Override
-    public PluginSettings otherRefresh() {
-        final Collection<String> bad = new ArrayList<>();
+    public CompletableFuture<PluginSettings> otherRefresh() {
+        final Future<PluginSettings> future = Future.future();
         
-        final List<String> roles;
-        try {
-            roles = ROLE_CACHE.get(id);
-        } catch(final ExecutionException e) {
-            Sentry.capture(e);
-            throw new IllegalStateException(e);
-        }
-        levelRoleRewards.keySet().forEach(e -> {
-            if(!roles.contains(e)) {
-                bad.add(e);
-            }
-        });
-        bad.forEach(levelRoleRewards::remove);
-        return this;
+        DiscordCache.roles(id)
+                .exceptionally(e -> {
+                    Sentry.capture(e);
+                    return Collections.emptyList();
+                })
+                .thenAccept(e -> {
+                    final List<String> roles = e.stream().map(Role::id).collect(Collectors.toList());
+                    
+                    final Collection<String> bad = new ArrayList<>();
+                    levelRoleRewards.keySet().forEach(r -> {
+                        if(!roles.contains(r)) {
+                            bad.add(r);
+                        }
+                    });
+                    bad.forEach(levelRoleRewards::remove);
+                    future.complete(this);
+                });
+        // return this;
+        return VertxCompletableFuture.from(Mewna.getInstance().vertx(), future);
     }
     
     @Override

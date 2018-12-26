@@ -87,58 +87,60 @@ public class PluginTwitch extends BasePlugin {
                     }
                 });
                 if(!webhookGuilds.isEmpty()) {
+                    //noinspection CodeBlock2Expr
                     webhookGuilds.forEach(guildId -> {
-                        final TwitchSettings settings = database().getOrBaseSettings(TwitchSettings.class, guildId);
-                        final Optional<TwitchStreamerConfig> maybeStreamer = settings.getTwitchStreamers().stream()
-                                .filter(e -> e.getId().equals(streamerId)).findFirst();
-                        if(maybeStreamer.isPresent()) {
-                            final TwitchStreamerConfig streamerConfig = maybeStreamer.get();
-                            boolean canHook = false;
-                            switch(mode) {
-                                case "stream-start": {
-                                    canHook = streamerConfig.isStreamStartMessagesEnabled();
-                                    break;
+                        database().getOrBaseSettings(TwitchSettings.class, guildId).thenAccept(settings -> {
+                            final Optional<TwitchStreamerConfig> maybeStreamer = settings.getTwitchStreamers().stream()
+                                    .filter(e -> e.getId().equals(streamerId)).findFirst();
+                            if(maybeStreamer.isPresent()) {
+                                final TwitchStreamerConfig streamerConfig = maybeStreamer.get();
+                                boolean canHook = false;
+                                switch(mode) {
+                                    case "stream-start": {
+                                        canHook = streamerConfig.isStreamStartMessagesEnabled();
+                                        break;
+                                    }
+                                    case "stream-end": {
+                                        canHook = streamerConfig.isStreamEndMessagesEnabled();
+                                        break;
+                                    }
+                                    case "follow": {
+                                        canHook = streamerConfig.isFollowMessagesEnabled();
+                                        break;
+                                    }
                                 }
-                                case "stream-end": {
-                                    canHook = streamerConfig.isStreamEndMessagesEnabled();
-                                    break;
-                                }
-                                case "follow": {
-                                    canHook = streamerConfig.isFollowMessagesEnabled();
-                                    break;
-                                }
-                            }
-                            if(canHook) {
-                                if(settings.getTwitchWebhookChannel() != null) {
-                                    final Optional<Webhook> maybeHook = database().getWebhook(settings.getTwitchWebhookChannel());
-                                    if(maybeHook.isPresent()) {
-                                        final Webhook webhook = maybeHook.get();
-                                        final Templater templater = map(event);
-                                        final MessageOptions messageOptions = new MessageOptions();
-                                        try {
-                                            switch(mode) {
-                                                case "stream-start": {
-                                                    messageOptions.content(templater.render(streamerConfig.getStreamStartMessage()));
-                                                    break;
+                                if(canHook) {
+                                    if(settings.getTwitchWebhookChannel() != null) {
+                                        final Optional<Webhook> maybeHook = database().getWebhook(settings.getTwitchWebhookChannel());
+                                        if(maybeHook.isPresent()) {
+                                            final Webhook webhook = maybeHook.get();
+                                            final Templater templater = map(event);
+                                            final MessageOptions messageOptions = new MessageOptions();
+                                            try {
+                                                switch(mode) {
+                                                    case "stream-start": {
+                                                        messageOptions.content(templater.render(streamerConfig.getStreamStartMessage()));
+                                                        break;
+                                                    }
+                                                    case "stream-end": {
+                                                        messageOptions.content(templater.render(streamerConfig.getStreamEndMessage()));
+                                                        break;
+                                                    }
+                                                    case "follow": {
+                                                        messageOptions.content(templater.render(streamerConfig.getFollowMessage()));
+                                                        break;
+                                                    }
                                                 }
-                                                case "stream-end": {
-                                                    messageOptions.content(templater.render(streamerConfig.getStreamEndMessage()));
-                                                    break;
-                                                }
-                                                case "follow": {
-                                                    messageOptions.content(templater.render(streamerConfig.getFollowMessage()));
-                                                    break;
-                                                }
+                                                //noinspection ResultOfMethodCallIgnored
+                                                catnip().rest().webhook().executeWebhook(webhook.getId(), webhook.getSecret(), messageOptions);
+                                            } catch(final Exception e) {
+                                                Sentry.capture(e);
                                             }
-                                            //noinspection ResultOfMethodCallIgnored
-                                            catnip().rest().webhook().executeWebhook(webhook.getId(), webhook.getSecret(), messageOptions);
-                                        } catch(final Exception e) {
-                                            Sentry.capture(e);
                                         }
                                     }
                                 }
                             }
-                        }
+                        });
                     });
                 }
             }

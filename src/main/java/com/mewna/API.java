@@ -7,7 +7,6 @@ import com.mewna.catnip.entity.guild.Role;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.data.DiscordCache;
 import com.mewna.data.Player;
-import com.mewna.data.PluginSettings;
 import com.mewna.data.Webhook;
 import com.mewna.plugin.plugins.PluginLevels;
 import com.mewna.plugin.util.TextureManager;
@@ -199,47 +198,50 @@ class API {
             });
             
             // Guilds
-            router.get("/data/guild/:id/config/:type").blockingHandler(ctx -> {
+            
+            router.get("/data/guild/:id/config/:type").handler(ctx -> {
                 final String id = ctx.request().getParam("id");
                 final String type = ctx.request().getParam("type");
-                final PluginSettings settings = mewna.database().getOrBaseSettings(type, id);
-                ctx.response().putHeader("Content-Type", "application/json")
-                        .end(JsonObject.mapFrom(settings).encode());
+                mewna.database().getOrBaseSettings(type, id).thenAccept(settings -> {
+                    ctx.response().putHeader("Content-Type", "application/json")
+                            .end(JsonObject.mapFrom(settings).encode());
+                });
             });
-            router.post("/data/guild/:id/config/:type").handler(BodyHandler.create()).blockingHandler(ctx -> {
+            router.post("/data/guild/:id/config/:type").handler(BodyHandler.create()).handler(ctx -> {
                 final String type = ctx.request().getParam("type");
                 final String id = ctx.request().getParam("id");
                 
                 final JsonObject data = ctx.getBodyAsJson();
-                final PluginSettings settings = mewna.database().getOrBaseSettings(type, id);
-                ctx.response().putHeader("Content-Type", "application/json");
-                if(settings.validate(data)) {
-                    try {
-                        if(settings.updateSettings(mewna.database(), data)) {
-                            // All good, update and return
-                            logger.info("Updated {} settings for {}", type, id);
-                            ctx.response().end(new JsonObject().put("status", "ok").encode());
-                        } else {
-                            logger.info("{} settings for {} failed updateSettings", type, id);
+                mewna.database().getOrBaseSettings(type, id).thenAccept(settings -> {
+                    ctx.response().putHeader("Content-Type", "application/json");
+                    if(settings.validate(data)) {
+                        try {
+                            if(settings.updateSettings(mewna.database(), data)) {
+                                // All good, update and return
+                                logger.info("Updated {} settings for {}", type, id);
+                                ctx.response().end(new JsonObject().put("status", "ok").encode());
+                            } else {
+                                logger.info("{} settings for {} failed updateSettings", type, id);
+                                ctx.response().end(new JsonObject().put("status", "error").put("error", "invalid config").encode());
+                            }
+                        } catch(final RuntimeException e) {
+                            logger.error("{} settings for {} failed updateSettings expectedly", type, id);
+                            e.printStackTrace();
+                            Sentry.capture(e);
                             ctx.response().end(new JsonObject().put("status", "error").put("error", "invalid config").encode());
+                        } catch(final Exception e) {
+                            logger.error("{} settings for {} failed updateSettings unexpectedly", type, id);
+                            logger.error("Caught unknown exception updating:");
+                            e.printStackTrace();
+                            Sentry.capture(e);
+                            ctx.response().end(new JsonObject().put("status", "error").put("error", "very invalid config").encode());
                         }
-                    } catch(final RuntimeException e) {
-                        logger.error("{} settings for {} failed updateSettings expectedly", type, id);
-                        e.printStackTrace();
-                        Sentry.capture(e);
+                    } else {
+                        logger.error("{} settings for {} failed validate", type, id);
+                        // :fire: :blobcatfireeyes:, send back an error
                         ctx.response().end(new JsonObject().put("status", "error").put("error", "invalid config").encode());
-                    } catch(final Exception e) {
-                        logger.error("{} settings for {} failed updateSettings unexpectedly", type, id);
-                        logger.error("Caught unknown exception updating:");
-                        e.printStackTrace();
-                        Sentry.capture(e);
-                        ctx.response().end(new JsonObject().put("status", "error").put("error", "very invalid config").encode());
                     }
-                } else {
-                    logger.error("{} settings for {} failed validate", type, id);
-                    // :fire: :blobcatfireeyes:, send back an error
-                    ctx.response().end(new JsonObject().put("status", "error").put("error", "invalid config").encode());
-                }
+                });
             });
             router.get("/data/guild/:id/levels").blockingHandler(ctx -> {
                 final String id = ctx.request().getParam("id");

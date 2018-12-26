@@ -29,4 +29,5 @@ public class CommandContext {
     private long cost;
     private String prefix;
     private String language;
+    private String currencySymbol;
 }

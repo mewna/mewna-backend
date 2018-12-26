@@ -111,6 +111,7 @@ public class CommandManager {
             }
             prefixes.add("<@" + CLIENT_ID + '>');
             prefixes.add("<@!" + CLIENT_ID + '>');
+            future.complete(prefixes);
         });
         
         return VertxCompletableFuture.from(mewna.vertx(), future);
@@ -126,7 +127,7 @@ public class CommandManager {
             if(user.bot()) {
                 return;
             }
-            
+    
             final Guild guild = event.guild();
             final String channelId = event.message().channelId();
             
@@ -158,9 +159,6 @@ public class CommandManager {
                 // TODO: There's gotta be a way to refactor this out into smaller methods...
                 final List<User> mentions = new ArrayList<>(event.message().mentionedUsers());
                 if(found) {
-                    if(System.getenv("DEBUG") != null && user.id().equals("128316294742147072")) {
-                        logger.info("[COMMAND DEBUG] Found prefix {}", prefix);
-                    }
                     parseCommand(user, guild, mentions, prefix, content, channelId, event);
                 } else {
                     // No prefix found, pass it down as an event
@@ -192,9 +190,6 @@ public class CommandManager {
         final List<String> args = Arrays.stream(argstr.trim().split("\\s+")).filter(e -> !e.isEmpty())
                 .collect(Collectors.toCollection(ArrayList::new));
         if(commands.containsKey(commandName)) {
-            if(System.getenv("DEBUG") != null && user.id().equals("128316294742147072")) {
-                logger.info("[COMMAND DEBUG] Found command: {}", commandName);
-            }
             executeCommand(user, guild, mentions, prefix, channelId, event, commandName, argstr, args);
         }
     }
@@ -221,6 +216,8 @@ public class CommandManager {
                         mewna.catnip().rest().channel().sendMessage(channelId,
                                 $(mewna.database().language(guild.id()), "plugins.disabled-command"));
                         canExec.complete(false);
+                    } else {
+                        canExec.complete(true);
                     }
                 } else {
                     logger.warn("Adding missing command {} to {} for {}", cmd.getBaseName(), settings.getClass().getSimpleName(), guild.id());
@@ -228,6 +225,11 @@ public class CommandManager {
                     mewna.database().saveSettings(settings);
                     canExec.complete(true);
                 }
+            }).exceptionally(e -> {
+                Sentry.capture(e);
+                logger.warn("Couldn't load plugin settings:", e);
+                canExec.complete(false);
+                return null;
             });
         } else {
             logger.warn("No plugin metadata for command {}!?", cmd.getBaseName());
@@ -236,9 +238,6 @@ public class CommandManager {
         
         VertxCompletableFuture.from(mewna.vertx(), canExec).thenAccept(b -> {
             if(b) {
-                if(System.getenv("DEBUG") != null && user.id().equals("128316294742147072")) {
-                    logger.info("[COMMAND DEBUG] Ready to execute: {}", commandName);
-                }
                 if(cmd.getRatelimit() != null) {
                     final String baseName = cmd.getBaseName();
                     

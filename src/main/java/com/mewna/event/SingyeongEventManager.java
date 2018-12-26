@@ -45,9 +45,6 @@ public class SingyeongEventManager {
                             .user(Entity.fromJson(mewna.catnip(), UserImpl.class, data.getJsonObject("user")))
                             .message(Entity.fromJson(mewna.catnip(), MessageImpl.class, data.getJsonObject("message")))
                             .build();
-                    if(System.getenv("DEBUG") != null && event.user().id().equals("128316294742147072")) {
-                        logger.info("[COMMAND DEBUG] Got message from you: {}", event.message().content());
-                    }
                     mewna.commandManager().tryExecCommand(event);
                     break;
                 }

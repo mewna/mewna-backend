@@ -104,12 +104,12 @@ public final class Mewna {
                 .thenAccept(__ -> singyeong.updateMetadata("backend-key", SingyeongType.STRING, "mewna-backend"))
                 .thenAccept(__ -> DiscordCache.setup())
                 .thenAccept(__ -> singyeong.onEvent(singyeongEventManager::handle))
+                .thenAccept(__ -> singyeong.onInvalid(i -> logger.info("Singyeong invalid: {}: {}", i.nonce(), i.reason())))
                 .thenAccept(__ -> new API(this).start())
                 .thenAccept(__ -> logger.info("Finished starting!"))
         .exceptionally(e -> {
             e.printStackTrace();
             return null;
         });
-        singyeong.onInvalid(i -> logger.info("Singyeong invalid: {}: {}", i.nonce(), i.reason()));
     }
 }

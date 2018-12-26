@@ -252,6 +252,7 @@ public class Database {
                             future.complete(base);
                         } catch(final IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
                             Sentry.capture(e);
+                            future.fail(e);
                             throw new RuntimeException(e);
                         }
                     }

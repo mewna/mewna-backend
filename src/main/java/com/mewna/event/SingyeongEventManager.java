@@ -19,8 +19,6 @@ import com.mewna.plugin.event.plugin.twitch.TwitchStreamer;
 import gg.amy.singyeong.Dispatch;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.core.json.JsonObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
@@ -40,7 +38,6 @@ public class SingyeongEventManager {
     
     public void handle(final Dispatch dispatch) {
         executor.executeBlocking(f -> {
-    
             final JsonObject data = dispatch.data();
             if(data.containsKey("type") && dispatch.nonce() == null) {
                 final String type = data.getString("type");
@@ -98,6 +95,7 @@ public class SingyeongEventManager {
             }
             
             f.complete(null);
-        }, res -> {});
+        }, res -> {
+        });
     }
 }

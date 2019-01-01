@@ -55,6 +55,7 @@ public class PluginEconomy extends BasePlugin {
     @Inject
     private CurrencyHelper helper;
     
+    @Ratelimit(time = 5)
     @Command(names = {"balance", "bal"}, desc = "commands.economy.balance", usage = "balance [player]",
             examples = {"balance", "balance @someone"})
     public void balance(final CommandContext ctx) {
@@ -77,6 +78,7 @@ public class PluginEconomy extends BasePlugin {
         }
     }
     
+    @Ratelimit(time = 5)
     @Command(names = "pay", desc = "commands.economy.pay", usage = "pay <mention> <amount>",
             examples = "pay @someone 100")
     public void pay(final CommandContext ctx) {
@@ -108,6 +110,7 @@ public class PluginEconomy extends BasePlugin {
         }
     }
     
+    @Ratelimit(time = 5)
     @Command(names = "daily", desc = "commands.economy.daily", usage = "daily", examples = "daily")
     public void daily(final CommandContext ctx) {
         final Player player = ctx.getPlayer();

@@ -61,7 +61,7 @@ public class CommandManager {
     public CommandManager(final Mewna mewna) {
         this.mewna = mewna;
         executor = mewna.vertx().createSharedWorkerExecutor("event-workers",
-                Runtime.getRuntime().availableProcessors() * 10, 30, TimeUnit.SECONDS);
+                Runtime.getRuntime().availableProcessors() * 100, 30, TimeUnit.SECONDS);
     }
     
     public void loadCommandsFromMethod(final Object pluginInstance, final Plugin pluginAnnotation,

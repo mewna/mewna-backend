@@ -32,6 +32,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static com.mewna.data.Player.MAX_INV_WEIGHT;
@@ -276,7 +277,8 @@ public class PluginEconomy extends BasePlugin {
                 players.put(id, player);
                 futures.add(DiscordCache.user(id).toCompletableFuture());
             }
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenAccept(__ -> {
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).orTimeout(5L, TimeUnit.SECONDS)
+                    .thenAccept(__ -> {
                 futures.forEach(e -> {
                     final User user = e.getNow(null);
                     if(user != null) {
@@ -288,6 +290,13 @@ public class PluginEconomy extends BasePlugin {
                     }
                 });
                 catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());
+            }).exceptionally(e -> {
+                if(e instanceof TimeoutException) {
+                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Couldn't load users in time :(");
+                } else {
+                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "\uD83D\uDD25 Couldn't load baltop. Try again later?");
+                }
+                return null;
             });
         });
     }

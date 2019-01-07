@@ -269,15 +269,23 @@ public class PluginEconomy extends BasePlugin {
             final ResultSet res = p.executeQuery();
             final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.economy.commands.baltop") + "\n\n");
             List<CompletableFuture<User>> futures = new ArrayList<>();
+            final Map<String, Player> players = new HashMap<>();
             while(res.next()) {
                 final String id = res.getString("id");
                 final Player player = new JsonObject(res.getString("data")).mapTo(Player.class);
+                players.put(id, player);
                 futures.add(DiscordCache.user(id).toCompletableFuture());
             }
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenAccept(__ -> {
                 futures.forEach(e -> {
-                    sb.append("- ").append(user.username()).append('#').append(user.discriminator()).append(" - ")
-                            .append(player.getBalance()).append(helper.getCurrencySymbol(ctx)).append('\n');
+                    final User user = e.getNow(null);
+                    if(user != null) {
+                        final Player player = players.get(user.id());
+                        sb.append("- ").append(user.username()).append('#').append(user.discriminator()).append(" - ")
+                                .append(player.getBalance()).append(helper.getCurrencySymbol(ctx)).append('\n');
+                    } else {
+                        sb.append("- Unknown User#0000 - Unknown balance.\n");
+                    }
                 });
             });
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());

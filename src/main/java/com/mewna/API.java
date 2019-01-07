@@ -309,10 +309,12 @@ class API {
                             }
                             ++counter;
                         }
+                        ctx.response().putHeader("Content-Type", "application/json")
+                                .end(new JsonArray(results).encode());
+                    } else {
+                        ctx.response().end("[]");
                     }
                 });
-                ctx.response().putHeader("Content-Type", "application/json")
-                        .end(new JsonArray(results).encode());
             });
             router.get("/data/guild/:id/webhooks").blockingHandler(ctx -> {
                 final JsonArray arr = new JsonArray(

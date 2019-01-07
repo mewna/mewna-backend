@@ -281,8 +281,8 @@ public class CommandManager {
                         return;
                     }
                 }
-                profiler.section("player");
                 executor.executeBlocking(future -> {
+                    profiler.section("player");
                     final Player player = mewna.database().getPlayer(user);
                     profiler.section("account");
                     Optional<Account> maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());

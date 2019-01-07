@@ -68,7 +68,7 @@ public final class DiscordCache {
                             final List<Channel> channels = array.stream()
                                     .map(e -> (JsonObject) e)
                                     .filter(e -> {
-                                        final ChannelType channelType = ChannelType.valueOf(e.getString("type"));
+                                        final ChannelType channelType = ChannelType.valueOf(e.getString("type", "text"));
                                         return channelType == ChannelType.TEXT || channelType == ChannelType.VOICE;
                                     })
                                     .map(e -> {

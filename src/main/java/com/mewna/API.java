@@ -268,8 +268,6 @@ class API {
                         while(resultSet.next()) {
                             final Player player = new JsonObject(resultSet.getString("player")).mapTo(Player.class);
                             final Account account = new JsonObject(resultSet.getString("account")).mapTo(Account.class);
-                            
-                            final User user = DiscordCache.user(player.getId()).toCompletableFuture().join();
                             final long userXp = player.getXp(id);
                             final long userLevel = PluginLevels.xpToLevel(userXp);
                             final long nextLevel = userLevel + 1;
@@ -277,20 +275,38 @@ class API {
                             final long nextLevelXp = PluginLevels.fullLevelToXp(nextLevel);
                             final long xpNeeded = PluginLevels.nextLevelXp(userXp);
                             
-                            results.add(new JsonObject()
-                                    .put("name", user.username())
-                                    .put("discrim", user.discriminator())
-                                    .put("avatar", user.effectiveAvatarUrl())
-                                    .put("userXp", userXp)
-                                    .put("userLevel", userLevel)
-                                    .put("nextLevel", nextLevel)
-                                    .put("playerRank", (long) counter)
-                                    .put("currentLevelXp", currentLevelXp)
-                                    .put("xpNeeded", xpNeeded)
-                                    .put("nextLevelXp", nextLevelXp)
-                                    .put("customBackground", account.customBackground())
-                                    .put("accountId", account.id())
-                            );
+                            final User user = DiscordCache.user(player.getId()).toCompletableFuture().exceptionally(e -> null).join();
+                            if(user != null) {
+                                results.add(new JsonObject()
+                                        .put("name", user.username())
+                                        .put("discrim", user.discriminator())
+                                        .put("avatar", user.effectiveAvatarUrl())
+                                        .put("userXp", userXp)
+                                        .put("userLevel", userLevel)
+                                        .put("nextLevel", nextLevel)
+                                        .put("playerRank", (long) counter)
+                                        .put("currentLevelXp", currentLevelXp)
+                                        .put("xpNeeded", xpNeeded)
+                                        .put("nextLevelXp", nextLevelXp)
+                                        .put("customBackground", account.customBackground())
+                                        .put("accountId", account.id())
+                                );
+                            } else {
+                                results.add(new JsonObject()
+                                        .put("name", "Unknown User")
+                                        .put("discrim", "0001")
+                                        .put("avatar", "https://cdn.discordapp.com/embed/avatars/0.png")
+                                        .put("userXp", userXp)
+                                        .put("userLevel", userLevel)
+                                        .put("nextLevel", nextLevel)
+                                        .put("playerRank", (long) counter)
+                                        .put("currentLevelXp", currentLevelXp)
+                                        .put("xpNeeded", xpNeeded)
+                                        .put("nextLevelXp", nextLevelXp)
+                                        .put("customBackground", account.customBackground())
+                                        .put("accountId", account.id())
+                                );
+                            }
                             ++counter;
                         }
                     }

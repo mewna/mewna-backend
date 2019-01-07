@@ -10,6 +10,7 @@ import com.mewna.plugin.Plugin;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.plugins.settings.WelcomingSettings;
 import com.mewna.util.Templater;
+import io.sentry.Sentry;
 import io.vertx.core.json.JsonObject;
 
 import java.util.HashMap;
@@ -51,7 +52,10 @@ public class PluginWelcoming extends BasePlugin {
             }
             final String roleId = settings.getJoinRoleId();
             if(roleId != null && !roleId.isEmpty()) {
-                catnip().rest().guild().addGuildMemberRole(guildId, event.member().id(), roleId);
+                catnip().rest().guild().addGuildMemberRole(guildId, event.member().id(), roleId).exceptionally(e -> {
+                    Sentry.capture(e);
+                    return null;
+                });
             }
         });
     }

@@ -97,11 +97,11 @@ public final class Mewna {
         // Start loading our data!
         Translator.preload();
         TextureManager.preload(this);
+        commandManager = new CommandManager(this);
         database.init();
         pluginManager.init();
         catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN")), vertx);
         singyeongEventManager = new SingyeongEventManager(this);
-        commandManager = new CommandManager(this);
         singyeong.connect()
                 .thenAccept(__ -> singyeong.updateMetadata("backend-key", SingyeongType.STRING, "mewna-backend"))
                 .thenAccept(__ -> DiscordCache.setup())

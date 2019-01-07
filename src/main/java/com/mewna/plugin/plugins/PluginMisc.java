@@ -388,12 +388,14 @@ public class PluginMisc extends BasePlugin {
         });
     }
     
+    /*
     @Command(names = {"page", "blog", "site"}, desc = "commands.misc.page", usage = "page", examples = "page")
-    public void page(final CommandContext ctx) {
+    public void blog(final CommandContext ctx) {
         final Guild guild = ctx.getGuild();
         catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                 System.getenv("DOMAIN") + "/server/" + guild.id());
     }
+    */
     
     @Command(names = "chargen", desc = "commands.misc.chargen", usage = "chargen", examples = "chargen")
     public void chargen(final CommandContext ctx) {

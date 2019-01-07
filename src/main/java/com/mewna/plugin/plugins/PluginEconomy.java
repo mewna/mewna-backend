@@ -287,8 +287,8 @@ public class PluginEconomy extends BasePlugin {
                         sb.append("- Unknown User#0000 - Unknown balance.\n");
                     }
                 });
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());
             });
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());
         });
     }
     

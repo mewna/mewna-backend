@@ -77,7 +77,7 @@ class API {
                 final String id = ctx.request().getParam("id");
                 DiscordCache.user(id).thenAccept(user -> {
                     ctx.response().putHeader("Content-Type", "application/json")
-                            .end(user.toJson().encode());
+                            .end(user.toJson().put("id", user.id()).encode());
                 }).exceptionally(e -> {
                     ctx.response().putHeader("Content-Type", "application/json")
                             .setStatusCode(404)
@@ -89,7 +89,7 @@ class API {
                 final String id = ctx.request().getParam("id");
                 DiscordCache.guild(id).thenAccept(guild -> {
                     ctx.response().putHeader("Content-Type", "application/json")
-                            .end(guild.toJson().encode());
+                            .end(guild.toJson().put("id", guild.id()).encode());
                 }).exceptionally(e -> {
                     ctx.response().putHeader("Content-Type", "application/json")
                             .setStatusCode(404)

@@ -381,10 +381,23 @@ public class PluginMisc extends BasePlugin {
     @Command(names = "ping", desc = "commands.misc.ping", usage = "ping", examples = "ping")
     public void ping(final CommandContext ctx) {
         final long start = System.currentTimeMillis();
+        ctx.getProfiler().section("startPing");
         catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Pinging...").thenAccept(msg -> {
+            ctx.getProfiler().section("edit");
             final long end = System.currentTimeMillis();
             catnip().rest().channel().editMessage(ctx.getMessage().channelId(), msg.id(),
-                    new MessageBuilder().content("Pong! (took " + (end - start) + "ms)").build());
+                    new MessageBuilder().content("Pong! (took " + (end - start) + "ms)").build()).thenAccept(_msg -> {
+                        ctx.getProfiler().end();
+                        if(ctx.getArgstr().equalsIgnoreCase("--profile")) {
+                            
+                            final StringBuilder sb = new StringBuilder("```CSS\n");
+                            ctx.getProfiler().sections().forEach(section -> sb.append('[').append(section.name()).append("] ")
+                                    .append(section.end() - section.start()).append("ms\n"));
+                            sb.append("```");
+                            
+                            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());
+                        }
+            });
         });
     }
     

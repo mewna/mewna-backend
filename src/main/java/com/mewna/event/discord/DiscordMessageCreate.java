@@ -22,4 +22,5 @@ public class DiscordMessageCreate {
     private Guild guild;
     private User user;
     private Member member;
+    private long received;
 }

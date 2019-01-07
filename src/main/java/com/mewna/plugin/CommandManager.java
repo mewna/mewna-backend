@@ -16,6 +16,7 @@ import com.mewna.plugin.metadata.Ratelimit;
 import com.mewna.plugin.plugins.settings.BehaviourSettings;
 import com.mewna.plugin.plugins.settings.EconomySettings;
 import com.mewna.plugin.util.Emotes;
+import com.mewna.util.Profiler;
 import com.mewna.util.Time;
 import io.sentry.Sentry;
 import io.vertx.core.Future;
@@ -128,6 +129,7 @@ public class CommandManager {
     
     public void tryExecCommand(final DiscordMessageCreate event) {
         try {
+            final Profiler profiler = new Profiler("basicChecks", event.received());
             final User user = event.message().author();
             if(user.bot()) {
                 return;
@@ -142,6 +144,7 @@ public class CommandManager {
                     return;
                 }
             }
+            profiler.section("prefixes");
             
             // ENTER THE REALM OF THE ASYNC HELL
             
@@ -164,7 +167,7 @@ public class CommandManager {
                 // TODO: There's gotta be a way to refactor this out into smaller methods...
                 final List<User> mentions = new ArrayList<>(event.message().mentionedUsers());
                 if(found) {
-                    parseCommand(user, guild, mentions, prefix, content, channelId, event);
+                    parseCommand(user, guild, mentions, prefix, content, channelId, event, profiler);
                 } else {
                     // No prefix found, pass it down as an event
                     mewna.pluginManager().processEvent(Raw.MESSAGE_CREATE, event);
@@ -177,7 +180,8 @@ public class CommandManager {
     }
     
     private void parseCommand(final User user, final Guild guild, final List<User> mentions, final String prefix,
-                              String content, final String channelId, final DiscordMessageCreate event) {
+                              String content, final String channelId, final DiscordMessageCreate event, final Profiler profiler) {
+        profiler.section("parse");
         final boolean mentionPrefix = prefix.equals("<@" + CLIENT_ID + '>')
                 || prefix.equals("<@!" + CLIENT_ID + '>');
         if(mentionPrefix) {
@@ -195,13 +199,14 @@ public class CommandManager {
         final List<String> args = Arrays.stream(argstr.trim().split("\\s+")).filter(e -> !e.isEmpty())
                 .collect(Collectors.toCollection(ArrayList::new));
         if(commands.containsKey(commandName)) {
-            executeCommand(user, guild, mentions, prefix, channelId, event, commandName, argstr, args);
+            executeCommand(user, guild, mentions, prefix, channelId, event, commandName, argstr, args, profiler);
         }
     }
     
     private void executeCommand(final User user, final Guild guild, final List<User> mentions, final String prefix,
                                 final String channelId, final DiscordMessageCreate event, final String commandName,
-                                final String argstr, final List<String> args) {
+                                final String argstr, final List<String> args, final Profiler profiler) {
+        profiler.section("metadata");
         final CommandWrapper cmd = commands.get(commandName);
         if(cmd.isOwner() && !user.id().equalsIgnoreCase("128316294742147072")) {
             return;
@@ -212,6 +217,7 @@ public class CommandManager {
         
         final Future<Boolean> canExec = Future.future();
         
+        profiler.section("canExec");
         if(first.isPresent()) {
             final Class<? extends PluginSettings> settingsClass = first.get().getSettingsClass();
             mewna.database().getOrBaseSettings(settingsClass, guild.id()).thenAccept(settings -> {
@@ -243,6 +249,7 @@ public class CommandManager {
         
         SafeVertxCompletableFuture.from(mewna.catnip(), canExec).thenAccept(b -> {
             if(b) {
+                profiler.section("ratelimit");
                 if(cmd.getRatelimit() != null) {
                     final String baseName = cmd.getBaseName();
                     
@@ -274,77 +281,85 @@ public class CommandManager {
                         return;
                     }
                 }
-                final Player player = mewna.database().getPlayer(user);
-                Optional<Account> maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());
-                if(!maybeAccount.isPresent()) {
-                    logger.error("No account present for Discord account {}!!!", user.id());
-                    //Sentry.capture("No account present for Discord account: " + user.id());
-                    mewna.accountManager().createNewDiscordLinkedAccount(player, user);
-                    maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());
+                profiler.section("player");
+                executor.executeBlocking(future -> {
+                    final Player player = mewna.database().getPlayer(user);
+                    Optional<Account> maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());
+                    profiler.section("account");
                     if(!maybeAccount.isPresent()) {
-                        logger.error("No account present for Discord account {} after creation!?", user.id());
-                        Sentry.capture("No account present for Discord account despite creation: " + user.id());
-                        return;
-                    }
-                } else {
-                    final Account account = maybeAccount.get();
-                    if(account.banned()) {
-                        mewna.statsClient().count("discord.backend.commands.banned", 1);
-                        logger.warn("Denying command from banned account {}: {}", account.id(), account.banReason());
-                        // TODO: I18n this
-                        mewna.catnip().rest().channel().sendMessage(channelId, Emotes.NO + " Banned from Mewna. Reason: "
-                                + account.banReason());
-                        return;
-                    }
-                }
-                
-                final Optional<Account> finalMaybeAccount = maybeAccount;
-                mewna.database().getOrBaseSettings(EconomySettings.class, guild.id()).thenAccept(settings -> {
-                    long cost = 0L;
-                    // Commands may require payment before running
-                    final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr, guild, event.message(),
-                            mentions, player, finalMaybeAccount.get(), 0L, prefix, mewna.database().language(guild.id()),
-                            settings.getCurrencySymbol());
-                    if(cmd.getPayment() != null) {
-                        // By default, try to make the minimum payment
-                        String maybePayment = cmd.getPayment().min() + "";
-                        if(cmd.getPayment().fromFirstArg()) {
-                            // If we calculate the payment from the first argument:
-                            // - if there is no argument, go with the minimum payment
-                            // - if there is an argument, try to parse it
-                            if(args.isEmpty()) {
-                                maybePayment = cmd.getPayment().min() + "";
-                            } else {
-                                maybePayment = args.get(0);
-                            }
+                        logger.error("No account present for Discord account {}!!!", user.id());
+                        //Sentry.capture("No account present for Discord account: " + user.id());
+                        mewna.accountManager().createNewDiscordLinkedAccount(player, user);
+                        maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());
+                        if(!maybeAccount.isPresent()) {
+                            logger.error("No account present for Discord account {} after creation!?", user.id());
+                            Sentry.capture("No account present for Discord account despite creation: " + user.id());
+                            return;
                         }
-                        
-                        final ImmutablePair<Boolean, Long> res = mewna.pluginManager().getCurrencyHelper()
-                                .handlePayment(paymentCtx, maybePayment, cmd.getPayment().min(), cmd.getPayment().max());
-                        // If we can make the payment, set the cost and continue
-                        // Otherwise, return early (the payment-handler sends error messages for us)
-                        if(res.left) {
-                            cost = res.right;
-                        } else {
+                    } else {
+                        final Account account = maybeAccount.get();
+                        if(account.banned()) {
+                            mewna.statsClient().count("discord.backend.commands.banned", 1);
+                            logger.warn("Denying command from banned account {}: {}", account.id(), account.banReason());
+                            // TODO: I18n this
+                            mewna.catnip().rest().channel().sendMessage(channelId, Emotes.NO + " Banned from Mewna. Reason: "
+                                    + account.banReason());
                             return;
                         }
                     }
-                    
-                    final CommandContext ctx = paymentCtx.toBuilder().cost(cost).build();
-                    
-                    logger.info("Command: {}#{} ({}, account: {}) in {}#{}-{}: {} {}", user.username(), user.discriminator(),
-                            user.id(), ctx.getAccount().id(), guild.id(), channelId, event.message().id(), commandName, argstr);
-                    mewna.statsClient().count("discord.backend.commands.run", 1, "name:" + cmd.getName());
-                    executor.executeBlocking(f -> {
-                        try {
-                            cmd.getMethod().invoke(cmd.getPlugin(), ctx);
-                        } catch(final IllegalAccessException | InvocationTargetException e) {
-                            Sentry.capture(e);
-                            e.printStackTrace();
+    
+                    final Optional<Account> finalMaybeAccount = maybeAccount;
+                    profiler.section("payment");
+                    mewna.database().getOrBaseSettings(EconomySettings.class, guild.id()).thenAccept(settings -> {
+                        long cost = 0L;
+                        // Commands may require payment before running
+                        final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr, guild, event.message(),
+                                mentions, player, finalMaybeAccount.get(), 0L, prefix, mewna.database().language(guild.id()),
+                                settings.getCurrencySymbol(), profiler);
+                        if(cmd.getPayment() != null) {
+                            // By default, try to make the minimum payment
+                            String maybePayment = cmd.getPayment().min() + "";
+                            if(cmd.getPayment().fromFirstArg()) {
+                                // If we calculate the payment from the first argument:
+                                // - if there is no argument, go with the minimum payment
+                                // - if there is an argument, try to parse it
+                                if(args.isEmpty()) {
+                                    maybePayment = cmd.getPayment().min() + "";
+                                } else {
+                                    maybePayment = args.get(0);
+                                }
+                            }
+            
+                            final ImmutablePair<Boolean, Long> res = mewna.pluginManager().getCurrencyHelper()
+                                    .handlePayment(paymentCtx, maybePayment, cmd.getPayment().min(), cmd.getPayment().max());
+                            // If we can make the payment, set the cost and continue
+                            // Otherwise, return early (the payment-handler sends error messages for us)
+                            if(res.left) {
+                                cost = res.right;
+                            } else {
+                                return;
+                            }
                         }
-                        f.complete(null);
-                    }, __ -> {
+        
+                        final CommandContext ctx = paymentCtx.toBuilder().cost(cost).build();
+        
+                        profiler.section("exec");
+                        logger.info("Command: {}#{} ({}, account: {}) in {}#{}-{}: {} {}", user.username(), user.discriminator(),
+                                user.id(), ctx.getAccount().id(), guild.id(), channelId, event.message().id(), commandName, argstr);
+                        mewna.statsClient().count("discord.backend.commands.run", 1, "name:" + cmd.getName());
+                        executor.executeBlocking(f -> {
+                            try {
+                                cmd.getMethod().invoke(cmd.getPlugin(), ctx);
+                            } catch(final IllegalAccessException | InvocationTargetException e) {
+                                Sentry.capture(e);
+                                e.printStackTrace();
+                            }
+                            f.complete(null);
+                        }, __ -> {
+                        });
                     });
+                    future.complete(null);
+                }, res -> {
                 });
             }
         });

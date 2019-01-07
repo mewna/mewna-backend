@@ -5,6 +5,7 @@ import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.message.Message;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.data.Player;
+import com.mewna.util.Profiler;
 import lombok.Builder;
 import lombok.Value;
 
@@ -30,4 +31,5 @@ public class CommandContext {
     private String prefix;
     private String language;
     private String currencySymbol;
+    private Profiler profiler;
 }

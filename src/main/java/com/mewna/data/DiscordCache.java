@@ -72,7 +72,7 @@ public final class DiscordCache {
                                         return channelType == ChannelType.TEXT || channelType == ChannelType.VOICE;
                                     })
                                     .map(e -> {
-                                        final ChannelType channelType = ChannelType.valueOf(e.getString("type", "text"));
+                                        final ChannelType channelType = ChannelType.valueOf(e.getString("type", "text").toUpperCase());
                                         if(channelType == ChannelType.TEXT) {
                                             return Entity.fromJson(Mewna.getInstance().catnip(), TextChannel.class, e);
                                         } else {

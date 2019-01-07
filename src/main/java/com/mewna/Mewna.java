@@ -45,7 +45,7 @@ public final class Mewna {
     @Getter
     private final PluginManager pluginManager = new PluginManager(this);
     @Getter
-    private final CommandManager commandManager = new CommandManager(this);
+    private CommandManager commandManager;
     @Getter
     private final Database database = new Database(this);
     @Getter
@@ -101,6 +101,7 @@ public final class Mewna {
         pluginManager.init();
         catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN")), vertx);
         singyeongEventManager = new SingyeongEventManager(this);
+        commandManager = new CommandManager(this);
         singyeong.connect()
                 .thenAccept(__ -> singyeong.updateMetadata("backend-key", SingyeongType.STRING, "mewna-backend"))
                 .thenAccept(__ -> DiscordCache.setup())

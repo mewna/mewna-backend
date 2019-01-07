@@ -29,6 +29,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -266,13 +268,18 @@ public class PluginEconomy extends BasePlugin {
         database().getStore().sql("SELECT * FROM players ORDER BY (data->>'balance')::integer DESC LIMIT 10;", p -> {
             final ResultSet res = p.executeQuery();
             final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.economy.commands.baltop") + "\n\n");
+            List<CompletableFuture<User>> futures = new ArrayList<>();
             while(res.next()) {
                 final String id = res.getString("id");
                 final Player player = new JsonObject(res.getString("data")).mapTo(Player.class);
-                final User user = DiscordCache.user(id).toCompletableFuture().join();
-                sb.append("- ").append(user.username()).append('#').append(user.discriminator()).append(" - ")
-                        .append(player.getBalance()).append(helper.getCurrencySymbol(ctx)).append('\n');
+                futures.add(DiscordCache.user(id).toCompletableFuture());
             }
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenAccept(__ -> {
+                futures.forEach(e -> {
+                    sb.append("- ").append(user.username()).append('#').append(user.discriminator()).append(" - ")
+                            .append(player.getBalance()).append(helper.getCurrencySymbol(ctx)).append('\n');
+                });
+            });
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());
         });
     }

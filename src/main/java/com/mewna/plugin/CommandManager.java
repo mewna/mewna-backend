@@ -5,6 +5,7 @@ import com.mewna.accounts.Account;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.shard.DiscordEvent.Raw;
+import com.mewna.catnip.util.SafeVertxCompletableFuture;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Player;
 import com.mewna.data.PluginSettings;
@@ -18,6 +19,7 @@ import com.mewna.plugin.util.Emotes;
 import com.mewna.util.Time;
 import io.sentry.Sentry;
 import io.vertx.core.Future;
+import io.vertx.core.WorkerExecutor;
 import lombok.Getter;
 import lombok.Value;
 import me.escoffier.vertx.completablefuture.VertxCompletableFuture;
@@ -48,6 +50,7 @@ public class CommandManager {
                 .orElse("bmew.,bmew ,=").split(",")));
     }
     
+    private final WorkerExecutor executor;
     private final Mewna mewna;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     @Getter
@@ -56,6 +59,8 @@ public class CommandManager {
     
     public CommandManager(final Mewna mewna) {
         this.mewna = mewna;
+        executor = mewna.vertx().createSharedWorkerExecutor("event-workers",
+                Runtime.getRuntime().availableProcessors() * 10, 30, TimeUnit.SECONDS);
     }
     
     public void loadCommandsFromMethod(final Object pluginInstance, final Plugin pluginAnnotation,
@@ -127,7 +132,7 @@ public class CommandManager {
             if(user.bot()) {
                 return;
             }
-    
+            
             final Guild guild = event.guild();
             final String channelId = event.message().channelId();
             
@@ -236,7 +241,7 @@ public class CommandManager {
             canExec.complete(true);
         }
         
-        VertxCompletableFuture.from(mewna.vertx(), canExec).thenAccept(b -> {
+        SafeVertxCompletableFuture.from(mewna.catnip(), canExec).thenAccept(b -> {
             if(b) {
                 if(cmd.getRatelimit() != null) {
                     final String baseName = cmd.getBaseName();
@@ -327,15 +332,19 @@ public class CommandManager {
                     
                     final CommandContext ctx = paymentCtx.toBuilder().cost(cost).build();
                     
-                    try {
-                        logger.info("Command: {}#{} ({}, account: {}) in {}#{}-{}: {} {}", user.username(), user.discriminator(),
-                                user.id(), ctx.getAccount().id(), guild.id(), channelId, event.message().id(), commandName, argstr);
-                        mewna.statsClient().count("discord.backend.commands.run", 1, "name:" + cmd.getName());
-                        cmd.getMethod().invoke(cmd.getPlugin(), ctx);
-                    } catch(final IllegalAccessException | InvocationTargetException e) {
-                        Sentry.capture(e);
-                        e.printStackTrace();
-                    }
+                    logger.info("Command: {}#{} ({}, account: {}) in {}#{}-{}: {} {}", user.username(), user.discriminator(),
+                            user.id(), ctx.getAccount().id(), guild.id(), channelId, event.message().id(), commandName, argstr);
+                    mewna.statsClient().count("discord.backend.commands.run", 1, "name:" + cmd.getName());
+                    executor.executeBlocking(f -> {
+                        try {
+                            cmd.getMethod().invoke(cmd.getPlugin(), ctx);
+                        } catch(final IllegalAccessException | InvocationTargetException e) {
+                            Sentry.capture(e);
+                            e.printStackTrace();
+                        }
+                        f.complete(null);
+                    }, __ -> {
+                    });
                 });
             }
         });

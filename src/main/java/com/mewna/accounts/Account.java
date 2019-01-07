@@ -60,6 +60,9 @@ public class Account {
     @JsonProperty("inBeta")
     private boolean isInBeta;
     @JsonProperty("banned")
+    private boolean banned;
+    @Deprecated
+    @JsonProperty("isBanned")
     private boolean isBanned;
     @JsonProperty("banReason")
     private String banReason;

@@ -33,7 +33,7 @@ public class SingyeongEventManager {
     public SingyeongEventManager(final Mewna mewna) {
         this.mewna = mewna;
         executor = mewna.vertx().createSharedWorkerExecutor("event-workers",
-                Runtime.getRuntime().availableProcessors() * 10, 30, TimeUnit.SECONDS);
+                Runtime.getRuntime().availableProcessors() * 100, 30, TimeUnit.SECONDS);
     }
     
     public void handle(final Dispatch dispatch) {

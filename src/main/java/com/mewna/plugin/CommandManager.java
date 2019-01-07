@@ -284,8 +284,8 @@ public class CommandManager {
                 profiler.section("player");
                 executor.executeBlocking(future -> {
                     final Player player = mewna.database().getPlayer(user);
-                    Optional<Account> maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());
                     profiler.section("account");
+                    Optional<Account> maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());
                     if(!maybeAccount.isPresent()) {
                         logger.error("No account present for Discord account {}!!!", user.id());
                         //Sentry.capture("No account present for Discord account: " + user.id());

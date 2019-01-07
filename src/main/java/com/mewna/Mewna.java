@@ -22,6 +22,7 @@ import gg.amy.singyeong.SingyeongClient;
 import gg.amy.singyeong.SingyeongType;
 import io.sentry.Sentry;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.json.Json;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -61,7 +62,7 @@ public final class Mewna {
     private final StatsDClient statsClient;
     
     @Getter
-    private final Vertx vertx = Vertx.vertx();
+    private final Vertx vertx = Vertx.vertx(new VertxOptions().setEventLoopPoolSize(Runtime.getRuntime().availableProcessors() * 2));
     @Getter
     private final SingyeongClient singyeong = SingyeongClient.create(vertx, System.getenv("SINGYEONG_DSN"));
     @Getter

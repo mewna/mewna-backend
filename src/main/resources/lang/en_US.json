@@ -14,7 +14,8 @@
       "buy": "Buy some items.",
       "sell": "Sell some items.",
       "mine": "Go mining for shines!",
-      "fish": "Go fishing for tasty fish!"
+      "fish": "Go fishing for tasty fish!",
+      "box": "View and open some mystery boxes!"
     },
     "emotes": "Fun little emote commands. You need to mention someone to use them.",
     "levels": {
@@ -139,6 +140,11 @@
           "rod-break": "Oh no! Your fishing rod broke when you tried to use it!",
           "got-water": "You fished all day, but found nothing but empty water.",
           "success": "You fished up:"
+        },
+        "boxes": {
+          "open": "You can open your boxes with `box open <type>`",
+          "none": "You have no boxes!",
+          "unknown": "I don't know how to do that..."
         }
       }
     },

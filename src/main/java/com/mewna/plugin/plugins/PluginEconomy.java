@@ -30,7 +30,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -279,18 +278,18 @@ public class PluginEconomy extends BasePlugin {
             }
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).orTimeout(5L, TimeUnit.SECONDS)
                     .thenAccept(__ -> {
-                futures.forEach(e -> {
-                    final User user = e.getNow(null);
-                    if(user != null) {
-                        final Player player = players.get(user.id());
-                        sb.append("- ").append(user.username()).append('#').append(user.discriminator()).append(" - ")
-                                .append(player.getBalance()).append(helper.getCurrencySymbol(ctx)).append('\n');
-                    } else {
-                        sb.append("- Unknown User#0000 - Unknown balance.\n");
-                    }
-                });
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());
-            }).exceptionally(e -> {
+                        futures.forEach(e -> {
+                            final User user = e.getNow(null);
+                            if(user != null) {
+                                final Player player = players.get(user.id());
+                                sb.append("- ").append(user.username()).append('#').append(user.discriminator()).append(" - ")
+                                        .append(player.getBalance()).append(helper.getCurrencySymbol(ctx)).append('\n');
+                            } else {
+                                sb.append("- Unknown User#0000 - Unknown balance.\n");
+                            }
+                        });
+                        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());
+                    }).exceptionally(e -> {
                 if(e instanceof TimeoutException) {
                     catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Couldn't load users in time :(");
                 } else {
@@ -360,24 +359,40 @@ public class PluginEconomy extends BasePlugin {
         catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), b.build());
     }
     
-    //@Command(names = {"boxes", "boxen"}, desc = "View your boxes.", usage = "boxes", examples = "boxes")
+    //@Command(names = {"boxes", "box", "boxen"}, desc = "View and open your boxes.", usage = {"boxes", "boxes open <type>"},
+    //        examples = {"boxes", "boxes open toolbox"})
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public void boxes(final CommandContext ctx) {
         final Player user = ctx.getPlayer();
-        final EmbedBuilder b = new EmbedBuilder();
-        if(user.getBoxes() != null && !user.getBoxes().isEmpty()) {
-            final StringBuilder sb = new StringBuilder();
-            
-            final Map<Box, Long> inv = user.getBoxes();
-            
-            Lists.partition(new ArrayList<>(inv.keySet()), 2)
-                    .forEach(e -> e.forEach(i -> sb.append(i.getName()).append(" `x").append(inv.get(i)).append("`, ")));
-            final String str = sb.toString();
-            b.field("Boxes", str.substring(0, str.length() - 2).trim(), false);
+        if(ctx.getArgs().isEmpty()) {
+            final EmbedBuilder b = new EmbedBuilder();
+    
+            if(user.getBoxes() != null && !user.getBoxes().isEmpty()) {
+                final StringBuilder sb = new StringBuilder();
+        
+                final Map<Box, Long> inv = user.getBoxes();
+        
+                Lists.partition(new ArrayList<>(inv.keySet()), 2)
+                        .forEach(e -> e.forEach(i -> sb.append(i.getName()).append(" `x").append(inv.get(i)).append("`, ")));
+                final String str = sb.toString();
+                b.title("Your Boxes").description(str.substring(0, str.length() - 2).trim())
+                        .field("Hint", $(ctx.getLanguage(), "plugins.economy.commands.boxes.open"), false);
+            } else {
+                b.title("Boxes").description($(ctx.getLanguage(), "plugins.economy.commands.boxes.none"));
+            }
+            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), b.build());
         } else {
-            b.title("Boxes").description("You have no boxes!");
+            switch(ctx.getArgs().get(0).toLowerCase()) {
+                case "open": {
+                    break;
+                }
+                case "default": {
+                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                            $(ctx.getLanguage(), "plugins.economy.commands.boxes.unknown"));
+                    break;
+                }
+            }
         }
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), b.build());
     }
     
     /*

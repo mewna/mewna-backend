@@ -144,7 +144,10 @@
         "boxes": {
           "open": "You can open your boxes with `box open <type>`",
           "none": "You have no boxes!",
-          "unknown": "I don't know how to do that..."
+          "unknown": "I don't know how to do that...",
+          "need-box-type": "That's not a real box type!",
+          "dont-have-box": "You don't have that kind of box!",
+          "opened-box": "You opened a $box and found: $items"
         }
       }
     },

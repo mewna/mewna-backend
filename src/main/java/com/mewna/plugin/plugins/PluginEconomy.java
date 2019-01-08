@@ -384,6 +384,42 @@ public class PluginEconomy extends BasePlugin {
         } else {
             switch(ctx.getArgs().get(0).toLowerCase()) {
                 case "open": {
+                    if(ctx.getArgs().size() > 1) {
+                        final String boxName = ctx.getArgs().get(1).toLowerCase();
+                        Box type = null;
+                        for(final Box value : Box.values()) {
+                            if(value.getName().equalsIgnoreCase(boxName)) {
+                                type = value;
+                                break;
+                            }
+                        }
+                        if(type != null) {
+                            if(ctx.getPlayer().getBoxes().containsKey(type)) {
+                                ctx.getPlayer().removeOneFromBoxes(type);
+                                final List<Item> loot = LootTables.generateLoot(type.getLootTable(), 1, 5);
+                                ctx.getPlayer().addToInventory(loot);
+                                database().savePlayer(ctx.getPlayer());
+                                
+                                final List<String> items = new ArrayList<>();
+                                loot.forEach(e -> items.add(e.getName() + ' ' + e.getEmote()));
+                                
+                                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                        $(ctx.getLanguage(), "plugins.economy.commands.boxes.opened-box")
+                                        .replace("$box", type.getName())
+                                        .replace("$items", String.join(", ", items))
+                                );
+                            } else {
+                                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                        $(ctx.getLanguage(), "plugins.economy.commands.boxes.dont-have-box"));
+                            }
+                        } else {
+                            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                    $(ctx.getLanguage(), "plugins.economy.commands.boxes.need-box-type"));
+                        }
+                    } else {
+                        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                $(ctx.getLanguage(), "plugins.economy.commands.boxes.need-box-type"));
+                    }
                     break;
                 }
                 case "default": {

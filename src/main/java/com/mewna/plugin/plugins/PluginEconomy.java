@@ -146,6 +146,7 @@ public class PluginEconomy extends BasePlugin {
                     .replace("$amount", "" + bonus)
                     .replace("$symbol", helper.getCurrencySymbol(ctx))
                     .replace("$streak", "" + player.getDailyStreak());
+            tryDropBox(ctx);
         } else {
             player.resetDailyStreak();
             player.incrementBalance(DAILY_BASE_REWARD);
@@ -170,6 +171,7 @@ public class PluginEconomy extends BasePlugin {
         ctx.getPlayer().incrementBalance(amount);
         database().savePlayer(ctx.getPlayer());
         catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), text);
+        tryDropBox(ctx);
     }
     
     @Payment(min = HEIST_BASE_COST)
@@ -188,6 +190,7 @@ public class PluginEconomy extends BasePlugin {
                     $(ctx.getLanguage(), "plugins.economy.commands.heist.success")
                             .replace("$amount", "" + reward)
                             .replace("$symbol", helper.getCurrencySymbol(ctx)));
+            tryDropBox(ctx);
         } else {
             // lose
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
@@ -255,6 +258,7 @@ public class PluginEconomy extends BasePlugin {
                 sb.append($(ctx.getLanguage(), "plugins.economy.commands.slots.win")
                         .replace("$amount", "" + payout)
                         .replace("$symbol", helper.getCurrencySymbol(ctx)));
+                tryDropBox(ctx);
             }
         } else {
             sb.append($(ctx.getLanguage(), "plugins.economy.commands.slots.nothing"));
@@ -328,6 +332,7 @@ public class PluginEconomy extends BasePlugin {
             sb.append($(ctx.getLanguage(), "plugins.economy.commands.gamble.success")
                     .replace("$amount", "" + payout)
                     .replace("$symbol", helper.getCurrencySymbol(ctx)));
+            tryDropBox(ctx);
         } else {
             sb.append($(ctx.getLanguage(), "plugins.economy.commands.gamble.failure")
                     .replace("$amount", "" + ctx.getCost())
@@ -359,19 +364,19 @@ public class PluginEconomy extends BasePlugin {
         catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), b.build());
     }
     
-    //@Command(names = {"boxes", "box", "boxen"}, desc = "View and open your boxes.", usage = {"boxes", "boxes open <type>"},
-    //        examples = {"boxes", "boxes open toolbox"})
+    @Command(names = {"boxes", "box", "boxen"}, desc = "View and open your boxes.", usage = {"boxes", "boxes open <type>"},
+            examples = {"boxes", "boxes open toolbox"})
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public void boxes(final CommandContext ctx) {
         final Player user = ctx.getPlayer();
         if(ctx.getArgs().isEmpty()) {
             final EmbedBuilder b = new EmbedBuilder();
-    
+            
             if(user.getBoxes() != null && !user.getBoxes().isEmpty()) {
                 final StringBuilder sb = new StringBuilder();
-        
+                
                 final Map<Box, Long> inv = user.getBoxes();
-        
+                
                 Lists.partition(new ArrayList<>(inv.keySet()), 2)
                         .forEach(e -> e.forEach(i -> sb.append(i.getName()).append(" `x").append(inv.get(i)).append("`, ")));
                 final String str = sb.toString();
@@ -405,8 +410,8 @@ public class PluginEconomy extends BasePlugin {
                                 
                                 catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                                         $(ctx.getLanguage(), "plugins.economy.commands.boxes.opened-box")
-                                        .replace("$box", type.getName())
-                                        .replace("$items", String.join(", ", items))
+                                                .replace("$box", type.getName())
+                                                .replace("$items", String.join(", ", items))
                                 );
                             } else {
                                 catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
@@ -430,17 +435,6 @@ public class PluginEconomy extends BasePlugin {
             }
         }
     }
-    
-    /*
-    @Command(names = "fillbox", desc = "", usage = "", examples = "")
-    public void boxme(final CommandContext ctx) {
-        final Player user = ctx.getPlayer();
-        user.addToBoxes(Arrays.asList(Box.values()));
-        database().savePlayer(user);
-        
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "thumbsup");
-    }
-    */
     
     @Command(names = "market", desc = "commands.economy.market", usage = "market", examples = "market")
     public void market(final CommandContext ctx) {
@@ -626,6 +620,7 @@ public class PluginEconomy extends BasePlugin {
             database().savePlayer(ctx.getPlayer());
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                     $(ctx.getLanguage(), "plugins.economy.commands.mine.success") + ":\n" + sb);
+            tryDropBox(ctx);
         }
     }
     
@@ -663,14 +658,20 @@ public class PluginEconomy extends BasePlugin {
             database().savePlayer(ctx.getPlayer());
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                     $(ctx.getLanguage(), "plugins.economy.commands.fish.success") + ":\n" + sb);
+            tryDropBox(ctx);
         }
     }
     
-    public boolean tryDropBox(final CommandContext ctx) {
-        if(LootTables.chance(50)) {
-            return false;
+    private void tryDropBox(final CommandContext ctx) {
+        if(LootTables.chance(random().nextInt(5))) {
+            final Box box = Box.values()[random().nextInt(Box.values().length)];
+            ctx.getPlayer().addOneToBoxes(box);
+            database().savePlayer(ctx.getPlayer());
+            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                    $(ctx.getLanguage(), "plugins.economy.found-box")
+                            .replace("$box", box.getName())
+            );
         }
-        return false;
     }
     
     /* // TODO

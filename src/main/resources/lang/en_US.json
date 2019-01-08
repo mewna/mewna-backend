@@ -53,6 +53,7 @@
     "disabled-command": "Sorry, but that command is disabled here.",
     "ratelimited-command": "You're using that command too fast! Try again in **$time**.",
     "economy": {
+      "found-box": "You found a $box! Open it with `boxes open $box`",
       "commands": {
         "empty-payment": "You can't pay nothing!",
         "payment-not-number": "`$number` isn't a number!",

@@ -269,7 +269,7 @@ public class PluginEconomy extends BasePlugin {
         database().getStore().sql("SELECT * FROM players ORDER BY (data->>'balance')::integer DESC LIMIT 10;", p -> {
             final ResultSet res = p.executeQuery();
             final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.economy.commands.baltop") + "\n\n");
-            List<CompletableFuture<User>> futures = new ArrayList<>();
+            final List<CompletableFuture<User>> futures = new ArrayList<>();
             final Map<String, Player> players = new HashMap<>();
             while(res.next()) {
                 final String id = res.getString("id");

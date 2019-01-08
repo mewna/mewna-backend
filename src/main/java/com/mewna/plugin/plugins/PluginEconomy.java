@@ -413,8 +413,10 @@ public class PluginEconomy extends BasePlugin {
                     sb.append(", ");
                 }
         }
-        final EmbedBuilder b = new EmbedBuilder().field("Market", sb.toString().trim(), false)
-                .field("", $(ctx.getLanguage(), "plugins.economy.commands.market.buy-sell"),
+        final EmbedBuilder b = new EmbedBuilder()
+                .title("Mewna Market")
+                .field("Items", sb.toString().trim(), false)
+                .field("Help", $(ctx.getLanguage(), "plugins.economy.commands.market.buy-sell"),
                         false);
         catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), b.build());
     }

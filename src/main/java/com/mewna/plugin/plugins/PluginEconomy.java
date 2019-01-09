@@ -73,7 +73,7 @@ public class PluginEconomy extends BasePlugin {
             final Player player = database().getPlayer(m);
             final long balance = player.getBalance();
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                    $(ctx.getLanguage(), "plugins.economy.commands.balance.self")
+                    $(ctx.getLanguage(), "plugins.economy.commands.balance.other")
                             .replace("$target", m.username())
                             .replace("$amount", "" + balance)
                             .replace("$symbol", helper.getCurrencySymbol(ctx)));
@@ -663,7 +663,7 @@ public class PluginEconomy extends BasePlugin {
     }
     
     private void tryDropBox(final CommandContext ctx) {
-        if(LootTables.chance(random().nextInt(5))) {
+        if(LootTables.chance(random().nextInt(15))) {
             final Box box = Box.values()[random().nextInt(Box.values().length)];
             ctx.getPlayer().addOneToBoxes(box);
             database().savePlayer(ctx.getPlayer());

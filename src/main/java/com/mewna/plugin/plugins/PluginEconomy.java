@@ -364,7 +364,7 @@ public class PluginEconomy extends BasePlugin {
         catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), b.build());
     }
     
-    @Command(names = {"boxes", "box", "boxen"}, desc = "View and open your boxes.", usage = {"boxes", "boxes open <type>"},
+    @Command(names = {"boxes", "box", "boxen"}, desc = "commands.economy.box", usage = {"boxes", "boxes open <type>"},
             examples = {"boxes", "boxes open toolbox"})
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public void boxes(final CommandContext ctx) {

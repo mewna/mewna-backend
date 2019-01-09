@@ -127,39 +127,43 @@ public class PluginMusic extends BasePlugin {
                         ctx.getMessage().guildId()
                 );
                 
-                try {
-                    final String domainName = getDomainName(ctx.getArgstr()).toLowerCase();
-                    switch(domainName) {
-                        case "youtube.com":
-                        case "youtu.be": {
-                            // YT URLs are ok, so just send it directly
-                            mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
-                                    new JsonObject().put("type", "VOICE_QUEUE")
-                                            .put("url", ctx.getArgstr())
-                                            .put("context", JsonObject.mapFrom(context)));
-                            break;
-                        }
-                        case "open.spotify.com":
-                        case "spotify.com": {
-                            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                                    $(ctx.getLanguage(), "plugins.music.commands.queue.no-spotify"));
-                            break;
-                        }
-                        default: {
-                            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                                    $(ctx.getLanguage(), "plugins.music.commands.queue.invalid-url"));
-                            break;
-                        }
-                    }
-                } catch(final Exception e) {
-                    // Not a valid url, search it
-                    mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
-                            new JsonObject().put("type", "VOICE_QUEUE")
-                                    .put("search", ctx.getArgstr())
-                                    .put("context", JsonObject.mapFrom(context)));
-                }
+                queueTrack(ctx, context);
             }
         });
+    }
+    
+    private void queueTrack(final CommandContext ctx, final NekoTrackContext context) {
+        try {
+            final String domainName = getDomainName(ctx.getArgstr()).toLowerCase();
+            switch(domainName) {
+                case "youtube.com":
+                case "youtu.be": {
+                    // YT URLs are ok, so just send it directly
+                    mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
+                            new JsonObject().put("type", "VOICE_QUEUE")
+                                    .put("url", ctx.getArgstr())
+                                    .put("context", JsonObject.mapFrom(context)));
+                    break;
+                }
+                case "open.spotify.com":
+                case "spotify.com": {
+                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                            $(ctx.getLanguage(), "plugins.music.commands.queue.no-spotify"));
+                    break;
+                }
+                default: {
+                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                            $(ctx.getLanguage(), "plugins.music.commands.queue.invalid-url"));
+                    break;
+                }
+            }
+        } catch(final Exception e) {
+            // Not a valid url, search it
+            mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
+                    new JsonObject().put("type", "VOICE_QUEUE")
+                            .put("search", ctx.getArgstr())
+                            .put("context", JsonObject.mapFrom(context)));
+        }
     }
     
     @Command(names = {"play", "p"}, desc = "commands.music.play", usage = "play", examples = "play")
@@ -176,9 +180,18 @@ public class PluginMusic extends BasePlugin {
                 catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                         $(ctx.getLanguage(), "plugins.music.bot-not-in-voice"));
             } else {
-                mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
-                        new JsonObject().put("type", "VOICE_PLAY")
-                                .put("guild_id", ctx.getGuild().id()));
+                if(ctx.getArgs().isEmpty()) {
+                    mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
+                            new JsonObject().put("type", "VOICE_PLAY")
+                                    .put("guild_id", ctx.getGuild().id()));
+                } else {
+                    final NekoTrackContext context = new NekoTrackContext(
+                            ctx.getUser().id(),
+                            ctx.getMessage().channelId(),
+                            ctx.getMessage().guildId()
+                    );
+                    queueTrack(ctx, context);
+                }
             }
         });
     }

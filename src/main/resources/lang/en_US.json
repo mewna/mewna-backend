@@ -46,7 +46,8 @@
       "leave": "Make Mewna leave the voice channel she's in.",
       "queue": "Queue a song for Mewna to play.",
       "play": "Make Mewna start playing the song queue.",
-      "np": "Get the current song Mewna's playing."
+      "np": "Get the current song Mewna's playing.",
+      "skip": "Skip the currently-playing song."
     }
   },
   "plugins": {

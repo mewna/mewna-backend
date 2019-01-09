@@ -196,6 +196,27 @@ public class PluginMusic extends BasePlugin {
         });
     }
     
+    @Command(names = "skip", desc = "commands.music.skip", usage = "skip", examples = "skip")
+    public void skip(final CommandContext ctx) {
+        final Guild guild = ctx.getGuild();
+        checkState(guild, ctx.getUser()).thenAccept(check -> {
+            if(check == VoiceCheck.USER_NOT_IN_VOICE) {
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        $(ctx.getLanguage(), "plugins.music.user-not-in-voice"));
+            } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        $(ctx.getLanguage(), "plugins.music.user-not-in-same-voice"));
+            } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        $(ctx.getLanguage(), "plugins.music.bot-not-in-voice"));
+            } else {
+                mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
+                        new JsonObject().put("type", "VOICE_PLAY")
+                                .put("guild_id", ctx.getGuild().id()));
+            }
+        });
+    }
+    
     @Command(names = {"np", "nowplaying"}, desc = "commands.music.np", usage = "np", examples = "np")
     public void np(final CommandContext ctx) {
         final NekoTrackContext context = new NekoTrackContext(

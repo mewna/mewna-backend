@@ -211,7 +211,7 @@ public class PluginMusic extends BasePlugin {
                         $(ctx.getLanguage(), "plugins.music.bot-not-in-voice"));
             } else {
                 mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
-                        new JsonObject().put("type", "VOICE_PLAY")
+                        new JsonObject().put("type", "VOICE_SKIP")
                                 .put("guild_id", ctx.getGuild().id()));
             }
         });

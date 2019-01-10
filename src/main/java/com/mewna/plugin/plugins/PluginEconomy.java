@@ -421,7 +421,7 @@ public class PluginEconomy extends BasePlugin {
                         if(type != null) {
                             if(ctx.getPlayer().getBoxes().containsKey(type)) {
                                 ctx.getPlayer().removeOneFromBoxes(type);
-                                final List<Item> loot = LootTables.generateLoot(type.getLootTable(), 1, 5);
+                                final List<Item> loot = LootTables.generateLoot(type.getLootTable(), 1, 5, false);
                                 ctx.getPlayer().addToInventory(loot);
                                 database().savePlayer(ctx.getPlayer());
                                 
@@ -628,7 +628,7 @@ public class PluginEconomy extends BasePlugin {
                     $(ctx.getLanguage(), "plugins.economy.commands.mine.pick-break"));
             return;
         }
-        final List<Item> loot = LootTables.generateLoot(LootTables.GEMS, 0, 2);
+        final List<Item> loot = LootTables.generateLoot(LootTables.GEMS, 0, 2, true);
         if(loot.isEmpty()) {
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                     $(ctx.getLanguage(), "plugins.economy.commands.mine.got-dust"));
@@ -666,7 +666,7 @@ public class PluginEconomy extends BasePlugin {
                     $(ctx.getLanguage(), "plugins.economy.commands.fish.rod-break"));
             return;
         }
-        final List<Item> loot = LootTables.generateLoot(LootTables.FISHING, 1, 3);
+        final List<Item> loot = LootTables.generateLoot(LootTables.FISHING, 1, 3, true);
         if(loot.isEmpty()) {
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                     $(ctx.getLanguage(), "plugins.economy.commands.fish.got-water"));

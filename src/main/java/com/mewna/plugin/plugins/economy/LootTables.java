@@ -68,11 +68,11 @@ public final class LootTables {
     private LootTables() {
     }
     
-    public static List<Item> generateLoot(final Map<Item, Integer> table, final int min, final int max) {
+    public static List<Item> generateLoot(final Map<Item, Integer> table, final int min, final int max, final boolean canEmpty) {
         if(min > max) {
             throw new IllegalArgumentException("min > max!");
         }
-        if(tlr() % 100 <= 10) {
+        if(tlr() % 100 <= 10 && canEmpty) {
             return Collections.emptyList();
         }
         final List<Item> loot = new ArrayList<>();

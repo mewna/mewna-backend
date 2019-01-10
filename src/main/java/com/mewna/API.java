@@ -484,7 +484,6 @@ class API {
                         case "upvote":
                         case "vote": {
                             p.setBalance(p.getBalance() + amount);
-                            p.getVotes().setDblorg(p.getVotes().getDblorg() + 1);
                             mewna.database().savePlayer(p);
                             mewna.statsClient().increment("votes.dbl", 1);
                             final String message;

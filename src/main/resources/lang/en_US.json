@@ -166,6 +166,7 @@
         "poke": "poked",
         "prod": "prodded",
         "shoot": "shot :gun:",
+        "slap": "slapped",
         "stab": "stabbed :knife:",
         "tickle": "tickled"
       }

@@ -468,7 +468,7 @@ class API {
             });
             
             // Votes
-            router.post("/data/votes").handler(BodyHandler.create()).blockingHandler(ctx -> {
+            router.post("/data/votes/dbl").handler(BodyHandler.create()).blockingHandler(ctx -> {
                 final JsonObject body = ctx.getBodyAsJson();
                 @SuppressWarnings("unused")
                 final String bot = body.getString("bot");
@@ -496,6 +496,8 @@ class API {
                             break;
                         }
                         case "test": {
+                            mewna.catnip().rest().user().createDM(user)
+                                    .thenAccept(channel -> channel.sendMessage("```Javascript\n" + body.encodePrettily() + "\n```"));
                             break;
                         }
                     }

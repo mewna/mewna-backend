@@ -489,9 +489,9 @@ class API {
                             final String message;
                             if(isWeekend) {
                                 mewna.statsClient().increment("votes.dbl.weekend", 1);
-                                message = $("en_US", "votes.dbl.weekend");
+                                message = $("en_US", "votes.dbl.weekend").replace("$amount", amount + "");
                             } else {
-                                message = $("en_US", "votes.dbl.normal");
+                                message = $("en_US", "votes.dbl.normal").replace("$amount", amount + "");
                             }
                             mewna.catnip().rest().user().createDM(user).thenAccept(channel -> channel.sendMessage(message));
                             break;

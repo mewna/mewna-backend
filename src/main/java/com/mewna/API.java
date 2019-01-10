@@ -484,10 +484,12 @@ class API {
                         case "upvote":
                         case "vote": {
                             p.setBalance(p.getBalance() + amount);
+                            p.getVotes().setDblorg(p.getVotes().getDblorg() + 1);
                             mewna.database().savePlayer(p);
-                            mewna.statsClient().increment("votes", 1);
+                            mewna.statsClient().increment("votes.dbl", 1);
                             final String message;
                             if(isWeekend) {
+                                mewna.statsClient().increment("votes.dbl.weekend", 1);
                                 message = $("en_US", "votes.dbl.weekend");
                             } else {
                                 message = $("en_US", "votes.dbl.normal");

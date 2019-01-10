@@ -3,6 +3,7 @@ package com.mewna.plugin.plugins;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.mewna.catnip.entity.builder.EmbedBuilder;
+import com.mewna.catnip.entity.builder.MessageBuilder;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.data.DiscordCache;
@@ -126,8 +127,15 @@ public class PluginEconomy extends BasePlugin {
             final long nextMillis = TimeUnit.SECONDS.toMillis(last.toLocalDate().plusDays(1).atStartOfDay(zone).toEpochSecond());
             final long nowMillis = TimeUnit.SECONDS.toMillis(now.toEpochSecond(zone.getRules().getOffset(now)));
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                    $(ctx.getLanguage(), "plugins.economy.commands.daily.failure-wait")
-                            .replace("$time", Time.toHumanReadableDuration(nextMillis - nowMillis)));
+                    new MessageBuilder()
+                            .content($(ctx.getLanguage(), "plugins.economy.commands.daily.failure-wait")
+                                    .replace("$time", Time.toHumanReadableDuration(nextMillis - nowMillis)))
+                            .embed(new EmbedBuilder()
+                                    .title("Hint")
+                                    .description("Still need money? [Vote for Mewna](https://discordbots.org/bot/251930037673132032/vote)" +
+                                            " and get an extra 1000💮 (and more on the weekends!).")
+                                    .build())
+                            .build());
             return;
         }
         final boolean streak;
@@ -157,7 +165,15 @@ public class PluginEconomy extends BasePlugin {
         
         player.updateLastDaily();
         database().savePlayer(player);
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), msg);
+        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                new MessageBuilder()
+                        .content(msg)
+                        .embed(new EmbedBuilder()
+                                .title("Hint")
+                                .description("Still need money? [Vote for Mewna](https://discordbots.org/bot/251930037673132032/vote)" +
+                                        " and get an extra 1000💮 (and more on the weekends!).")
+                                .build())
+                        .build());
     }
     
     @Ratelimit(time = 20)

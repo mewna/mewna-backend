@@ -639,7 +639,7 @@ public class PluginEconomy extends BasePlugin {
             ctx.getPlayer().addAllToInventory(count);
             database().savePlayer(ctx.getPlayer());
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                    $(ctx.getLanguage(), "plugins.economy.commands.mine.success") + ":\n" + sb);
+                    $(ctx.getLanguage(), "plugins.economy.commands.mine.success") + '\n' + sb);
             tryDropBox(ctx);
         }
     }
@@ -677,7 +677,7 @@ public class PluginEconomy extends BasePlugin {
             ctx.getPlayer().addAllToInventory(count);
             database().savePlayer(ctx.getPlayer());
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                    $(ctx.getLanguage(), "plugins.economy.commands.fish.success") + ":\n" + sb);
+                    $(ctx.getLanguage(), "plugins.economy.commands.fish.success") + '\n' + sb);
             tryDropBox(ctx);
         }
     }

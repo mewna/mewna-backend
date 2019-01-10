@@ -133,7 +133,7 @@ public class PluginEconomy extends BasePlugin {
                             .embed(new EmbedBuilder()
                                     .title("Hint")
                                     .description("Still need money? [Vote for Mewna](https://discordbots.org/bot/251930037673132032/vote)" +
-                                            " and get an extra 1000💮 (and more on the weekends!).")
+                                            " every 12 hours and get an extra 1000💮 (and more on the weekends!).")
                                     .build())
                             .build());
             return;

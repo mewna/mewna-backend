@@ -274,7 +274,7 @@ public class PluginEconomy extends BasePlugin {
             final ResultSet res = p.executeQuery();
             final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.economy.commands.baltop") + "\n\n");
             final Map<String, Player> players = new LinkedHashMap<>();
-            final Map<String, CompletableFuture<User>> futures = new HashMap<>();
+            final Map<String, CompletableFuture<User>> futures = new LinkedHashMap<>();
             while(res.next()) {
                 final String id = res.getString("id");
                 final Player player = new JsonObject(res.getString("data")).mapTo(Player.class);

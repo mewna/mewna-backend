@@ -19,6 +19,7 @@ import com.mewna.plugin.plugins.economy.LootTables;
 import com.mewna.plugin.plugins.settings.EconomySettings;
 import com.mewna.plugin.util.CurrencyHelper;
 import com.mewna.util.Time;
+import io.sentry.Sentry;
 import io.vertx.core.json.JsonObject;
 import lombok.ToString;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -297,6 +298,7 @@ public class PluginEconomy extends BasePlugin {
                 if(e instanceof TimeoutException) {
                     catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Couldn't load users in time :(");
                 } else {
+                    Sentry.capture(e);
                     catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "\uD83D\uDD25 Couldn't load baltop. Try again later?");
                 }
                 return null;

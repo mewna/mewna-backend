@@ -1,6 +1,7 @@
 package com.mewna.plugin.plugins;
 
 import com.mewna.accounts.Account;
+import com.mewna.catnip.entity.channel.UserDMChannel;
 import com.mewna.catnip.entity.message.Message;
 import com.mewna.data.DiscordCache;
 import com.mewna.data.Player;
@@ -115,5 +116,12 @@ public class PluginSecret extends BasePlugin {
                                 " Member: " + MewnaFutures.get(member) + " \n" +
                                 "```"
                         ));
+    }
+    
+    @Command(names = "dm", desc = "secret", usage = "secret", examples = "secret", owner = true)
+    public void dm(final CommandContext ctx) {
+        catnip().rest().user().createDM(ctx.getUser().id()).thenAccept(channel -> {
+            channel.sendMessage("test!");
+        });
     }
 }

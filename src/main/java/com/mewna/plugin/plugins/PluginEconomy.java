@@ -291,7 +291,8 @@ public class PluginEconomy extends BasePlugin {
                                         .append(player.getBalance()).append(helper.getCurrencySymbol(ctx)).append('\n');
                             } else {
                                 final Player player = players.get(id);
-                                sb.append("- Unknown User#0000 - ").append(player.getBalance());
+                                sb.append("- Unknown User#0000 - ").append(player.getBalance())
+                                        .append(helper.getCurrencySymbol(ctx)).append('\n');
                             }
                         });
                         catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());

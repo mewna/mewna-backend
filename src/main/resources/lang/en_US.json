@@ -310,5 +310,11 @@
         }
       }
     }
+  },
+  "votes": {
+    "dbl": {
+      "normal": "Thanks for voting! You got $amount💮 for voting.",
+      "weekend": "Thanks for voting! You got $amount💮 for voting. It's the weekend, so you get double! 🎉"
+    }
   }
 }

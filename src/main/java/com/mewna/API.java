@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.mewna.util.Translator.$;
+
 /**
  * @author amy
  * @since 6/10/18.
@@ -463,6 +465,42 @@ class API {
                                 .map(JsonObject::mapFrom)
                                 .orElse(new JsonObject())
                                 .encode());
+            });
+            
+            // Votes
+            router.post("/data/votes").handler(BodyHandler.create()).blockingHandler(ctx -> {
+                final JsonObject body = ctx.getBodyAsJson();
+                @SuppressWarnings("unused")
+                final String bot = body.getString("bot");
+                final String user = body.getString("user");
+                final String type = body.getString("type");
+                final boolean isWeekend = body.getBoolean("isWeekend");
+                
+                final Optional<Player> player = mewna.database().getOptionalPlayer(user);
+                if(player.isPresent()) {
+                    final int amount = isWeekend ? 2000 : 1000;
+                    final Player p = player.get();
+                    switch(type.toLowerCase()) {
+                        case "upvote":
+                        case "vote": {
+                            p.setBalance(p.getBalance() + amount);
+                            mewna.database().savePlayer(p);
+                            mewna.statsClient().increment("votes", 1);
+                            final String message;
+                            if(isWeekend) {
+                                message = $("en_US", "votes.dbl.weekend");
+                            } else {
+                                message = $("en_US", "votes.dbl.normal");
+                            }
+                            mewna.catnip().rest().user().createDM(user).thenAccept(channel -> channel.sendMessage(message));
+                            break;
+                        }
+                        case "test": {
+                            break;
+                        }
+                    }
+                }
+                ctx.response().end("{}");
             });
         }
         

@@ -273,24 +273,25 @@ public class PluginEconomy extends BasePlugin {
         database().getStore().sql("SELECT * FROM players ORDER BY (data->>'balance')::integer DESC LIMIT 10;", p -> {
             final ResultSet res = p.executeQuery();
             final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.economy.commands.baltop") + "\n\n");
-            final List<CompletableFuture<User>> futures = new ArrayList<>();
-            final Map<String, Player> players = new HashMap<>();
+            final Map<String, Player> players = new LinkedHashMap<>();
+            final Map<String, CompletableFuture<User>> futures = new HashMap<>();
             while(res.next()) {
                 final String id = res.getString("id");
                 final Player player = new JsonObject(res.getString("data")).mapTo(Player.class);
                 players.put(id, player);
-                futures.add(DiscordCache.user(id).toCompletableFuture());
+                futures.put(id, DiscordCache.user(id).toCompletableFuture());
             }
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).orTimeout(5L, TimeUnit.SECONDS)
+            CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[0])).orTimeout(5L, TimeUnit.SECONDS)
                     .thenAccept(__ -> {
-                        futures.forEach(e -> {
+                        futures.forEach((id, e) -> {
                             final User user = e.getNow(null);
                             if(user != null) {
                                 final Player player = players.get(user.id());
                                 sb.append("- ").append(user.username()).append('#').append(user.discriminator()).append(" - ")
                                         .append(player.getBalance()).append(helper.getCurrencySymbol(ctx)).append('\n');
                             } else {
-                                sb.append("- Unknown User#0000 - Unknown balance.\n");
+                                final Player player = players.get(id);
+                                sb.append("- Unknown User#0000 - ").append(player.getBalance())
                             }
                         });
                         catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());

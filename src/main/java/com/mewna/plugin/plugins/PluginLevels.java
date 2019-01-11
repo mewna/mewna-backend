@@ -135,11 +135,11 @@ public class PluginLevels extends BasePlugin {
             final Map<String, String> data = new HashMap<>();
             final JsonObject jGuild = JsonObject.mapFrom(guild);
             for(final String key : jGuild.fieldNames()) {
-                data.put("server." + key, jGuild.getMap().get(key).toString());
+                data.put("server." + key, jGuild.getMap().get(key) + "");
             }
             final JsonObject jUser = JsonObject.mapFrom(user);
             for(final String key : jUser.fieldNames()) {
-                data.put("user." + key, jUser.getMap().get(key).toString());
+                data.put("user." + key, jUser.getMap().get(key) + "");
             }
             data.put("user.name", user.username());
             data.put("user.mention", user.asMention());
@@ -267,14 +267,6 @@ public class PluginLevels extends BasePlugin {
                     // Emit level-up event so we can process it
                     mewna().pluginManager().processEvent(EventType.LEVEL_UP, new LevelUpEvent(guild, null,
                             event.user(), event.member(), xpToLevel(oldXp + xp), oldXp + xp));
-                    /*
-                    mewna().singyeong().send(Mewna.APP_ID, new QueryBuilder().build(),
-                            new JsonObject()
-                                    .put("type", "LEVEL_UP")
-                                    .put("user", author.id())
-                                    .put("guild", guild.id()).put("level", xpToLevel(oldXp + xp)).put("xp", oldXp + xp)
-                                    .put("channel", event.message().channelId()));
-                                    */
                 }
             }
         });

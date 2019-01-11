@@ -25,6 +25,7 @@ import com.mewna.plugin.util.Emotes;
 import com.mewna.plugin.util.Renderer;
 import com.mewna.util.Templater;
 import gg.amy.singyeong.QueryBuilder;
+import io.sentry.Sentry;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
@@ -128,21 +129,27 @@ public class PluginLevels extends BasePlugin {
     }
     
     private Templater map(final LevelUpEvent event) {
-        final Guild guild = event.guild();
-        final User user = event.user();
-        final Map<String, String> data = new HashMap<>();
-        final JsonObject jGuild = JsonObject.mapFrom(guild);
-        for(final String key : jGuild.fieldNames()) {
-            data.put("server." + key, jGuild.getMap().get(key).toString());
+        try {
+            final Guild guild = event.guild();
+            final User user = event.user();
+            final Map<String, String> data = new HashMap<>();
+            final JsonObject jGuild = JsonObject.mapFrom(guild);
+            for(final String key : jGuild.fieldNames()) {
+                data.put("server." + key, jGuild.getMap().get(key).toString());
+            }
+            final JsonObject jUser = JsonObject.mapFrom(user);
+            for(final String key : jUser.fieldNames()) {
+                data.put("user." + key, jUser.getMap().get(key).toString());
+            }
+            data.put("user.name", user.username());
+            data.put("user.mention", user.asMention());
+            data.put("level", event.level() + "");
+            data.put("xp", event.xp() + "");
+            return Templater.fromMap(data);
+        } catch(final Exception e) {
+            Sentry.capture(e);
+            throw new RuntimeException(e);
         }
-        final JsonObject jUser = JsonObject.mapFrom(user);
-        for(final String key : jUser.fieldNames()) {
-            data.put("user." + key, jUser.getMap().get(key).toString());
-        }
-        data.put("user.mention", user.asMention());
-        data.put("level", event.level() + "");
-        data.put("xp", event.xp() + "");
-        return Templater.fromMap(data);
     }
     
     @Event(EventType.LEVEL_UP)
@@ -287,12 +294,12 @@ public class PluginLevels extends BasePlugin {
                 player = database().getPlayer(user);
                 self = false;
             }
-    
+            
             if(user.bot()) {
                 catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), $(ctx.getLanguage(), "plugins.levels.bot"));
                 return;
             }
-    
+            
             String generating;
             if(self) {
                 generating = $(ctx.getLanguage(), "plugins.levels.commands.rank.generating.self");
@@ -301,7 +308,7 @@ public class PluginLevels extends BasePlugin {
                         .replace("$target", user.username());
             }
             generating = generating.replace("$mention", ctx.getUser().asMention());
-    
+            
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                     Emotes.LOADING_ICON + ' ' + generating)
                     .thenAccept(message -> catnip().rest().channel().triggerTypingIndicator(ctx.getMessage().channelId())

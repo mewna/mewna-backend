@@ -1,6 +1,5 @@
 package com.mewna.plugin.event.plugin.levels;
 
-import com.mewna.catnip.entity.channel.Channel;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.guild.Member;
 import com.mewna.catnip.entity.user.User;
@@ -17,13 +16,13 @@ import lombok.experimental.Accessors;
 @Accessors(fluent = true)
 public class LevelUpEvent extends BaseEvent {
     private final Guild guild;
-    private final Channel channel;
+    private final String channel;
     private final User user;
     private final Member member;
     private final long level;
     private final long xp;
     
-    public LevelUpEvent(final Guild guild, final Channel channel, final User user, final Member member, final long level,
+    public LevelUpEvent(final Guild guild, final String channel, final User user, final Member member, final long level,
                         final long xp) {
         super(EventType.LEVEL_UP);
         this.guild = guild;

@@ -24,7 +24,6 @@ import com.mewna.plugin.plugins.settings.LevelsSettings;
 import com.mewna.plugin.util.Emotes;
 import com.mewna.plugin.util.Renderer;
 import com.mewna.util.Templater;
-import gg.amy.singyeong.QueryBuilder;
 import io.sentry.Sentry;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -174,7 +173,7 @@ public class PluginLevels extends BasePlugin {
     private void sendLevelUpMessage(final LevelsSettings settings, final LevelUpEvent event, final Member member) {
         if(settings.isLevelUpMessagesEnabled()) {
             final String message = map(event).render(settings.getLevelUpMessage());
-            catnip().rest().channel().sendMessage(event.channel().id(), message).exceptionally(e -> {
+            catnip().rest().channel().sendMessage(event.channel(), message).exceptionally(e -> {
                 Sentry.capture(e);
                 return null;
             });
@@ -265,7 +264,7 @@ public class PluginLevels extends BasePlugin {
                 database().savePlayer(player);
                 if(isLevelUp(oldXp, oldXp + xp)) {
                     // Emit level-up event so we can process it
-                    mewna().pluginManager().processEvent(EventType.LEVEL_UP, new LevelUpEvent(guild, null,
+                    mewna().pluginManager().processEvent(EventType.LEVEL_UP, new LevelUpEvent(guild, event.message().channelId(),
                             event.user(), event.member(), xpToLevel(oldXp + xp), oldXp + xp));
                 }
             }

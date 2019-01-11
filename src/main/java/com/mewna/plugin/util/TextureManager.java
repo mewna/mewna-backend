@@ -93,7 +93,7 @@ public final class TextureManager {
     }
     
     private static void cacheAvatar(final User user) {
-        final BufferedImage avatar = downloadAvatar(user.avatarUrl(new ImageOptions().png().size(128)));
+        final BufferedImage avatar = downloadAvatar(user.effectiveAvatarUrl(new ImageOptions().png().size(128)));
         try {
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(avatar, "png", baos);

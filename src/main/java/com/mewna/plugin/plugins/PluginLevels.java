@@ -265,10 +265,16 @@ public class PluginLevels extends BasePlugin {
                 database().savePlayer(player);
                 if(isLevelUp(oldXp, oldXp + xp)) {
                     // Emit level-up event so we can process it
+                    mewna().pluginManager().processEvent(EventType.LEVEL_UP, new LevelUpEvent(guild, null,
+                            event.user(), event.member(), xpToLevel(oldXp + xp), oldXp + xp));
+                    /*
                     mewna().singyeong().send(Mewna.APP_ID, new QueryBuilder().build(),
-                            new JsonObject().put("user", author.id())
+                            new JsonObject()
+                                    .put("type", "LEVEL_UP")
+                                    .put("user", author.id())
                                     .put("guild", guild.id()).put("level", xpToLevel(oldXp + xp)).put("xp", oldXp + xp)
                                     .put("channel", event.message().channelId()));
+                                    */
                 }
             }
         });

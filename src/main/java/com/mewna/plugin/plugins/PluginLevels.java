@@ -172,11 +172,12 @@ public class PluginLevels extends BasePlugin {
     }
     
     private void sendLevelUpMessage(final LevelsSettings settings, final LevelUpEvent event, final Member member) {
-        if(settings.isLevelsEnabled()) {
-            if(settings.isLevelUpMessagesEnabled()) {
-                final String message = map(event).render(settings.getLevelUpMessage());
-                catnip().rest().channel().sendMessage(event.channel().id(), message);
-            }
+        if(settings.isLevelUpMessagesEnabled()) {
+            final String message = map(event).render(settings.getLevelUpMessage());
+            catnip().rest().channel().sendMessage(event.channel().id(), message).exceptionally(e -> {
+                Sentry.capture(e);
+                return null;
+            });
         }
     }
     

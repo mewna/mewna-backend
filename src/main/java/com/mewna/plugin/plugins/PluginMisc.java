@@ -558,7 +558,7 @@ public class PluginMisc extends BasePlugin {
                                     + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.you-have")
                                     .replace("$count", amount + "")
                                     + ')', body + sb + "\n*"
-                                    + u.getDesc()
+                                    + u.getDesc() + "*\n"
                                     + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.output")
                                     .replace("$tato", "" + u.getOutput()), false);
                         }

@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mewna.catnip.entity.builder.EmbedBuilder;
 import com.mewna.catnip.entity.builder.MessageBuilder;
-import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.data.DiscordCache;
 import com.mewna.data.Player.ClickerBuildings;
@@ -387,16 +386,16 @@ public class PluginMisc extends BasePlugin {
             final long end = System.currentTimeMillis();
             catnip().rest().channel().editMessage(ctx.getMessage().channelId(), msg.id(),
                     new MessageBuilder().content("Pong! (took " + (end - start) + "ms)").build()).thenAccept(_msg -> {
-                        ctx.getProfiler().end();
-                        if(ctx.getArgstr().equalsIgnoreCase("--profile")) {
-                            
-                            final StringBuilder sb = new StringBuilder("```CSS\n");
-                            ctx.getProfiler().sections().forEach(section -> sb.append('[').append(section.name()).append("] ")
-                                    .append(section.end() - section.start()).append("ms\n"));
-                            sb.append("```");
-                            
-                            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());
-                        }
+                ctx.getProfiler().end();
+                if(ctx.getArgstr().equalsIgnoreCase("--profile")) {
+                    
+                    final StringBuilder sb = new StringBuilder("```CSS\n");
+                    ctx.getProfiler().sections().forEach(section -> sb.append('[').append(section.name()).append("] ")
+                            .append(section.end() - section.start()).append("ms\n"));
+                    sb.append("```");
+                    
+                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());
+                }
             });
         });
     }

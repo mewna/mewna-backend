@@ -493,7 +493,15 @@ class API {
                             } else {
                                 message = $("en_US", "votes.dbl.normal").replace("$amount", amount + "");
                             }
-                            mewna.catnip().rest().user().createDM(user).thenAccept(channel -> channel.sendMessage(message));
+                            mewna.catnip().rest().user().createDM(user).thenAccept(channel -> channel.sendMessage(message))
+                                    .thenAccept(__ -> {
+                                        logger.info("Sent upvote DM to {}", user);
+                                    })
+                                    .exceptionally(e -> {
+                                        Sentry.capture(e);
+                                        return null;
+                                    })
+                            ;
                             break;
                         }
                         case "test": {

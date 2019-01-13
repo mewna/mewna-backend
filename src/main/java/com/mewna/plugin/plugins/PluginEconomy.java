@@ -59,6 +59,8 @@ public class PluginEconomy extends BasePlugin {
     @Inject
     private CurrencyHelper helper;
     
+    public static final int VOTE_BONUS = 500;
+    
     @Ratelimit(time = 5)
     @Command(names = {"balance", "bal"}, desc = "commands.economy.balance", usage = "balance [player]",
             examples = {"balance", "balance @someone"})
@@ -132,8 +134,10 @@ public class PluginEconomy extends BasePlugin {
                                     .replace("$time", Time.toHumanReadableDuration(nextMillis - nowMillis)))
                             .embed(new EmbedBuilder()
                                     .title("Hint")
-                                    .description("Still need money? [Vote for Mewna](https://discordbots.org/bot/251930037673132032/vote)" +
-                                            " every 12 hours and get an extra 1000💮 (and more on the weekends!).")
+                                    .description($(ctx.getLanguage(), "plugins.economy.vote-nag")
+                                            .replace("$link", "https://discordbots.org/bot/251930037673132032/vote")
+                                            .replace("$amount", VOTE_BONUS + "")
+                                            .replace("$symbol", helper.getCurrencySymbol(ctx)))
                                     .build())
                             .build());
             return;
@@ -170,8 +174,10 @@ public class PluginEconomy extends BasePlugin {
                         .content(msg)
                         .embed(new EmbedBuilder()
                                 .title("Hint")
-                                .description("Still need money? [Vote for Mewna](https://discordbots.org/bot/251930037673132032/vote)" +
-                                        " and get an extra 1000💮 (and more on the weekends!).")
+                                .description($(ctx.getLanguage(), "plugins.economy.vote-nag")
+                                        .replace("$link", "https://discordbots.org/bot/251930037673132032/vote")
+                                        .replace("$amount", VOTE_BONUS + "")
+                                        .replace("$symbol", helper.getCurrencySymbol(ctx)))
                                 .build())
                         .build());
     }

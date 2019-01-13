@@ -54,6 +54,7 @@
     "disabled-command": "Sorry, but that command is disabled here.",
     "ratelimited-command": "You're using that command too fast! Try again in **$time**.",
     "economy": {
+      "vote-nag": "Still need money? [Vote for Mewna]($link) every 12 hours and get an extra **$amount$symbol** (and double on weekends!).",
       "found-box": "You found a $box! Open it with `boxes open $box`",
       "commands": {
         "empty-payment": "You can't pay nothing!",

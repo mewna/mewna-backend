@@ -8,6 +8,7 @@ import com.mewna.catnip.entity.user.User;
 import com.mewna.data.DiscordCache;
 import com.mewna.data.Player;
 import com.mewna.data.Webhook;
+import com.mewna.plugin.plugins.PluginEconomy;
 import com.mewna.plugin.plugins.PluginLevels;
 import com.mewna.plugin.util.TextureManager;
 import com.mewna.servers.ServerBlogPost;
@@ -478,7 +479,7 @@ class API {
                 
                 final Optional<Player> player = mewna.database().getOptionalPlayer(user);
                 if(player.isPresent()) {
-                    final int amount = isWeekend ? 2000 : 1000;
+                    final int amount = PluginEconomy.VOTE_BONUS * (isWeekend ? 2 : 1);
                     final Player p = player.get();
                     switch(type.toLowerCase()) {
                         case "upvote":

@@ -52,10 +52,10 @@ public class PluginMusic extends BasePlugin {
         final String guildId = guild.id();
         checkState(guild, ctx.getUser()).thenAccept(check -> {
             if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.user-not-in-voice"));
             } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE || check == VoiceCheck.SELF_AND_USER_IN_SAME_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.bot-already-in-voice"));
             } else {
                 DiscordCache.voiceState(guildId, ctx.getUser().id())
@@ -81,13 +81,13 @@ public class PluginMusic extends BasePlugin {
         final String guildId = guild.id();
         checkState(guild, ctx.getUser()).thenAccept(check -> {
             if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.user-not-in-voice"));
             } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.user-not-in-same-voice"));
             } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.bot-not-in-voice"));
             } else {
                 DiscordCache.voiceState(guildId, ctx.getUser().id())
@@ -112,13 +112,13 @@ public class PluginMusic extends BasePlugin {
         final Guild guild = ctx.getGuild();
         checkState(guild, ctx.getUser()).thenAccept(check -> {
             if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.user-not-in-voice"));
             } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.user-not-in-same-voice"));
             } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.bot-not-in-voice"));
             } else {
                 final NekoTrackContext context = new NekoTrackContext(
@@ -147,19 +147,20 @@ public class PluginMusic extends BasePlugin {
                 }
                 case "open.spotify.com":
                 case "spotify.com": {
-                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                    ctx.sendMessage(
                             $(ctx.getLanguage(), "plugins.music.commands.queue.no-spotify"));
                     break;
                 }
                 default: {
-                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                    ctx.sendMessage(
                             $(ctx.getLanguage(), "plugins.music.commands.queue.invalid-url"));
                     break;
                 }
             }
         } catch(final Exception e) {
             // Not a valid url, search it
-            mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
+            mewna().singyeong().send("nekomimi",
+                    new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
                     new JsonObject().put("type", "VOICE_QUEUE")
                             .put("search", ctx.getArgstr())
                             .put("context", JsonObject.mapFrom(context)));
@@ -171,13 +172,13 @@ public class PluginMusic extends BasePlugin {
         final Guild guild = ctx.getGuild();
         checkState(guild, ctx.getUser()).thenAccept(check -> {
             if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.user-not-in-voice"));
             } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.user-not-in-same-voice"));
             } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.bot-not-in-voice"));
             } else {
                 if(ctx.getArgs().isEmpty()) {
@@ -201,13 +202,13 @@ public class PluginMusic extends BasePlugin {
         final Guild guild = ctx.getGuild();
         checkState(guild, ctx.getUser()).thenAccept(check -> {
             if(check == VoiceCheck.USER_NOT_IN_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.user-not-in-voice"));
             } else if(check == VoiceCheck.USER_IN_DIFFERENT_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.user-not-in-same-voice"));
             } else if(check == VoiceCheck.SELF_NOT_IN_VOICE) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.bot-not-in-voice"));
             } else {
                 mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),

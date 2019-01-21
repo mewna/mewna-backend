@@ -19,7 +19,7 @@ public class PluginEmotes extends BasePlugin {
             examples = {"bap someone", "stab someone else", "poke everyone"}, aliased = false)
     public void emote(final CommandContext ctx) {
         if(ctx.getArgstr().isEmpty()) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "You need to tell me who you're doing that to.");
+            ctx.sendMessage( "You need to tell me who you're doing that to.");
             return;
         }
         
@@ -32,6 +32,6 @@ public class PluginEmotes extends BasePlugin {
                 .replace("@everyone", "very funny")
                 .replace("@here", "very funny");
 
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), out);
+        ctx.sendMessage( out);
     }
 }

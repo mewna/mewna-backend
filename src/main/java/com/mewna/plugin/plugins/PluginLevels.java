@@ -277,7 +277,7 @@ public class PluginLevels extends BasePlugin {
         final Guild guild = ctx.getGuild();
         database().getOrBaseSettings(LevelsSettings.class, guild.id()).thenAccept(settings -> {
             if(!settings.isLevelsEnabled()) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), $(ctx.getLanguage(), "plugins.levels.not-enabled"));
+                ctx.sendMessage( $(ctx.getLanguage(), "plugins.levels.not-enabled"));
                 return;
             }
             final User user;
@@ -294,7 +294,7 @@ public class PluginLevels extends BasePlugin {
             }
             
             if(user.bot()) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), $(ctx.getLanguage(), "plugins.levels.bot"));
+                ctx.sendMessage( $(ctx.getLanguage(), "plugins.levels.bot"));
                 return;
             }
             
@@ -307,7 +307,7 @@ public class PluginLevels extends BasePlugin {
             }
             generating = generating.replace("$mention", ctx.getUser().asMention());
             
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     Emotes.LOADING_ICON + ' ' + generating)
                     .thenAccept(message -> catnip().rest().channel().triggerTypingIndicator(ctx.getMessage().channelId())
                             .thenAccept(__ -> {
@@ -371,7 +371,7 @@ public class PluginLevels extends BasePlugin {
         }
         
         if(user.bot()) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), $(ctx.getLanguage(), "plugins.levels.bot"));
+            ctx.sendMessage( $(ctx.getLanguage(), "plugins.levels.bot"));
             return;
         }
         
@@ -384,7 +384,7 @@ public class PluginLevels extends BasePlugin {
         }
         generating = generating.replace("$mention", ctx.getUser().asMention());
         
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+        ctx.sendMessage(
                 Emotes.LOADING_ICON + ' ' + generating)
                 .thenAccept(message ->
                         catnip().rest().channel().triggerTypingIndicator(ctx.getMessage().channelId())
@@ -432,7 +432,7 @@ public class PluginLevels extends BasePlugin {
             user = ctx.getMentions().get(0);
             player = database().getPlayer(user);
         }
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+        ctx.sendMessage(
                 $(ctx.getLanguage(), "plugins.levels.commands.score")
                         .replace("$target", user.username())
                         .replace("$score", player.calculateScore() + ""));
@@ -444,10 +444,10 @@ public class PluginLevels extends BasePlugin {
         final Guild guild = ctx.getGuild();
         database().getOrBaseSettings(LevelsSettings.class, guild.id()).thenAccept(settings -> {
             if(!settings.isLevelsEnabled()) {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), $(ctx.getLanguage(), "plugins.levels.not-enabled"));
+                ctx.sendMessage( $(ctx.getLanguage(), "plugins.levels.not-enabled"));
                 return;
             }
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     System.getenv("DOMAIN") + "/discord/leaderboards/" + guild.id());
         });
     }

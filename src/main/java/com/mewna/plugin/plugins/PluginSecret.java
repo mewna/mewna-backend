@@ -1,7 +1,6 @@
 package com.mewna.plugin.plugins;
 
 import com.mewna.accounts.Account;
-import com.mewna.catnip.entity.channel.UserDMChannel;
 import com.mewna.catnip.entity.message.Message;
 import com.mewna.data.DiscordCache;
 import com.mewna.data.Player;
@@ -25,13 +24,13 @@ import java.util.Optional;
 public class PluginSecret extends BasePlugin {
     @Command(names = "secret", desc = "secret", usage = "secret", examples = "secret", owner = true)
     public void secret(final CommandContext ctx) {
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "secret");
+        ctx.sendMessage("secret");
     }
     
     @Command(names = "inspect", desc = "secret", usage = "secret", examples = "secret", owner = true)
     public void debugInspect(final CommandContext ctx) {
         if(ctx.getArgs().size() != 2) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), Emotes.NO);
+            ctx.sendMessage(Emotes.NO);
         } else {
             final String snowflake = ctx.getArgs().get(1)
                     .replaceAll("<@(!)?", "")
@@ -46,9 +45,9 @@ public class PluginSecret extends BasePlugin {
                         o.remove("votes");
                         o.remove("boxes");
                         final String json = o.encodePrettily();
-                        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "```Javascript\n" + json + "\n```");
+                        ctx.sendMessage("```Javascript\n" + json + "\n```");
                     } else {
-                        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), Emotes.NO);
+                        ctx.sendMessage(Emotes.NO);
                     }
                     break;
                 }
@@ -58,14 +57,17 @@ public class PluginSecret extends BasePlugin {
                         final JsonObject o = JsonObject.mapFrom(optionalAccount.get());
                         o.remove("email");
                         final String json = o.encodePrettily();
-                        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "```Javascript\n" + json + "\n```");
+                        ctx.sendMessage("```Javascript\n" + json + "\n```");
                     } else {
-                        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), Emotes.NO);
+                        ctx.sendMessage(Emotes.NO);
                     }
                     break;
                 }
+                case "guild": {
+                
+                }
                 default: {
-                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), Emotes.NO);
+                    ctx.sendMessage(Emotes.NO);
                     break;
                 }
             }
@@ -77,17 +79,18 @@ public class PluginSecret extends BasePlugin {
         final String guildId = ctx.getGuild().id();
         mewna().singyeong().send("mewna-shard", new QueryBuilder().contains("guilds", guildId).build(),
                 new JsonObject().put("henlo", guildId));
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Casting guild " + guildId);
+        ctx.sendMessage("Casting guild " + guildId);
     }
     
     @Command(names = "guildcheck", desc = "secret", usage = "secret", examples = "secret", owner = true)
     public void guildcheck(final CommandContext ctx) {
         final String guildId = ctx.getGuild().id();
-        
+    
+        //noinspection CodeBlock2Expr
         DiscordCache.guild(guildId).thenAccept(g -> {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Checked casted guild " + guildId + " with result " + g);
+            ctx.sendMessage("Checked casted guild " + guildId + " with result " + g);
         }).exceptionally(e -> {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Checked casted guild " + guildId + " with exception");
+            ctx.sendMessage("Checked casted guild " + guildId + " with exception");
             e.printStackTrace();
             return null;
         });
@@ -120,8 +123,6 @@ public class PluginSecret extends BasePlugin {
     
     @Command(names = "dm", desc = "secret", usage = "secret", examples = "secret", owner = true)
     public void dm(final CommandContext ctx) {
-        catnip().rest().user().createDM(ctx.getUser().id()).thenAccept(channel -> {
-            channel.sendMessage("test!");
-        });
+        catnip().rest().user().createDM(ctx.getUser().id()).thenAccept(channel -> channel.sendMessage("test!"));
     }
 }

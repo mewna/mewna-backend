@@ -47,19 +47,16 @@ import static com.mewna.util.Translator.$;
 @SuppressWarnings("unused")
 @Plugin(name = "Economy", desc = "Let people earn and spend money.", settings = EconomySettings.class)
 public class PluginEconomy extends BasePlugin {
+    public static final int VOTE_BONUS = 500;
     private static final long SLOTS_BASE_COST = 10;
     private static final long GAMBLE_BASE_COST = 25;
     private static final long HEIST_BASE_COST = 300;
     private static final long CRIME_BASE_COST = 10;
-    
     private static final long DAILY_BASE_REWARD = 100;
-    
     private static final int GAMBLE_WUMPUS_COUNT = 4;
     private final Map<String, SlotMachine> slotsCache = new HashMap<>();
     @Inject
     private CurrencyHelper helper;
-    
-    public static final int VOTE_BONUS = 500;
     
     @Ratelimit(time = 5)
     @Command(names = {"balance", "bal"}, desc = "commands.economy.balance", usage = "balance [player]",
@@ -68,19 +65,17 @@ public class PluginEconomy extends BasePlugin {
         if(ctx.getMessage().mentionedUsers().isEmpty()) {
             final Player player = ctx.getPlayer();
             final long balance = player.getBalance();
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                    $(ctx.getLanguage(), "plugins.economy.commands.balance.self")
-                            .replace("$amount", balance + "")
-                            .replace("$symbol", helper.getCurrencySymbol(ctx)));
+            ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.balance.self")
+                    .replace("$amount", balance + "")
+                    .replace("$symbol", helper.getCurrencySymbol(ctx)));
         } else {
             final User m = ctx.getMessage().mentionedUsers().get(0);
             final Player player = database().getPlayer(m);
             final long balance = player.getBalance();
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                    $(ctx.getLanguage(), "plugins.economy.commands.balance.other")
-                            .replace("$target", m.username())
-                            .replace("$amount", "" + balance)
-                            .replace("$symbol", helper.getCurrencySymbol(ctx)));
+            ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.balance.other")
+                    .replace("$target", m.username())
+                    .replace("$amount", "" + balance)
+                    .replace("$symbol", helper.getCurrencySymbol(ctx)));
         }
     }
     
@@ -89,17 +84,17 @@ public class PluginEconomy extends BasePlugin {
             examples = "pay @someone 100")
     public void pay(final CommandContext ctx) {
         if(ctx.getMentions().isEmpty()) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), $(ctx.getLanguage(), "plugins.economy.commands.pay.needs-mention"));
+            ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.pay.needs-mention"));
             return;
         }
         if(ctx.getArgs().size() < 2) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), $(ctx.getLanguage(), "plugins.economy.commands.pay.needs-mention-amount"));
+            ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.pay.needs-mention-amount"));
             return;
         }
         final Player sender = ctx.getPlayer();
         final Player target = database().getPlayer(ctx.getMentions().get(0));
         if(target.getId().equalsIgnoreCase(sender.getId())) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), $(ctx.getLanguage(), "plugins.economy.commands.pay.no-self-pay"));
+            ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.pay.no-self-pay"));
             return;
         }
         final ImmutablePair<Boolean, Long> res = helper.handlePayment(ctx, ctx.getArgs().get(1), 1, Long.MAX_VALUE);
@@ -107,12 +102,11 @@ public class PluginEconomy extends BasePlugin {
             target.incrementBalance(res.right);
             database().savePlayer(target);
             
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                    $(ctx.getLanguage(), "plugins.economy.commands.pay.success")
-                            .replace("$amount", "" + res.right)
-                            .replace("$symbol", helper.getCurrencySymbol(ctx))
-                            .replace("$target", ctx.getMentions().get(0).username())
-                            .replace("$user", ctx.getUser().username()));
+            ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.pay.success")
+                    .replace("$amount", "" + res.right)
+                    .replace("$symbol", helper.getCurrencySymbol(ctx))
+                    .replace("$target", ctx.getMentions().get(0).username())
+                    .replace("$user", ctx.getUser().username()));
         }
     }
     
@@ -128,7 +122,7 @@ public class PluginEconomy extends BasePlugin {
         if(last.toLocalDate().plusDays(1).toEpochDay() > now.toLocalDate().toEpochDay()) {
             final long nextMillis = TimeUnit.SECONDS.toMillis(last.toLocalDate().plusDays(1).atStartOfDay(zone).toEpochSecond());
             final long nowMillis = TimeUnit.SECONDS.toMillis(now.toEpochSecond(zone.getRules().getOffset(now)));
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     new MessageBuilder()
                             .content($(ctx.getLanguage(), "plugins.economy.commands.daily.failure-wait")
                                     .replace("$time", Time.toHumanReadableDuration(nextMillis - nowMillis)))
@@ -169,7 +163,7 @@ public class PluginEconomy extends BasePlugin {
         
         player.updateLastDaily();
         database().savePlayer(player);
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+        ctx.sendMessage(
                 new MessageBuilder()
                         .content(msg)
                         .embed(new EmbedBuilder()
@@ -193,7 +187,7 @@ public class PluginEconomy extends BasePlugin {
         
         ctx.getPlayer().incrementBalance(amount);
         database().savePlayer(ctx.getPlayer());
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), text);
+        ctx.sendMessage(text);
         tryDropBox(ctx);
     }
     
@@ -209,14 +203,14 @@ public class PluginEconomy extends BasePlugin {
             ctx.getPlayer().incrementBalance(reward);
             database().savePlayer(ctx.getPlayer());
             
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.heist.success")
                             .replace("$amount", "" + reward)
                             .replace("$symbol", helper.getCurrencySymbol(ctx)));
             tryDropBox(ctx);
         } else {
             // lose
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.heist.failure")
                             .replace("$amount", "" + HEIST_BASE_COST)
                             .replace("$symbol", helper.getCurrencySymbol(ctx)));
@@ -286,7 +280,7 @@ public class PluginEconomy extends BasePlugin {
         } else {
             sb.append($(ctx.getLanguage(), "plugins.economy.commands.slots.nothing"));
         }
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());
+        ctx.sendMessage(sb.toString());
     }
     
     @Ratelimit(time = 20)
@@ -317,13 +311,13 @@ public class PluginEconomy extends BasePlugin {
                                         .append(helper.getCurrencySymbol(ctx)).append('\n');
                             }
                         });
-                        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());
+                        ctx.sendMessage(sb.toString());
                     }).exceptionally(e -> {
                 if(e instanceof TimeoutException) {
-                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Couldn't load users in time :(");
+                    ctx.sendMessage("Couldn't load users in time :(");
                 } else {
                     Sentry.capture(e);
-                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "\uD83D\uDD25 Couldn't load baltop. Try again later?");
+                    ctx.sendMessage("\uD83D\uDD25 Couldn't load baltop. Try again later?");
                 }
                 return null;
             });
@@ -364,7 +358,7 @@ public class PluginEconomy extends BasePlugin {
                     .replace("$amount", "" + ctx.getCost())
                     .replace("$symbol", helper.getCurrencySymbol(ctx)));
         }
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());
+        ctx.sendMessage(sb.toString());
     }
     
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -387,7 +381,7 @@ public class PluginEconomy extends BasePlugin {
         } else {
             b.title("Items").description($(ctx.getLanguage(), "plugins.economy.commands.inventory.empty"));
         }
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), b.build());
+        ctx.sendMessage(b.build());
     }
     
     @Command(names = {"boxes", "box", "boxen"}, desc = "commands.economy.box", usage = {"boxes", "boxes open <type>"},
@@ -411,7 +405,7 @@ public class PluginEconomy extends BasePlugin {
             } else {
                 b.title("Boxes").description($(ctx.getLanguage(), "plugins.economy.commands.boxes.none"));
             }
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), b.build());
+            ctx.sendMessage(b.build());
         } else {
             switch(ctx.getArgs().get(0).toLowerCase()) {
                 case "open": {
@@ -434,27 +428,27 @@ public class PluginEconomy extends BasePlugin {
                                 final List<String> items = new ArrayList<>();
                                 loot.forEach(e -> items.add(e.getName() + ' ' + e.getEmote()));
                                 
-                                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                ctx.sendMessage(
                                         $(ctx.getLanguage(), "plugins.economy.commands.boxes.opened-box")
                                                 .replace("$box", type.getName())
                                                 .replace("$items", String.join(", ", items))
                                 );
                             } else {
-                                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                ctx.sendMessage(
                                         $(ctx.getLanguage(), "plugins.economy.commands.boxes.dont-have-box"));
                             }
                         } else {
-                            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                            ctx.sendMessage(
                                     $(ctx.getLanguage(), "plugins.economy.commands.boxes.need-box-type"));
                         }
                     } else {
-                        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        ctx.sendMessage(
                                 $(ctx.getLanguage(), "plugins.economy.commands.boxes.need-box-type"));
                     }
                     break;
                 }
                 case "default": {
-                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                    ctx.sendMessage(
                             $(ctx.getLanguage(), "plugins.economy.commands.boxes.unknown"));
                     break;
                 }
@@ -489,7 +483,7 @@ public class PluginEconomy extends BasePlugin {
                 .field("Items", sb.toString().trim(), false)
                 .field("Help", $(ctx.getLanguage(), "plugins.economy.commands.market.buy-sell"),
                         false);
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), b.build());
+        ctx.sendMessage(b.build());
     }
     
     @Command(names = "buy", desc = "commands.economy.buy", usage = "buy <item name> [amount]",
@@ -575,7 +569,7 @@ public class PluginEconomy extends BasePlugin {
                             throw new IllegalArgumentException();
                         }
                     } catch(final Exception e) {
-                        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        ctx.sendMessage(
                                 $(ctx.getLanguage(), "plugins.economy.commands.sell.invalid-number")
                                         .replace("$number", args.get(0)));
                         return;
@@ -590,26 +584,26 @@ public class PluginEconomy extends BasePlugin {
                         ctx.getPlayer().incrementBalance(payment);
                         database().savePlayer(ctx.getPlayer());
                         
-                        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        ctx.sendMessage(
                                 $(ctx.getLanguage(), "plugins.economy.commands.sell.sell-success")
                                         .replace("$number", "" + amount)
                                         .replace("$thing", item.getName())
                                         .replace("$amount", "" + payment)
                                         .replace("$symbol", helper.getCurrencySymbol(ctx)));
                     } else {
-                        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        ctx.sendMessage(
                                 $(ctx.getLanguage(), "plugins.economy.commands.sell.not-enough-item"));
                     }
                 } else {
-                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                    ctx.sendMessage(
                             $(ctx.getLanguage(), "plugins.economy.commands.sell.cant-sell"));
                 }
             } else {
-                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.economy.commands.sell.item-doesnt-exist"));
             }
         } else {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.sell.no-item"));
         }
     }
@@ -618,25 +612,25 @@ public class PluginEconomy extends BasePlugin {
     @Command(names = "mine", desc = "commands.economy.mine", usage = "mine", examples = "mine")
     public void mine(final CommandContext ctx) {
         if(isWeighedDown(ctx.getPlayer())) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.mine.full-inventory"));
             return;
         }
         if(!ctx.getPlayer().hasItem(Item.PICKAXE)) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.mine.no-pick"));
             return;
         }
         if(LootTables.chance(5)) {
             ctx.getPlayer().removeOneFromInventory(Item.PICKAXE);
             database().savePlayer(ctx.getPlayer());
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.mine.pick-break"));
             return;
         }
         final List<Item> loot = LootTables.generateLoot(LootTables.GEMS, 0, 2, true);
         if(loot.isEmpty()) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.mine.got-dust"));
         } else {
             final StringBuilder sb = new StringBuilder();
@@ -644,7 +638,7 @@ public class PluginEconomy extends BasePlugin {
             count.keySet().forEach(e -> sb.append(e.getEmote()).append(" `x").append(count.get(e)).append("`\n"));
             ctx.getPlayer().addAllToInventory(count);
             database().savePlayer(ctx.getPlayer());
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.mine.success") + '\n' + sb);
             tryDropBox(ctx);
         }
@@ -654,13 +648,13 @@ public class PluginEconomy extends BasePlugin {
     @Command(names = "fish", desc = "commands.economy.fish", usage = "fish", examples = "fish")
     public void fish(final CommandContext ctx) {
         if(isWeighedDown(ctx.getPlayer())) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.fish.full-inventory"))
             ;
             return;
         }
         if(!ctx.getPlayer().hasItem(Item.FISHING_ROD)) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.fish.no-rod"))
             ;
             return;
@@ -668,13 +662,13 @@ public class PluginEconomy extends BasePlugin {
         if(LootTables.chance(5)) {
             ctx.getPlayer().removeOneFromInventory(Item.FISHING_ROD);
             database().savePlayer(ctx.getPlayer());
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.fish.rod-break"));
             return;
         }
         final List<Item> loot = LootTables.generateLoot(LootTables.FISHING, 1, 3, true);
         if(loot.isEmpty()) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.fish.got-water"));
         } else {
             final StringBuilder sb = new StringBuilder();
@@ -682,7 +676,7 @@ public class PluginEconomy extends BasePlugin {
             count.keySet().forEach(e -> sb.append(e.getEmote()).append(" `x").append(count.get(e)).append("`\n"));
             ctx.getPlayer().addAllToInventory(count);
             database().savePlayer(ctx.getPlayer());
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.fish.success") + '\n' + sb);
             tryDropBox(ctx);
         }
@@ -693,7 +687,7 @@ public class PluginEconomy extends BasePlugin {
             final Box box = Box.values()[random().nextInt(Box.values().length)];
             ctx.getPlayer().addOneToBoxes(box);
             database().savePlayer(ctx.getPlayer());
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+            ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.found-box")
                             .replace("$box", box.getName())
             );

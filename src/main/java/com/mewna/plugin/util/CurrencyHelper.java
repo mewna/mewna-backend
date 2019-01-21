@@ -3,7 +3,6 @@ package com.mewna.plugin.util;
 import com.mewna.Mewna;
 import com.mewna.data.Player;
 import com.mewna.plugin.CommandContext;
-import com.mewna.plugin.plugins.settings.EconomySettings;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import javax.inject.Inject;
@@ -26,43 +25,37 @@ public final class CurrencyHelper {
         final String symbol = getCurrencySymbol(ctx);
         switch(check.left) {
             case BAD_EMPTY: {
-                mewna.catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                        $(ctx.getLanguage(), "plugins.economy.commands.empty-payment"));
+                ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.empty-payment"));
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_NOT_NUM: {
-                mewna.catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                        $(ctx.getLanguage(), "plugins.economy.commands.payment-not-number")
-                                .replace("$number", maybeAmount));
+                ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.payment-not-number")
+                        .replace("$number", maybeAmount));
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_POOR_NO_BAL: {
-                mewna.catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                        $(ctx.getLanguage(), "plugins.economy.commands.poor-no-money"));
+                ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.poor-no-money"));
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_POOR: {
-                mewna.catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                        $(ctx.getLanguage(), "plugins.economy.commands.poor-not-enough")
-                            .replace("$amount", maybeAmount)
-                        .replace("$balance", ctx.getPlayer().getBalance()+"")
+                ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.poor-not-enough")
+                        .replace("$amount", maybeAmount)
+                        .replace("$balance", ctx.getPlayer().getBalance() + "")
                         .replace("$symbol", symbol));
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_CHEAP: {
-                mewna.catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                        $(ctx.getLanguage(), "plugins.economy.commands.too-cheap")
+                ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.too-cheap")
                         .replace("$amount", maybeAmount)
                         .replace("$symbol", symbol)
-                        .replace("$minAmount", min+""));
+                        .replace("$minAmount", min + ""));
                 return ImmutablePair.of(false, -1L);
             }
             case BAD_TOO_MUCH: {
-                mewna.catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                        $(ctx.getLanguage(), "plugins.economy.commands.too-much")
-                                .replace("$amount", maybeAmount)
-                                .replace("$symbol", symbol)
-                                .replace("$maxAmount", max+""));
+                ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.too-much")
+                        .replace("$amount", maybeAmount)
+                        .replace("$symbol", symbol)
+                        .replace("$maxAmount", max + ""));
                 return ImmutablePair.of(false, -1L);
             }
             case OK: {

@@ -203,11 +203,9 @@ public class PluginMisc extends BasePlugin {
             final String cat = Objects.requireNonNull(client.newCall(new Request.Builder().get().url("https://aws.random.cat/meow").build())
                     .execute().body()).string();
             final JsonObject json = new JsonObject(cat); // meow
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                    new EmbedBuilder().title("Cat").image(json.getString("file")).build());
+            ctx.sendMessage(new EmbedBuilder().title("Cat").image(json.getString("file")).build());
         } catch(final IOException e) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                    $(ctx.getLanguage(), "plugins.misc.commands.cat.invalid"));
+            ctx.sendMessage($(ctx.getLanguage(), "plugins.misc.commands.cat.invalid"));
         }
     }
     
@@ -218,11 +216,9 @@ public class PluginMisc extends BasePlugin {
             final String dog = Objects.requireNonNull(client.newCall(new Request.Builder().get().url("https://random.dog/woof.json").build())
                     .execute().body()).string();
             final JsonObject json = new JsonObject(dog); // woof
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                    new EmbedBuilder().title("Dog").image(json.getString("url")).build());
+            ctx.sendMessage(new EmbedBuilder().title("Dog").image(json.getString("url")).build());
         } catch(final IOException e) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                    $(ctx.getLanguage(), "plugins.misc.commands.dog.invalid"));
+            ctx.sendMessage($(ctx.getLanguage(), "plugins.misc.commands.dog.invalid"));
         }
     }
     
@@ -234,65 +230,59 @@ public class PluginMisc extends BasePlugin {
             final String catgirl = Objects.requireNonNull(client.newCall(new Request.Builder().get().url("https://nekos.life/api/neko").build())
                     .execute().body()).string();
             final JsonObject json = new JsonObject(catgirl); // nya
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                    new EmbedBuilder().title("Catgirl").image(json.getString("neko")).build());
+            ctx.sendMessage(new EmbedBuilder().title("Catgirl").image(json.getString("neko")).build());
         } catch(final IOException e) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                    $(ctx.getLanguage(), "plugins.misc.commands.catgirl.invalid"));
+            ctx.sendMessage($(ctx.getLanguage(), "plugins.misc.commands.catgirl.invalid"));
         }
     }
     
     @Command(names = {"rubeface", "rf"}, desc = "commands.misc.rubeface", usage = "rubeface",
             examples = "rubeface")
     public void rubeface(final CommandContext ctx) {
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                new EmbedBuilder().title("Rubeface").image(rubeface[random().nextInt(rubeface.length)]).build());
+        ctx.sendMessage(new EmbedBuilder().title("Rubeface").image(rubeface[random().nextInt(rubeface.length)]).build());
     }
     
     @Command(names = {"memetext", "bigtext", "mt"}, desc = "commands.misc.memetext", usage = "memetext <input>",
             examples = "memetext some text I want to be big!")
     public void memetext(final CommandContext ctx) {
         if(ctx.getArgstr().trim().isEmpty()) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                    $(ctx.getLanguage(), "plugins.misc.commands.memetext.invalid"));
+            ctx.sendMessage($(ctx.getLanguage(), "plugins.misc.commands.memetext.invalid"));
             return;
         }
         final StringBuilder sb = new StringBuilder();
         for(final char c : ctx.getArgstr().toCharArray()) {
             sb.append(MEMETEXT_MAP.getOrDefault(c, "" + c)).append(' ');
         }
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                ctx.getUser().asMention() + ": " + sb.toString().trim()
-                        .replace("@everyone", "[haha very funny]")
-                        .replace("@here", "[haha very funny]"));
+        ctx.sendMessage(ctx.getUser().asMention() + ": " + sb.toString().trim()
+                .replace("@everyone", "[haha very funny]")
+                .replace("@here", "[haha very funny]"));
     }
     
     @Command(names = "snowman", desc = "commands.misc.snowman", usage = "snowman", examples = "snowman")
     public void snowman(final CommandContext ctx) {
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "☃");
+        ctx.sendMessage("☃");
     }
     
     @Command(names = {"bootlegcat", "blc"}, desc = "commands.misc.bootlegcat", usage = "bootlegcat",
             examples = "bootlegcat")
     public void bootlegcat(final CommandContext ctx) {
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                $(ctx.getLanguage(), "plugins.misc.commands.bootlegcat.base") + "\n\n" +
-                        Emotes.YES + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.bootlegcat.1") + '\n' +
-                        Emotes.YES + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.bootlegcat.2") + '\n' +
-                        Emotes.YES + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.bootlegcat.3") + '\n' +
-                        Emotes.YES + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.bootlegcat.4") + '\n' +
-                        '\n' +
-                        "```\n" +
-                        "___|____|____|____|____|____|__\n" +
-                        "__|____|____|____|____|____|___\n" +
-                        "|____|___|_         ____|____|\n" +
-                        "___|___|    (\\.-./)  _|____|__\n" +
-                        "_|____|_  = (^ Y ^) =  _|____|\n" +
-                        "__|____|___ /`---`\\ __|____|___\n" +
-                        "|____|____|_U___|_U|____|____\n" +
-                        "___|____|____|____|____|____|__\n" +
-                        "__|____|____|____|____|____|____\n" +
-                        "```");
+        ctx.sendMessage($(ctx.getLanguage(), "plugins.misc.commands.bootlegcat.base") + "\n\n" +
+                Emotes.YES + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.bootlegcat.1") + '\n' +
+                Emotes.YES + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.bootlegcat.2") + '\n' +
+                Emotes.YES + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.bootlegcat.3") + '\n' +
+                Emotes.YES + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.bootlegcat.4") + '\n' +
+                '\n' +
+                "```\n" +
+                "___|____|____|____|____|____|__\n" +
+                "__|____|____|____|____|____|___\n" +
+                "|____|___|_         ____|____|\n" +
+                "___|___|    (\\.-./)  _|____|__\n" +
+                "_|____|_  = (^ Y ^) =  _|____|\n" +
+                "__|____|___ /`---`\\ __|____|___\n" +
+                "|____|____|_U___|_U|____|____\n" +
+                "___|____|____|____|____|____|__\n" +
+                "__|____|____|____|____|____|____\n" +
+                "```");
     }
     
     @Command(
@@ -315,8 +305,7 @@ public class PluginMisc extends BasePlugin {
     )
     public void emojify(final CommandContext ctx) {
         if(ctx.getArgstr() == null || ctx.getArgstr().isEmpty()) {
-            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
-                    $(ctx.getLanguage(), "plugins.misc.commands.emojify.invalid")
+            ctx.sendMessage($(ctx.getLanguage(), "plugins.misc.commands.emojify.invalid")
                             .replace("$category", ctx.getCommand().toLowerCase()));
             return;
         }
@@ -343,7 +332,7 @@ public class PluginMisc extends BasePlugin {
         for(final String e : ctx.getArgstr().split("\\s+")) {
             s.append(e).append(' ').append(emoji).append(' ');
         }
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), ctx.getUser().asMention() + " > " + s.toString().trim()
+        ctx.sendMessage(ctx.getUser().asMention() + " > " + s.toString().trim()
                 .replace("@everyone", "[haha very funny]")
                 .replace("@here", "[haha very funny]")
                 .replace(ctx.getGuild().id(), "haha no"));
@@ -359,7 +348,7 @@ public class PluginMisc extends BasePlugin {
                 .field("Support server", "https://discord.gg/UwdDN6r", false)
                 .field("Follow us on Twitter!", "https://twitter.com/mewnabot", false)
         ;
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), builder.build());
+        ctx.sendMessage(builder.build());
     }
     
     @Command(names = {"roll", "r"}, desc = "commands.misc.roll", usage = "roll <dice expression>",
@@ -374,14 +363,14 @@ public class PluginMisc extends BasePlugin {
         } catch(final Exception e) {
             message = $(ctx.getLanguage(), "plugins.misc.commands.roll.invalid");
         }
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), message);
+        ctx.sendMessage(message);
     }
     
     @Command(names = "ping", desc = "commands.misc.ping", usage = "ping", examples = "ping")
     public void ping(final CommandContext ctx) {
         final long start = System.currentTimeMillis();
         ctx.getProfiler().section("startPing");
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), "Pinging...").thenAccept(msg -> {
+        ctx.sendMessage("Pinging...").thenAccept(msg -> {
             ctx.getProfiler().section("edit");
             final long end = System.currentTimeMillis();
             catnip().rest().channel().editMessage(ctx.getMessage().channelId(), msg.id(),
@@ -394,7 +383,7 @@ public class PluginMisc extends BasePlugin {
                             .append(section.end() - section.start()).append("ms\n"));
                     sb.append("```");
                     
-                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());
+                    ctx.sendMessage(sb.toString());
                 }
             });
         });
@@ -404,7 +393,7 @@ public class PluginMisc extends BasePlugin {
     @Command(names = {"page", "blog", "site"}, desc = "commands.misc.page", usage = "page", examples = "page")
     public void blog(final CommandContext ctx) {
         final Guild guild = ctx.getGuild();
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+        ctx.sendMessage(
                 System.getenv("DOMAIN") + "/server/" + guild.id());
     }
     */
@@ -426,7 +415,7 @@ public class PluginMisc extends BasePlugin {
         }
         
         sb.append("```");
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), sb.toString());
+        ctx.sendMessage(sb.toString());
     }
     
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -449,7 +438,7 @@ public class PluginMisc extends BasePlugin {
                             $(ctx.getLanguage(), "plugins.misc.commands.tato.help.5") + '\n' +
                             $(ctx.getLanguage(), "plugins.misc.commands.tato.help.6");
                     //"- Feed your Mewna Miners with `tato food`.\n" +
-                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), m);
+                    ctx.sendMessage(m);
                     break;
                 }
                 case "upgrades":
@@ -476,25 +465,25 @@ public class PluginMisc extends BasePlugin {
                             builder.field(check + u.getName(), body + sb + "\n*" + u.getDesc() + '*',
                                     false);
                         }
-                        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), builder.build());
+                        ctx.sendMessage(builder.build());
                     } else {
                         final String action = args.remove(0);
                         switch(action) {
                             case "buy":
                             case "b": {
                                 if(args.isEmpty()) {
-                                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                    ctx.sendMessage(
                                             Emotes.NO + ' '
                                                     + $(ctx.getLanguage(), "plugins.misc.commands.tato.upgrades.buy.no-upgrade"));
                                 } else {
                                     final String type = args.remove(0);
                                     final ClickerUpgrades upgrade = ClickerUpgrades.byName(type);
                                     if(upgrade == null) {
-                                        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                        ctx.sendMessage(
                                                 Emotes.NO + ' '
                                                         + $(ctx.getLanguage(), "plugins.misc.commands.tato.upgrades.buy.invalid-upgrade"));
                                     } else if(data.getUpgrades().contains(upgrade)) {
-                                        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                        ctx.sendMessage(
                                                 Emotes.NO + ' '
                                                         + $(ctx.getLanguage(), "plugins.misc.commands.tato.upgrades.buy.already-owned"));
                                     } else {
@@ -511,13 +500,13 @@ public class PluginMisc extends BasePlugin {
                                                 data.getUpgrades().add(upgrade);
                                                 ctx.getPlayer().setClickerData(data);
                                                 database().savePlayer(ctx.getPlayer());
-                                                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                                ctx.sendMessage(
                                                         Emotes.YES + ' '
                                                                 + $(ctx.getLanguage(), "plugins.misc.commands.tato.upgrades.buy.success")
                                                                 .replace("$upgrade", upgrade.getName()));
                                             }
                                         } else {
-                                            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                            ctx.sendMessage(
                                                     Emotes.NO + ' '
                                                             + $(ctx.getLanguage(), "plugins.misc.commands.tato.upgrades.buy.need-items"));
                                         }
@@ -561,7 +550,7 @@ public class PluginMisc extends BasePlugin {
                                     + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.output")
                                     .replace("$tato", "" + u.getOutput()), false);
                         }
-                        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), builder.build());
+                        ctx.sendMessage(builder.build());
                         break;
                     } else {
                         final String action = args.remove(0);
@@ -569,14 +558,14 @@ public class PluginMisc extends BasePlugin {
                             case "buy":
                             case "b": {
                                 if(args.isEmpty()) {
-                                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                    ctx.sendMessage(
                                             Emotes.NO + ' '
                                                     + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.buy.no-building"));
                                 } else {
                                     final String type = args.remove(0);
                                     final ClickerBuildings building = ClickerBuildings.byName(type);
                                     if(building == null) {
-                                        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                        ctx.sendMessage(
                                                 Emotes.NO + ' '
                                                         + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.buy.invalid-building"));
                                     } else {
@@ -597,13 +586,13 @@ public class PluginMisc extends BasePlugin {
                                                 }
                                                 ctx.getPlayer().setClickerData(data);
                                                 database().savePlayer(ctx.getPlayer());
-                                                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                                ctx.sendMessage(
                                                         Emotes.YES + ' '
                                                                 + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.buy.success")
                                                                 .replace("$building", building.getName()));
                                             }
                                         } else {
-                                            catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                                            ctx.sendMessage(
                                                     Emotes.NO + ' '
                                                             + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.buy.need-items"));
                                         }
@@ -621,7 +610,7 @@ public class PluginMisc extends BasePlugin {
                 }
                 */
                 case "top": {
-                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), Emotes.LOADING_ICON
+                    ctx.sendMessage(Emotes.LOADING_ICON
                             + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.tato.top.loading"))
                             .thenAccept(msg -> pool.execute(() -> {
                                 final String query = "SELECT id, (data->'clickerData'->>'totalClicks') AS clicks FROM players " +
@@ -644,7 +633,7 @@ public class PluginMisc extends BasePlugin {
                     break;
                 }
                 default: {
-                    catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), Emotes.NO + ' '
+                    ctx.sendMessage(Emotes.NO + ' '
                             + $(ctx.getLanguage(), "plugins.misc.commands.tato.unknown"));
                     break;
                 }
@@ -703,7 +692,7 @@ public class PluginMisc extends BasePlugin {
         
         // Finally, display
         
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+        ctx.sendMessage(
                 $(ctx.getLanguage(), "plugins.misc.commands.tato.stats-header")
                         .replace("$target", ctx.getUser().asMention()) + ":\n" + stats);
     }
@@ -942,11 +931,11 @@ public class PluginMisc extends BasePlugin {
     }
     
     private void sendDndResponse(final CommandContext ctx, final String res) {
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), res);
+        ctx.sendMessage(res);
     }
     
     private void sendDndEmbedResponse(final CommandContext ctx, final EmbedBuilder builder) {
-        catnip().rest().channel().sendMessage(ctx.getMessage().channelId(), builder.build());
+        ctx.sendMessage(builder.build());
     }
     
     @SuppressWarnings("ResultOfMethodCallIgnored")

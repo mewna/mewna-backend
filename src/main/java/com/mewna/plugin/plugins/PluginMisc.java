@@ -306,7 +306,7 @@ public class PluginMisc extends BasePlugin {
     public void emojify(final CommandContext ctx) {
         if(ctx.getArgstr() == null || ctx.getArgstr().isEmpty()) {
             ctx.sendMessage($(ctx.getLanguage(), "plugins.misc.commands.emojify.invalid")
-                            .replace("$category", ctx.getCommand().toLowerCase()));
+                    .replace("$category", ctx.getCommand().toLowerCase()));
             return;
         }
         final String emoji;
@@ -373,8 +373,7 @@ public class PluginMisc extends BasePlugin {
         ctx.sendMessage("Pinging...").thenAccept(msg -> {
             ctx.getProfiler().section("edit");
             final long end = System.currentTimeMillis();
-            catnip().rest().channel().editMessage(ctx.getMessage().channelId(), msg.id(),
-                    new MessageBuilder().content("Pong! (took " + (end - start) + "ms)").build()).thenAccept(_msg -> {
+            msg.edit(new MessageBuilder().content("Pong! (took " + (end - start) + "ms)").build()).thenAccept(_msg -> {
                 ctx.getProfiler().end();
                 if(ctx.getArgstr().equalsIgnoreCase("--profile")) {
                     

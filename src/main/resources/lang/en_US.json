@@ -139,7 +139,7 @@
         },
         "fish": {
           "full-inventory": "Your inventory is full! Try selling some stuff first.",
-          "no-rod": "You don't have a `fishingrod`, so you can't mine. Perhaps you should `buy` one...",
+          "no-rod": "You don't have a `fishingrod`, so you can't fish. Perhaps you should `buy` one...",
           "rod-break": "Oh no! Your fishing rod broke when you tried to use it!",
           "got-water": "You fished all day, but found nothing but empty water.",
           "success": "You fished up:"

@@ -376,7 +376,6 @@ public class PluginMisc extends BasePlugin {
             msg.edit(new MessageBuilder().content("Pong! (took " + (end - start) + "ms)").build()).thenAccept(_msg -> {
                 ctx.getProfiler().end();
                 if(ctx.getArgstr().equalsIgnoreCase("--profile")) {
-                    
                     final StringBuilder sb = new StringBuilder("```CSS\n");
                     ctx.getProfiler().sections().forEach(section -> sb.append('[').append(section.name()).append("] ")
                             .append(section.end() - section.start()).append("ms\n"));

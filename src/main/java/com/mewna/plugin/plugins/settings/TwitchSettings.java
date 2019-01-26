@@ -138,7 +138,6 @@ public class TwitchSettings implements PluginSettings {
                     new QueryBuilder().build(),
                     new JsonObject().put("t", "TWITCH_SUBSCRIBE")
                             .put("d", new JsonObject().put("id", streamer.getId()).put("topic", "streams")));
-            System.out.println(streamer.getId());
         });
         
         // We don't try to unsubscribe from webhooks because that would honestly be a nightmare x-x

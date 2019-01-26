@@ -1,5 +1,6 @@
 package com.mewna.plugin.plugins;
 
+import com.mewna.Mewna;
 import com.mewna.accounts.Account;
 import com.mewna.catnip.entity.message.Message;
 import com.mewna.data.DiscordCache;
@@ -9,12 +10,19 @@ import com.mewna.plugin.Command;
 import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.Plugin;
 import com.mewna.plugin.plugins.settings.SecretSettings;
+import com.mewna.plugin.plugins.settings.TwitchSettings;
 import com.mewna.plugin.util.Emotes;
 import com.mewna.util.MewnaFutures;
 import gg.amy.singyeong.QueryBuilder;
+import io.sentry.Sentry;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author amy
@@ -85,7 +93,7 @@ public class PluginSecret extends BasePlugin {
     @Command(names = "guildcheck", desc = "secret", usage = "secret", examples = "secret", owner = true)
     public void guildcheck(final CommandContext ctx) {
         final String guildId = ctx.getGuild().id();
-    
+        
         //noinspection CodeBlock2Expr
         DiscordCache.guild(guildId).thenAccept(g -> {
             ctx.sendMessage("Checked casted guild " + guildId + " with result " + g);
@@ -124,5 +132,31 @@ public class PluginSecret extends BasePlugin {
     @Command(names = "dm", desc = "secret", usage = "secret", examples = "secret", owner = true)
     public void dm(final CommandContext ctx) {
         catnip().rest().user().createDM(ctx.getUser().id()).thenAccept(channel -> channel.sendMessage("test!"));
+    }
+    
+    @Command(names = "forcetwitchresub", desc = "secret", usage = "secret", examples = "secret", owner = true)
+    public void meme(final CommandContext ctx) {
+        new Thread(() -> {
+            final Set<String> ids = new HashSet<>();
+            database().getStore().sql("SELECT data FROM settings_twitch;", c -> {
+                final ResultSet rs = c.executeQuery();
+                while(rs.next()) {
+                    try {
+                        final TwitchSettings s = Json.mapper.readValue(rs.getString("data"), TwitchSettings.class);
+                        s.getTwitchStreamers().stream()
+                                .filter(e -> e.isStreamStartMessagesEnabled() || e.isStreamEndMessagesEnabled())
+                                .forEach(e -> ids.add(e.getId()));
+                    } catch(final IOException e) {
+                        Sentry.capture(e);
+                    }
+                }
+            });
+            ids.forEach(e -> Mewna.getInstance().singyeong().send("telepathy",
+                    new QueryBuilder().build(),
+                    new JsonObject().put("t", "TWITCH_SUBSCRIBE")
+                            .put("d", new JsonObject().put("id", e).put("topic", "streams"))));
+            catnip().rest().user().createDM(ctx.getUser().id())
+                    .thenAccept(channel -> channel.sendMessage("Finished forcing twitch resub (" + ids.size() + " streamers)."));
+        }).start();
     }
 }

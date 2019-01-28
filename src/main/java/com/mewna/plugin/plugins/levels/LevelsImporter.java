@@ -86,7 +86,7 @@ public final class LevelsImporter {
                             
                             Mewna.getInstance().database().getStore().sql("INSERT INTO players (id, data) VALUES (?, to_jsonb(?::jsonb)) " +
                                             "ON CONFLICT (id) DO UPDATE " +
-                                            "SET data = jsonb_insert(players.data, '{guildXp, " + guild + "}', '" + player.getXp() + "');",
+                                            "SET data = jsonb_set(players.data, '{guildXp, " + guild + "}', '" + player.getXp() + "');",
                                     c -> {
                                         c.setString(1, player.getId());
                                         final Player p = new Player();

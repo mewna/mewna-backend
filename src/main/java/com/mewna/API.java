@@ -10,6 +10,7 @@ import com.mewna.data.Player;
 import com.mewna.data.Webhook;
 import com.mewna.plugin.plugins.PluginEconomy;
 import com.mewna.plugin.plugins.PluginLevels;
+import com.mewna.plugin.plugins.levels.LevelsImporter;
 import com.mewna.plugin.util.TextureManager;
 import com.mewna.servers.ServerBlogPost;
 import io.sentry.Sentry;
@@ -361,6 +362,18 @@ class API {
                         .end(new JsonObject().encode());
             });
             
+            // Levels imports
+            router.post("/data/levels/import/:id/mee6").handler(ctx -> {
+                final String id = ctx.request().getParam("id");
+                // This makes me feel better about passing untrusted user input from the url parameters
+                if(!id.matches("\\d{17,20}")) {
+                    ctx.response().end(new JsonObject().encode());
+                    return;
+                }
+                LevelsImporter.importMEE6Levels(id);
+                ctx.response().end(new JsonObject().encode());
+            });
+    
             // Server pages
             router.post("/data/server/:id/post").handler(BodyHandler.create()).blockingHandler(ctx -> {
                 // Create a post

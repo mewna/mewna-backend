@@ -307,7 +307,7 @@ public class CommandManager {
                             return;
                         }
                     }
-    
+                    
                     final Optional<Account> finalMaybeAccount = maybeAccount;
                     profiler.section("payment");
                     mewna.database().getOrBaseSettings(EconomySettings.class, guild.id()).thenAccept(settings -> {
@@ -329,7 +329,7 @@ public class CommandManager {
                                     maybePayment = args.get(0);
                                 }
                             }
-            
+                            
                             final ImmutablePair<Boolean, Long> res = mewna.pluginManager().getCurrencyHelper()
                                     .handlePayment(paymentCtx, maybePayment, cmd.getPayment().min(), cmd.getPayment().max());
                             // If we can make the payment, set the cost and continue
@@ -340,9 +340,9 @@ public class CommandManager {
                                 return;
                             }
                         }
-        
+                        
                         final CommandContext ctx = paymentCtx.toBuilder().cost(cost).build();
-        
+                        
                         profiler.section("exec");
                         logger.info("Command: {}#{} ({}, account: {}) in {}#{}-{}: {} {}", user.username(), user.discriminator(),
                                 user.id(), ctx.getAccount().id(), guild.id(), channelId, event.message().id(), commandName, argstr);

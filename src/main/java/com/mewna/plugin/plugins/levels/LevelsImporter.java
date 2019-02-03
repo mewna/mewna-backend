@@ -1,10 +1,12 @@
 package com.mewna.plugin.plugins.levels;
 
 import com.mewna.Mewna;
+import com.mewna.catnip.entity.impl.UserImpl;
 import com.mewna.data.Player;
 import com.mewna.plugin.plugins.levels.mee6.MEE6Player;
 import com.mewna.plugin.plugins.levels.mee6.MEE6RoleReward;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
+import com.mewna.plugin.util.Snowflakes;
 import io.sentry.Sentry;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -94,6 +96,10 @@ public final class LevelsImporter {
                                         c.setString(2, JsonObject.mapFrom(p).encode());
                                         c.execute();
                                     });
+                            if(!Mewna.getInstance().accountManager().getAccountByLinkedDiscord(player.getId()).isPresent()) {
+                                Mewna.getInstance().accountManager().createNewDiscordLinkedAccount(null,
+                                        new UserImpl().avatar(player.getAvatar()).username(player.getUsername()).discriminator(player.getDiscriminator()));
+                            }
                         });
                         Mewna.getInstance().database().getStore().sql("COMMIT;");
                         try {

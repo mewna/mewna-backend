@@ -6,7 +6,6 @@ import com.mewna.data.Player;
 import com.mewna.plugin.plugins.levels.mee6.MEE6Player;
 import com.mewna.plugin.plugins.levels.mee6.MEE6RoleReward;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
-import com.mewna.plugin.util.Snowflakes;
 import io.sentry.Sentry;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;

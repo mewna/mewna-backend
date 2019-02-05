@@ -303,39 +303,48 @@ public class Player {
     
     public enum ClickerTiers {
         // @formatter:off
-        T1  ("Nine Lives",         BigDecimal.valueOf(                        0L)), // 0
-        T2  ("Just Nyan More",     BigDecimal.valueOf(                      100L)), // 100
-        T3  ("Purrenial Interest", BigDecimal.valueOf(                    1_000L)), // 1k
-        T4  ("Hitting the Catnip", BigDecimal.valueOf(                   10_000L)), // 10k
-        T5  ("Found YouTube",      BigDecimal.valueOf(                  100_000L)), // 100k
-        T6  ("Claws Out",          BigDecimal.valueOf(                1_000_000L)), // 1m
-        T7  ("Soft Pads",          BigDecimal.valueOf(            1_000_000_000L)), // 1b
-        T8  ("Found By YouTube",   BigDecimal.valueOf(        1_000_000_000_000L)), // 1t
-        T9  ("Caliconnoisseur",    BigDecimal.valueOf(    1_000_000_000_000_000L)), // 1qd
-        T10 ("Uses Litterbox",     BigDecimal.valueOf(1_000_000_000_000_000_000L)), // 1qt
+        T1  (1,  "Nine Lives",         BigDecimal.valueOf(                        0L)), // 0
+        T2  (2,  "Just Nyan More",     BigDecimal.valueOf(                      100L)), // 100
+        T3  (3,  "Purrenial Interest", BigDecimal.valueOf(                    1_000L)), // 1k
+        T4  (4,  "Hitting the Catnip", BigDecimal.valueOf(                   10_000L)), // 10k
+        T5  (5,  "Found YouTube",      BigDecimal.valueOf(                  100_000L)), // 100k
+        T6  (6,  "Claws Out",          BigDecimal.valueOf(                1_000_000L)), // 1m
+        T7  (7,  "Soft Pads",          BigDecimal.valueOf(            1_000_000_000L)), // 1b
+        T8  (8,  "Found By YouTube",   BigDecimal.valueOf(        1_000_000_000_000L)), // 1t
+        T9  (9,  "Caliconnoisseur",    BigDecimal.valueOf(    1_000_000_000_000_000L)), // 1qd
+        T10 (10, "Uses Litterbox",     BigDecimal.valueOf(1_000_000_000_000_000_000L)), // 1qt
         ; // Long.MAX_VALUE for comparison            9_223_372_036_854_775_807L
     
         // @formatter:on
+        @Getter
+        private final int rank;
+        
         @Getter
         private final String name;
         
         @Getter
         private final BigDecimal minValue;
         
-        ClickerTiers(final String name, final BigDecimal minValue) {
+        ClickerTiers(final int rank, final String name, final BigDecimal minValue) {
+            this.rank = rank;
             this.name = name;
             this.minValue = minValue;
+        }
+    
+        public String tierString() {
+            return "T" + rank;
         }
     }
     
     public enum ClickerBuildings {
         // @formatter:off
-        MINER(              "miner",             "A Mewna who mines for tato.",                     T1, 20L,    BigDecimal.valueOf(2L),     Item.PICKAXE),
-        FERTILIZER(         "fertilizer",        "Fertilizer to grow more tato in the mines.",      T2, 250L,   BigDecimal.valueOf(25L),    Item.PASTA, Item.RAMEN, Item.DONUT),
-        FRENCH_FRY_MACHINE( "frenchfrymachine",  "Turn tato into french fries to boost output.",    T3, 2000L,  BigDecimal.valueOf(200L),   Item.FRIES, Item.HOTDOG, Item.BOOT),
-        POTATO_CHIP_FACTORY("potatochipfactory", "Turn tato into french chips to boost output.",    T4, 5000L,  BigDecimal.valueOf(1000L),  Item.FRIES, Item.BURGER, Item.BOOT),
-        FOOD_TRUCK(         "foodtruck",         "Cart out tato faster for extra income.",          T5, 10000L, BigDecimal.valueOf(30000L), Item.FRIES, Item.BURGER, Item.HOTDOG, Item.PASTA, Item.RAMEN, Item.FISH, Item.TROPICAL_FISH, Item.BURRITO),
-        TATO_TEMPLE(        "tatotemple",        "Worship the Almighty Tato for mining blessings.", T6, 30000L, BigDecimal.valueOf(50000L), Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE),
+        MINER(              "miner",             "A Mewna who mines for tato.",                             T1, 20L,    BigDecimal.valueOf(2L),      Item.PICKAXE),
+        FERTILIZER(         "fertilizer",        "Fertilizer to grow more tato in the mines.",              T1, 250L,   BigDecimal.valueOf(25L),     Item.PASTA, Item.RAMEN, Item.DONUT),
+        FRENCH_FRY_MACHINE( "frenchfrymachine",  "Turn tato into french fries to boost output.",            T1, 2000L,  BigDecimal.valueOf(200L),    Item.FRIES, Item.HOTDOG, Item.BOOT),
+        POTATO_CHIP_FACTORY("potatochipfactory", "Turn tato into french chips to boost output.",            T2, 5000L,  BigDecimal.valueOf(1000L),   Item.FRIES, Item.BURGER, Item.BOOT),
+        FOOD_TRUCK(         "foodtruck",         "Cart out tato faster for extra income.",                  T3, 10000L, BigDecimal.valueOf(30000L),  Item.FRIES, Item.BURGER, Item.HOTDOG, Item.PASTA, Item.RAMEN, Item.FISH, Item.TROPICAL_FISH, Item.BURRITO),
+        TATO_TEMPLE(        "tatotemple",        "Worship the Almighty Tato for mining blessings.",         T4, 30000L, BigDecimal.valueOf(50000L),  Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE),
+        TATO_PORTAL(        "tatoportal",        "Open a portal to the Tato Dimension for even more tato!", T8, 5000L,  BigDecimal.valueOf(250000L), Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE, Item.RAMEN, Item.TACO),
         ;
     
         // @formatter:off
@@ -369,6 +378,10 @@ public class Player {
                 }
             }
             return null;
+        }
+    
+        public boolean playerHasTier(final Player player) {
+            return player.clickerData.getTier().rank >= tier.rank;
         }
     }
     

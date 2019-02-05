@@ -540,7 +540,7 @@ public class PluginMisc extends BasePlugin {
                             }
                             
                             // lol
-                            builder.field(u.getName() + " ("
+                            builder.field(u.getName() + " - " + u.getTier().tierString() + " ("
                                     + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.you-have")
                                     .replace("$count", amount + "")
                                     + ')', body + sb + "\n*"
@@ -566,6 +566,10 @@ public class PluginMisc extends BasePlugin {
                                         ctx.sendMessage(
                                                 Emotes.NO + ' '
                                                         + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.buy.invalid-building"));
+                                    } else if(!building.playerHasTier(ctx.getPlayer())) {
+                                        ctx.sendMessage(
+                                                Emotes.NO + ' '
+                                                        + $(ctx.getLanguage(), "plugins.misc.commands.tato.buildings.buy.tier-too-low"));
                                     } else {
                                         // We check items first so that we don't take money on a failure
                                         final boolean hasItems = Arrays.stream(building.getItems())
@@ -681,7 +685,7 @@ public class PluginMisc extends BasePlugin {
                 .append("         [TPS] : ").append(data.getTatoPerSecond()).append(" tato / sec\n")
                 .append("  [Total tato] : ").append(data.getTotalClicks().setScale(0, RoundingMode.FLOOR)).append(" tato\n")
                 .append("      [Gained] : ").append(increase.setScale(0, RoundingMode.FLOOR)).append(" tato\n")
-                .append("[Current Tier] : ").append(tier.name()).append(" - ").append(tier.getName()).append("\n\n")
+                .append("[Current Tier] : ").append(tier.tierString()).append(" - ").append(tier.getName()).append("\n\n")
                 // oh god why
                 .append("[Upgrades]\n").append(upgradeSB.substring(0, upgradeSB.length() - 1)).append("\n\n")
                 .append("[Buildings]\n").append(buildingSB.substring(0, buildingSB.length() - 1)).append(" \n")

@@ -259,6 +259,7 @@
             "output": "Output: $tato tato per second",
             "buy": {
               "no-building": "You need to tell me what building you want to buy!",
+              "tier-too-low": "Your tato tier is too low to buy that!",
               "invalid-building": "That's not a real building!",
               "need-items": "You don't have the items needed to buy that!",
               "success": "You bought a **$building** building."

@@ -338,13 +338,14 @@ public class Player {
     
     public enum ClickerBuildings {
         // @formatter:off
-        MINER(              "miner",             "A Mewna who mines for tato.",                             T1, 20L,    BigDecimal.valueOf(2L),      Item.PICKAXE),
-        FERTILIZER(         "fertilizer",        "Fertilizer to grow more tato in the mines.",              T1, 250L,   BigDecimal.valueOf(25L),     Item.PASTA, Item.RAMEN, Item.DONUT),
-        FRENCH_FRY_MACHINE( "frenchfrymachine",  "Turn tato into french fries to boost output.",            T1, 2000L,  BigDecimal.valueOf(200L),    Item.FRIES, Item.HOTDOG, Item.BOOT),
-        POTATO_CHIP_FACTORY("potatochipfactory", "Turn tato into french chips to boost output.",            T2, 5000L,  BigDecimal.valueOf(1000L),   Item.FRIES, Item.BURGER, Item.BOOT),
-        FOOD_TRUCK(         "foodtruck",         "Cart out tato faster for extra income.",                  T3, 10000L, BigDecimal.valueOf(30000L),  Item.FRIES, Item.BURGER, Item.HOTDOG, Item.PASTA, Item.RAMEN, Item.FISH, Item.TROPICAL_FISH, Item.BURRITO),
-        TATO_TEMPLE(        "tatotemple",        "Worship the Almighty Tato for mining blessings.",         T4, 30000L, BigDecimal.valueOf(50000L),  Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE),
-        TATO_PORTAL(        "tatoportal",        "Open a portal to the Tato Dimension for even more tato!", T8, 10000L, BigDecimal.valueOf(250000L), Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE, Item.RAMEN, Item.TACO),
+        MINER(              "miner",             "A Mewna who mines for tato.",                                         T1, 20L,    BigDecimal.valueOf(2L),       Item.PICKAXE),
+        FERTILIZER(         "fertilizer",        "Fertilizer to grow more tato in the mines.",                          T1, 250L,   BigDecimal.valueOf(25L),      Item.PASTA, Item.RAMEN, Item.DONUT),
+        FRENCH_FRY_MACHINE( "frenchfrymachine",  "Turn tato into french fries to boost output.",                        T1, 2000L,  BigDecimal.valueOf(200L),     Item.FRIES, Item.HOTDOG, Item.BOOT),
+        POTATO_CHIP_FACTORY("potatochipfactory", "Turn tato into french chips to boost output.",                        T2, 5000L,  BigDecimal.valueOf(1000L),    Item.FRIES, Item.BURGER, Item.BOOT),
+        FOOD_TRUCK(         "foodtruck",         "Cart out tato faster for extra income.",                              T3, 10000L, BigDecimal.valueOf(30000L),   Item.FRIES, Item.BURGER, Item.HOTDOG, Item.PASTA, Item.RAMEN, Item.FISH, Item.TROPICAL_FISH, Item.BURRITO),
+        TATO_TEMPLE(        "tatotemple",        "Worship the Almighty Tato for mining blessings.",                     T4, 30000L, BigDecimal.valueOf(50000L),   Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE),
+        TATO_PORTAL(        "tatoportal",        "Open a portal to the Tato Dimension for even more tato!",             T8, 10000L, BigDecimal.valueOf(250000L),  Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE, Item.RAMEN, Item.TACO),
+        ASCENDED_MEWNA(     "ascendedmewna",     "A Mewna who has ascended to godhood and produces tato from nothing.", T9, 30000L, BigDecimal.valueOf(2000000L), Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE, Item.RAMEN, Item.TACO),
         ;
     
         // @formatter:off

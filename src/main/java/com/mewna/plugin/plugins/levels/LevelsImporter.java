@@ -95,10 +95,12 @@ public final class LevelsImporter {
                                         c.setString(2, JsonObject.mapFrom(p).encode());
                                         c.execute();
                                     });
+                            /*
                             if(!Mewna.getInstance().accountManager().getAccountByLinkedDiscord(player.getId()).isPresent()) {
                                 Mewna.getInstance().accountManager().createNewDiscordLinkedAccount(null,
                                         new UserImpl().avatar(player.getAvatar()).username(player.getUsername()).discriminator(player.getDiscriminator()));
                             }
+                            */
                         });
                         Mewna.getInstance().database().getStore().sql("COMMIT;");
                         try {

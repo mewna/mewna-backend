@@ -1,7 +1,6 @@
 package com.mewna.plugin.plugins.levels;
 
 import com.mewna.Mewna;
-import com.mewna.catnip.entity.impl.UserImpl;
 import com.mewna.data.Player;
 import com.mewna.plugin.plugins.levels.mee6.MEE6Player;
 import com.mewna.plugin.plugins.levels.mee6.MEE6RoleReward;

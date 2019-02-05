@@ -295,7 +295,7 @@ public class Player {
     // TODO: This is kinda dumb tbqh
     @JsonIgnore
     public Account getAccount() {
-        //noinspection ConstantConditions
+        //noinspection ConstantConditions,OptionalGetWithoutIsPresent
         return Mewna.getInstance().database().getAccountByDiscordId(id).get();
     }
     
@@ -344,7 +344,7 @@ public class Player {
         POTATO_CHIP_FACTORY("potatochipfactory", "Turn tato into french chips to boost output.",            T2, 5000L,  BigDecimal.valueOf(1000L),   Item.FRIES, Item.BURGER, Item.BOOT),
         FOOD_TRUCK(         "foodtruck",         "Cart out tato faster for extra income.",                  T3, 10000L, BigDecimal.valueOf(30000L),  Item.FRIES, Item.BURGER, Item.HOTDOG, Item.PASTA, Item.RAMEN, Item.FISH, Item.TROPICAL_FISH, Item.BURRITO),
         TATO_TEMPLE(        "tatotemple",        "Worship the Almighty Tato for mining blessings.",         T4, 30000L, BigDecimal.valueOf(50000L),  Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE),
-        TATO_PORTAL(        "tatoportal",        "Open a portal to the Tato Dimension for even more tato!", T8, 5000L,  BigDecimal.valueOf(250000L), Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE, Item.RAMEN, Item.TACO),
+        TATO_PORTAL(        "tatoportal",        "Open a portal to the Tato Dimension for even more tato!", T8, 10000L, BigDecimal.valueOf(250000L), Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE, Item.RAMEN, Item.TACO),
         ;
     
         // @formatter:off
@@ -387,12 +387,13 @@ public class Player {
     
     public enum ClickerUpgrades {
         // @formatter:off
-        POTATO_SLICER(   "potatoslicer",   "Potato slicers help your Mewnas get tato faster.",                               null, 10L,     Item.PICKAXE),
-        POTATO_MASHER(   "potatomasher",   "Potato mashers increase your Mewnas' tato production",                           null, 100L,    Item.BOOT, Item.COMET),
-        FRENCH_FRY_OIL(  "frenchfryoil",   "French fry oil makes fry machines output more.",                                 null, 500L,    Item.COMET, Item.FRIES),
-        POTATO_CHIP_SALT("potatochipsalt", "Potato chip salt causes factories to produce more.",                             null, 1000L,   Item.STAR, Item.FRIES),
-        EXTRA_SEASONING( "extraseasoning", "Extra seasoning makes your food tastier and worth more tato.",                   null, 10000L,  Item.DIAMOND, Item.FRIES),
-        CUTER_EARS(      "cuterears",      "Cuter ears make your Mewnas irresistable, and people will give them free tato.", null, 100000L, Item.STAR, Item.DIAMOND),
+        POTATO_SLICER(   "potatoslicer",   "Potato slicers help your Mewnas get tato faster.",                               T1, 10L,     Item.PICKAXE),
+        POTATO_MASHER(   "potatomasher",   "Potato mashers increase your Mewnas' tato production",                           T1, 100L,    Item.BOOT, Item.COMET),
+        FRENCH_FRY_OIL(  "frenchfryoil",   "French fry oil makes fry machines output more.",                                 T1, 500L,    Item.COMET, Item.FRIES),
+        POTATO_CHIP_SALT("potatochipsalt", "Potato chip salt causes factories to produce more.",                             T1, 1000L,   Item.STAR, Item.FRIES),
+        EXTRA_SEASONING( "extraseasoning", "Extra seasoning makes your food tastier and worth more tato.",                   T1, 10000L,  Item.DIAMOND, Item.FRIES),
+        POTATO_SALAD(    "potatosalad",    "Mewnas use potato salad for energy when deep in the tato mines.",                T1, 50000L,  Item.WEED, Item.DIAMOND),
+        CUTER_EARS(      "cuterears",      "Cuter ears make your Mewnas irresistable, and people will give them free tato.", T1, 100000L, Item.STAR, Item.DIAMOND),
         ;
     
         // @formatter:on
@@ -486,6 +487,9 @@ public class Player {
                     default: {
                         break;
                     }
+                }
+                if(upgrades.contains(ClickerUpgrades.POTATO_SALAD)) {
+                    out = out.multiply(BigDecimal.valueOf(3L));
                 }
                 if(upgrades.contains(ClickerUpgrades.CUTER_EARS)) {
                     out = out.multiply(BigDecimal.valueOf(10L));

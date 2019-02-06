@@ -4,7 +4,6 @@ import com.mewna.Mewna;
 import com.mewna.accounts.Account;
 import com.mewna.catnip.entity.message.Message;
 import com.mewna.data.DiscordCache;
-import com.mewna.data.Player;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Command;
 import com.mewna.plugin.CommandContext;
@@ -45,18 +44,19 @@ public class PluginSecret extends BasePlugin {
                     .replace(">", "");
             switch(ctx.getArgs().get(0).toLowerCase()) {
                 case "player": {
-                    final Optional<Player> optionalPlayer = database().getOptionalPlayer(snowflake);
-                    if(optionalPlayer.isPresent()) {
-                        final JsonObject o = JsonObject.mapFrom(optionalPlayer.get());
-                        // TODO: ???
-                        o.remove("account");
-                        o.remove("votes");
-                        o.remove("boxes");
-                        final String json = o.encodePrettily();
-                        ctx.sendMessage("```Javascript\n" + json + "\n```");
-                    } else {
-                        ctx.sendMessage(Emotes.NO);
-                    }
+                    database().getOptionalPlayer(snowflake).thenAccept(optionalPlayer -> {
+                        if(optionalPlayer.isPresent()) {
+                            final JsonObject o = JsonObject.mapFrom(optionalPlayer.get());
+                            // TODO: ???
+                            o.remove("account");
+                            o.remove("votes");
+                            o.remove("boxes");
+                            final String json = o.encodePrettily();
+                            ctx.sendMessage("```Javascript\n" + json + "\n```");
+                        } else {
+                            ctx.sendMessage(Emotes.NO);
+                        }
+                    });
                     break;
                 }
                 case "account": {

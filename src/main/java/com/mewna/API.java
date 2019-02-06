@@ -373,7 +373,7 @@ class API {
                 LevelsImporter.importMEE6Levels(id);
                 ctx.response().end(new JsonObject().encode());
             });
-    
+            
             // Server pages
             router.post("/data/server/:id/post").handler(BodyHandler.create()).blockingHandler(ctx -> {
                 // Create a post
@@ -472,17 +472,21 @@ class API {
             });
             
             // Player
-            router.get("/data/player/:id").blockingHandler(ctx -> {
+            router.get("/data/player/:id").handler(ctx -> {
                 final String id = ctx.request().getParam("id");
-                ctx.response().putHeader("Content-Type", "application/json")
-                        .end(mewna.database().getOptionalPlayer(id)
-                                .map(JsonObject::mapFrom)
-                                .orElse(new JsonObject())
-                                .encode());
+                
+                mewna.database().getOptionalPlayer(id)
+                        .thenAccept(o -> {
+                            ctx.response().putHeader("Content-Type", "application/json")
+                                    .end(o
+                                            .map(JsonObject::mapFrom)
+                                            .orElse(new JsonObject())
+                                            .encode());
+                        });
             });
             
             // Votes
-            router.post("/data/votes/dbl").handler(BodyHandler.create()).blockingHandler(ctx -> {
+            router.post("/data/votes/dbl").handler(BodyHandler.create()).handler(ctx -> {
                 final JsonObject body = ctx.getBodyAsJson();
                 @SuppressWarnings("unused")
                 final String bot = body.getString("bot");
@@ -490,41 +494,42 @@ class API {
                 final String type = body.getString("type");
                 final boolean isWeekend = body.getBoolean("isWeekend");
                 
-                final Optional<Player> player = mewna.database().getOptionalPlayer(user);
-                if(player.isPresent()) {
-                    final int amount = PluginEconomy.VOTE_BONUS * (isWeekend ? 2 : 1);
-                    final Player p = player.get();
-                    switch(type.toLowerCase()) {
-                        case "upvote":
-                        case "vote": {
-                            p.setBalance(p.getBalance() + amount);
-                            mewna.database().savePlayer(p);
-                            mewna.statsClient().increment("votes.dbl", 1);
-                            final String message;
-                            if(isWeekend) {
-                                mewna.statsClient().increment("votes.dbl.weekend", 1);
-                                message = $("en_US", "votes.dbl.weekend").replace("$amount", amount + "");
-                            } else {
-                                message = $("en_US", "votes.dbl.normal").replace("$amount", amount + "");
+                mewna.database().getOptionalPlayer(user).thenAccept(player -> {
+                    if(player.isPresent()) {
+                        final int amount = PluginEconomy.VOTE_BONUS * (isWeekend ? 2 : 1);
+                        final Player p = player.get();
+                        switch(type.toLowerCase()) {
+                            case "upvote":
+                            case "vote": {
+                                p.setBalance(p.getBalance() + amount);
+                                mewna.database().savePlayer(p);
+                                mewna.statsClient().increment("votes.dbl", 1);
+                                final String message;
+                                if(isWeekend) {
+                                    mewna.statsClient().increment("votes.dbl.weekend", 1);
+                                    message = $("en_US", "votes.dbl.weekend").replace("$amount", amount + "");
+                                } else {
+                                    message = $("en_US", "votes.dbl.normal").replace("$amount", amount + "");
+                                }
+                                mewna.catnip().rest().user().createDM(user).thenAccept(channel -> channel.sendMessage(message))
+                                        .thenAccept(__ -> {
+                                            logger.info("Sent upvote DM to {}", user);
+                                        })
+                                        .exceptionally(e -> {
+                                            Sentry.capture(e);
+                                            return null;
+                                        })
+                                ;
+                                break;
                             }
-                            mewna.catnip().rest().user().createDM(user).thenAccept(channel -> channel.sendMessage(message))
-                                    .thenAccept(__ -> {
-                                        logger.info("Sent upvote DM to {}", user);
-                                    })
-                                    .exceptionally(e -> {
-                                        Sentry.capture(e);
-                                        return null;
-                                    })
-                            ;
-                            break;
-                        }
-                        case "test": {
-                            mewna.catnip().rest().user().createDM(user)
-                                    .thenAccept(channel -> channel.sendMessage("```Javascript\n" + body.encodePrettily() + "\n```"));
-                            break;
+                            case "test": {
+                                mewna.catnip().rest().user().createDM(user)
+                                        .thenAccept(channel -> channel.sendMessage("```Javascript\n" + body.encodePrettily() + "\n```"));
+                                break;
+                            }
                         }
                     }
-                }
+                });
                 ctx.response().end("{}");
             });
         }

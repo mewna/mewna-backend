@@ -57,43 +57,42 @@ public class AccountManager {
         final AccountBuilder builder = mewna.database().getAccountById(id).map(Account::toBuilder)
                 // We do this to get the default values so that we don't have to do extra work here later.
                 .orElseGet(() -> new Account(id).toBuilder());
-        builder.id(id);
-        
-        if(data.containsKey("username") && data.getString("username", null) != null) {
-            final String username = data.getString("username", null);
-            if(username != null && !username.isEmpty()) {
-                builder.username(username);
-            }
-        }
-        if(data.containsKey("email") && data.getString("email", null) != null) {
-            final String email = data.getString("email", null);
-            if(email != null && !email.isEmpty()) {
-                builder.email(email);
-            }
-        }
-        if(isNew && data.containsKey("displayName") && data.getString("displayName", null) != null) {
-            final String displayName = data.getString("displayName", null);
-            if(displayName != null && !displayName.isEmpty()) {
-                builder.displayName(displayName);
-            }
-        }
-        if(data.containsKey("avatar") && data.getString("avatar", null) != null) {
-            final String avatar = data.getString("avatar", null);
-            if(avatar != null && !avatar.isEmpty()) {
-                builder.avatar(avatar);
-            }
-        }
         if(data.containsKey("discordAccountId") && data.getString("discordAccountId", null) != null) {
             final String discordAccountId = data.getString("discordAccountId", null);
+            builder.id(discordAccountId);
             if(discordAccountId != null && !discordAccountId.isEmpty()) {
                 builder.discordAccountId(discordAccountId);
             }
-        }
-        mewna.database().saveAccount(builder.build());
-        if(isNew) {
-            logger.info("Created account {}", id);
-        } else {
-            logger.info("Updated account {}", id);
+            if(data.containsKey("username") && data.getString("username", null) != null) {
+                final String username = data.getString("username", null);
+                if(username != null && !username.isEmpty()) {
+                    builder.username(username);
+                }
+            }
+            if(data.containsKey("email") && data.getString("email", null) != null) {
+                final String email = data.getString("email", null);
+                if(email != null && !email.isEmpty()) {
+                    builder.email(email);
+                }
+            }
+            if(isNew && data.containsKey("displayName") && data.getString("displayName", null) != null) {
+                final String displayName = data.getString("displayName", null);
+                if(displayName != null && !displayName.isEmpty()) {
+                    builder.displayName(displayName);
+                }
+            }
+            if(data.containsKey("avatar") && data.getString("avatar", null) != null) {
+                final String avatar = data.getString("avatar", null);
+                if(avatar != null && !avatar.isEmpty()) {
+                    builder.avatar(avatar);
+                }
+            }
+            mewna.database().saveAccount(builder.build());
+            if(isNew) {
+                logger.info("Created account {}", id);
+            } else {
+                logger.info("Updated account {}", id);
+            }
         }
     }
     

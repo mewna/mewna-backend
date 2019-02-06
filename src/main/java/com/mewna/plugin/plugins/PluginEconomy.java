@@ -70,12 +70,13 @@ public class PluginEconomy extends BasePlugin {
                     .replace("$symbol", helper.getCurrencySymbol(ctx)));
         } else {
             final User m = ctx.getMessage().mentionedUsers().get(0);
-            final Player player = database().getPlayer(m);
-            final long balance = player.getBalance();
-            ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.balance.other")
-                    .replace("$target", m.username())
-                    .replace("$amount", "" + balance)
-                    .replace("$symbol", helper.getCurrencySymbol(ctx)));
+            database().getPlayer(m).thenAccept(player -> {
+                final long balance = player.getBalance();
+                ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.balance.other")
+                        .replace("$target", m.username())
+                        .replace("$amount", "" + balance)
+                        .replace("$symbol", helper.getCurrencySymbol(ctx)));
+            });
         }
     }
     
@@ -92,22 +93,23 @@ public class PluginEconomy extends BasePlugin {
             return;
         }
         final Player sender = ctx.getPlayer();
-        final Player target = database().getPlayer(ctx.getMentions().get(0));
-        if(target.getId().equalsIgnoreCase(sender.getId())) {
-            ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.pay.no-self-pay"));
-            return;
-        }
-        final ImmutablePair<Boolean, Long> res = helper.handlePayment(ctx, ctx.getArgs().get(1), 1, Long.MAX_VALUE);
-        if(res.left) {
-            target.incrementBalance(res.right);
-            database().savePlayer(target);
-            
-            ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.pay.success")
-                    .replace("$amount", "" + res.right)
-                    .replace("$symbol", helper.getCurrencySymbol(ctx))
-                    .replace("$target", ctx.getMentions().get(0).username())
-                    .replace("$user", ctx.getUser().username()));
-        }
+        database().getPlayer(ctx.getMentions().get(0)).thenAccept(target -> {
+            if(target.getId().equalsIgnoreCase(sender.getId())) {
+                ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.pay.no-self-pay"));
+                return;
+            }
+            final ImmutablePair<Boolean, Long> res = helper.handlePayment(ctx, ctx.getArgs().get(1), 1, Long.MAX_VALUE);
+            if(res.left) {
+                target.incrementBalance(res.right);
+                database().savePlayer(target);
+        
+                ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.pay.success")
+                        .replace("$amount", "" + res.right)
+                        .replace("$symbol", helper.getCurrencySymbol(ctx))
+                        .replace("$target", ctx.getMentions().get(0).username())
+                        .replace("$user", ctx.getUser().username()));
+            }
+        });
     }
     
     @Ratelimit(time = 5)

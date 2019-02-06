@@ -7,7 +7,6 @@ import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.shard.DiscordEvent.Raw;
 import com.mewna.catnip.util.SafeVertxCompletableFuture;
 import com.mewna.data.CommandSettings;
-import com.mewna.data.Player;
 import com.mewna.data.PluginSettings;
 import com.mewna.event.discord.DiscordMessageCreate;
 import com.mewna.plugin.PluginManager.PluginMetadata;
@@ -281,85 +280,87 @@ public class CommandManager {
                         return;
                     }
                 }
-                executor.executeBlocking(future -> {
-                    profiler.section("player");
-                    final Player player = mewna.database().getPlayer(user);
-                    profiler.section("account");
-                    Optional<Account> maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());
-                    if(!maybeAccount.isPresent()) {
-                        logger.error("No account present for Discord account {}!!!", user.id());
-                        //Sentry.capture("No account present for Discord account: " + user.id());
-                        mewna.accountManager().createNewDiscordLinkedAccount(player, user);
-                        maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());
+                profiler.section("player");
+                //noinspection CodeBlock2Expr
+                mewna.database().getPlayer(user).thenAccept(player -> {
+                    executor.executeBlocking(future -> {
+                        profiler.section("account");
+                        Optional<Account> maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());
                         if(!maybeAccount.isPresent()) {
-                            logger.error("No account present for Discord account {} after creation!?", user.id());
-                            Sentry.capture("No account present for Discord account despite creation: " + user.id());
-                            return;
-                        }
-                    } else {
-                        final Account account = maybeAccount.get();
-                        if(account.banned()) {
-                            mewna.statsClient().count("discord.backend.commands.banned", 1);
-                            logger.warn("Denying command from banned account {}: {}", account.id(), account.banReason());
-                            // TODO: I18n this
-                            mewna.catnip().rest().channel().sendMessage(channelId, Emotes.NO + " Banned from Mewna. Reason: "
-                                    + account.banReason());
-                            return;
-                        }
-                    }
-                    
-                    final Optional<Account> finalMaybeAccount = maybeAccount;
-                    profiler.section("payment");
-                    mewna.database().getOrBaseSettings(EconomySettings.class, guild.id()).thenAccept(settings -> {
-                        long cost = 0L;
-                        // Commands may require payment before running
-                        final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr, guild, event.message(),
-                                mentions, player, finalMaybeAccount.get(), 0L, prefix, mewna.database().language(guild.id()),
-                                settings.getCurrencySymbol(), profiler);
-                        if(cmd.getPayment() != null) {
-                            // By default, try to make the minimum payment
-                            String maybePayment = cmd.getPayment().min() + "";
-                            if(cmd.getPayment().fromFirstArg()) {
-                                // If we calculate the payment from the first argument:
-                                // - if there is no argument, go with the minimum payment
-                                // - if there is an argument, try to parse it
-                                if(args.isEmpty()) {
-                                    maybePayment = cmd.getPayment().min() + "";
-                                } else {
-                                    maybePayment = args.get(0);
-                                }
+                            logger.error("No account present for Discord account {}!!!", user.id());
+                            //Sentry.capture("No account present for Discord account: " + user.id());
+                            mewna.accountManager().createNewDiscordLinkedAccount(player, user);
+                            maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());
+                            if(!maybeAccount.isPresent()) {
+                                logger.error("No account present for Discord account {} after creation!?", user.id());
+                                Sentry.capture("No account present for Discord account despite creation: " + user.id());
+                                return;
                             }
-                            
-                            final ImmutablePair<Boolean, Long> res = mewna.pluginManager().getCurrencyHelper()
-                                    .handlePayment(paymentCtx, maybePayment, cmd.getPayment().min(), cmd.getPayment().max());
-                            // If we can make the payment, set the cost and continue
-                            // Otherwise, return early (the payment-handler sends error messages for us)
-                            if(res.left) {
-                                cost = res.right;
-                            } else {
+                        } else {
+                            final Account account = maybeAccount.get();
+                            if(account.banned()) {
+                                mewna.statsClient().count("discord.backend.commands.banned", 1);
+                                logger.warn("Denying command from banned account {}: {}", account.id(), account.banReason());
+                                // TODO: I18n this
+                                mewna.catnip().rest().channel().sendMessage(channelId, Emotes.NO + " Banned from Mewna. Reason: "
+                                        + account.banReason());
                                 return;
                             }
                         }
                         
-                        final CommandContext ctx = paymentCtx.toBuilder().cost(cost).build();
-                        
-                        profiler.section("exec");
-                        logger.info("Command: {}#{} ({}, account: {}) in {}#{}-{}: {} {}", user.username(), user.discriminator(),
-                                user.id(), ctx.getAccount().id(), guild.id(), channelId, event.message().id(), commandName, argstr);
-                        mewna.statsClient().count("discord.backend.commands.run", 1, "name:" + cmd.getName());
-                        executor.executeBlocking(f -> {
-                            try {
-                                cmd.getMethod().invoke(cmd.getPlugin(), ctx);
-                            } catch(final IllegalAccessException | InvocationTargetException e) {
-                                Sentry.capture(e);
-                                e.printStackTrace();
+                        final Optional<Account> finalMaybeAccount = maybeAccount;
+                        profiler.section("payment");
+                        mewna.database().getOrBaseSettings(EconomySettings.class, guild.id()).thenAccept(settings -> {
+                            long cost = 0L;
+                            // Commands may require payment before running
+                            final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr, guild, event.message(),
+                                    mentions, player, finalMaybeAccount.get(), 0L, prefix, mewna.database().language(guild.id()),
+                                    settings.getCurrencySymbol(), profiler);
+                            if(cmd.getPayment() != null) {
+                                // By default, try to make the minimum payment
+                                String maybePayment = cmd.getPayment().min() + "";
+                                if(cmd.getPayment().fromFirstArg()) {
+                                    // If we calculate the payment from the first argument:
+                                    // - if there is no argument, go with the minimum payment
+                                    // - if there is an argument, try to parse it
+                                    if(args.isEmpty()) {
+                                        maybePayment = cmd.getPayment().min() + "";
+                                    } else {
+                                        maybePayment = args.get(0);
+                                    }
+                                }
+                                
+                                final ImmutablePair<Boolean, Long> res = mewna.pluginManager().getCurrencyHelper()
+                                        .handlePayment(paymentCtx, maybePayment, cmd.getPayment().min(), cmd.getPayment().max());
+                                // If we can make the payment, set the cost and continue
+                                // Otherwise, return early (the payment-handler sends error messages for us)
+                                if(res.left) {
+                                    cost = res.right;
+                                } else {
+                                    return;
+                                }
                             }
-                            f.complete(null);
-                        }, __ -> {
+                            
+                            final CommandContext ctx = paymentCtx.toBuilder().cost(cost).build();
+                            
+                            profiler.section("exec");
+                            logger.info("Command: {}#{} ({}, account: {}) in {}#{}-{}: {} {}", user.username(), user.discriminator(),
+                                    user.id(), ctx.getAccount().id(), guild.id(), channelId, event.message().id(), commandName, argstr);
+                            mewna.statsClient().count("discord.backend.commands.run", 1, "name:" + cmd.getName());
+                            executor.executeBlocking(f -> {
+                                try {
+                                    cmd.getMethod().invoke(cmd.getPlugin(), ctx);
+                                } catch(final IllegalAccessException | InvocationTargetException e) {
+                                    Sentry.capture(e);
+                                    e.printStackTrace();
+                                }
+                                f.complete(null);
+                            }, __ -> {
+                            });
                         });
+                        future.complete(null);
+                    }, res -> {
                     });
-                    future.complete(null);
-                }, res -> {
                 });
             }
         });

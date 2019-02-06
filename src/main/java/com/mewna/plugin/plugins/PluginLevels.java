@@ -9,6 +9,7 @@ import com.mewna.catnip.entity.message.MessageOptions;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.rest.guild.MemberData;
 import com.mewna.catnip.shard.DiscordEvent.Raw;
+import com.mewna.catnip.util.SafeVertxCompletableFuture;
 import com.mewna.data.Player;
 import com.mewna.event.discord.DiscordMessageCreate;
 import com.mewna.plugin.BasePlugin;
@@ -33,6 +34,7 @@ import java.sql.ResultSet;
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -218,56 +220,57 @@ public class PluginLevels extends BasePlugin {
     @Event(Raw.MESSAGE_CREATE)
     public void handleChatMessage(final DiscordMessageCreate event) {
         final User author = event.message().author();
-        final Player player = database().getPlayer(author);
-        final ImmutablePair<Boolean, Long> globalRes = mewna().ratelimiter()
-                .checkUpdateRatelimit(author.id(), "chat-xp-global", TimeUnit.MINUTES.toMillis(10));
-        if(!globalRes.left) {
-            final long oldXp = player.getGlobalXp();
-            final long xp = getXp(player);
-            mewna().statsClient().count("discord.backend.xpgained.global", xp);
-            player.incrementGlobalXp(getXp(player));
-            database().savePlayer(player);
-            // Level-up notifications here?
-            if(isLevelUp(oldXp, oldXp + xp)) {
-                final long level = xpToLevel(oldXp + xp);
-                // lol
-                switch((int) level) {
-                    case 10:
-                    case 25:
-                    case 50:
-                    case 100: {
-                        mewna().pluginManager().processEvent(EventType.PLAYER_EVENT,
-                                new PlayerEvent(SystemUserEventType.GLOBAL_LEVEL, player,
-                                        new JsonObject().put("level", level)));
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
-            }
-        }
-        
-        final Guild guild = event.guild();
-        database().getOrBaseSettings(LevelsSettings.class, guild.id()).thenAccept(settings -> {
-            if(!settings.isLevelsEnabled()) {
-                return;
-            }
-            final ImmutablePair<Boolean, Long> localRes = mewna().ratelimiter()
-                    .checkUpdateRatelimit(event.message().author().id(), "chat-xp-local:" + guild.id(),
-                            TimeUnit.MINUTES.toMillis(1));
-            if(!localRes.left) {
-                final long oldXp = player.getXp(guild);
+        database().getPlayer(author).thenAccept(player -> {
+            final ImmutablePair<Boolean, Long> globalRes = mewna().ratelimiter()
+                    .checkUpdateRatelimit(author.id(), "chat-xp-global", TimeUnit.MINUTES.toMillis(10));
+            if(!globalRes.left) {
+                final long oldXp = player.getGlobalXp();
                 final long xp = getXp(player);
-                mewna().statsClient().count("discord.backend.xpgained.local", xp);
-                player.incrementLocalXp(guild, xp);
+                mewna().statsClient().count("discord.backend.xpgained.global", xp);
+                player.incrementGlobalXp(getXp(player));
                 database().savePlayer(player);
+                // Level-up notifications here?
                 if(isLevelUp(oldXp, oldXp + xp)) {
-                    // Emit level-up event so we can process it
-                    mewna().pluginManager().processEvent(EventType.LEVEL_UP, new LevelUpEvent(guild, event.message().channelId(),
-                            event.user(), event.member(), xpToLevel(oldXp + xp), oldXp + xp));
+                    final long level = xpToLevel(oldXp + xp);
+                    // lol
+                    switch((int) level) {
+                        case 10:
+                        case 25:
+                        case 50:
+                        case 100: {
+                            mewna().pluginManager().processEvent(EventType.PLAYER_EVENT,
+                                    new PlayerEvent(SystemUserEventType.GLOBAL_LEVEL, player,
+                                            new JsonObject().put("level", level)));
+                            break;
+                        }
+                        default: {
+                            break;
+                        }
+                    }
                 }
             }
+            
+            final Guild guild = event.guild();
+            database().getOrBaseSettings(LevelsSettings.class, guild.id()).thenAccept(settings -> {
+                if(!settings.isLevelsEnabled()) {
+                    return;
+                }
+                final ImmutablePair<Boolean, Long> localRes = mewna().ratelimiter()
+                        .checkUpdateRatelimit(event.message().author().id(), "chat-xp-local:" + guild.id(),
+                                TimeUnit.MINUTES.toMillis(1));
+                if(!localRes.left) {
+                    final long oldXp = player.getXp(guild);
+                    final long xp = getXp(player);
+                    mewna().statsClient().count("discord.backend.xpgained.local", xp);
+                    player.incrementLocalXp(guild, xp);
+                    database().savePlayer(player);
+                    if(isLevelUp(oldXp, oldXp + xp)) {
+                        // Emit level-up event so we can process it
+                        mewna().pluginManager().processEvent(EventType.LEVEL_UP, new LevelUpEvent(guild, event.message().channelId(),
+                                event.user(), event.member(), xpToLevel(oldXp + xp), oldXp + xp));
+                    }
+                }
+            });
         });
     }
     
@@ -277,80 +280,81 @@ public class PluginLevels extends BasePlugin {
         final Guild guild = ctx.getGuild();
         database().getOrBaseSettings(LevelsSettings.class, guild.id()).thenAccept(settings -> {
             if(!settings.isLevelsEnabled()) {
-                ctx.sendMessage( $(ctx.getLanguage(), "plugins.levels.not-enabled"));
+                ctx.sendMessage($(ctx.getLanguage(), "plugins.levels.not-enabled"));
                 return;
             }
             final User user;
-            final Player player;
+            final CompletableFuture<Player> playerFuture;
             final boolean self;
             if(ctx.getMentions().isEmpty() || ctx.getMentions().get(0).id().equals(ctx.getUser().id())) {
                 user = ctx.getUser();
-                player = ctx.getPlayer();
+                playerFuture = SafeVertxCompletableFuture.completedFuture(ctx.getPlayer());
                 self = true;
             } else {
                 user = ctx.getMentions().get(0);
-                player = database().getPlayer(user);
+                playerFuture = database().getPlayer(user);
                 self = false;
             }
-            
             if(user.bot()) {
-                ctx.sendMessage( $(ctx.getLanguage(), "plugins.levels.bot"));
+                ctx.sendMessage($(ctx.getLanguage(), "plugins.levels.bot"));
                 return;
             }
-            
-            String generating;
-            if(self) {
-                generating = $(ctx.getLanguage(), "plugins.levels.commands.rank.generating.self");
-            } else {
-                generating = $(ctx.getLanguage(), "plugins.levels.commands.rank.generating.other")
-                        .replace("$target", user.username());
-            }
-            generating = generating.replace("$mention", ctx.getUser().asMention());
-            
-            ctx.sendMessage(
-                    Emotes.LOADING_ICON + ' ' + generating)
-                    .thenAccept(message -> catnip().rest().channel().triggerTypingIndicator(ctx.getMessage().channelId())
-                            .thenAccept(__ -> {
-                                try {
-                                    // lol
-                                    // we do everything possible to guarantee that this should be safe
-                                    // without doing a check here
-                                    //noinspection ConstantConditions,OptionalGetWithoutIsPresent
-                                    final Account account = database().getAccountByDiscordId(user.id()).get();
-                                    final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.id();
-                                    
-                                    catnip().vertx().executeBlocking(future -> {
-                                        final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
-                                        future.complete(cardBytes);
-                                    }, res -> {
-                                        final byte[] cardBytes = (byte[]) res.result();
-                                        final EmbedBuilder builder = new EmbedBuilder()
-                                                .title("**" + user.username() + "**'s rank card")
-                                                .image("attachment://rank.png")
-                                                .color(new Color(Renderer.PRIMARY_COLOUR))
-                                                .description('[' + $(ctx.getLanguage(), "plugins.levels.view-full-profile") + "](" + profileUrl + ')')
-                                                .footer($(ctx.getLanguage(), "plugins.levels.change-background"),
-                                                        user.effectiveAvatarUrl());
-                                        catnip().rest().channel().deleteMessage(ctx.getMessage().channelId(), message.id())
-                                                .thenAccept(___ -> catnip().rest().channel()
-                                                        .sendMessage(ctx.getMessage().channelId(),
-                                                                new MessageOptions()
-                                                                        .content(ctx.getUser().asMention())
-                                                                        .embed(builder.build())
-                                                                        .addFile("rank.png", cardBytes))
-                                                        .exceptionally(e -> {
-                                                            e.printStackTrace();
-                                                            return null;
-                                                        })
-                                                );
-                                    });
-                                } catch(final Exception e) {
+            playerFuture.thenAccept(player -> {
+                String generating;
+                if(self) {
+                    generating = $(ctx.getLanguage(), "plugins.levels.commands.rank.generating.self");
+                } else {
+                    generating = $(ctx.getLanguage(), "plugins.levels.commands.rank.generating.other")
+                            .replace("$target", user.username());
+                }
+                generating = generating.replace("$mention", ctx.getUser().asMention());
+                
+                ctx.sendMessage(
+                        Emotes.LOADING_ICON + ' ' + generating)
+                        .thenAccept(message -> catnip().rest().channel().triggerTypingIndicator(ctx.getMessage().channelId())
+                                .thenAccept(__ -> {
+                                    try {
+                                        // lol
+                                        // we do everything possible to guarantee that this should be safe
+                                        // without doing a check here
+                                        //noinspection ConstantConditions,OptionalGetWithoutIsPresent
+                                        final Account account = database().getAccountByDiscordId(user.id()).get();
+                                        final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.id();
+                                        
+                                        catnip().vertx().executeBlocking(future -> {
+                                            final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
+                                            future.complete(cardBytes);
+                                        }, res -> {
+                                            final byte[] cardBytes = (byte[]) res.result();
+                                            final EmbedBuilder builder = new EmbedBuilder()
+                                                    .title("**" + user.username() + "**'s rank card")
+                                                    .image("attachment://rank.png")
+                                                    .color(new Color(Renderer.PRIMARY_COLOUR))
+                                                    .description('[' + $(ctx.getLanguage(), "plugins.levels.view-full-profile") + "](" + profileUrl + ')')
+                                                    .footer($(ctx.getLanguage(), "plugins.levels.change-background"),
+                                                            user.effectiveAvatarUrl());
+                                            catnip().rest().channel().deleteMessage(ctx.getMessage().channelId(), message.id())
+                                                    .thenAccept(___ -> catnip().rest().channel()
+                                                            .sendMessage(ctx.getMessage().channelId(),
+                                                                    new MessageOptions()
+                                                                            .content(ctx.getUser().asMention())
+                                                                            .embed(builder.build())
+                                                                            .addFile("rank.png", cardBytes))
+                                                            .exceptionally(e -> {
+                                                                e.printStackTrace();
+                                                                return null;
+                                                            })
+                                                    );
+                                        });
+                                    } catch(final Exception e) {
+                                        Sentry.capture(e);
+                                        e.printStackTrace();
+                                    }
+                                }).exceptionally(e -> {
                                     e.printStackTrace();
-                                }
-                            }).exceptionally(e -> {
-                                e.printStackTrace();
-                                return null;
-                            }));
+                                    return null;
+                                }));
+            });
         });
     }
     
@@ -358,21 +362,16 @@ public class PluginLevels extends BasePlugin {
             examples = {"profile", "profile @someone"})
     public void profile(final CommandContext ctx) {
         final User user;
-        final Player player;
+        final CompletableFuture<Player> playerFuture;
         final boolean self;
         if(ctx.getMentions().isEmpty() || ctx.getMentions().get(0).id().equals(ctx.getUser().id())) {
             user = ctx.getUser();
-            player = ctx.getPlayer();
+            playerFuture = SafeVertxCompletableFuture.completedFuture(ctx.getPlayer());
             self = true;
         } else {
             user = ctx.getMentions().get(0);
-            player = database().getPlayer(user);
+            playerFuture = database().getPlayer(user);
             self = false;
-        }
-        
-        if(user.bot()) {
-            ctx.sendMessage( $(ctx.getLanguage(), "plugins.levels.bot"));
-            return;
         }
         
         String generating;
@@ -383,59 +382,62 @@ public class PluginLevels extends BasePlugin {
                     .replace("$target", user.username());
         }
         generating = generating.replace("$mention", ctx.getUser().asMention());
-        
-        ctx.sendMessage(
-                Emotes.LOADING_ICON + ' ' + generating)
-                .thenAccept(message ->
-                        catnip().rest().channel().triggerTypingIndicator(ctx.getMessage().channelId())
-                                .thenAccept(__ -> {
-                                    // lol
-                                    // we do everything possible to guarantee that this should be safe
-                                    // without doing a check here
-                                    //noinspection ConstantConditions,OptionalGetWithoutIsPresent
-                                    final Account account = database().getAccountByDiscordId(user.id()).get();
-                                    final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.id();
-                                    
-                                    catnip().vertx().executeBlocking(future -> {
-                                        final byte[] cardBytes = Renderer.generateProfileCard(user, player);
-                                        future.complete(cardBytes);
-                                    }, res -> {
-                                        final byte[] cardBytes = (byte[]) res.result();
-                                        final EmbedBuilder builder = new EmbedBuilder()
-                                                .title("**" + user.username() + "**'s profile card")
-                                                .image("attachment://profile.png")
-                                                .color(new Color(Renderer.PRIMARY_COLOUR))
-                                                .description('[' + $(ctx.getLanguage(), "plugins.levels.view-full-profile") + "](" + profileUrl + ')')
-                                                .footer($(ctx.getLanguage(), "plugins.levels.change-background-description"), null);
-                                        catnip().rest().channel().deleteMessage(ctx.getMessage().channelId(), message.id())
-                                                .thenApply(___ ->
-                                                        catnip().rest().channel()
-                                                                .sendMessage(ctx.getMessage().channelId(),
-                                                                        new MessageOptions()
-                                                                                .content(ctx.getUser().asMention())
-                                                                                .addFile("profile.png", cardBytes)
-                                                                                .embed(builder.build()))
-                                                );
-                                    });
-                                }));
+        final String finalGenerating = generating;
+        //noinspection CodeBlock2Expr
+        playerFuture.thenAccept(player -> {
+            ctx.sendMessage(
+                    Emotes.LOADING_ICON + ' ' + finalGenerating)
+                    .thenAccept(message ->
+                            catnip().rest().channel().triggerTypingIndicator(ctx.getMessage().channelId())
+                                    .thenAccept(__ -> {
+                                        // lol
+                                        // we do everything possible to guarantee that this should be safe
+                                        // without doing a check here
+                                        //noinspection ConstantConditions,OptionalGetWithoutIsPresent
+                                        final Account account = database().getAccountByDiscordId(user.id()).get();
+                                        final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.id();
+                                        
+                                        catnip().vertx().executeBlocking(future -> {
+                                            final byte[] cardBytes = Renderer.generateProfileCard(user, player);
+                                            future.complete(cardBytes);
+                                        }, res -> {
+                                            final byte[] cardBytes = (byte[]) res.result();
+                                            final EmbedBuilder builder = new EmbedBuilder()
+                                                    .title("**" + user.username() + "**'s profile card")
+                                                    .image("attachment://profile.png")
+                                                    .color(new Color(Renderer.PRIMARY_COLOUR))
+                                                    .description('[' + $(ctx.getLanguage(), "plugins.levels.view-full-profile") + "](" + profileUrl + ')')
+                                                    .footer($(ctx.getLanguage(), "plugins.levels.change-background-description"), null);
+                                            catnip().rest().channel().deleteMessage(ctx.getMessage().channelId(), message.id())
+                                                    .thenApply(___ ->
+                                                            catnip().rest().channel()
+                                                                    .sendMessage(ctx.getMessage().channelId(),
+                                                                            new MessageOptions()
+                                                                                    .content(ctx.getUser().asMention())
+                                                                                    .addFile("profile.png", cardBytes)
+                                                                                    .embed(builder.build()))
+                                                    );
+                                        });
+                                    }));
+        });
     }
     
     @Command(names = "score", desc = "commands.levels.score", usage = "score [@mention]",
             examples = {"score", "score @someone"})
     public void score(final CommandContext ctx) {
         final User user;
-        final Player player;
+        final CompletableFuture<Player> playerFuture;
         if(ctx.getMentions().isEmpty()) {
             user = ctx.getUser();
-            player = ctx.getPlayer();
+            playerFuture = SafeVertxCompletableFuture.completedFuture(ctx.getPlayer());
         } else {
             user = ctx.getMentions().get(0);
-            player = database().getPlayer(user);
+            playerFuture = database().getPlayer(user);
         }
-        ctx.sendMessage(
+        playerFuture.thenAccept(player -> ctx.sendMessage(
                 $(ctx.getLanguage(), "plugins.levels.commands.score")
                         .replace("$target", user.username())
-                        .replace("$score", player.calculateScore() + ""));
+                        .replace("$score", player.calculateScore() + "")));
     }
     
     @Command(names = {"leaderboards", "ranks", "levels", "leaderboard", "rankings"}, desc = "commands.levels.leaderboards",
@@ -444,7 +446,7 @@ public class PluginLevels extends BasePlugin {
         final Guild guild = ctx.getGuild();
         database().getOrBaseSettings(LevelsSettings.class, guild.id()).thenAccept(settings -> {
             if(!settings.isLevelsEnabled()) {
-                ctx.sendMessage( $(ctx.getLanguage(), "plugins.levels.not-enabled"));
+                ctx.sendMessage($(ctx.getLanguage(), "plugins.levels.not-enabled"));
                 return;
             }
             ctx.sendMessage(

@@ -271,25 +271,33 @@ public class Database {
     // Players //
     /////////////
     
-    public Optional<Player> getOptionalPlayer(final String id) {
-        return store.mapSync(Player.class).load(id);
-    }
-    
-    public Player getPlayer(final User user) {
-        return getOptionalPlayer(user.id()).orElseGet(() -> {
-            final Player base = Player.base(user.id());
-            savePlayer(base);
-            // If we don't have a player, then we also need to create an account for them
-            if(!mewna.accountManager().getAccountByLinkedDiscord(user.id()).isPresent()) {
-                mewna.accountManager().createNewDiscordLinkedAccount(base, user);
-            }
-            return base;
+    public CompletableFuture<Optional<Player>> getOptionalPlayer(final String id) {
+        return store.mapAsync(Player.class).load(id).exceptionally(e -> {
+            Sentry.capture(e);
+            return Optional.empty();
         });
     }
     
-    public void savePlayer(final Player player) {
+    public CompletableFuture<Player> getPlayer(final User user) {
+        return getOptionalPlayer(user.id())
+                .thenApply(o -> o.orElseGet(() -> {
+                    final Player base = Player.base(user.id());
+                    savePlayer(base);
+                    // If we don't have a player, then we also need to create an account for them
+                    if(!mewna.accountManager().getAccountByLinkedDiscord(user.id()).isPresent()) {
+                        mewna.accountManager().createNewDiscordLinkedAccount(base, user);
+                    }
+                    return base;
+                }))
+                .exceptionally(e -> {
+                    Sentry.capture(e);
+                    return null;
+                });
+    }
+    
+    public CompletableFuture<Void> savePlayer(final Player player) {
         player.cleanup();
-        store.mapSync(Player.class).save(player);
+        return store.mapAsync(Player.class).save(player);
     }
     
     public void redis(final Consumer<Jedis> c) {
@@ -307,13 +315,13 @@ public class Database {
         });
     }
     
-    public Optional<Account> getAccountById(final String id) {
-        return store.mapSync(Account.class).load(id);
-    }
-    
     //////////////
     // Accounts //
     //////////////
+    
+    public Optional<Account> getAccountById(final String id) {
+        return store.mapSync(Account.class).load(id);
+    }
     
     public Optional<Account> getAccountByDiscordId(final String id) {
         final OptionalHolder<Account> holder = new OptionalHolder<>();

@@ -298,6 +298,9 @@ public class CommandManager {
                             }
                         } else {
                             final Account account = maybeAccount.get();
+                            if(!account.id().equalsIgnoreCase(account.discordAccountId())) {
+                                mewna.database().saveAccount(account.toBuilder().id(account.discordAccountId()).build());
+                            }
                             if(account.banned()) {
                                 mewna.statsClient().count("discord.backend.commands.banned", 1);
                                 logger.warn("Denying command from banned account {}: {}", account.id(), account.banReason());

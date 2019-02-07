@@ -59,9 +59,11 @@ public class AccountManager {
                 .orElseGet(() -> new Account(id).toBuilder());
         if(data.containsKey("discordAccountId") && data.getString("discordAccountId", null) != null) {
             final String discordAccountId = data.getString("discordAccountId", null);
-            builder.id(discordAccountId);
             if(discordAccountId != null && !discordAccountId.isEmpty()) {
+                builder.id(discordAccountId);
                 builder.discordAccountId(discordAccountId);
+            } else {
+                return;
             }
             if(data.containsKey("username") && data.getString("username", null) != null) {
                 final String username = data.getString("username", null);
@@ -89,9 +91,9 @@ public class AccountManager {
             }
             mewna.database().saveAccount(builder.build());
             if(isNew) {
-                logger.info("Created account {}", id);
+                logger.info("Created account {}", discordAccountId);
             } else {
-                logger.info("Updated account {}", id);
+                logger.info("Updated account {}", discordAccountId);
             }
         }
     }

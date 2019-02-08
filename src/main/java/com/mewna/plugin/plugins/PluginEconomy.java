@@ -6,6 +6,7 @@ import com.mewna.catnip.entity.builder.EmbedBuilder;
 import com.mewna.catnip.entity.builder.MessageBuilder;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.user.User;
+import com.mewna.catnip.util.SafeVertxCompletableFuture;
 import com.mewna.data.DiscordCache;
 import com.mewna.data.Player;
 import com.mewna.plugin.BasePlugin;
@@ -21,6 +22,7 @@ import com.mewna.plugin.plugins.settings.EconomySettings;
 import com.mewna.plugin.util.CurrencyHelper;
 import com.mewna.util.Time;
 import io.sentry.Sentry;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import lombok.ToString;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -102,7 +104,7 @@ public class PluginEconomy extends BasePlugin {
             if(res.left) {
                 target.incrementBalance(res.right);
                 database().savePlayer(target);
-        
+                
                 ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.pay.success")
                         .replace("$amount", "" + res.right)
                         .replace("$symbol", helper.getCurrencySymbol(ctx))
@@ -138,44 +140,47 @@ public class PluginEconomy extends BasePlugin {
                             .build());
             return;
         }
-        final boolean streak;
-        // check streak
-        streak = last.toLocalDate().plusDays(2).toEpochDay() >= now.toLocalDate().toEpochDay();
-        
-        String msg = $(ctx.getLanguage(), "plugins.economy.commands.daily.collect-base")
-                .replace("$amount", "" + DAILY_BASE_REWARD)
-                .replace("$symbol", helper.getCurrencySymbol(ctx))
-                + "\n\n";
-        
-        if(streak) {
-            player.incrementDailyStreak();
-            final long bonus = 100 + 10 * (player.getDailyStreak() - 1);
-            player.incrementBalance(DAILY_BASE_REWARD + bonus);
-            msg += $(ctx.getLanguage(), "plugins.economy.commands.daily.collect-streak")
-                    .replace("$amount", "" + bonus)
+        tryDropBox(ctx).thenAccept(__ -> {
+            final boolean streak;
+            // check streak
+            streak = last.toLocalDate().plusDays(2).toEpochDay() >= now.toLocalDate().toEpochDay();
+            
+            String msg = $(ctx.getLanguage(), "plugins.economy.commands.daily.collect-base")
+                    .replace("$amount", "" + DAILY_BASE_REWARD)
                     .replace("$symbol", helper.getCurrencySymbol(ctx))
-                    .replace("$streak", "" + player.getDailyStreak());
-            tryDropBox(ctx);
-        } else {
-            player.resetDailyStreak();
-            player.incrementBalance(DAILY_BASE_REWARD);
-            msg += $(ctx.getLanguage(), "plugins.economy.commands.daily.streak-break")
-                    .replace("$symbol", helper.getCurrencySymbol(ctx));
-        }
-        
-        player.updateLastDaily();
-        database().savePlayer(player);
-        ctx.sendMessage(
-                new MessageBuilder()
-                        .content(msg)
-                        .embed(new EmbedBuilder()
-                                .title("Hint")
-                                .description($(ctx.getLanguage(), "plugins.economy.vote-nag")
-                                        .replace("$link", "https://discordbots.org/bot/251930037673132032/vote")
-                                        .replace("$amount", VOTE_BONUS + "")
-                                        .replace("$symbol", helper.getCurrencySymbol(ctx)))
-                                .build())
-                        .build());
+                    + "\n\n";
+            
+            if(streak) {
+                player.incrementDailyStreak();
+                final long bonus = 100 + 10 * (player.getDailyStreak() - 1);
+                player.incrementBalance(DAILY_BASE_REWARD + bonus);
+                msg += $(ctx.getLanguage(), "plugins.economy.commands.daily.collect-streak")
+                        .replace("$amount", "" + bonus)
+                        .replace("$symbol", helper.getCurrencySymbol(ctx))
+                        .replace("$streak", "" + player.getDailyStreak());
+            } else {
+                player.resetDailyStreak();
+                player.incrementBalance(DAILY_BASE_REWARD);
+                msg += $(ctx.getLanguage(), "plugins.economy.commands.daily.streak-break")
+                        .replace("$symbol", helper.getCurrencySymbol(ctx));
+            }
+            
+            player.updateLastDaily();
+            final String finalMsg = msg;
+            database().savePlayer(player).thenAccept(___ -> {
+                ctx.sendMessage(
+                        new MessageBuilder()
+                                .content(finalMsg)
+                                .embed(new EmbedBuilder()
+                                        .title("Hint")
+                                        .description($(ctx.getLanguage(), "plugins.economy.vote-nag")
+                                                .replace("$link", "https://discordbots.org/bot/251930037673132032/vote")
+                                                .replace("$amount", VOTE_BONUS + "")
+                                                .replace("$symbol", helper.getCurrencySymbol(ctx)))
+                                        .build())
+                                .build());
+            });
+        });
     }
     
     @Ratelimit(time = 20)
@@ -188,9 +193,9 @@ public class PluginEconomy extends BasePlugin {
                 .replace("$symbol", helper.getCurrencySymbol(ctx));
         
         ctx.getPlayer().incrementBalance(amount);
-        database().savePlayer(ctx.getPlayer());
-        ctx.sendMessage(text);
-        tryDropBox(ctx);
+        database().savePlayer(ctx.getPlayer())
+                .thenAccept(__ -> ctx.sendMessage(text)
+                        .thenAccept(___ -> tryDropBox(ctx)));
     }
     
     @Payment(min = HEIST_BASE_COST)
@@ -203,13 +208,13 @@ public class PluginEconomy extends BasePlugin {
             // win
             final long reward = HEIST_BASE_COST * 10;
             ctx.getPlayer().incrementBalance(reward);
-            database().savePlayer(ctx.getPlayer());
-            
-            ctx.sendMessage(
-                    $(ctx.getLanguage(), "plugins.economy.commands.heist.success")
-                            .replace("$amount", "" + reward)
-                            .replace("$symbol", helper.getCurrencySymbol(ctx)));
-            tryDropBox(ctx);
+            database().savePlayer(ctx.getPlayer()).thenAccept(__ -> {
+                ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.heist.success")
+                        .replace("$amount", "" + reward)
+                        .replace("$symbol", helper.getCurrencySymbol(ctx))).thenAccept(___ -> {
+                    tryDropBox(ctx);
+                });
+            });
         } else {
             // lose
             ctx.sendMessage(
@@ -265,11 +270,13 @@ public class PluginEconomy extends BasePlugin {
             // TODO: Rare bonus chance like I always do
             
             ctx.getPlayer().incrementBalance(payout);
-            database().savePlayer(ctx.getPlayer());
-            
+            database().savePlayer(ctx.getPlayer()).thenAccept(__ -> {
+                if(roll[1][0] != BOOM) {
+                    tryDropBox(ctx);
+                }
+            });
             //noinspection UnnecessarilyQualifiedStaticallyImportedElement
             if(roll[1][0] == ReelSymbol.BOOM) {
-                
                 sb.append($(ctx.getLanguage(), "plugins.economy.commands.slots.boom")
                         .replace("$amount", -payout + "")
                         .replace("$symbol", helper.getCurrencySymbol(ctx)));
@@ -277,7 +284,6 @@ public class PluginEconomy extends BasePlugin {
                 sb.append($(ctx.getLanguage(), "plugins.economy.commands.slots.win")
                         .replace("$amount", "" + payout)
                         .replace("$symbol", helper.getCurrencySymbol(ctx)));
-                tryDropBox(ctx);
             }
         } else {
             sb.append($(ctx.getLanguage(), "plugins.economy.commands.slots.nothing"));
@@ -349,12 +355,10 @@ public class PluginEconomy extends BasePlugin {
             // Winners get 3x payout
             final long payout = ctx.getCost() * 3;
             ctx.getPlayer().incrementBalance(payout);
-            database().savePlayer(ctx.getPlayer());
-            
+            database().savePlayer(ctx.getPlayer()).thenAccept(__ -> tryDropBox(ctx));
             sb.append($(ctx.getLanguage(), "plugins.economy.commands.gamble.success")
                     .replace("$amount", "" + payout)
                     .replace("$symbol", helper.getCurrencySymbol(ctx)));
-            tryDropBox(ctx);
         } else {
             sb.append($(ctx.getLanguage(), "plugins.economy.commands.gamble.failure")
                     .replace("$amount", "" + ctx.getCost())
@@ -639,10 +643,9 @@ public class PluginEconomy extends BasePlugin {
             final Map<Item, Long> count = lootToMap(loot);
             count.keySet().forEach(e -> sb.append(e.getEmote()).append(" `x").append(count.get(e)).append("`\n"));
             ctx.getPlayer().addAllToInventory(count);
-            database().savePlayer(ctx.getPlayer());
+            database().savePlayer(ctx.getPlayer()).thenAccept(__ -> tryDropBox(ctx));
             ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.mine.success") + '\n' + sb);
-            tryDropBox(ctx);
         }
     }
     
@@ -677,22 +680,40 @@ public class PluginEconomy extends BasePlugin {
             final Map<Item, Long> count = lootToMap(loot);
             count.keySet().forEach(e -> sb.append(e.getEmote()).append(" `x").append(count.get(e)).append("`\n"));
             ctx.getPlayer().addAllToInventory(count);
-            database().savePlayer(ctx.getPlayer());
+            database().savePlayer(ctx.getPlayer()).thenAccept(__ -> tryDropBox(ctx));
             ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.fish.success") + '\n' + sb);
-            tryDropBox(ctx);
         }
     }
     
-    private void tryDropBox(final CommandContext ctx) {
+    private CompletableFuture<Void> tryDropBox(final CommandContext ctx) {
         if(LootTables.chance(random().nextInt(15))) {
+            final Future<Void> future = Future.future();
             final Box box = Box.values()[random().nextInt(Box.values().length)];
             ctx.getPlayer().addOneToBoxes(box);
-            database().savePlayer(ctx.getPlayer());
-            ctx.sendMessage(
-                    $(ctx.getLanguage(), "plugins.economy.found-box")
-                            .replace("$box", box.getName())
-            );
+            database().savePlayer(ctx.getPlayer())
+                    .thenAccept(__ -> {
+                        ctx.sendMessage(
+                                $(ctx.getLanguage(), "plugins.economy.found-box")
+                                        .replace("$box", box.getName()))
+                                .thenAccept(___ -> {
+                                    future.complete(null);
+                                })
+                                .exceptionally(e -> {
+                                    Sentry.capture(e);
+                                    future.complete(null);
+                                    return null;
+                                })
+                        ;
+                    })
+                    .exceptionally(e -> {
+                        Sentry.capture(e);
+                        future.complete(null);
+                        return null;
+                    });
+            return SafeVertxCompletableFuture.from(catnip(), future);
+        } else {
+            return CompletableFuture.completedFuture(null);
         }
     }
     

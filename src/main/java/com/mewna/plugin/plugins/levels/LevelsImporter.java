@@ -94,6 +94,7 @@ public final class LevelsImporter {
                                         c.setString(2, JsonObject.mapFrom(p).encode());
                                         c.execute();
                                     });
+                            // TODO: INSERT INTO accounts ... ON CONFLICT DO NOTHING;
                             /*
                             if(!Mewna.getInstance().accountManager().getAccountByLinkedDiscord(player.getId()).isPresent()) {
                                 Mewna.getInstance().accountManager().createNewDiscordLinkedAccount(null,

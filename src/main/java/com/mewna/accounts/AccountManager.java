@@ -39,7 +39,7 @@ public class AccountManager {
     }
     
     public void createNewDiscordLinkedAccount(final Player player, final User user) {
-        final String snowflake = Snowflakes.getNewSnowflake();
+        final String snowflake = user.id();
         final Account account = new Account(snowflake);
         
         account.discordAccountId(user.id());

@@ -85,7 +85,7 @@ public class PluginSecret extends BasePlugin {
     @Command(names = "guildcast", desc = "secret", usage = "secret", examples = "secret", owner = true)
     public void guildcast(final CommandContext ctx) {
         final String guildId = ctx.getGuild().id();
-        mewna().singyeong().send("mewna-shard", new QueryBuilder().contains("guilds", guildId).build(),
+        mewna().singyeong().send("shards", new QueryBuilder().contains("guilds", guildId).build(),
                 new JsonObject().put("henlo", guildId));
         ctx.sendMessage("Casting guild " + guildId);
     }

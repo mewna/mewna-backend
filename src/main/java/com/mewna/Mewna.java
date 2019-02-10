@@ -13,21 +13,22 @@ import com.mewna.paypal.PaypalHandler;
 import com.mewna.plugin.CommandManager;
 import com.mewna.plugin.PluginManager;
 import com.mewna.plugin.util.TextureManager;
+import com.mewna.util.IOUtils;
 import com.mewna.util.Ratelimiter;
 import com.mewna.util.Translator;
 import com.timgroup.statsd.NoOpStatsDClient;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
 import gg.amy.singyeong.SingyeongClient;
-import gg.amy.singyeong.SingyeongType;
 import io.sentry.Sentry;
 import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
 import io.vertx.core.json.Json;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Optional;
 
 /**
  * @author amy
@@ -36,35 +37,31 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("Singleton")
 @Accessors(fluent = true)
 public final class Mewna {
-    public static final String APP_ID = "mewna-backend";
     @SuppressWarnings("StaticVariableOfConcreteClass")
     private static final Mewna INSTANCE = new Mewna();
-    
-    @Getter
-    private SingyeongEventManager singyeongEventManager;
     @Getter
     private final PluginManager pluginManager = new PluginManager(this);
-    @Getter
-    private CommandManager commandManager;
     @Getter
     private final Database database = new Database(this);
     @Getter
     private final Ratelimiter ratelimiter = new Ratelimiter(this);
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    
     @Getter
     private final AccountManager accountManager = new AccountManager(this);
-    
     @Getter
     private final PaypalHandler paypalHandler = new PaypalHandler(this);
-    
     @Getter
     private final StatsDClient statsClient;
-    
     @Getter
-    private final Vertx vertx = Vertx.vertx(new VertxOptions().setEventLoopPoolSize(Runtime.getRuntime().availableProcessors() * 2));
+    private final Vertx vertx = Vertx.vertx();
     @Getter
-    private final SingyeongClient singyeong = SingyeongClient.create(vertx, System.getenv("SINGYEONG_DSN"));
+    private final SingyeongClient singyeong;
+    @Getter
+    private final int port = Integer.parseInt(Optional.ofNullable(System.getenv("PORT")).orElse("80"));
+    @Getter
+    private SingyeongEventManager singyeongEventManager;
+    @Getter
+    private CommandManager commandManager;
     @Getter
     private Catnip catnip;
     
@@ -74,6 +71,8 @@ public final class Mewna {
         } else {
             statsClient = new NoOpStatsDClient();
         }
+        // Initialized here to avoid breaking things
+        singyeong = SingyeongClient.create(vertx, System.getenv("SINGYEONG_DSN"), IOUtils.ip() + ':' + port);
     }
     
     public static void main(final String[] args) {
@@ -103,15 +102,14 @@ public final class Mewna {
         catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN")), vertx);
         singyeongEventManager = new SingyeongEventManager(this);
         singyeong.connect()
-                .thenAccept(__ -> singyeong.updateMetadata("backend-key", SingyeongType.STRING, "mewna-backend"))
                 .thenAccept(__ -> DiscordCache.setup())
                 .thenAccept(__ -> singyeong.onEvent(singyeongEventManager::handle))
                 .thenAccept(__ -> singyeong.onInvalid(i -> logger.info("Singyeong invalid: {}: {}", i.nonce(), i.reason())))
                 .thenAccept(__ -> new API(this).start())
                 .thenAccept(__ -> logger.info("Finished starting!"))
-        .exceptionally(e -> {
-            e.printStackTrace();
-            return null;
-        });
+                .exceptionally(e -> {
+                    e.printStackTrace();
+                    return null;
+                });
     }
 }

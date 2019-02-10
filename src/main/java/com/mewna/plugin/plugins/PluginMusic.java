@@ -60,7 +60,7 @@ public class PluginMusic extends BasePlugin {
             } else {
                 DiscordCache.voiceState(guildId, ctx.getUser().id())
                         .thenAccept(state -> {
-                            mewna().singyeong().send("mewna-shard",
+                            mewna().singyeong().send("shards",
                                     new QueryBuilder().contains("guilds", guildId).build(),
                                     new JsonObject().put("type", "VOICE_JOIN")
                                             .put("guild_id", guildId)
@@ -98,7 +98,7 @@ public class PluginMusic extends BasePlugin {
                                                     .sendMessage(ctx.getMessage().channelId(),
                                                             $(ctx.getLanguage(), "plugins.music.commands.leave.left") +
                                                                     " \uD83D\uDD0A" + ch.name());
-                                            mewna().singyeong().send("mewna-shard", new QueryBuilder().contains("guilds", guildId).build(),
+                                            mewna().singyeong().send("shards", new QueryBuilder().contains("guilds", guildId).build(),
                                                     new JsonObject().put("type", "VOICE_LEAVE").put("guild_id", guildId));
                                         }));
             }

@@ -119,7 +119,7 @@ public final class DiscordCache {
         final String nonce = UUID.randomUUID().toString();
         final PendingFetch<T> pending = new PendingFetch<>(cls, future);
         
-        Mewna.getInstance().singyeong().send("mewna-shard", nonce, new QueryBuilder().build(),
+        Mewna.getInstance().singyeong().send("shards", nonce, new QueryBuilder().build(),
                 new JsonObject()
                         .put("type", "CACHE")
                         .put("query", query.put("mode", mode)));

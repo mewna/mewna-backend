@@ -584,8 +584,6 @@ class API {
             });
         }
         
-        server.requestHandler(router::accept)
-                .listen(Integer.parseInt(Optional.ofNullable(System.getenv("PORT"))
-                        .orElse("80")));
+        server.requestHandler(router::accept).listen(mewna.port());
     }
 }

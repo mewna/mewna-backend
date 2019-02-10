@@ -17,10 +17,9 @@ import com.mewna.plugin.event.plugin.twitch.TwitchStreamEndEvent;
 import com.mewna.plugin.event.plugin.twitch.TwitchStreamStartEvent;
 import com.mewna.plugin.event.plugin.twitch.TwitchStreamer;
 import gg.amy.singyeong.Dispatch;
-import io.vertx.core.WorkerExecutor;
 import io.vertx.core.json.JsonObject;
 
-import java.util.concurrent.TimeUnit;
+import static com.mewna.util.Async.move;
 
 /**
  * @author amy
@@ -28,16 +27,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class SingyeongEventManager {
     private final Mewna mewna;
-    private final WorkerExecutor executor;
     
     public SingyeongEventManager(final Mewna mewna) {
         this.mewna = mewna;
-        executor = mewna.vertx().createSharedWorkerExecutor("event-workers",
-                Runtime.getRuntime().availableProcessors() * 10, 30, TimeUnit.SECONDS);
     }
     
     public void handle(final Dispatch dispatch) {
-        executor.executeBlocking(f -> {
+        move(() -> {
             final JsonObject data = dispatch.data();
             if(data.containsKey("type") && dispatch.nonce() == null) {
                 final String type = data.getString("type");
@@ -94,9 +90,6 @@ public class SingyeongEventManager {
                     }
                 }
             }
-            
-            f.complete(null);
-        }, res -> {
         });
     }
 }

@@ -19,7 +19,6 @@ import com.mewna.util.Profiler;
 import com.mewna.util.Time;
 import io.sentry.Sentry;
 import io.vertx.core.Future;
-import io.vertx.core.WorkerExecutor;
 import lombok.Getter;
 import lombok.Value;
 import me.escoffier.vertx.completablefuture.VertxCompletableFuture;
@@ -34,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.mewna.util.Async.move;
 import static com.mewna.util.Translator.$;
 
 /**
@@ -50,7 +50,6 @@ public class CommandManager {
                 .orElse("bmew.,bmew ,=").split(",")));
     }
     
-    private final WorkerExecutor executor;
     private final Mewna mewna;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     @Getter
@@ -59,8 +58,6 @@ public class CommandManager {
     
     public CommandManager(final Mewna mewna) {
         this.mewna = mewna;
-        executor = mewna.vertx().createSharedWorkerExecutor("event-workers",
-                Runtime.getRuntime().availableProcessors() * 100, 30, TimeUnit.SECONDS);
     }
     
     public void loadCommandsFromMethod(final Object pluginInstance, final Plugin pluginAnnotation,
@@ -283,7 +280,7 @@ public class CommandManager {
                 profiler.section("player");
                 //noinspection CodeBlock2Expr
                 mewna.database().getPlayer(user).thenAccept(player -> {
-                    executor.executeBlocking(future -> {
+                    move(() -> {
                         profiler.section("account");
                         Optional<Account> maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());
                         if(!maybeAccount.isPresent()) {
@@ -350,19 +347,15 @@ public class CommandManager {
                             logger.info("Command: {}#{} ({}, account: {}) in {}#{}-{}: {} {}", user.username(), user.discriminator(),
                                     user.id(), ctx.getAccount().id(), guild.id(), channelId, event.message().id(), commandName, argstr);
                             mewna.statsClient().count("discord.backend.commands.run", 1, "name:" + cmd.getName());
-                            executor.executeBlocking(f -> {
+                            move(() -> {
                                 try {
                                     cmd.getMethod().invoke(cmd.getPlugin(), ctx);
                                 } catch(final IllegalAccessException | InvocationTargetException e) {
                                     Sentry.capture(e);
                                     e.printStackTrace();
                                 }
-                                f.complete(null);
-                            }, __ -> {
                             });
                         });
-                        future.complete(null);
-                    }, res -> {
                     });
                 });
             }

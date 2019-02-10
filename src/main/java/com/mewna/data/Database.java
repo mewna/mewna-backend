@@ -345,20 +345,7 @@ public class Database {
     }
     
     public void saveAccount(final Account account) {
-        // store.mapSync(Account.class).save(account);
-        // idk /shrug
-        store.sql("INSERT INTO " + store.mapSync(Account.class).getTableName()
-                        + " (" + store.mapSync(Account.class).getPrimaryKeyName() + ", data) " +
-                        "VALUES (?, to_jsonb(?::jsonb)) ON CONFLICT (" + store.mapSync(Account.class).getPrimaryKeyName() + ") " +
-                        "DO UPDATE SET " + store.mapSync(Account.class).getPrimaryKeyName() + " = ?, data = to_jsonb(?::jsonb);",
-                c -> {
-                    final String json = JsonObject.mapFrom(account).encode();
-                    c.setObject(1, account.id());
-                    c.setString(2, json);
-                    c.setObject(3, account.id());
-                    c.setString(4, json);
-                    c.execute();
-                });
+        store.mapSync(Account.class).save(account);
     }
     
     public void savePost(final TimelinePost post) {

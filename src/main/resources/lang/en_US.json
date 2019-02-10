@@ -273,7 +273,7 @@
           "not-enough-args": "Not enough arguments provided.",
           "invalid-search-type": "Invalid search type.",
           "invalid-search": "Invalid search.",
-          "invalid-length": "Searches must be at least 3 characters long.",
+          "invalid-search-length": "Searches must be at least 3 characters long.",
           "too-many-matches": "Too many possible matches"
         }
       }

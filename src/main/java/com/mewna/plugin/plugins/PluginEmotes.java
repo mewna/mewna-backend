@@ -32,6 +32,6 @@ public class PluginEmotes extends BasePlugin {
                 .replace("@everyone", "very funny")
                 .replace("@here", "very funny");
 
-        ctx.sendMessage( out);
+        ctx.sendMessage(out);
     }
 }

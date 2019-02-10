@@ -88,12 +88,12 @@ public class Database {
     // Internal //
     //////////////
     
+    @SuppressWarnings("unchecked")
     private void mapSettingsClasses() {
         final List<Class<?>> classes = new ArrayList<>();
         new FastClasspathScanner(Plugin.class.getPackage().getName()).matchAllStandardClasses(cls -> {
             if(PluginSettings.class.isAssignableFrom(cls) && !cls.equals(PluginSettings.class)) {
                 classes.add(cls);
-                //noinspection unchecked
                 pluginSettingsByName.put(cls.getSimpleName().toLowerCase().replace("settings", ""),
                         (Class<? extends PluginSettings>) cls);
             }
@@ -225,6 +225,7 @@ public class Database {
         return getOrBaseSettings(cls, id);
     }
     
+    @SuppressWarnings("unchecked")
     public <T extends PluginSettings> CompletableFuture<T> getOrBaseSettings(final Class<T> type, final String id) {
         if(!store.isMappedSync(type) && !store.isMappedAsync(type)) {
             throw new IllegalArgumentException("Attempted to get settings of type " + type.getName() + ", but it's not mapped!");
@@ -239,7 +240,6 @@ public class Database {
                 .thenAccept(maybeSettings -> {
                     if(maybeSettings.isPresent()) {
                         final T maybe = maybeSettings.get();
-                        //noinspection unchecked
                         maybe.refreshCommands().otherRefresh().thenAccept(settings ->
                                 saveSettings(settings).exceptionally(e -> {
                                     Sentry.capture(e);
@@ -261,9 +261,9 @@ public class Database {
         return VertxCompletableFuture.from(mewna.vertx(), future);
     }
     
+    @SuppressWarnings("unchecked")
     public <T extends PluginSettings> CompletableFuture<Void> saveSettings(final T settings) {
         // This is technically valid
-        //noinspection unchecked
         return store.mapAsync((Class<T>) settings.getClass()).save(settings);
     }
     

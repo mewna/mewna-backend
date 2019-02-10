@@ -31,7 +31,7 @@ import java.util.function.Function;
 public class PluginManager {
     private final Collection<Class<?>> loaded = new HashSet<>();
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Map<Class<?>, Function<Class<?>, Object>> injectionClasses;
+    private final Map<Class<?>, Function<Class<?>, ?>> injectionClasses;
     @Getter
     private final Mewna mewna;
     @Getter(AccessLevel.PACKAGE)
@@ -68,7 +68,7 @@ public class PluginManager {
         this.mewna = mewna;
         currencyHelper = new CurrencyHelper();
         
-        injectionClasses = ImmutableMap.<Class<?>, Function<Class<?>, Object>>builder()
+        injectionClasses = ImmutableMap.<Class<?>, Function<Class<?>, ?>>builder()
                 .put(Mewna.class, __ -> this.mewna)
                 .put(Logger.class, LoggerFactory::getLogger)
                 .put(Database.class, __ -> this.mewna.database())

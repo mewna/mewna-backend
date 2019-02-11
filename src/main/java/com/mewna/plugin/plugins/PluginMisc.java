@@ -51,6 +51,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
+import static com.mewna.util.Async.move;
 import static com.mewna.util.Translator.$;
 
 /**
@@ -106,8 +107,6 @@ public class PluginMisc extends BasePlugin {
             .registerTypeAdapter(XFeat.class, new XFeatDeserializer())
             .registerTypeAdapter(XRace.class, new XRaceDeserializer())
             .create();
-    
-    private final ExecutorService pool = Executors.newCachedThreadPool();
     
     @Getter
     private final List<XSpell> spells = new CopyOnWriteArrayList<>();
@@ -614,7 +613,7 @@ public class PluginMisc extends BasePlugin {
                 case "top": {
                     ctx.sendMessage(Emotes.LOADING_ICON
                             + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.tato.top.loading"))
-                            .thenAccept(msg -> pool.execute(() -> {
+                            .thenAccept(msg -> move(() -> {
                                 final String query = "SELECT id, (data->'clickerData'->>'totalClicks') AS clicks FROM players " +
                                         "WHERE (data->'clickerData'->>'totalClicks')::bigint > 0 " +
                                         "ORDER BY (data->'clickerData'->>'totalClicks')::bigint DESC " +

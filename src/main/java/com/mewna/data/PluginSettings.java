@@ -3,10 +3,10 @@ package com.mewna.data;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
 import com.mewna.plugin.CommandManager.CommandWrapper;
+import gg.amy.singyeong.SafeVertxCompletableFuture;
 import io.sentry.Sentry;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
-import me.escoffier.vertx.completablefuture.VertxCompletableFuture;
 
 import java.io.IOException;
 import java.util.*;
@@ -43,7 +43,7 @@ public interface PluginSettings {
     PluginSettings refreshCommands();
     
     default CompletableFuture<PluginSettings> otherRefresh() {
-        return VertxCompletableFuture.from(Mewna.getInstance().vertx(), Future.succeededFuture(this));
+        return SafeVertxCompletableFuture.from(Mewna.getInstance().vertx(), Future.succeededFuture(this));
     }
     
     /**

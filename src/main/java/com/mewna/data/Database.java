@@ -8,13 +8,13 @@ import com.mewna.plugin.Plugin;
 import com.mewna.plugin.util.Snowflakes;
 import com.mewna.servers.ServerBlogPost;
 import gg.amy.pgorm.PgStore;
+import gg.amy.singyeong.SafeVertxCompletableFuture;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import io.sentry.Sentry;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.Getter;
-import me.escoffier.vertx.completablefuture.VertxCompletableFuture;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.slf4j.Logger;
@@ -225,7 +225,7 @@ public class Database {
         return getOrBaseSettings(cls, id);
     }
     
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "OptionalAssignedToNull"})
     public <T extends PluginSettings> CompletableFuture<T> getOrBaseSettings(final Class<T> type, final String id) {
         if(!store.isMappedSync(type) && !store.isMappedAsync(type)) {
             throw new IllegalArgumentException("Attempted to get settings of type " + type.getName() + ", but it's not mapped!");
@@ -235,30 +235,39 @@ public class Database {
         getSettingsByType(type, id)
                 .exceptionally(e -> {
                     Sentry.capture(e);
-                    return Optional.empty();
-                })
-                .thenAccept(maybeSettings -> {
-                    if(maybeSettings.isPresent()) {
+                    return null;
+                    })
+                .thenApply(maybeSettings -> {
+                    // This is a valid thing to do - a null value is returned
+                    // when the settings *are not present due to an error*, ie
+                    // in an exceptional case that generally shouldn't ever happen
+                    if(maybeSettings == null) {
+                        // future.fail("Failing due to database issues");
+                        throw new IllegalStateException("Failing due to database issues");
+                    } else if(maybeSettings.isPresent()) {
                         final T maybe = maybeSettings.get();
-                        maybe.refreshCommands().otherRefresh().thenAccept(settings ->
+                        // We're joining inside of NON-vx threads here, so I'm pretty sure this is safe?
+                        // Honestly I just couldn't think of a better way to do it......
+                        return maybe.refreshCommands().otherRefresh().thenAccept(settings ->
                                 saveSettings(settings).exceptionally(e -> {
                                     Sentry.capture(e);
                                     return null;
-                                }).thenAccept(__ -> future.complete((T) settings)));
+                                }).thenAccept(__ -> future.complete((T) settings))).join();
                     } else {
                         try {
                             final T base = type.getConstructor(String.class).newInstance(id);
                             saveSettings(base);
-                            future.complete(base);
+                            // future.complete(base);
+                            return base;
                         } catch(final IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
                             Sentry.capture(e);
-                            future.fail(e);
+                            // future.fail(e);
                             throw new RuntimeException(e);
                         }
                     }
                 });
         
-        return VertxCompletableFuture.from(mewna.vertx(), future);
+        return SafeVertxCompletableFuture.from(mewna.vertx(), future);
     }
     
     @SuppressWarnings("unchecked")

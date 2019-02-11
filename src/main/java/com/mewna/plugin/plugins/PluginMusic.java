@@ -17,10 +17,10 @@ import com.mewna.plugin.plugins.settings.MusicSettings;
 import com.mewna.plugin.util.Emotes;
 import com.mewna.util.Time;
 import gg.amy.singyeong.QueryBuilder;
+import gg.amy.singyeong.SafeVertxCompletableFuture;
 import io.sentry.Sentry;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
-import me.escoffier.vertx.completablefuture.VertxCompletableFuture;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -359,7 +359,7 @@ public class PluginMusic extends BasePlugin {
             return null;
         });
         
-        return VertxCompletableFuture.from(mewna().vertx(), future);
+        return SafeVertxCompletableFuture.from(mewna().vertx(), future);
     }
     
     private enum VoiceCheck {

@@ -21,7 +21,6 @@ import io.sentry.Sentry;
 import io.vertx.core.Future;
 import lombok.Getter;
 import lombok.Value;
-import me.escoffier.vertx.completablefuture.VertxCompletableFuture;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,12 +98,7 @@ public class CommandManager {
     
     @SuppressWarnings("TypeMayBeWeakened")
     private CompletableFuture<List<String>> getAllPrefixes(final Guild guild) {
-        final Future<List<String>> future = Future.future();
-        
-        mewna.database().getOrBaseSettings(BehaviourSettings.class, guild.id()).exceptionally(e -> {
-            Sentry.capture(e);
-            return null;
-        }).thenAccept(settings -> {
+        return mewna.database().getOrBaseSettings(BehaviourSettings.class, guild.id()).thenApply(settings -> {
             final List<String> prefixes = new ArrayList<>();
             if(settings.getPrefix() != null && !settings.getPrefix().isEmpty() && settings.getPrefix().length() <= 16) {
                 prefixes.add(settings.getPrefix());
@@ -113,10 +107,11 @@ public class CommandManager {
             }
             prefixes.add("<@" + CLIENT_ID + '>');
             prefixes.add("<@!" + CLIENT_ID + '>');
-            future.complete(prefixes);
+            return prefixes;
+        }).exceptionally(e -> {
+            Sentry.capture(e);
+            return Collections.emptyList();
         });
-        
-        return VertxCompletableFuture.from(mewna.vertx(), future);
     }
     
     public <T> List<CommandWrapper> getCommandsForPlugin(final Class<T> pluginClass) {
@@ -147,28 +142,32 @@ public class CommandManager {
             getAllPrefixes(guild).exceptionally(e -> {
                 Sentry.capture(e);
                 return Collections.emptyList();
-            }).thenAccept(prefixes -> {
-                // Parse prefixes
-                final String content = event.message().content();
-                String prefix = null;
-                boolean found = false;
-                for(final String p : prefixes) {
-                    if(p != null && !p.isEmpty()) {
-                        if(content.toLowerCase().startsWith(p.toLowerCase())) {
-                            prefix = p;
-                            found = true;
+            }).thenAccept(prefixes -> move(() -> {
+                // Move out of vert.x threads
+                // Empty prefixes == no prefixes found because db errors
+                if(!prefixes.isEmpty()) {
+                    // Parse prefixes
+                    final String content = event.message().content();
+                    String prefix = null;
+                    boolean found = false;
+                    for(final String p : prefixes) {
+                        if(p != null && !p.isEmpty()) {
+                            if(content.toLowerCase().startsWith(p.toLowerCase())) {
+                                prefix = p;
+                                found = true;
+                            }
                         }
                     }
+                    // TODO: There's gotta be a way to refactor this out into smaller methods...
+                    final List<User> mentions = new ArrayList<>(event.message().mentionedUsers());
+                    if(found) {
+                        parseCommand(user, guild, mentions, prefix, content, channelId, event, profiler);
+                    } else {
+                        // No prefix found, pass it down as an event
+                        mewna.pluginManager().processEvent(Raw.MESSAGE_CREATE, event);
+                    }
                 }
-                // TODO: There's gotta be a way to refactor this out into smaller methods...
-                final List<User> mentions = new ArrayList<>(event.message().mentionedUsers());
-                if(found) {
-                    parseCommand(user, guild, mentions, prefix, content, channelId, event, profiler);
-                } else {
-                    // No prefix found, pass it down as an event
-                    mewna.pluginManager().processEvent(Raw.MESSAGE_CREATE, event);
-                }
-            });
+            }));
         } catch(final Throwable t) {
             Sentry.capture(t);
             logger.error("Error at high-level command processor:", t);
@@ -243,7 +242,7 @@ public class CommandManager {
             canExec.complete(true);
         }
         
-        SafeVertxCompletableFuture.from(mewna.catnip(), canExec).thenAccept(b -> {
+        SafeVertxCompletableFuture.from(mewna.catnip(), canExec).thenAccept(b -> move(() -> {
             if(b) {
                 profiler.section("ratelimit");
                 if(cmd.getRatelimit() != null) {
@@ -310,7 +309,7 @@ public class CommandManager {
                         
                         final Optional<Account> finalMaybeAccount = maybeAccount;
                         profiler.section("payment");
-                        mewna.database().getOrBaseSettings(EconomySettings.class, guild.id()).thenAccept(settings -> {
+                        mewna.database().getOrBaseSettings(EconomySettings.class, guild.id()).thenAccept(settings -> move(() -> {
                             long cost = 0L;
                             // Commands may require payment before running
                             final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr, guild, event.message(),
@@ -347,19 +346,18 @@ public class CommandManager {
                             logger.info("Command: {}#{} ({}, account: {}) in {}#{}-{}: {} {}", user.username(), user.discriminator(),
                                     user.id(), ctx.getAccount().id(), guild.id(), channelId, event.message().id(), commandName, argstr);
                             mewna.statsClient().count("discord.backend.commands.run", 1, "name:" + cmd.getName());
-                            move(() -> {
-                                try {
-                                    cmd.getMethod().invoke(cmd.getPlugin(), ctx);
-                                } catch(final IllegalAccessException | InvocationTargetException e) {
-                                    Sentry.capture(e);
-                                    e.printStackTrace();
-                                }
-                            });
-                        });
+                            
+                            try {
+                                cmd.getMethod().invoke(cmd.getPlugin(), ctx);
+                            } catch(final IllegalAccessException | InvocationTargetException e) {
+                                Sentry.capture(e);
+                                e.printStackTrace();
+                            }
+                        }));
                     });
                 });
             }
-        });
+        }));
     }
     
     @Value

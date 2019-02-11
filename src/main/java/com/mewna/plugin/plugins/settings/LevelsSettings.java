@@ -10,6 +10,7 @@ import com.mewna.plugin.plugins.PluginLevels;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
+import gg.amy.singyeong.SafeVertxCompletableFuture;
 import io.sentry.Sentry;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -18,7 +19,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import me.escoffier.vertx.completablefuture.VertxCompletableFuture;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -88,7 +88,7 @@ public class LevelsSettings implements PluginSettings {
                     future.complete(this);
                 });
         // return this;
-        return VertxCompletableFuture.from(Mewna.getInstance().vertx(), future);
+        return SafeVertxCompletableFuture.from(Mewna.getInstance().vertx(), future);
     }
     
     @Override

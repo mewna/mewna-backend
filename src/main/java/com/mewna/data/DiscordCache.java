@@ -4,7 +4,6 @@ import com.mewna.Mewna;
 import com.mewna.catnip.entity.Entity;
 import com.mewna.catnip.entity.channel.Channel;
 import com.mewna.catnip.entity.channel.Channel.ChannelType;
-import com.mewna.catnip.entity.channel.GuildChannel;
 import com.mewna.catnip.entity.channel.TextChannel;
 import com.mewna.catnip.entity.channel.VoiceChannel;
 import com.mewna.catnip.entity.guild.Guild;
@@ -13,13 +12,13 @@ import com.mewna.catnip.entity.guild.Role;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.user.VoiceState;
 import gg.amy.singyeong.QueryBuilder;
+import gg.amy.singyeong.SafeVertxCompletableFuture;
 import io.sentry.Sentry;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.Value;
 import lombok.experimental.Accessors;
-import me.escoffier.vertx.completablefuture.VertxCompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,7 +124,7 @@ public final class DiscordCache {
                         .put("query", query.put("mode", mode)));
         
         PENDING.putIfAbsent(nonce, pending);
-        return VertxCompletableFuture.from(Mewna.getInstance().vertx(), future);
+        return SafeVertxCompletableFuture.from(Mewna.getInstance().vertx(), future);
     }
     
     public static CompletionStage<Guild> guild(final String id) {

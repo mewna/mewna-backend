@@ -38,6 +38,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.mewna.util.Async.move;
 import static com.mewna.util.Translator.$;
 
 /**
@@ -312,7 +313,7 @@ public class PluginLevels extends BasePlugin {
                 ctx.sendMessage(
                         Emotes.LOADING_ICON + ' ' + generating)
                         .thenAccept(message -> catnip().rest().channel().triggerTypingIndicator(ctx.getMessage().channelId())
-                                .thenAccept(__ -> {
+                                .thenAccept(__ -> move(() -> {
                                     try {
                                         // lol
                                         // we do everything possible to guarantee that this should be safe
@@ -321,36 +322,31 @@ public class PluginLevels extends BasePlugin {
                                         final Account account = database().getAccountByDiscordId(user.id()).get();
                                         final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.id();
                                         
-                                        catnip().vertx().executeBlocking(future -> {
-                                            final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
-                                            future.complete(cardBytes);
-                                        }, res -> {
-                                            final byte[] cardBytes = (byte[]) res.result();
-                                            final EmbedBuilder builder = new EmbedBuilder()
-                                                    .title("**" + user.username() + "**'s rank card")
-                                                    .image("attachment://rank.png")
-                                                    .color(new Color(Renderer.PRIMARY_COLOUR))
-                                                    .description('[' + $(ctx.getLanguage(), "plugins.levels.view-full-profile") + "](" + profileUrl + ')')
-                                                    .footer($(ctx.getLanguage(), "plugins.levels.change-background"),
-                                                            user.effectiveAvatarUrl());
-                                            catnip().rest().channel().deleteMessage(ctx.getMessage().channelId(), message.id())
-                                                    .thenAccept(___ -> catnip().rest().channel()
-                                                            .sendMessage(ctx.getMessage().channelId(),
-                                                                    new MessageOptions()
-                                                                            .content(ctx.getUser().asMention())
-                                                                            .embed(builder.build())
-                                                                            .addFile("rank.png", cardBytes))
-                                                            .exceptionally(e -> {
-                                                                e.printStackTrace();
-                                                                return null;
-                                                            })
-                                                    );
-                                        });
+                                        final byte[] cardBytes = Renderer.generateRankCard(ctx.getGuild(), user, player);
+                                        final EmbedBuilder builder = new EmbedBuilder()
+                                                .title("**" + user.username() + "**'s rank card")
+                                                .image("attachment://rank.png")
+                                                .color(new Color(Renderer.PRIMARY_COLOUR))
+                                                .description('[' + $(ctx.getLanguage(), "plugins.levels.view-full-profile") + "](" + profileUrl + ')')
+                                                .footer($(ctx.getLanguage(), "plugins.levels.change-background"),
+                                                        user.effectiveAvatarUrl());
+                                        catnip().rest().channel().deleteMessage(ctx.getMessage().channelId(), message.id())
+                                                .thenAccept(___ -> catnip().rest().channel()
+                                                        .sendMessage(ctx.getMessage().channelId(),
+                                                                new MessageOptions()
+                                                                        .content(ctx.getUser().asMention())
+                                                                        .embed(builder.build())
+                                                                        .addFile("rank.png", cardBytes))
+                                                        .exceptionally(e -> {
+                                                            e.printStackTrace();
+                                                            return null;
+                                                        })
+                                                );
                                     } catch(final Exception e) {
                                         Sentry.capture(e);
                                         e.printStackTrace();
                                     }
-                                }).exceptionally(e -> {
+                                })).exceptionally(e -> {
                                     e.printStackTrace();
                                     return null;
                                 }));
@@ -389,36 +385,30 @@ public class PluginLevels extends BasePlugin {
                     Emotes.LOADING_ICON + ' ' + finalGenerating)
                     .thenAccept(message ->
                             catnip().rest().channel().triggerTypingIndicator(ctx.getMessage().channelId())
-                                    .thenAccept(__ -> {
+                                    .thenAccept(__ -> move(() -> {
                                         // lol
                                         // we do everything possible to guarantee that this should be safe
                                         // without doing a check here
                                         //noinspection ConstantConditions,OptionalGetWithoutIsPresent
                                         final Account account = database().getAccountByDiscordId(user.id()).get();
                                         final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.id();
-                                        
-                                        catnip().vertx().executeBlocking(future -> {
-                                            final byte[] cardBytes = Renderer.generateProfileCard(user, player);
-                                            future.complete(cardBytes);
-                                        }, res -> {
-                                            final byte[] cardBytes = (byte[]) res.result();
-                                            final EmbedBuilder builder = new EmbedBuilder()
-                                                    .title("**" + user.username() + "**'s profile card")
-                                                    .image("attachment://profile.png")
-                                                    .color(new Color(Renderer.PRIMARY_COLOUR))
-                                                    .description('[' + $(ctx.getLanguage(), "plugins.levels.view-full-profile") + "](" + profileUrl + ')')
-                                                    .footer($(ctx.getLanguage(), "plugins.levels.change-background-description"), null);
-                                            catnip().rest().channel().deleteMessage(ctx.getMessage().channelId(), message.id())
-                                                    .thenApply(___ ->
-                                                            catnip().rest().channel()
-                                                                    .sendMessage(ctx.getMessage().channelId(),
-                                                                            new MessageOptions()
-                                                                                    .content(ctx.getUser().asMention())
-                                                                                    .addFile("profile.png", cardBytes)
-                                                                                    .embed(builder.build()))
-                                                    );
-                                        });
-                                    }));
+                                        final byte[] cardBytes = Renderer.generateProfileCard(user, player);
+                                        final EmbedBuilder builder = new EmbedBuilder()
+                                                .title("**" + user.username() + "**'s profile card")
+                                                .image("attachment://profile.png")
+                                                .color(new Color(Renderer.PRIMARY_COLOUR))
+                                                .description('[' + $(ctx.getLanguage(), "plugins.levels.view-full-profile") + "](" + profileUrl + ')')
+                                                .footer($(ctx.getLanguage(), "plugins.levels.change-background-description"), null);
+                                        catnip().rest().channel().deleteMessage(ctx.getMessage().channelId(), message.id())
+                                                .thenApply(___ ->
+                                                        catnip().rest().channel()
+                                                                .sendMessage(ctx.getMessage().channelId(),
+                                                                        new MessageOptions()
+                                                                                .content(ctx.getUser().asMention())
+                                                                                .addFile("profile.png", cardBytes)
+                                                                                .embed(builder.build()))
+                                                );
+                                    })));
         });
     }
     

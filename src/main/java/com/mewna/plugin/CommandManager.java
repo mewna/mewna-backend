@@ -158,7 +158,6 @@ public class CommandManager {
                             }
                         }
                     }
-                    // TODO: There's gotta be a way to refactor this out into smaller methods...
                     final List<User> mentions = new ArrayList<>(event.message().mentionedUsers());
                     if(found) {
                         parseCommand(user, guild, mentions, prefix, content, channelId, event, profiler);
@@ -168,9 +167,9 @@ public class CommandManager {
                     }
                 }
             }));
-        } catch(final Throwable t) {
-            Sentry.capture(t);
-            logger.error("Error at high-level command processor:", t);
+        } catch(final Exception e) {
+            Sentry.capture(e);
+            logger.error("Error at high-level command processor:", e);
         }
     }
     
@@ -201,6 +200,7 @@ public class CommandManager {
     private void executeCommand(final User user, final Guild guild, final List<User> mentions, final String prefix,
                                 final String channelId, final DiscordMessageCreate event, final String commandName,
                                 final String argstr, final List<String> args, final Profiler profiler) {
+        // TODO: There's gotta be a way to refactor this out into smaller methods...
         profiler.section("metadata");
         final CommandWrapper cmd = commands.get(commandName);
         if(cmd.isOwner() && !user.id().equalsIgnoreCase("128316294742147072")) {

@@ -379,6 +379,7 @@ public class PluginLevels extends BasePlugin {
         }
         generating = generating.replace("$mention", ctx.getUser().asMention());
         final String finalGenerating = generating;
+        
         //noinspection CodeBlock2Expr
         playerFuture.thenAccept(player -> {
             ctx.sendMessage(

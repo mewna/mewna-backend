@@ -236,7 +236,7 @@ public class Database {
                 .exceptionally(e -> {
                     Sentry.capture(e);
                     return null;
-                    })
+                })
                 .thenApply(maybeSettings -> {
                     // This is a valid thing to do - a null value is returned
                     // when the settings *are not present due to an error*, ie
@@ -283,21 +283,32 @@ public class Database {
     public CompletableFuture<Optional<Player>> getOptionalPlayer(final String id) {
         return store.mapAsync(Player.class).load(id).exceptionally(e -> {
             Sentry.capture(e);
-            return Optional.empty();
+            // This is okay I promise ;-;
+            //noinspection OptionalAssignedToNull
+            return null;
         });
     }
     
     public CompletableFuture<Player> getPlayer(final User user) {
         return getOptionalPlayer(user.id())
-                .thenApply(o -> o.orElseGet(() -> {
-                    final Player base = Player.base(user.id());
-                    savePlayer(base);
-                    // If we don't have a player, then we also need to create an account for them
-                    if(!mewna.accountManager().getAccountByLinkedDiscord(user.id()).isPresent()) {
-                        mewna.accountManager().createNewDiscordLinkedAccount(base, user);
+                .thenApply(o -> {
+                    // This is fine!
+                    // o is null only in case of database errors
+                    //noinspection OptionalAssignedToNull
+                    if(o == null) {
+                        throw new IllegalStateException("Database error fetching player " + user.id());
+                    } else {
+                        return o.orElseGet(() -> {
+                            final Player base = Player.base(user.id());
+                            savePlayer(base);
+                            // If we don't have a player, then we also need to create an account for them
+                            if(!mewna.accountManager().getAccountByLinkedDiscord(user.id()).isPresent()) {
+                                mewna.accountManager().createNewDiscordLinkedAccount(base, user);
+                            }
+                            return base;
+                        });
                     }
-                    return base;
-                }))
+                })
                 .exceptionally(e -> {
                     Sentry.capture(e);
                     return null;

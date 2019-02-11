@@ -25,8 +25,6 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("InterfaceMayBeAnnotatedFunctional")
 public interface PluginSettings {
-    ObjectMapper MAPPER = new ObjectMapper();
-    
     static <T> List<String> commandsOwnedByPlugin(final Class<T> cls) {
         return Mewna.getInstance().commandManager().getCommandsForPlugin(cls).stream().map(CommandWrapper::getBaseName)
                 .distinct().collect(Collectors.toList());
@@ -106,8 +104,8 @@ public interface PluginSettings {
                 if(maybeCommand.isPresent()) {
                     try {
                         // If this fails, it's bad JSON or some shit, so reject it
-                        MAPPER.readValue(maybeCommand.get().toString(), CommandSettings.class);
-                    } catch(final IOException e) {
+                        maybeCommand.get().mapTo(CommandSettings.class);
+                    } catch(final Exception e) {
                         return false;
                     }
                 } else {

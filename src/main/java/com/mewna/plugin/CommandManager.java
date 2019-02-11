@@ -237,8 +237,10 @@ public class CommandManager {
                 canExec.complete(false);
                 return null;
             });
-        } else {
+        } else if(!cmd.isOwner()) {
             logger.warn("No plugin metadata for command {}!?", cmd.getBaseName());
+            canExec.complete(true);
+        } else {
             canExec.complete(true);
         }
         

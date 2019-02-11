@@ -18,6 +18,7 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.sql.ResultSet;
 import java.util.HashSet;
 import java.util.Optional;
@@ -36,48 +37,55 @@ public class PluginSecret extends BasePlugin {
     
     @Command(names = "inspect", desc = "secret", usage = "secret", examples = "secret", owner = true)
     public void debugInspect(final CommandContext ctx) {
-        if(ctx.getArgs().size() != 2) {
-            ctx.sendMessage(Emotes.NO);
-        } else {
-            final String snowflake = ctx.getArgs().get(1)
-                    .replaceAll("<@(!)?", "")
-                    .replace(">", "");
-            switch(ctx.getArgs().get(0).toLowerCase()) {
-                case "player": {
-                    database().getOptionalPlayer(snowflake).thenAccept(optionalPlayer -> {
-                        if(optionalPlayer.isPresent()) {
-                            final JsonObject o = JsonObject.mapFrom(optionalPlayer.get());
-                            // TODO: ???
-                            o.remove("account");
-                            o.remove("votes");
-                            o.remove("boxes");
-                            final String json = o.encodePrettily();
-                            ctx.sendMessage("```Javascript\n" + json + "\n```");
-                        } else {
-                            ctx.sendMessage(Emotes.NO);
-                        }
-                    });
-                    break;
-                }
-                case "account": {
-                    final Optional<Account> optionalAccount = mewna().accountManager().getAccountByLinkedDiscord(snowflake);
-                    if(optionalAccount.isPresent()) {
-                        final JsonObject o = JsonObject.mapFrom(optionalAccount.get());
-                        o.remove("email");
+        switch(ctx.getArgs().get(0).toLowerCase()) {
+            case "threads": {
+                final int threadCount = ManagementFactory.getThreadMXBean().getThreadCount();
+                final int peakThreadCount = ManagementFactory.getThreadMXBean().getPeakThreadCount();
+                final int daemonThreadCount = ManagementFactory.getThreadMXBean().getDaemonThreadCount();
+                ctx.sendMessage("```CSS\n" +
+                        " [Total threads] " + threadCount + '\n' +
+                        "  [Peak threads] " + peakThreadCount + '\n' +
+                        "[Daemon threads] " + daemonThreadCount + '\n' +
+                        "```");
+                break;
+            }
+            case "player": {
+                final String snowflake = ctx.getArgs().get(1)
+                        .replaceAll("<@(!)?", "")
+                        .replace(">", "");
+                database().getOptionalPlayer(snowflake).thenAccept(optionalPlayer -> {
+                    if(optionalPlayer.isPresent()) {
+                        final JsonObject o = JsonObject.mapFrom(optionalPlayer.get());
+                        // TODO: ???
+                        o.remove("account");
+                        o.remove("votes");
+                        o.remove("boxes");
                         final String json = o.encodePrettily();
                         ctx.sendMessage("```Javascript\n" + json + "\n```");
                     } else {
                         ctx.sendMessage(Emotes.NO);
                     }
-                    break;
-                }
-                case "guild": {
-                
-                }
-                default: {
+                });
+                break;
+            }
+            case "account": {
+                final String snowflake = ctx.getArgs().get(1)
+                        .replaceAll("<@(!)?", "")
+                        .replace(">", "");
+                final Optional<Account> optionalAccount = mewna().accountManager().getAccountByLinkedDiscord(snowflake);
+                if(optionalAccount.isPresent()) {
+                    final JsonObject o = JsonObject.mapFrom(optionalAccount.get());
+                    o.remove("email");
+                    final String json = o.encodePrettily();
+                    ctx.sendMessage("```Javascript\n" + json + "\n```");
+                } else {
                     ctx.sendMessage(Emotes.NO);
-                    break;
                 }
+                break;
+            }
+            default: {
+                ctx.sendMessage(Emotes.NO);
+                break;
             }
         }
     }

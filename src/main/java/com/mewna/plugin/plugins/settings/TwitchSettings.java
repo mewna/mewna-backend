@@ -82,8 +82,8 @@ public class TwitchSettings implements PluginSettings {
                         final JsonObject streamer = (JsonObject) o;
                         try {
                             // If this fails, it's bad JSON or some shit, so reject it
-                            MAPPER.readValue(streamer.toString(), TwitchStreamerConfig.class);
-                        } catch(final IOException e) {
+                            streamer.mapTo(TwitchStreamerConfig.class);
+                        } catch(final Exception e) {
                             return false;
                         }
                     }
@@ -108,7 +108,7 @@ public class TwitchSettings implements PluginSettings {
             final JsonObject streamer = (JsonObject) o;
             try {
                 // If this fails, it's bad JSON or some shit, but it shouldn't have passed the validation steps anyway
-                final TwitchStreamerConfig twitchStreamer = MAPPER.readValue(streamer.toString(), TwitchStreamerConfig.class);
+                final TwitchStreamerConfig twitchStreamer = streamer.mapTo(TwitchStreamerConfig.class);
                 
                 if(twitchStreamer.isFollowMessagesEnabled()) {
                     // This is **very intentionally** done like this
@@ -122,7 +122,7 @@ public class TwitchSettings implements PluginSettings {
                     }
                 }
                 streamers.add(twitchStreamer);
-            } catch(final IOException e) {
+            } catch(final Exception e) {
                 return false;
             }
         }

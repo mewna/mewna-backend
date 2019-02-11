@@ -239,7 +239,8 @@ public class CommandManager {
             });
         } else if(!cmd.isOwner()) {
             logger.warn("No plugin metadata for command {}!?", cmd.getBaseName());
-            canExec.complete(true);
+            Sentry.capture("No plugin metadata for command "+ cmd.getBaseName() + " loaded from class " + cmd.getPlugin().getClass().getName());
+            canExec.complete(false);
         } else {
             canExec.complete(true);
         }

@@ -141,7 +141,7 @@ public class PluginManager {
                 }
                 
                 pluginMap.put(c, pluginInstance);
-                if(pluginAnnotation.enabled() && !pluginAnnotation.owner()) {
+                if(pluginAnnotation.enabled() && !pluginAnnotation.owner() && !pluginAnnotation.staff()) {
                     pluginMetadata.add(new PluginMetadata(pluginAnnotation.name(), pluginAnnotation.desc(), c, pluginAnnotation.settings()));
                 }
                 logger.info("Finished loading plugin {}: {}", pluginAnnotation.name(), pluginAnnotation.desc());

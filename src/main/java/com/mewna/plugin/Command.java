@@ -22,6 +22,8 @@ public @interface Command {
     
     boolean owner() default false;
     
+    boolean staff() default false;
+    
     boolean aliased() default true;
 }
 

@@ -23,4 +23,6 @@ public @interface Plugin {
     Class<? extends PluginSettings> settings();
     
     boolean owner() default false;
+    
+    boolean staff() default false;
 }

@@ -72,17 +72,22 @@ public class CommandManager {
         final Command cmd = m.getDeclaredAnnotation(Command.class);
         // Load commands
         for(final String s : cmd.names()) {
-            commands.put(s.toLowerCase(), new CommandWrapper(s.toLowerCase(),
-                    cmd.aliased() ? cmd.names()[0].toLowerCase() : s.toLowerCase(), cmd.names(),
-                    m.getDeclaredAnnotation(Ratelimit.class),
-                    m.getDeclaredAnnotation(Payment.class),
-                    cmd.desc(),
-                    cmd.owner() || pluginAnnotation.owner(), pluginInstance, m));
+            commands.put(s.toLowerCase(),
+                    new CommandWrapper(
+                            s.toLowerCase(),
+                            cmd.aliased() ? cmd.names()[0].toLowerCase() : s.toLowerCase(), cmd.names(),
+                            m.getDeclaredAnnotation(Ratelimit.class),
+                            m.getDeclaredAnnotation(Payment.class),
+                            cmd.desc(),
+                            cmd.owner() || pluginAnnotation.owner(), cmd.staff() || pluginAnnotation.staff(),
+                            pluginInstance, m
+                    )
+            );
             logger.info("Loaded plugin command '{}' for plugin '{}' ({})", s,
                     pluginAnnotation.name(), pluginClass.getName());
         }
         // Load metadata
-        if(!cmd.owner() && !pluginAnnotation.owner()) {
+        if(!cmd.owner() && !pluginAnnotation.owner() && !cmd.staff() && !pluginAnnotation.staff()) { // ignore secret commands
             if(cmd.aliased()) {
                 final List<String> tmp = new ArrayList<>(Arrays.asList(cmd.names()));
                 final String name = tmp.remove(0);
@@ -206,6 +211,9 @@ public class CommandManager {
         if(cmd.isOwner() && !user.id().equalsIgnoreCase("128316294742147072")) {
             return;
         }
+        if(cmd.isStaff() && !event.member().roleIds().contains("406558129699160066")) { // TODO: Don't hardcode staff role...
+            return;
+        }
         // Make sure it's not disabled
         final Optional<PluginMetadata> first = mewna.pluginManager().getPluginMetadata().stream()
                 .filter(e -> e.getPluginClass().equals(cmd.getPlugin().getClass())).findFirst();
@@ -237,9 +245,9 @@ public class CommandManager {
                 canExec.complete(false);
                 return null;
             });
-        } else if(!cmd.isOwner()) {
+        } else if(!cmd.isOwner() && !cmd.isStaff()) {
             logger.warn("No plugin metadata for command {}!?", cmd.getBaseName());
-            Sentry.capture("No plugin metadata for command "+ cmd.getBaseName() + " loaded from class " + cmd.getPlugin().getClass().getName());
+            Sentry.capture("No plugin metadata for command " + cmd.getBaseName() + " loaded from class " + cmd.getPlugin().getClass().getName());
             canExec.complete(false);
         } else {
             canExec.complete(true);
@@ -382,6 +390,7 @@ public class CommandManager {
         private Payment payment;
         private String desc;
         private boolean owner;
+        private boolean staff;
         private Object plugin;
         private Method method;
     }

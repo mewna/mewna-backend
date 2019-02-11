@@ -31,8 +31,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-import static com.mewna.data.PluginSettings.MAPPER;
-
 /**
  * Database-level abstraction
  *
@@ -353,8 +351,8 @@ public class Database {
                 resultSet.next();
                 final String data = resultSet.getString("data");
                 try {
-                    holder.setValue(MAPPER.readValue(data, Account.class));
-                } catch(final IOException e) {
+                    holder.setValue(new JsonObject(data).mapTo(Account.class));
+                } catch(final Exception e) {
                     Sentry.capture(e);
                     throw new RuntimeException(e);
                 }

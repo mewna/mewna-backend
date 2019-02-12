@@ -68,6 +68,9 @@ public class PluginStaff extends BasePlugin {
                     if(!page.endsWith("```")) {
                         page += "```";
                     }
+                    if(!page.startsWith("```")) {
+                        page = "```CSS\n" + page;
+                    }
                     pages.add("" + page);
                 }
                 move(() -> {

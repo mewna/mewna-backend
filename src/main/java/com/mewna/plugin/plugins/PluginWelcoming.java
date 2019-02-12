@@ -33,6 +33,8 @@ public class PluginWelcoming extends BasePlugin {
             data.put("user." + key, "" + jUser.getValue(key));
         }
         data.put("user.name", user.username());
+        data.put("user.discrim", user.discriminator());
+        data.put("user.discriminator", user.discriminator());
         data.put("user.mention", user.asMention());
         return Templater.fromMap(data);
     }

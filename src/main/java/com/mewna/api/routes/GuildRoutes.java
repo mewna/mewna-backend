@@ -42,7 +42,7 @@ public class GuildRoutes implements RouteGroup {
         });
         router.post("/data/guild/:id/config/:type")
                 .handler(BodyHandler.create())
-                .handler(ctx -> {
+                .handler(ctx -> move(() ->{
                     final String type = ctx.request().getParam("type");
                     final String id = ctx.request().getParam("id");
                     
@@ -77,7 +77,7 @@ public class GuildRoutes implements RouteGroup {
                             ctx.response().end(new JsonObject().put("status", "error").put("error", "invalid config").encode());
                         }
                     });
-                });
+                }));
         router.get("/data/guild/:id/levels").handler(ctx -> move(() -> {
             final String id = ctx.request().getParam("id");
             // This makes me feel better about passing untrusted user input from the url parameters

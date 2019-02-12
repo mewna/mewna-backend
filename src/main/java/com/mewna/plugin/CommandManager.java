@@ -211,7 +211,8 @@ public class CommandManager {
         if(cmd.isOwner() && !user.id().equalsIgnoreCase("128316294742147072")) {
             return;
         }
-        if(cmd.isStaff() && !event.member().roleIds().contains("406558129699160066")) { // TODO: Don't hardcode staff role...
+        if(cmd.isStaff() && !(event.member().roleIds().contains("406558129699160066") // TODO: Don't hardcode staff role...
+                || user.id().equalsIgnoreCase("128316294742147072"))) {
             return;
         }
         // Make sure it's not disabled

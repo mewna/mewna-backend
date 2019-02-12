@@ -19,6 +19,7 @@ import com.mewna.util.Time;
 import gg.amy.singyeong.QueryBuilder;
 import gg.amy.singyeong.SafeVertxCompletableFuture;
 import io.sentry.Sentry;
+import io.sentry.event.EventBuilder;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
@@ -235,6 +236,19 @@ public class PluginMusic extends BasePlugin {
     @Event(EventType.AUDIO_TRACK_QUEUE)
     public void handleTrackQueue(final NekoTrackEvent event) {
         final EmbedBuilder builder = new EmbedBuilder();
+        // lol
+        
+        if(event.track() == null) {
+            Sentry.capture(new EventBuilder().withMessage("Captured null event track! Data:\n" + JsonObject.mapFrom(event).encodePrettily()).build());
+        }
+        if(event.track().context() == null) {
+            Sentry.capture(new EventBuilder().withMessage("Captured null event track context! Data:\n" + JsonObject.mapFrom(event).encodePrettily()).build());
+        }
+        if(event.track().context().guild() == null) {
+            Sentry.capture(new EventBuilder().withMessage("Captured null event track context guild! Data:\n" + JsonObject.mapFrom(event).encodePrettily()).build());
+        }
+        
+        // back to srs bsns
         builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.song-queued"))
                 .url(event.track().url())
                 .field($(database().language(event.track().context().guild()), "plugins.music.events.title"),

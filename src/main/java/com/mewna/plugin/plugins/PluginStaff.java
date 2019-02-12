@@ -61,7 +61,7 @@ public class PluginStaff extends BasePlugin {
                     if(page.length() > 1500) {
                         page += "```";
                         pages.add("" + page);
-                        page = "";
+                        page = "```Javascript\n";
                     }
                 }
                 if(!page.isEmpty()) {

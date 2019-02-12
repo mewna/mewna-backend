@@ -50,7 +50,7 @@ public class CacheRoutes implements RouteGroup {
             final String id = ctx.request().getParam("id");
             DiscordCache.user(id)
                     .thenAccept(user -> ctx.response().putHeader("Content-Type", "application/json")
-                            .end(user.toJson().put("id", user.id()).encode()))
+                            .end(JsonObject.mapFrom(user).put("id", user.id()).encode()))
                     .exceptionally(e -> {
                         ctx.response().putHeader("Content-Type", "application/json")
                                 .setStatusCode(404)
@@ -62,7 +62,7 @@ public class CacheRoutes implements RouteGroup {
             final String id = ctx.request().getParam("id");
             DiscordCache.guild(id)
                     .thenAccept(guild -> ctx.response().putHeader("Content-Type", "application/json")
-                            .end(guild.toJson().put("id", guild.id()).encode()))
+                            .end(JsonObject.mapFrom(guild).put("id", guild.id()).encode()))
                     .exceptionally(e -> {
                         ctx.response().putHeader("Content-Type", "application/json")
                                 .setStatusCode(404)

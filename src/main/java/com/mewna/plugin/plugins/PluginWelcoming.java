@@ -24,11 +24,11 @@ import java.util.Map;
 public class PluginWelcoming extends BasePlugin {
     private Templater map(@SuppressWarnings("TypeMayBeWeakened") final Guild guild, final User user) {
         final Map<String, String> data = new HashMap<>();
-        final JsonObject jGuild = guild.toJson();
+        final JsonObject jGuild = JsonObject.mapFrom(guild);
         for(final String key : jGuild.fieldNames()) {
             data.put("server." + key, "" + jGuild.getValue(key));
         }
-        final JsonObject jUser = user.toJson();
+        final JsonObject jUser = JsonObject.mapFrom(guild);
         for(final String key : jUser.fieldNames()) {
             data.put("user." + key, "" + jUser.getValue(key));
         }

@@ -3,7 +3,9 @@ package com.mewna.plugin.plugins;
 import com.mewna.Mewna;
 import com.mewna.accounts.Account;
 import com.mewna.catnip.entity.message.Message;
+import com.mewna.catnip.entity.message.Message.Attachment;
 import com.mewna.data.DiscordCache;
+import com.mewna.data.Player;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Command;
 import com.mewna.plugin.CommandContext;
@@ -16,13 +18,15 @@ import gg.amy.singyeong.QueryBuilder;
 import io.sentry.Sentry;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.sql.ResultSet;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author amy
@@ -30,9 +34,70 @@ import java.util.Set;
  */
 @Plugin(name = "secret", desc = "spooky secret things :3", settings = SecretSettings.class, owner = true)
 public class PluginSecret extends BasePlugin {
+    @Inject
+    private OkHttpClient client;
+    
     @Command(names = "secret", desc = "secret", usage = "secret", examples = "secret", owner = true)
     public void secret(final CommandContext ctx) {
         ctx.sendMessage("secret");
+    }
+    
+    @Command(names = "reset", desc = "secret", usage = "secret", examples = "secret", owner = true)
+    public void reset(final CommandContext ctx) {
+        final Message msg = ctx.getMessage();
+        if(msg.attachments().isEmpty() || ctx.getArgs().isEmpty()) {
+            ctx.sendMessage(Emotes.NO);
+        } else {
+            try {
+                final Attachment a = msg.attachments().get(0);
+                @SuppressWarnings({"ConstantConditions", "UnnecessarilyQualifiedInnerClassAccess"})
+                final String file = client.newCall(new Request.Builder().url(a.url()).get().build()).execute().body().string();
+                final List<JsonObject> pages = Arrays.stream(file.split("\n")).map(JsonObject::new).collect(Collectors.toList());
+                // Validate
+                final List<JsonObject> validatedPages = pages.stream().filter(e -> {
+                    try {
+                        switch(ctx.getArgs().get(0)) {
+                            case "players": {
+                                e.mapTo(Player.class);
+                                return true;
+                            }
+                            default: {
+                                return false;
+                            }
+                        }
+                    } catch(final Exception ignored) {
+                        return false;
+                    }
+                }).collect(Collectors.toList());
+                if(validatedPages.size() == pages.size()) {
+                    ctx.sendMessage(Emotes.YES + " Loaded " + pages.size() + " pages of reset data for table " + ctx.getArgs().get(0));
+    
+                    database().getStore().sql(conn -> {
+                        conn.prepareStatement("BEGIN").execute();
+                        final int[] counter = {0};
+                        validatedPages.forEach(page ->
+                                database().getStore().sql("UPDATE " + ctx.getArgs().get(0) + " SET data = data || ?::jsonb WHERE id = '"
+                                                + page.getString("id") + "';",
+                                        c -> {
+                                            c.setString(1, page.encode());
+                                            final int i = c.executeUpdate();
+                                            counter[0] += i;
+                                        }));
+                        if(counter[0] != validatedPages.size()) {
+                            conn.prepareStatement("ROLLBACK").execute();
+                            ctx.sendMessage(Emotes.NO + " Invalid page count " + counter[0] + " for table " + ctx.getArgs().get(0) + " (expected " + validatedPages.size() + "!)");
+                        } else {
+                            conn.prepareStatement("COMMIT").execute();
+                            ctx.sendMessage(Emotes.YES + " Updated " + counter[0] + " pages for table " + ctx.getArgs().get(0));
+                        }
+                    });
+                } else {
+                    ctx.sendMessage(Emotes.NO + ' ' + (pages.size() - validatedPages.size()) + " invalid pages for table " + ctx.getArgs().get(0));
+                }
+            } catch(final Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
     
     @Command(names = "inspect", desc = "secret", usage = "secret", examples = "secret", owner = true)

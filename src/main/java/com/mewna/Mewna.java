@@ -100,7 +100,8 @@ public final class Mewna {
         commandManager = new CommandManager(this);
         database.init();
         pluginManager.init();
-        catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN")), vertx);
+        // Skip token validation to save on REST reqs
+        catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN")).validateToken(false), vertx);
         singyeongEventManager = new SingyeongEventManager(this);
         singyeong.connect()
                 .thenAccept(__ -> DiscordCache.setup())

@@ -239,15 +239,10 @@ public class PluginMusic extends BasePlugin {
         // lol
         
         if(event.track() == null) {
-            Sentry.capture(new EventBuilder().withMessage("Captured null event track! Data:\n" + JsonObject.mapFrom(event).encodePrettily()).build());
+            // TODO: Dealing with no-tracks-found event
+            return;
+            // Sentry.capture(new EventBuilder().withMessage("Captured null event track! Data:\n" + JsonObject.mapFrom(event).encodePrettily()).build());
         }
-        if(event.track().context() == null) {
-            Sentry.capture(new EventBuilder().withMessage("Captured null event track context! Data:\n" + JsonObject.mapFrom(event).encodePrettily()).build());
-        }
-        if(event.track().context().guild() == null) {
-            Sentry.capture(new EventBuilder().withMessage("Captured null event track context guild! Data:\n" + JsonObject.mapFrom(event).encodePrettily()).build());
-        }
-        
         // back to srs bsns
         builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.song-queued"))
                 .url(event.track().url())

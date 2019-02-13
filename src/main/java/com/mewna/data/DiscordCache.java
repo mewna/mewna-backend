@@ -9,6 +9,8 @@ import com.mewna.catnip.entity.channel.VoiceChannel;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.guild.Member;
 import com.mewna.catnip.entity.guild.Role;
+import com.mewna.catnip.entity.impl.TextChannelImpl;
+import com.mewna.catnip.entity.impl.VoiceChannelImpl;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.user.VoiceState;
 import gg.amy.singyeong.QueryBuilder;
@@ -75,9 +77,9 @@ public final class DiscordCache {
                                     .map(e -> {
                                         final ChannelType channelType = ChannelType.valueOf(e.getJsonObject("d").getString("type", "text").toUpperCase());
                                         if(channelType == ChannelType.TEXT && !e.getJsonObject("d").containsKey("bitrate")) {
-                                            return Entity.fromJson(Mewna.getInstance().catnip(), TextChannel.class, e);
+                                            return Entity.fromJson(Mewna.getInstance().catnip(), TextChannelImpl.class, e);
                                         } else {
-                                            return Entity.fromJson(Mewna.getInstance().catnip(), VoiceChannel.class, e);
+                                            return Entity.fromJson(Mewna.getInstance().catnip(), VoiceChannelImpl.class, e);
                                         }
                                     })
                                     .collect(Collectors.toList());

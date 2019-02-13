@@ -138,12 +138,12 @@ public final class DiscordCache {
         return fetch(User.class, "user", new JsonObject().put("id", id));
     }
     
-    public static CompletionStage<TextChannel> textChannel(final String guild, final String id) {
-        return fetch(TextChannel.class, "channel", new JsonObject().put("guild", guild).put("id", id));
+    public static CompletionStage<? extends TextChannel> textChannel(final String guild, final String id) {
+        return fetch(TextChannelImpl.class, "channel", new JsonObject().put("guild", guild).put("id", id));
     }
     
-    public static CompletionStage<VoiceChannel> voiceChannel(final String guild, final String id) {
-        return fetch(VoiceChannel.class, "channel", new JsonObject().put("guild", guild).put("id", id));
+    public static CompletionStage<? extends VoiceChannel> voiceChannel(final String guild, final String id) {
+        return fetch(VoiceChannelImpl.class, "channel", new JsonObject().put("guild", guild).put("id", id));
     }
     
     public static CompletionStage<Collection<Channel>> channels(final String guild) {

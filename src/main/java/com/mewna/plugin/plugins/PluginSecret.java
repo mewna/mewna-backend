@@ -110,7 +110,12 @@ public class PluginSecret extends BasePlugin {
             maybeHook.ifPresentOrElse(hook -> {
                 ctx.sendMessage(String.format("%s -> %s (%s)", hook.getChannel(), hook.getId(), hook.getGuild()));
             }, () -> {
-                ctx.sendMessage(Emotes.NO + " No webhook!");
+                final Optional<Webhook> maybeRealHook = database().getWebhookById(ctx.getArgs().get(0));
+                maybeRealHook.ifPresentOrElse(hook -> {
+                    ctx.sendMessage(String.format("%s -> %s (%s)", hook.getChannel(), hook.getId(), hook.getGuild()));
+                }, () -> {
+                    ctx.sendMessage(Emotes.NO + " No webhook!");
+                });
             });
         }
     }

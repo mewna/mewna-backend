@@ -1143,6 +1143,7 @@ public class PluginMisc extends BasePlugin {
     }
     
     // This class is NOT lombok'd because of compiler errors
+    @Value
     public static final class XMonster {
         private final String name;
         private final String size;
@@ -1169,141 +1170,6 @@ public class PluginMisc extends BasePlugin {
         private final List<Trait> traits;
         private final List<Action> actions;
         private final List<Legendary> legendaries;
-        
-        public XMonster(final String name, final String size, final String type, final String alignment, final String ac,
-                        final String hp, final String speed, final String strength, final String dexterity,
-                        final String constitution, final String intelligence, final String wisdom, final String charisma,
-                        final String save, final String skill, final String resist, final String immune,
-                        final String conditionImmune, final String senses, final String passive, final String languages,
-                        final String cr, final List<Trait> traits, final List<Action> actions,
-                        final List<Legendary> legendaries) {
-            this.name = name;
-            this.size = size;
-            this.type = type;
-            this.alignment = alignment;
-            this.ac = ac;
-            this.hp = hp;
-            this.speed = speed;
-            this.strength = strength;
-            this.dexterity = dexterity;
-            this.constitution = constitution;
-            this.intelligence = intelligence;
-            this.wisdom = wisdom;
-            this.charisma = charisma;
-            this.save = save;
-            this.skill = skill;
-            this.resist = resist;
-            this.immune = immune;
-            this.conditionImmune = conditionImmune;
-            this.senses = senses;
-            this.passive = passive;
-            this.languages = languages;
-            this.cr = cr;
-            this.traits = traits;
-            this.actions = actions;
-            this.legendaries = legendaries;
-        }
-        
-        public String getName() {
-            return name;
-        }
-        
-        public String getSize() {
-            return size;
-        }
-        
-        public String getType() {
-            return type;
-        }
-        
-        public String getAlignment() {
-            return alignment;
-        }
-        
-        public String getAc() {
-            return ac;
-        }
-        
-        public String getHp() {
-            return hp;
-        }
-        
-        public String getSpeed() {
-            return speed;
-        }
-        
-        public String getStrength() {
-            return strength;
-        }
-        
-        public String getDexterity() {
-            return dexterity;
-        }
-        
-        public String getConstitution() {
-            return constitution;
-        }
-        
-        public String getIntelligence() {
-            return intelligence;
-        }
-        
-        public String getWisdom() {
-            return wisdom;
-        }
-        
-        public String getCharisma() {
-            return charisma;
-        }
-        
-        public String getSave() {
-            return save;
-        }
-        
-        public String getSkill() {
-            return skill;
-        }
-        
-        public String getResist() {
-            return resist;
-        }
-        
-        public String getImmune() {
-            return immune;
-        }
-        
-        public String getConditionImmune() {
-            return conditionImmune;
-        }
-        
-        public String getSenses() {
-            return senses;
-        }
-        
-        public String getPassive() {
-            return passive;
-        }
-        
-        public String getLanguages() {
-            return languages;
-        }
-        
-        public String getCr() {
-            return cr;
-        }
-        
-        public List<Trait> getTraits() {
-            return traits;
-        }
-        
-        public List<Action> getActions() {
-            return actions;
-        }
-        
-        @SuppressWarnings("WeakerAccess")
-        public List<Legendary> getLegendaries() {
-            return legendaries;
-        }
         
         @SuppressWarnings("InnerClassTooDeeplyNested")
         @Value

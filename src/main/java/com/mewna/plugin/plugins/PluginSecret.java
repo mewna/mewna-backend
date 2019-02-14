@@ -6,6 +6,7 @@ import com.mewna.catnip.entity.message.Message;
 import com.mewna.catnip.entity.message.Message.Attachment;
 import com.mewna.data.DiscordCache;
 import com.mewna.data.Player;
+import com.mewna.data.Webhook;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Command;
 import com.mewna.plugin.CommandContext;
@@ -97,6 +98,20 @@ public class PluginSecret extends BasePlugin {
             } catch(final Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+    
+    @Command(names = "findwebhook", desc = "secret", usage = "secret", examples = "secret", owner = true)
+    public void findWebhook(final CommandContext ctx) {
+        if(ctx.getArgs().isEmpty()) {
+            ctx.sendMessage(Emotes.NO);
+        } else {
+            final Optional<Webhook> maybeHook = database().getWebhook(ctx.getArgs().get(0));
+            maybeHook.ifPresentOrElse(hook -> {
+                ctx.sendMessage(String.format("%s -> %s (%s)", hook.getChannel(), hook.getId(), hook.getGuild()));
+            }, () -> {
+                ctx.sendMessage(Emotes.NO + " No webhook!");
+            });
         }
     }
     

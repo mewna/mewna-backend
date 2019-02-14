@@ -8,10 +8,8 @@ import com.mewna.plugin.Plugin;
 import com.mewna.plugin.util.Snowflakes;
 import com.mewna.servers.ServerBlogPost;
 import gg.amy.pgorm.PgStore;
-import gg.amy.singyeong.SafeVertxCompletableFuture;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import io.sentry.Sentry;
-import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.Getter;
@@ -229,17 +227,12 @@ public class Database {
         if(!store.isMappedSync(type) && !store.isMappedAsync(type)) {
             throw new IllegalArgumentException("Attempted to get settings of type " + type.getName() + ", but it's not mapped!");
         }
-        final Future<T> future = Future.future();
-        
-        getSettingsByType(type, id)
-                .exceptionally(e -> {
-                    Sentry.capture(e);
-                    return null;
-                })
+        return getSettingsByType(type, id)
                 .thenApply(maybeSettings -> {
                     // This is a valid thing to do - a null value is returned
                     // when the settings *are not present due to an error*, ie
                     // in an exceptional case that generally shouldn't ever happen
+                    // Thanks, java.util.Optional, for being so trash.
                     if(maybeSettings == null) {
                         // future.fail("Failing due to database issues");
                         throw new IllegalStateException("Failing due to database issues");
@@ -247,26 +240,23 @@ public class Database {
                         final T maybe = maybeSettings.get();
                         // We're joining inside of NON-vx threads here, so I'm pretty sure this is safe?
                         // Honestly I just couldn't think of a better way to do it......
-                        return maybe.refreshCommands().otherRefresh().thenAccept(settings ->
-                                saveSettings(settings).exceptionally(e -> {
-                                    Sentry.capture(e);
-                                    return null;
-                                }).thenAccept(__ -> future.complete((T) settings))).join();
+                        final T settings = (T) maybe.refreshCommands().otherRefresh().join();
+                        saveSettings(settings).join();
+                        return settings;
                     } else {
                         try {
                             final T base = type.getConstructor(String.class).newInstance(id);
                             saveSettings(base).join();
-                            future.complete(base);
                             return base;
                         } catch(final IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
                             Sentry.capture(e);
-                            future.fail(e);
                             throw new RuntimeException(e);
                         }
                     }
+                }).exceptionally(e -> {
+                    Sentry.capture(e);
+                    return null;
                 });
-        
-        return SafeVertxCompletableFuture.from(mewna.vertx(), future);
     }
     
     @SuppressWarnings("unchecked")

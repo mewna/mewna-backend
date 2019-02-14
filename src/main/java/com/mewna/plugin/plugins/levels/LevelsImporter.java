@@ -32,7 +32,7 @@ public final class LevelsImporter {
     public static void importMEE6Levels(final String guild) {
         new Thread(() -> {
             final OkHttpClient client = new OkHttpClient();
-            Thread.currentThread().setName("MEE6 importer " + guild);
+            Thread.currentThread().setName(guild);
             final List<JsonObject> pages = new ArrayList<>();
             boolean exception = false;
             int currentPage = 0;

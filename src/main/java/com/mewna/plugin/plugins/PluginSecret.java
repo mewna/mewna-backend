@@ -108,9 +108,10 @@ public class PluginSecret extends BasePlugin {
                 final int peakThreadCount = ManagementFactory.getThreadMXBean().getPeakThreadCount();
                 final int daemonThreadCount = ManagementFactory.getThreadMXBean().getDaemonThreadCount();
                 ctx.sendMessage("```CSS\n" +
-                        " [Total threads] " + threadCount + '\n' +
-                        "  [Peak threads] " + peakThreadCount + '\n' +
-                        "[Daemon threads] " + daemonThreadCount + '\n' +
+                        "     [Total threads] " + threadCount + '\n' +
+                        "[Non-daemon threads] " + (threadCount - daemonThreadCount) + '\n' +
+                        "    [Daemon threads] " + daemonThreadCount + '\n' +
+                        "      [Peak threads] " + peakThreadCount + '\n' +
                         "```");
                 break;
             }

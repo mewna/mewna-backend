@@ -200,8 +200,7 @@ public class PluginEconomy extends BasePlugin {
     
     @Payment(min = HEIST_BASE_COST)
     @Ratelimit(time = 5 * 60)
-    @Command(names = "heist", desc = "commands.economy.heist", usage = "heist",
-            examples = "heist")
+    @Command(names = "heist", desc = "commands.economy.heist", usage = "heist", examples = "heist")
     public void heist(final CommandContext ctx) {
         final int chance = random().nextInt(1000);
         if(chance < 125) {

@@ -38,14 +38,17 @@ public class PluginManager {
     private final CurrencyHelper currencyHelper;
     @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
     private final OkHttpClient okHttpClient = new OkHttpClient.Builder()
+            // Lie about our user agent so we can ex. grab discord profile images
             .addInterceptor(new UserAgentInterceptor("Mozilla/5.0 (X11; Linux x86_64) " +
                     "AppleWebKit/537.36 (KHTML, like Gecko) " +
-                    "Chrome/66.0.3359.117 " +
+                    "Chrome/71.0.3578.98 " +
                     "Safari/537.36"))
             .build();
     private final Map<Class<?>, ? super Object> pluginMap = new HashMap<>();
     @Getter
     private final Collection<PluginMetadata> pluginMetadata = new ArrayList<>();
+    @Getter
+    private final Collection<Class<? extends PluginSettings>> settingsClasses = new ArrayList<>();
     
     /**
      * Event handlers for Discord events. Things like cache are done before the
@@ -143,6 +146,7 @@ public class PluginManager {
                 pluginMap.put(c, pluginInstance);
                 if(pluginAnnotation.enabled() && !pluginAnnotation.owner() && !pluginAnnotation.staff()) {
                     pluginMetadata.add(new PluginMetadata(pluginAnnotation.name(), pluginAnnotation.desc(), c, pluginAnnotation.settings()));
+                    settingsClasses.add(pluginAnnotation.settings());
                 }
                 logger.info("Finished loading plugin {}: {}", pluginAnnotation.name(), pluginAnnotation.desc());
             } catch(final InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {

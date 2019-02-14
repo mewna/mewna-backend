@@ -43,6 +43,7 @@ public class Database {
     private final Mewna mewna;
     @Getter
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    @Getter
     private final Map<String, Class<? extends PluginSettings>> pluginSettingsByName = new HashMap<>();
     @SuppressWarnings("TypeMayBeWeakened")
     private final OkHttpClient client = new OkHttpClient();
@@ -254,12 +255,12 @@ public class Database {
                     } else {
                         try {
                             final T base = type.getConstructor(String.class).newInstance(id);
-                            saveSettings(base);
-                            // future.complete(base);
+                            saveSettings(base).join();
+                            future.complete(base);
                             return base;
                         } catch(final IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
                             Sentry.capture(e);
-                            // future.fail(e);
+                            future.fail(e);
                             throw new RuntimeException(e);
                         }
                     }

@@ -3,6 +3,7 @@ package com.mewna.api;
 import com.google.common.collect.ImmutableList;
 import com.mewna.Mewna;
 import com.mewna.api.routes.*;
+import com.mewna.api.routes.v3.ConfigRoutes;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class API {
     private final Mewna mewna;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final List<RouteGroup> routes = ImmutableList.of(
+            // v1 / v2
             new CacheRoutes(),
             new AccountRoutes(),
             new GuildRoutes(),
@@ -27,7 +29,10 @@ public class API {
             new BlogRoutes(),
             new StoreRoutes(),
             new MetadataRoutes(),
-            new PlayerRoutes()
+            new PlayerRoutes(),
+            
+            // v3
+            new ConfigRoutes()
     );
     
     @SuppressWarnings({"CodeBlock2Expr", "UnnecessarilyQualifiedInnerClassAccess"})
@@ -36,6 +41,6 @@ public class API {
         final HttpServer server = mewna.vertx().createHttpServer();
         final Router router = Router.router(mewna.vertx());
         routes.forEach(e -> e.registerRoutes(mewna, router));
-        server.requestHandler(router::accept).listen(mewna.port());
+        server.requestHandler(router).listen(mewna.port());
     }
 }

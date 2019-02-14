@@ -153,14 +153,13 @@ public class PluginManager {
     }
     
     public <T> void processEvent(final String type, final T event) {
-        Optional.ofNullable(discordEventHandlers.get(type)).ifPresent(x -> x.forEach(h -> {
+        Optional.ofNullable(discordEventHandlers.get(type)).ifPresentOrElse(x -> x.forEach(h -> {
             try {
                 h.getHandle().invoke(h.getHolder(), event);
-            } catch(final IllegalAccessException | InvocationTargetException e) {
+            } catch(final Exception e) {
                 Sentry.capture(e);
-                e.printStackTrace();
             }
-        }));
+        }), () -> Sentry.capture("No handler for event type: " + type));
     }
     
     @SuppressWarnings({"unused", "unchecked"})

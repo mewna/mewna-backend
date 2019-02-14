@@ -134,6 +134,7 @@ public class PluginTwitch extends BasePlugin {
                                                         break;
                                                     }
                                                 }
+                                                mewna().statsClient().increment("twitch-webhooks", "type:" + mode);
                                                 logger().info("Sending Twitch {} for {} to {} for {}", mode, event.getStreamer().getLogin(), webhook.getId(), settings.getId());
                                                 //noinspection ResultOfMethodCallIgnored
                                                 catnip().rest().webhook().executeWebhook(webhook.getId(), webhook.getSecret(), messageOptions);

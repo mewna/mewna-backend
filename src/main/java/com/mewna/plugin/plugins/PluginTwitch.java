@@ -19,6 +19,8 @@ import io.sentry.Sentry;
 import java.sql.ResultSet;
 import java.util.*;
 
+import static com.mewna.util.Async.move;
+
 /**
  * TODO: HEAVY caching...
  * <p>
@@ -90,7 +92,7 @@ public class PluginTwitch extends BasePlugin {
                 if(!webhookGuilds.isEmpty()) {
                     //noinspection CodeBlock2Expr
                     webhookGuilds.forEach(guildId -> {
-                        database().getOrBaseSettings(TwitchSettings.class, guildId).thenAccept(settings -> {
+                        database().getOrBaseSettings(TwitchSettings.class, guildId).thenAccept(settings -> move(() -> {
                             final Optional<TwitchStreamerConfig> maybeStreamer = settings.getTwitchStreamers().stream()
                                     .filter(e -> e.getId().equals(streamerId)).findFirst();
                             if(maybeStreamer.isPresent()) {
@@ -142,7 +144,7 @@ public class PluginTwitch extends BasePlugin {
                                     }
                                 }
                             }
-                        });
+                        }));
                     });
                 }
             }

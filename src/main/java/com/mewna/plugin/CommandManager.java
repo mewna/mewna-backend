@@ -293,6 +293,14 @@ public class CommandManager {
                 mewna.database().getPlayer(user).thenAccept(player -> {
                     move(() -> {
                         profiler.section("account");
+                        // Fill out accounts if they don't exist
+                        // This is more of just a safety / sanity check than
+                        // anything.
+                        // In general, this should never be reached since
+                        // getPlayer() will populate an account if it also has
+                        // to create a player object.
+                        // ie. this will only really be necessary for ex.
+                        // some levels imports.
                         Optional<Account> maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());
                         if(!maybeAccount.isPresent()) {
                             logger.error("No account present for Discord account {}!!!", user.id());

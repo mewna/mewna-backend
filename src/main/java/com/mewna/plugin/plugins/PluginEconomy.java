@@ -167,19 +167,17 @@ public class PluginEconomy extends BasePlugin {
             
             player.updateLastDaily();
             final String finalMsg = msg;
-            database().savePlayer(player).thenAccept(___ -> {
-                ctx.sendMessage(
-                        new MessageBuilder()
-                                .content(finalMsg)
-                                .embed(new EmbedBuilder()
-                                        .title("Hint")
-                                        .description($(ctx.getLanguage(), "plugins.economy.vote-nag")
-                                                .replace("$link", "https://discordbots.org/bot/251930037673132032/vote")
-                                                .replace("$amount", VOTE_BONUS + "")
-                                                .replace("$symbol", helper.getCurrencySymbol(ctx)))
-                                        .build())
-                                .build());
-            });
+            database().savePlayer(player).thenAccept(___ -> ctx.sendMessage(
+                    new MessageBuilder()
+                            .content(finalMsg)
+                            .embed(new EmbedBuilder()
+                                    .title("Hint")
+                                    .description($(ctx.getLanguage(), "plugins.economy.vote-nag")
+                                            .replace("$link", "https://discordbots.org/bot/251930037673132032/vote")
+                                            .replace("$amount", VOTE_BONUS + "")
+                                            .replace("$symbol", helper.getCurrencySymbol(ctx)))
+                                    .build())
+                            .build()));
         });
     }
     
@@ -207,13 +205,10 @@ public class PluginEconomy extends BasePlugin {
             // win
             final long reward = HEIST_BASE_COST * 10;
             ctx.getPlayer().incrementBalance(reward);
-            database().savePlayer(ctx.getPlayer()).thenAccept(__ -> {
-                ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.heist.success")
-                        .replace("$amount", "" + reward)
-                        .replace("$symbol", helper.getCurrencySymbol(ctx))).thenAccept(___ -> {
-                    tryDropBox(ctx);
-                });
-            });
+            database().savePlayer(ctx.getPlayer()).thenAccept(__ ->
+                    ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.heist.success")
+                            .replace("$amount", "" + reward)
+                            .replace("$symbol", helper.getCurrencySymbol(ctx))).thenAccept(___ -> tryDropBox(ctx)));
         } else {
             // lose
             ctx.sendMessage(
@@ -691,20 +686,15 @@ public class PluginEconomy extends BasePlugin {
             final Box box = Box.values()[random().nextInt(Box.values().length)];
             ctx.getPlayer().addOneToBoxes(box);
             database().savePlayer(ctx.getPlayer())
-                    .thenAccept(__ -> {
-                        ctx.sendMessage(
-                                $(ctx.getLanguage(), "plugins.economy.found-box")
-                                        .replace("$box", box.getName()))
-                                .thenAccept(___ -> {
-                                    future.complete(null);
-                                })
-                                .exceptionally(e -> {
-                                    Sentry.capture(e);
-                                    future.complete(null);
-                                    return null;
-                                })
-                        ;
-                    })
+                    .thenAccept(__ -> ctx.sendMessage(
+                            $(ctx.getLanguage(), "plugins.economy.found-box")
+                                    .replace("$box", box.getName()))
+                            .thenAccept(___ -> future.complete(null))
+                            .exceptionally(e -> {
+                                Sentry.capture(e);
+                                future.complete(null);
+                                return null;
+                            }))
                     .exceptionally(e -> {
                         Sentry.capture(e);
                         future.complete(null);

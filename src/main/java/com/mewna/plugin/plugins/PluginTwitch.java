@@ -69,6 +69,7 @@ public class PluginTwitch extends BasePlugin {
     private void handleHook(final TwitchStreamerEvent event, final String mode) {
         // TODO: Detect when nobody subscribes to stream up OR down for unsubbing
         final String streamerId = event.getStreamer().getId();
+        logger().info("Got Twitch {} event for streamer {}", mode, event.getStreamer().getLogin());
         // Oh god...
         database().getStore().sql("SELECT id FROM settings_twitch " +
                 "WHERE data->'twitchStreamers' @> '[{\"id\": \"" + streamerId + "\"}]';", p -> {
@@ -131,6 +132,7 @@ public class PluginTwitch extends BasePlugin {
                                                         break;
                                                     }
                                                 }
+                                                logger().info("Sending Twitch {} for {} to {} for {}", mode, event.getStreamer().getLogin(), webhook.getId(), settings.getId());
                                                 //noinspection ResultOfMethodCallIgnored
                                                 catnip().rest().webhook().executeWebhook(webhook.getId(), webhook.getSecret(), messageOptions);
                                             } catch(final Exception e) {

@@ -124,7 +124,7 @@ public class GuildRoutes implements RouteGroup {
                                     .put("xpNeeded", xpNeeded)
                                     .put("nextLevelXp", nextLevelXp)
                                     .put("customBackground", account.customBackground())
-                                    .put("accountId", account.id())
+                                    .put("accountId", player.getId())
                             );
                         } else {
                             results.add(new JsonObject()
@@ -139,7 +139,7 @@ public class GuildRoutes implements RouteGroup {
                                     .put("xpNeeded", xpNeeded)
                                     .put("nextLevelXp", nextLevelXp)
                                     .put("customBackground", account.customBackground())
-                                    .put("accountId", account.id())
+                                    .put("accountId", player.getId())
                             );
                         }
                         ++counter;

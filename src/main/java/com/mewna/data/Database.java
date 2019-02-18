@@ -241,12 +241,12 @@ public class Database {
                         // We're joining inside of NON-vx threads here, so I'm pretty sure this is safe?
                         // Honestly I just couldn't think of a better way to do it......
                         final T settings = (T) maybe.refreshCommands().otherRefresh().join();
-                        saveSettings(settings).join();
+                        saveSettings(settings);
                         return settings;
                     } else {
                         try {
                             final T base = type.getConstructor(String.class).newInstance(id);
-                            saveSettings(base).join();
+                            saveSettings(base);
                             return base;
                         } catch(final IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
                             Sentry.capture(e);
@@ -260,9 +260,9 @@ public class Database {
     }
     
     @SuppressWarnings("unchecked")
-    public <T extends PluginSettings> CompletableFuture<Void> saveSettings(final T settings) {
+    public <T extends PluginSettings> void saveSettings(final T settings) {
         // This is technically valid
-        return store.mapAsync((Class<T>) settings.getClass()).save(settings);
+        store.mapSync((Class<T>) settings.getClass()).save(settings);
     }
     
     /////////////

@@ -76,19 +76,22 @@ public class PluginTwitch extends BasePlugin {
         database().getStore().sql("SELECT id FROM settings_twitch " +
                 "WHERE data->'twitchStreamers' @> '[{\"id\": \"" + streamerId + "\"}]';", p -> {
             final ResultSet resultSet = p.executeQuery();
+            final Collection<String> webhookGuilds = new ArrayList<>();
+            while(resultSet.next()) {
+                webhookGuilds.add(resultSet.getString("id"));
+            }
             if(resultSet.isBeforeFirst()) {
-                final Collection<String> webhookGuilds = new ArrayList<>();
-                while(resultSet.next()) {
-                    webhookGuilds.add(resultSet.getString("id"));
-                }
                 webhookGuilds.removeIf(e -> {
                     try {
+                        // TODO: Is this deadlocking?
                         DiscordCache.guild(e).toCompletableFuture().get();
                         return false;
                     } catch(final Exception ignored) {
                         return true;
                     }
                 });
+            }
+            move(() -> {
                 if(!webhookGuilds.isEmpty()) {
                     //noinspection CodeBlock2Expr
                     webhookGuilds.forEach(guildId -> {
@@ -148,7 +151,7 @@ public class PluginTwitch extends BasePlugin {
                         }));
                     });
                 }
-            }
+            });
         });
     }
 }

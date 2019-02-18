@@ -228,6 +228,10 @@ public class Database {
             throw new IllegalArgumentException("Attempted to get settings of type " + type.getName() + ", but it's not mapped!");
         }
         return getSettingsByType(type, id)
+                .exceptionally(e -> {
+                    Sentry.capture(e);
+                    return null;
+                })
                 .thenApply(maybeSettings -> {
                     // This is a valid thing to do - a null value is returned
                     // when the settings *are not present due to an error*, ie
@@ -253,9 +257,6 @@ public class Database {
                             throw new RuntimeException(e);
                         }
                     }
-                }).exceptionally(e -> {
-                    Sentry.capture(e);
-                    return null;
                 });
     }
     

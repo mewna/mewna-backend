@@ -21,7 +21,7 @@
         <commons.collections.version>LATEST</commons.collections.version>
         <commons.text.version>1.2</commons.text.version>
         <jedis.version>2.9.0</jedis.version>
-        <postgres.orm.version>075aa12</postgres.orm.version>
+        <postgres.orm.version>0e13c22</postgres.orm.version>
         <jackson.version>2.9.6</jackson.version>
         <paypal.version>1.14.0</paypal.version>
         <dogstatsd.version>2.6.1</dogstatsd.version>

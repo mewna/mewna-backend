@@ -1,5 +1,6 @@
 package com.mewna.plugin.plugins;
 
+import com.google.common.collect.ImmutableMap;
 import com.mewna.Mewna;
 import com.mewna.accounts.Account;
 import com.mewna.catnip.entity.message.Message;
@@ -11,6 +12,7 @@ import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Command;
 import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.Plugin;
+import com.mewna.plugin.plugins.economy.Item;
 import com.mewna.plugin.plugins.settings.SecretSettings;
 import com.mewna.plugin.plugins.settings.TwitchSettings;
 import com.mewna.plugin.util.Emotes;
@@ -28,6 +30,8 @@ import java.lang.management.ManagementFactory;
 import java.sql.ResultSet;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.mewna.util.Async.move;
 
 /**
  * @author amy
@@ -72,7 +76,7 @@ public class PluginSecret extends BasePlugin {
                 }).collect(Collectors.toList());
                 if(validatedPages.size() == pages.size()) {
                     ctx.sendMessage(Emotes.YES + " Loaded " + pages.size() + " pages of reset data for table " + ctx.getArgs().get(0));
-    
+                    
                     database().getStore().sql(conn -> {
                         conn.prepareStatement("BEGIN").execute();
                         final int[] counter = {0};
@@ -107,16 +111,15 @@ public class PluginSecret extends BasePlugin {
             ctx.sendMessage(Emotes.NO);
         } else {
             final Optional<Webhook> maybeHook = database().getWebhook(ctx.getArgs().get(0));
-            maybeHook.ifPresentOrElse(hook -> {
-                ctx.sendMessage(String.format("%s -> %s (%s)", hook.getChannel(), hook.getId(), hook.getGuild()));
-            }, () -> {
-                final Optional<Webhook> maybeRealHook = database().getWebhookById(ctx.getArgs().get(0));
-                maybeRealHook.ifPresentOrElse(hook -> {
-                    ctx.sendMessage(String.format("%s -> %s (%s)", hook.getChannel(), hook.getId(), hook.getGuild()));
-                }, () -> {
-                    ctx.sendMessage(Emotes.NO + " No webhook!");
-                });
-            });
+            maybeHook.ifPresentOrElse(hook ->
+                            ctx.sendMessage(String.format("%s -> %s (%s)", hook.getChannel(), hook.getId(), hook.getGuild())),
+                    () -> {
+                        final Optional<Webhook> maybeRealHook = database().getWebhookById(ctx.getArgs().get(0));
+                        maybeRealHook.ifPresentOrElse(hook -> ctx.sendMessage(
+                                String.format("%s -> %s (%s)", hook.getChannel(), hook.getId(), hook.getGuild())
+                                ),
+                                () -> ctx.sendMessage(Emotes.NO + " No webhook!"));
+                    });
         }
     }
     
@@ -228,8 +231,44 @@ public class PluginSecret extends BasePlugin {
         catnip().rest().user().createDM(ctx.getUser().id()).thenAccept(channel -> channel.sendMessage("test!"));
     }
     
+    @Command(names = "grantitem", desc = "secret", usage = "sercet", examples = "secret", owner = true)
+    public void grantItem(final CommandContext ctx) {
+        if(ctx.getArgs().size() < 2) {
+            ctx.sendMessage(Emotes.NO);
+        } else {
+            final String playerId = ctx.getArgs().get(0).replace("<@", "").replace(">", "");
+            final Optional<Item> maybeItem = Arrays.stream(Item.values())
+                    .filter(e -> e.getName().equalsIgnoreCase(ctx.getArgs().get(1)))
+                    .findFirst();
+            int amount = 1;
+            if(ctx.getArgs().size() > 2) {
+                try {
+                    amount = Integer.parseInt(ctx.getArgs().get(2));
+                } catch(final Exception e) {
+                    ctx.sendMessage(Emotes.NO + " Invalid amount");
+                    return;
+                }
+            }
+            if(maybeItem.isPresent()) {
+                final Item item = maybeItem.get();
+                final int finalAmount = amount;
+                database().getOptionalPlayer(playerId).thenAccept(o -> move(() -> {
+                    if(o.isPresent()) {
+                        final Player player = o.get();
+                        player.addAllToInventory(ImmutableMap.of(item, (long) finalAmount));
+                        database().savePlayer(player).thenAccept(__ -> ctx.sendMessage(Emotes.YES));
+                    } else {
+                        ctx.sendMessage(Emotes.NO + " No such player!");
+                    }
+                }));
+            } else {
+                ctx.sendMessage(Emotes.NO + " No such item!");
+            }
+        }
+    }
+    
     @Command(names = "forcetwitchresub", desc = "secret", usage = "secret", examples = "secret", owner = true)
-    public void meme(final CommandContext ctx) {
+    public void forceTwitchResub(final CommandContext ctx) {
         new Thread(() -> {
             final Set<String> ids = new HashSet<>();
             database().getStore().sql("SELECT data FROM settings_twitch;", c -> {

@@ -274,7 +274,8 @@
           "invalid-search-type": "Invalid search type.",
           "invalid-search": "Invalid search.",
           "invalid-search-length": "Searches must be at least 3 characters long.",
-          "too-many-matches": "Too many possible matches"
+          "too-many-matches": "Too many possible matches",
+          "monster-too-big": "It looks like that stat block is too big to display in Discord..."
         }
       }
     },

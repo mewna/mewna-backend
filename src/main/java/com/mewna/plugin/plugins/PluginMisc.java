@@ -745,13 +745,21 @@ public class PluginMisc extends BasePlugin {
                         .filter(e -> e.getName().toLowerCase().contains(search.toLowerCase()))
                         .collect(Collectors.toList());
                 if(monsters.size() == 1) {
-                    sendDndEmbedResponse(ctx, sendMonster(monsters.get(0)));
+                    try {
+                        sendDndEmbedResponse(ctx, sendMonster(monsters.get(0)));
+                    } catch(final IllegalStateException e) {
+                        ctx.sendMessage(Emotes.NO + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.dnd.monster-too-big"));
+                    }
                     return;
                 } else if(monsters.size() > 1) {
                     // Check for exact match
                     for(final XMonster monster : monsters) {
                         if(monster.getName().equalsIgnoreCase(search)) {
-                            sendDndEmbedResponse(ctx, sendMonster(monster));
+                            try {
+                                sendDndEmbedResponse(ctx, sendMonster(monster));
+                            } catch(final IllegalStateException e) {
+                                ctx.sendMessage(Emotes.NO + ' ' + $(ctx.getLanguage(), "plugins.misc.commands.dnd.monster-too-big"));
+                            }
                             return;
                         }
                     }

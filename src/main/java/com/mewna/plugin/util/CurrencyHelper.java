@@ -61,7 +61,8 @@ public final class CurrencyHelper {
             case OK: {
                 mewna.statsClient().count("discord.backend.money.spent", check.right);
                 ctx.getPlayer().incrementBalance(-check.right);
-                mewna.database().savePlayer(ctx.getPlayer());
+                // TODO: Make this properly async!
+                mewna.database().savePlayer(ctx.getPlayer()).join();
                 return ImmutablePair.of(true, check.right);
             }
             default: {

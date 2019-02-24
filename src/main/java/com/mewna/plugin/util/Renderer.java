@@ -82,13 +82,6 @@ public final class Renderer {
         } catch(final FontFormatException | IOException e) {
             throw new RuntimeException(e);
         }
-    
-        /*
-        USERNAME_FONT = new Font("Yanone Kaffeesatz", Font.PLAIN, 42).deriveFont(FONT_SETTINGS);
-        STATS_FONT = new Font("Droid Sans", Font.PLAIN, 32).deriveFont(FONT_SETTINGS);
-        STATS_FONT_SMALLER = new Font("Droid Sans", Font.PLAIN, 30).deriveFont(FONT_SETTINGS);
-        ABOUT_ME_FONT = new Font("Droid Sans", Font.PLAIN, 24).deriveFont(FONT_SETTINGS);
-        */
     }
     
     private Renderer() {

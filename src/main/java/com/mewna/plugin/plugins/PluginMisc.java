@@ -43,6 +43,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -372,10 +374,19 @@ public class PluginMisc extends BasePlugin {
             final long end = System.currentTimeMillis();
             msg.edit(new MessageBuilder().content("Pong! (took " + (end - start) + "ms)").build()).thenAccept(_msg -> {
                 ctx.getProfiler().end();
-                if(ctx.getArgstr().equalsIgnoreCase("--profile")) {
+                if(ctx.getArgstr().equalsIgnoreCase("--profile")
+                        && ctx.getUser().id().equalsIgnoreCase("128316294742147072")) {
                     final StringBuilder sb = new StringBuilder("```CSS\n");
                     ctx.getProfiler().sections().forEach(section -> sb.append('[').append(section.name()).append("] ")
                             .append(section.end() - section.start()).append("ms\n"));
+                    sb.append('\n');
+                    try {
+                        sb.append("[worker] ").append(InetAddress.getLocalHost().getHostName()).append('\n');
+                    } catch(final UnknownHostException e) {
+                        sb.append("[worker] unknown (check sentry)\n");
+                        Sentry.capture(e);
+                    }
+                    
                     sb.append("```");
                     
                     ctx.sendMessage(sb.toString());
@@ -388,8 +399,7 @@ public class PluginMisc extends BasePlugin {
     @Command(names = {"page", "blog", "site"}, desc = "commands.misc.page", usage = "page", examples = "page")
     public void blog(final CommandContext ctx) {
         final Guild guild = ctx.getGuild();
-        ctx.sendMessage(
-                System.getenv("DOMAIN") + "/server/" + guild.id());
+        ctx.sendMessage(System.getenv("DOMAIN") + "/server/" + guild.id());
     }
     */
     

@@ -112,8 +112,8 @@ public class PluginStaff extends BasePlugin {
         sb.append("[guild] ").append(ctx.getGuild().id()).append('\n');
         sb.append("[user] ").append(ctx.getUser().id()).append('\n');
         sb.append("[message] ").append(ctx.getMessage().id()).append('\n');
-        sb.append("[ts] ").append(ctx.getSource().timestamp());
-        sb.append("[sender] ").append(ctx.getSource().sender());
+        sb.append("[ts] ").append(ctx.getSource().timestamp()).append('\n');
+        sb.append("[sender] ").append(ctx.getSource().sender()).append('\n');
         
         sb.append("```");
         

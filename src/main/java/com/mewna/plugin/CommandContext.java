@@ -7,6 +7,7 @@ import com.mewna.catnip.entity.message.Message;
 import com.mewna.catnip.entity.message.MessageOptions;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.data.Player;
+import com.mewna.event.discord.DiscordMessageCreate;
 import com.mewna.util.Profiler;
 import lombok.Builder;
 import lombok.Value;
@@ -35,6 +36,7 @@ public class CommandContext {
     private String language;
     private String currencySymbol;
     private Profiler profiler;
+    private DiscordMessageCreate source;
     
     public CompletionStage<Message> sendMessage(final String msg) {
         return message.catnip().rest().channel().sendMessage(message.channelId(), msg);

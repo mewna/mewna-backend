@@ -8,8 +8,11 @@ import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.Plugin;
 import com.mewna.plugin.plugins.settings.*;
 import com.mewna.plugin.util.Emotes;
+import io.sentry.Sentry;
 import io.vertx.core.json.JsonObject;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 
 import static com.mewna.util.Async.move;
@@ -90,5 +93,30 @@ public class PluginStaff extends BasePlugin {
                     "(ex. `mew.config 1234567890 behaviour`), " +
                     "or do `mew.config types` for all config types.");
         }
+    }
+    
+    @Command(names = "trace", desc = "staff-only", usage = "staff-only", examples = "staff-only", staff = true)
+    public void trace(final CommandContext ctx) {
+        ctx.getProfiler().end();
+        final StringBuilder sb = new StringBuilder("```CSS\n");
+        ctx.getProfiler().sections().forEach(section -> sb.append('[').append(section.name()).append("] ")
+                .append(section.end() - section.start()).append("ms\n"));
+        sb.append('\n');
+        try {
+            sb.append("[worker] ").append(InetAddress.getLocalHost().getHostName()).append('\n');
+        } catch(final UnknownHostException e) {
+            sb.append("[worker] unknown (check sentry)\n");
+            Sentry.capture(e);
+        }
+        // sb.append("[shard] ").append(0).append('\n');
+        sb.append("[guild] ").append(ctx.getGuild().id()).append('\n');
+        sb.append("[user] ").append(ctx.getUser().id()).append('\n');
+        sb.append("[message] ").append(ctx.getMessage().id()).append('\n');
+        sb.append("[ts] ").append(ctx.getSource().timestamp());
+        sb.append("[sender] ").append(ctx.getSource().sender());
+        
+        sb.append("```");
+        
+        ctx.sendMessage(sb.toString());
     }
 }

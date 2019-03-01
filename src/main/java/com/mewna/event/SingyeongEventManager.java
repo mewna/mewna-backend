@@ -45,6 +45,8 @@ public class SingyeongEventManager {
                                 .user(Entity.fromJson(mewna.catnip(), UserImpl.class, data.getJsonObject("user")))
                                 .message(Entity.fromJson(mewna.catnip(), MessageImpl.class, data.getJsonObject("message")))
                                 .received(System.currentTimeMillis())
+                                .timestamp(dispatch.timestamp())
+                                .sender(dispatch.sender())
                                 .build();
                         mewna.commandManager().tryExecCommand(event);
                         break;

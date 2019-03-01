@@ -334,7 +334,7 @@ public class CommandManager {
                             // Commands may require payment before running
                             final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr, guild, event.message(),
                                     mentions, player, finalMaybeAccount.get(), 0L, prefix, mewna.database().language(guild.id()),
-                                    settings.getCurrencySymbol(), profiler);
+                                    settings.getCurrencySymbol(), profiler, event);
                             if(cmd.getPayment() != null) {
                                 // By default, try to make the minimum payment
                                 String maybePayment = cmd.getPayment().min() + "";

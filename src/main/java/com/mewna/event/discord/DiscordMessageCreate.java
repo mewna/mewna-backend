@@ -23,4 +23,6 @@ public class DiscordMessageCreate {
     private User user;
     private Member member;
     private long received;
+    private long timestamp;
+    private String sender;
 }

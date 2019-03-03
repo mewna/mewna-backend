@@ -26,7 +26,7 @@ public class PlayerRoutes implements RouteGroup {
         router.get("/data/player/:id").handler(ctx -> move(() -> {
             final String id = ctx.request().getParam("id");
             
-            mewna.database().getOptionalPlayer(id)
+            mewna.database().getOptionalPlayer(id, null)
                     .thenAccept(o -> ctx.response().putHeader("Content-Type", "application/json")
                             .end(o.map(JsonObject::mapFrom)
                                     .orElse(new JsonObject())
@@ -41,7 +41,7 @@ public class PlayerRoutes implements RouteGroup {
             final String type = body.getString("type");
             final boolean isWeekend = body.getBoolean("isWeekend");
             
-            mewna.database().getOptionalPlayer(user).thenAccept(player -> move(() -> {
+            mewna.database().getOptionalPlayer(user, null).thenAccept(player -> move(() -> {
                 if(player.isPresent()) {
                     final int amount = PluginEconomy.VOTE_BONUS * (isWeekend ? 2 : 1);
                     final Player p = player.get();

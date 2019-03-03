@@ -7,6 +7,7 @@ import com.mewna.catnip.entity.user.User;
 import com.mewna.plugin.Plugin;
 import com.mewna.plugin.util.Snowflakes;
 import com.mewna.servers.ServerBlogPost;
+import com.mewna.util.Profiler;
 import gg.amy.pgorm.PgStore;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import io.sentry.Sentry;
@@ -270,7 +271,10 @@ public class Database {
     // Players //
     /////////////
     
-    public CompletableFuture<Optional<Player>> getOptionalPlayer(final String id) {
+    public CompletableFuture<Optional<Player>> getOptionalPlayer(final String id, final Profiler profiler) {
+        if(profiler != null) {
+            profiler.section("playerMapAsync");
+        }
         return store.mapAsync(Player.class).load(id).exceptionally(e -> {
             Sentry.capture(e);
             // This is okay I promise ;-;
@@ -279,9 +283,12 @@ public class Database {
         });
     }
     
-    public CompletableFuture<Player> getPlayer(final User user) {
-        return getOptionalPlayer(user.id())
+    public CompletableFuture<Player> getPlayer(final User user, final Profiler profiler) {
+        return getOptionalPlayer(user.id(), profiler)
                 .thenApply(o -> {
+                    if(profiler != null) {
+                        profiler.section("playerValidation");
+                    }
                     // This is fine!
                     // o is null only in case of database errors
                     //noinspection OptionalAssignedToNull
@@ -289,6 +296,9 @@ public class Database {
                         throw new IllegalStateException("Database error fetching player " + user.id());
                     } else {
                         return o.orElseGet(() -> {
+                            if(profiler != null) {
+                                profiler.section("playerRecreate");
+                            }
                             final Player base = Player.base(user.id());
                             savePlayer(base);
                             // If we don't have a player, then we also need to create an account for them

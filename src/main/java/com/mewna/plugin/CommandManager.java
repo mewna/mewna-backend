@@ -293,7 +293,7 @@ public class CommandManager {
                 }
                 profiler.section("playerStart");
                 //noinspection CodeBlock2Expr
-                mewna.database().getPlayer(user).thenAccept(player -> {
+                mewna.database().getPlayer(user, profiler).thenAccept(player -> {
                     profiler.section("playerMove");
                     move(() -> {
                         profiler.section("account");

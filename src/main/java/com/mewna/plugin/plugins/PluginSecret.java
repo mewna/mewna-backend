@@ -142,7 +142,7 @@ public class PluginSecret extends BasePlugin {
                 final String snowflake = ctx.getArgs().get(1)
                         .replaceAll("<@(!)?", "")
                         .replace(">", "");
-                database().getOptionalPlayer(snowflake).thenAccept(optionalPlayer -> {
+                database().getOptionalPlayer(snowflake, ctx.getProfiler()).thenAccept(optionalPlayer -> {
                     if(optionalPlayer.isPresent()) {
                         final JsonObject o = JsonObject.mapFrom(optionalPlayer.get());
                         // TODO: ???
@@ -252,7 +252,7 @@ public class PluginSecret extends BasePlugin {
             if(maybeItem.isPresent()) {
                 final Item item = maybeItem.get();
                 final int finalAmount = amount;
-                database().getOptionalPlayer(playerId).thenAccept(o -> move(() -> {
+                database().getOptionalPlayer(playerId, ctx.getProfiler()).thenAccept(o -> move(() -> {
                     if(o.isPresent()) {
                         final Player player = o.get();
                         player.addAllToInventory(ImmutableMap.of(item, (long) finalAmount));

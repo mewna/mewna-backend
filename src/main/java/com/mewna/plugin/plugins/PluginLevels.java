@@ -221,7 +221,7 @@ public class PluginLevels extends BasePlugin {
     @Event(Raw.MESSAGE_CREATE)
     public void handleChatMessage(final DiscordMessageCreate event) {
         final User author = event.message().author();
-        database().getPlayer(author).thenAccept(player -> {
+        database().getPlayer(author, null).thenAccept(player -> {
             final ImmutablePair<Boolean, Long> globalRes = mewna().ratelimiter()
                     .checkUpdateRatelimit(author.id(), "chat-xp-global", TimeUnit.MINUTES.toMillis(10));
             if(!globalRes.left) {
@@ -293,7 +293,7 @@ public class PluginLevels extends BasePlugin {
                 self = true;
             } else {
                 user = ctx.getMentions().get(0);
-                playerFuture = database().getPlayer(user);
+                playerFuture = database().getPlayer(user, ctx.getProfiler());
                 self = false;
             }
             if(user.bot()) {
@@ -366,7 +366,7 @@ public class PluginLevels extends BasePlugin {
             self = true;
         } else {
             user = ctx.getMentions().get(0);
-            playerFuture = database().getPlayer(user);
+            playerFuture = database().getPlayer(user, ctx.getProfiler());
             self = false;
         }
         
@@ -423,7 +423,7 @@ public class PluginLevels extends BasePlugin {
             playerFuture = SafeVertxCompletableFuture.completedFuture(ctx.getPlayer());
         } else {
             user = ctx.getMentions().get(0);
-            playerFuture = database().getPlayer(user);
+            playerFuture = database().getPlayer(user, ctx.getProfiler());
         }
         playerFuture.thenAccept(player -> ctx.sendMessage(
                 $(ctx.getLanguage(), "plugins.levels.commands.score")

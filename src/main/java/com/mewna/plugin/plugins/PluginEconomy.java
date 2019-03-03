@@ -72,7 +72,7 @@ public class PluginEconomy extends BasePlugin {
                     .replace("$symbol", helper.getCurrencySymbol(ctx)));
         } else {
             final User m = ctx.getMessage().mentionedUsers().get(0);
-            database().getPlayer(m).thenAccept(player -> {
+            database().getPlayer(m, ctx.getProfiler()).thenAccept(player -> {
                 final long balance = player.getBalance();
                 ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.balance.other")
                         .replace("$target", m.username())
@@ -95,7 +95,7 @@ public class PluginEconomy extends BasePlugin {
             return;
         }
         final Player sender = ctx.getPlayer();
-        database().getPlayer(ctx.getMentions().get(0)).thenAccept(target -> {
+        database().getPlayer(ctx.getMentions().get(0), ctx.getProfiler()).thenAccept(target -> {
             if(target.getId().equalsIgnoreCase(sender.getId())) {
                 ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.pay.no-self-pay"));
                 return;

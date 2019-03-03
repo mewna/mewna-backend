@@ -14,7 +14,8 @@ import java.util.function.Supplier;
  * @since 2/10/19.
  */
 public final class Async {
-    private static final ExecutorService POOL = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+    private static final ExecutorService POOL = Executors.newCachedThreadPool();
+    // Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors() * 2);
     
     private Async() {
     }

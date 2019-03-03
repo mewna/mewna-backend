@@ -291,9 +291,10 @@ public class CommandManager {
                         return;
                     }
                 }
-                profiler.section("player");
+                profiler.section("playerStart");
                 //noinspection CodeBlock2Expr
                 mewna.database().getPlayer(user).thenAccept(player -> {
+                    profiler.section("playerMove");
                     move(() -> {
                         profiler.section("account");
                         // Fill out accounts if they don't exist

@@ -102,18 +102,21 @@ public class CommandManager {
     }
     
     @SuppressWarnings("TypeMayBeWeakened")
-    private CompletableFuture<List<String>> getAllPrefixes(final Guild guild) {
+    private CompletableFuture<List<String>> getAllPrefixes(final Guild guild, final Profiler profiler) {
         return mewna.database().getOrBaseSettings(BehaviourSettings.class, guild.id()).thenApply(settings -> {
+            profiler.section("prefixesCleanup");
             final List<String> prefixes = new ArrayList<>();
             if(settings.getPrefix() != null && !settings.getPrefix().isEmpty() && settings.getPrefix().length() <= 16) {
                 prefixes.add(settings.getPrefix());
             } else {
                 prefixes.addAll(PREFIXES);
             }
+            profiler.section("prefixesAddMentions");
             prefixes.add("<@" + CLIENT_ID + '>');
             prefixes.add("<@!" + CLIENT_ID + '>');
             return prefixes;
         }).exceptionally(e -> {
+            profiler.section("prefixesError");
             Sentry.capture(e);
             return Collections.emptyList();
         });
@@ -140,11 +143,11 @@ public class CommandManager {
                     return;
                 }
             }
-            profiler.section("prefixes");
+            profiler.section("prefixesStart");
             
             // ENTER THE REALM OF THE ASYNC HELL
             
-            getAllPrefixes(guild).exceptionally(e -> {
+            getAllPrefixes(guild, profiler).exceptionally(e -> {
                 Sentry.capture(e);
                 return Collections.emptyList();
             }).thenAccept(prefixes -> move(() -> {

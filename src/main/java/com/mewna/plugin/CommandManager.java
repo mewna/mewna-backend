@@ -331,8 +331,9 @@ public class CommandManager {
                         }
                         
                         final Optional<Account> finalMaybeAccount = maybeAccount;
-                        profiler.section("payment");
+                        profiler.section("paymentStart");
                         mewna.database().getOrBaseSettings(EconomySettings.class, guild.id()).thenAccept(settings -> move(() -> {
+                            profiler.section("paymentSettings");
                             long cost = 0L;
                             // Commands may require payment before running
                             final CommandContext paymentCtx = new CommandContext(user, commandName, args, argstr, guild, event.message(),
@@ -351,7 +352,7 @@ public class CommandManager {
                                         maybePayment = args.get(0);
                                     }
                                 }
-                                
+                                profiler.section("paymentProcessing");
                                 final ImmutablePair<Boolean, Long> res = mewna.pluginManager().getCurrencyHelper()
                                         .handlePayment(paymentCtx, maybePayment, cmd.getPayment().min(), cmd.getPayment().max());
                                 // If we can make the payment, set the cost and continue

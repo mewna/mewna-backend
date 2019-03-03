@@ -56,6 +56,8 @@ public class WelcomingSettings implements PluginSettings {
         return this;
     }
     
+    // TODO: Validate channel existence
+    
     @Override
     public boolean validateSettings(final JsonObject data) {
         for(final String key : data.fieldNames()) {

@@ -1,6 +1,5 @@
 package com.mewna.data;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mewna.Mewna;
 import com.mewna.plugin.CommandManager.CommandWrapper;
 import gg.amy.singyeong.SafeVertxCompletableFuture;
@@ -8,7 +7,6 @@ import io.sentry.Sentry;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;

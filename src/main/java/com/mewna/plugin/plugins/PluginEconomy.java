@@ -49,7 +49,7 @@ import static com.mewna.util.Translator.$;
 @SuppressWarnings("unused")
 @Plugin(name = "Economy", desc = "Let people earn and spend money.", settings = EconomySettings.class)
 public class PluginEconomy extends BasePlugin {
-    public static final int VOTE_BONUS = 500;
+    public static final int VOTE_BONUS = 750;
     private static final long SLOTS_BASE_COST = 10;
     private static final long GAMBLE_BASE_COST = 25;
     private static final long HEIST_BASE_COST = 300;
@@ -152,7 +152,7 @@ public class PluginEconomy extends BasePlugin {
             
             if(streak) {
                 player.incrementDailyStreak();
-                final long bonus = 100 + 10 * (player.getDailyStreak() - 1);
+                final long bonus = 100 + 15 * (player.getDailyStreak() - 1);
                 player.incrementBalance(DAILY_BASE_REWARD + bonus);
                 msg += $(ctx.getLanguage(), "plugins.economy.commands.daily.collect-streak")
                         .replace("$amount", "" + bonus)
@@ -201,7 +201,7 @@ public class PluginEconomy extends BasePlugin {
     @Command(names = "heist", desc = "commands.economy.heist", usage = "heist", examples = "heist")
     public void heist(final CommandContext ctx) {
         final int chance = random().nextInt(1000);
-        if(chance < 125) {
+        if(chance < 10) {
             // win
             final long reward = HEIST_BASE_COST * 15;
             ctx.getPlayer().incrementBalance(reward);
@@ -352,7 +352,7 @@ public class PluginEconomy extends BasePlugin {
         
         if(playerWumpus == winningWumpus) {
             // Winners get 3x payout
-            final long payout = ctx.getCost() * 3;
+            final long payout = ctx.getCost() * 4;
             ctx.getPlayer().incrementBalance(payout);
             database().savePlayer(ctx.getPlayer()).thenAccept(__ -> tryDropBox(ctx));
             sb.append($(ctx.getLanguage(), "plugins.economy.commands.gamble.success")
@@ -613,7 +613,7 @@ public class PluginEconomy extends BasePlugin {
         }
     }
     
-    @Ratelimit(time = 20)
+    @Ratelimit(time = 15)
     @Command(names = "mine", desc = "commands.economy.mine", usage = "mine", examples = "mine")
     public void mine(final CommandContext ctx) {
         if(isWeighedDown(ctx.getPlayer())) {
@@ -626,14 +626,14 @@ public class PluginEconomy extends BasePlugin {
                     $(ctx.getLanguage(), "plugins.economy.commands.mine.no-pick"));
             return;
         }
-        if(LootTables.chance(5)) {
+        if(LootTables.chance(8)) {
             ctx.getPlayer().removeOneFromInventory(Item.PICKAXE);
             database().savePlayer(ctx.getPlayer());
             ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.mine.pick-break"));
             return;
         }
-        final List<Item> loot = LootTables.generateLoot(LootTables.GEMS, 0, 2, true);
+        final List<Item> loot = LootTables.generateLoot(LootTables.GEMS, 0, 3, true);
         if(loot.isEmpty()) {
             ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.mine.got-dust"));
@@ -648,7 +648,7 @@ public class PluginEconomy extends BasePlugin {
         }
     }
     
-    @Ratelimit(time = 10)
+    @Ratelimit(time = 5)
     @Command(names = "fish", desc = "commands.economy.fish", usage = "fish", examples = "fish")
     public void fish(final CommandContext ctx) {
         if(isWeighedDown(ctx.getPlayer())) {
@@ -663,14 +663,14 @@ public class PluginEconomy extends BasePlugin {
             ;
             return;
         }
-        if(LootTables.chance(5)) {
+        if(LootTables.chance(10)) {
             ctx.getPlayer().removeOneFromInventory(Item.FISHING_ROD);
             database().savePlayer(ctx.getPlayer());
             ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.fish.rod-break"));
             return;
         }
-        final List<Item> loot = LootTables.generateLoot(LootTables.FISHING, 1, 3, true);
+        final List<Item> loot = LootTables.generateLoot(LootTables.FISHING, 1, 5, true);
         if(loot.isEmpty()) {
             ctx.sendMessage(
                     $(ctx.getLanguage(), "plugins.economy.commands.fish.got-water"));
@@ -686,7 +686,7 @@ public class PluginEconomy extends BasePlugin {
     }
     
     private CompletableFuture<Void> tryDropBox(final CommandContext ctx) {
-        if(LootTables.chance(random().nextInt(15))) {
+        if(LootTables.chance(random().nextInt(12))) {
             final Future<Void> future = Future.future();
             final Box box = Box.values()[random().nextInt(Box.values().length)];
             ctx.getPlayer().addOneToBoxes(box);

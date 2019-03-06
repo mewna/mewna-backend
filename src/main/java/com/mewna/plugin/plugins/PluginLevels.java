@@ -448,6 +448,6 @@ public class PluginLevels extends BasePlugin {
     }
     
     private long getXp(final Player player) {
-        return 10 + random().nextInt(11);
+        return 10 + random().nextInt(15);
     }
 }

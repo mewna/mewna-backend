@@ -260,7 +260,12 @@ public class PluginEconomy extends BasePlugin {
         
         if(win) {
             // calc payment and send messages
-            final long payout = roll[1][0].worth + payment;
+            final long payout;
+            if(roll[1][0] == BOOM) {
+                payout = BOOM.worth - payment;
+            } else {
+                payout = roll[1][0].worth + payment;
+            }
             // TODO: Rare bonus chance like I always do
             
             ctx.getPlayer().incrementBalance(payout);

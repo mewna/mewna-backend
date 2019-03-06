@@ -15,7 +15,6 @@ import java.util.function.Supplier;
  */
 public final class Async {
     private static final ExecutorService POOL = Executors.newCachedThreadPool();
-    // Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors() * 2);
     
     private Async() {
     }

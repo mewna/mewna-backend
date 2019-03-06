@@ -222,55 +222,57 @@ public class PluginLevels extends BasePlugin {
     public void handleChatMessage(final DiscordMessageCreate event) {
         final User author = event.message().author();
         database().getPlayer(author, null).thenAccept(player -> {
-            final ImmutablePair<Boolean, Long> globalRes = mewna().ratelimiter()
-                    .checkUpdateRatelimit(author.id(), "chat-xp-global", TimeUnit.MINUTES.toMillis(10));
-            if(!globalRes.left) {
-                final long oldXp = player.getGlobalXp();
-                final long xp = getXp(player);
-                mewna().statsClient().count("discord.backend.xpgained.global", xp);
-                player.incrementGlobalXp(getXp(player));
-                database().savePlayer(player);
-                // Level-up notifications here?
-                if(isLevelUp(oldXp, oldXp + xp)) {
-                    final long level = xpToLevel(oldXp + xp);
-                    // lol
-                    switch((int) level) {
-                        case 10:
-                        case 25:
-                        case 50:
-                        case 100: {
-                            mewna().pluginManager().processEvent(EventType.PLAYER_EVENT,
-                                    new PlayerEvent(SystemUserEventType.GLOBAL_LEVEL, player,
-                                            new JsonObject().put("level", level)));
-                            break;
-                        }
-                        default: {
-                            break;
-                        }
-                    }
-                }
-            }
-            
-            final Guild guild = event.guild();
-            database().getOrBaseSettings(LevelsSettings.class, guild.id()).thenAccept(settings -> {
-                if(!settings.isLevelsEnabled()) {
-                    return;
-                }
-                final ImmutablePair<Boolean, Long> localRes = mewna().ratelimiter()
-                        .checkUpdateRatelimit(event.message().author().id(), "chat-xp-local:" + guild.id(),
-                                TimeUnit.MINUTES.toMillis(1));
-                if(!localRes.left) {
-                    final long oldXp = player.getXp(guild);
+            move(() -> {
+                final ImmutablePair<Boolean, Long> globalRes = mewna().ratelimiter()
+                        .checkUpdateRatelimit(author.id(), "chat-xp-global", TimeUnit.MINUTES.toMillis(10));
+                if(!globalRes.left) {
+                    final long oldXp = player.getGlobalXp();
                     final long xp = getXp(player);
-                    mewna().statsClient().count("discord.backend.xpgained.local", xp);
-                    player.incrementLocalXp(guild, xp);
-                    database().savePlayer(player);
+                    mewna().statsClient().count("discord.backend.xpgained.global", xp);
+                    player.incrementGlobalXp(getXp(player));
+                    database().savePlayer(player).join();
+                    // Level-up notifications here?
                     if(isLevelUp(oldXp, oldXp + xp)) {
-                        // Emit level-up event so we can process it
-                        mewna().pluginManager().processEvent(EventType.LEVEL_UP, new LevelUpEvent(guild, event.message().channelId(),
-                                event.user(), event.member(), xpToLevel(oldXp + xp), oldXp + xp));
+                        final long level = xpToLevel(oldXp + xp);
+                        // lol
+                        switch((int) level) {
+                            case 10:
+                            case 25:
+                            case 50:
+                            case 100: {
+                                mewna().pluginManager().processEvent(EventType.PLAYER_EVENT,
+                                        new PlayerEvent(SystemUserEventType.GLOBAL_LEVEL, player,
+                                                new JsonObject().put("level", level)));
+                                break;
+                            }
+                            default: {
+                                break;
+                            }
+                        }
                     }
                 }
+    
+                final Guild guild = event.guild();
+                database().getOrBaseSettings(LevelsSettings.class, guild.id()).thenAccept(settings -> {
+                    if(!settings.isLevelsEnabled()) {
+                        return;
+                    }
+                    final ImmutablePair<Boolean, Long> localRes = mewna().ratelimiter()
+                            .checkUpdateRatelimit(event.message().author().id(), "chat-xp-local:" + guild.id(),
+                                    TimeUnit.MINUTES.toMillis(1));
+                    if(!localRes.left) {
+                        final long oldXp = player.getXp(guild);
+                        final long xp = getXp(player);
+                        mewna().statsClient().count("discord.backend.xpgained.local", xp);
+                        player.incrementLocalXp(guild, xp);
+                        database().savePlayer(player).join();
+                        if(isLevelUp(oldXp, oldXp + xp)) {
+                            // Emit level-up event so we can process it
+                            mewna().pluginManager().processEvent(EventType.LEVEL_UP, new LevelUpEvent(guild, event.message().channelId(),
+                                    event.user(), event.member(), xpToLevel(oldXp + xp), oldXp + xp));
+                        }
+                    }
+                });
             });
         });
     }
@@ -446,6 +448,6 @@ public class PluginLevels extends BasePlugin {
     }
     
     private long getXp(final Player player) {
-        return 10 + random().nextInt(10);
+        return 10 + random().nextInt(11);
     }
 }

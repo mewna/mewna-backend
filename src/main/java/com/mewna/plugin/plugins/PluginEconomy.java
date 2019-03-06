@@ -203,7 +203,7 @@ public class PluginEconomy extends BasePlugin {
         final int chance = random().nextInt(1000);
         if(chance < 125) {
             // win
-            final long reward = HEIST_BASE_COST * 10;
+            final long reward = HEIST_BASE_COST * 15;
             ctx.getPlayer().incrementBalance(reward);
             database().savePlayer(ctx.getPlayer()).thenAccept(__ ->
                     ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.heist.success")

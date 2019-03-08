@@ -179,6 +179,7 @@ public class PluginStaff extends BasePlugin {
                     } catch(final Exception e) {
                         ctx.sendMessage(Emotes.NO + " Invalid command usage!");
                     }
+                    break;
                 }
                 default: {
                     ctx.sendMessage(Emotes.NO);

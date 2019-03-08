@@ -127,7 +127,7 @@ public class PluginStaff extends BasePlugin {
         if(ctx.getArgs().size() < 3) {
             ctx.sendMessage("```CSS\n" +
                     "[ITEMS] grant item <user id> <item> <amount>\n" +
-                    "[GUILD EXP] grant exp <user id> <guild id> <amount>" +
+                    "[GUILD EXP] grant exp <user id> <guild id> <amount>\n" +
                     "```");
         } else {
             final String mode = ctx.getArgs().remove(0).toLowerCase();

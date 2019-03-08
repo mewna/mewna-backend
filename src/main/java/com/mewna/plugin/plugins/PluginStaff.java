@@ -1,11 +1,13 @@
 package com.mewna.plugin.plugins;
 
 import com.google.common.collect.ImmutableMap;
+import com.mewna.data.Player;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Command;
 import com.mewna.plugin.CommandContext;
 import com.mewna.plugin.Plugin;
+import com.mewna.plugin.plugins.economy.Item;
 import com.mewna.plugin.plugins.settings.*;
 import com.mewna.plugin.util.Emotes;
 import io.sentry.Sentry;
@@ -118,5 +120,70 @@ public class PluginStaff extends BasePlugin {
         sb.append("```");
         
         ctx.sendMessage(sb.toString());
+    }
+    
+    @Command(names = "grant", desc = "secret", usage = "sercet", examples = "secret", staff = true)
+    public void grant(final CommandContext ctx) {
+        if(ctx.getArgs().size() < 3) {
+            ctx.sendMessage("```CSS\n" +
+                    "[ITEMS] grant item <user id> <item> <amount>\n" +
+                    "[GUILD EXP] grant exp <user id> <guild id> <amount>" +
+                    "```");
+        } else {
+            final String mode = ctx.getArgs().remove(0).toLowerCase();
+            final String playerId = ctx.getArgs().get(0).replace("<@", "").replace(">", "");
+            switch(mode) {
+                case "item": {
+                    final Optional<Item> maybeItem = Arrays.stream(Item.values())
+                            .filter(e -> e.getName().equalsIgnoreCase(ctx.getArgs().get(1)))
+                            .findFirst();
+                    int amount = 1;
+                    if(ctx.getArgs().size() > 2) {
+                        try {
+                            amount = Integer.parseInt(ctx.getArgs().get(2));
+                        } catch(final Exception e) {
+                            ctx.sendMessage(Emotes.NO + " Invalid amount");
+                            return;
+                        }
+                    }
+                    if(maybeItem.isPresent()) {
+                        final Item item = maybeItem.get();
+                        final int finalAmount = amount;
+                        database().getOptionalPlayer(playerId, ctx.getProfiler()).thenAccept(o -> move(() -> {
+                            if(o.isPresent()) {
+                                final Player player = o.get();
+                                player.addAllToInventory(ImmutableMap.of(item, (long) finalAmount));
+                                database().savePlayer(player).thenAccept(__ -> ctx.sendMessage(Emotes.YES));
+                            } else {
+                                ctx.sendMessage(Emotes.NO + " No such player!");
+                            }
+                        }));
+                    } else {
+                        ctx.sendMessage(Emotes.NO + " No such item!");
+                    }
+                    break;
+                }
+                case "exp": {
+                    try {
+                        final String guildId = ctx.getArgs().get(1);
+                        final long amount = Long.parseLong(ctx.getArgs().get(1));
+                        database().getOptionalPlayer(playerId, ctx.getProfiler()).thenAccept(o -> move(() -> {
+                            if(o.isPresent()) {
+                                final Player player = o.get();
+                                player.setGuildXp(ImmutableMap.of(guildId, amount));
+                                database().savePlayer(player).thenAccept(__ -> ctx.sendMessage(Emotes.YES));
+                            } else {
+                                ctx.sendMessage(Emotes.NO + " No such player!");
+                            }
+                        }));
+                    } catch(final Exception e) {
+                        ctx.sendMessage(Emotes.NO + " Invalid command usage!");
+                    }
+                }
+                default: {
+                    ctx.sendMessage(Emotes.NO);
+                }
+            }
+        }
     }
 }

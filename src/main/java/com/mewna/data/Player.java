@@ -123,6 +123,13 @@ public class Player {
         }
     }
     
+    public void setLocalXp(final String id, final long amount) {
+        guildXp.put(id, amount);
+        if(guildXp.get(id) < 0L) {
+            guildXp.put(id, 0L);
+        }
+    }
+    
     public void incrementLocalXp(final Guild guild, final long amount) {
         incrementLocalXp(guild.id(), amount);
     }

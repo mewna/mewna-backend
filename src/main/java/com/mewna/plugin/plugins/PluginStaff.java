@@ -170,7 +170,7 @@ public class PluginStaff extends BasePlugin {
                         database().getOptionalPlayer(playerId, ctx.getProfiler()).thenAccept(o -> move(() -> {
                             if(o.isPresent()) {
                                 final Player player = o.get();
-                                player.incrementLocalXp(guildId, amount);
+                                player.setLocalXp(guildId, amount);
                                 database().savePlayer(player).thenAccept(__ -> ctx.sendMessage(Emotes.YES));
                             } else {
                                 ctx.sendMessage(Emotes.NO + " No such player!");

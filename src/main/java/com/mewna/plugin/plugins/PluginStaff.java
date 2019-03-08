@@ -166,11 +166,11 @@ public class PluginStaff extends BasePlugin {
                 case "exp": {
                     try {
                         final String guildId = ctx.getArgs().get(1);
-                        final long amount = Long.parseLong(ctx.getArgs().get(1));
+                        final long amount = Long.parseLong(ctx.getArgs().get(2));
                         database().getOptionalPlayer(playerId, ctx.getProfiler()).thenAccept(o -> move(() -> {
                             if(o.isPresent()) {
                                 final Player player = o.get();
-                                player.setGuildXp(ImmutableMap.of(guildId, amount));
+                                player.incrementLocalXp(guildId, amount);
                                 database().savePlayer(player).thenAccept(__ -> ctx.sendMessage(Emotes.YES));
                             } else {
                                 ctx.sendMessage(Emotes.NO + " No such player!");

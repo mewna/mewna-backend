@@ -129,6 +129,7 @@ public class PluginStaff extends BasePlugin {
                     "[ITEMS] grant item <user id> <item> <amount>\n" +
                     "[GUILD EXP] grant exp <user id> <guild id> <amount>\n" +
                     "[GUILD EXP] grant levels <user id> <guild id> <amount>\n" +
+                    "[MONEY] grant money <user id> <amount>\n" +
                     "```");
         } else {
             final String mode = ctx.getArgs().remove(0).toLowerCase();
@@ -190,6 +191,23 @@ public class PluginStaff extends BasePlugin {
                             if(o.isPresent()) {
                                 final Player player = o.get();
                                 player.setLocalXp(guildId, PluginLevels.fullLevelToXp(level));
+                                database().savePlayer(player).thenAccept(__ -> ctx.sendMessage(Emotes.YES));
+                            } else {
+                                ctx.sendMessage(Emotes.NO + " No such player!");
+                            }
+                        }));
+                    } catch(final Exception e) {
+                        ctx.sendMessage(Emotes.NO + " Invalid command usage!");
+                    }
+                    break;
+                }
+                case "money": {
+                    try {
+                        final long amount = Long.parseLong(ctx.getArgs().get(1));
+                        database().getOptionalPlayer(playerId, ctx.getProfiler()).thenAccept(o -> move(() -> {
+                            if(o.isPresent()) {
+                                final Player player = o.get();
+                                player.setBalance(amount);
                                 database().savePlayer(player).thenAccept(__ -> ctx.sendMessage(Emotes.YES));
                             } else {
                                 ctx.sendMessage(Emotes.NO + " No such player!");

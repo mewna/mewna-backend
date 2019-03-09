@@ -4,6 +4,7 @@ import com.mewna.Mewna;
 import com.mewna.accounts.Account;
 import com.mewna.accounts.timeline.TimelinePost;
 import com.mewna.catnip.entity.user.User;
+import com.mewna.catnip.util.SafeVertxCompletableFuture;
 import com.mewna.plugin.Plugin;
 import com.mewna.plugin.util.Snowflakes;
 import com.mewna.servers.ServerBlogPost;
@@ -28,6 +29,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /**
@@ -228,6 +230,17 @@ public class Database {
         if(!store.isMappedSync(type) && !store.isMappedAsync(type)) {
             throw new IllegalArgumentException("Attempted to get settings of type " + type.getName() + ", but it's not mapped!");
         }
+        final AtomicReference<T> cached = new AtomicReference<>(null);
+        redis(r -> {
+            final String json = r.get("mewna:settings:cache:" + type.getSimpleName() + ':' + id);
+            if(json != null) {
+                // logger.info("Reading settings {} for guild {} from cache", type.getSimpleName(), id);
+                cached.set(new JsonObject(json).mapTo(type));
+            }
+        });
+        if(cached.get() != null) {
+            return CompletableFuture.completedFuture(cached.get());
+        }
         return getSettingsByType(type, id)
                 .exceptionally(e -> {
                     Sentry.capture(e);
@@ -247,11 +260,22 @@ public class Database {
                         // Honestly I just couldn't think of a better way to do it......
                         final T settings = (T) maybe.refreshCommands().otherRefresh().join();
                         saveSettings(settings);
+                        // Cache 'em
+                        redis(r -> {
+                            // logger.info("Caching settings {} for guild {}", type.getSimpleName(), id);
+                            r.set("mewna:settings:cache:" + type.getSimpleName() + ':' + id,
+                                    JsonObject.mapFrom(settings).encode());
+                        });
                         return settings;
                     } else {
                         try {
                             final T base = type.getConstructor(String.class).newInstance(id);
                             saveSettings(base);
+                            redis(r -> {
+                                // logger.info("Caching settings {} for guild {}", type.getSimpleName(), id);
+                                r.set("mewna:settings:cache:" + type.getSimpleName() + ':' + id,
+                                        JsonObject.mapFrom(base).encode());
+                            });
                             return base;
                         } catch(final IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
                             Sentry.capture(e);
@@ -263,6 +287,12 @@ public class Database {
     
     @SuppressWarnings("unchecked")
     public <T extends PluginSettings> void saveSettings(final T settings) {
+        redis(r -> {
+            final String name = settings.getClass().getSimpleName();
+            final String id = settings.getId();
+            // logger.info("Deleting settings {} for guild {} from cache", name, id);
+            r.del("mewna:settings:cache:" + name + ':' + id);
+        });
         // This is technically valid
         store.mapSync((Class<T>) settings.getClass()).save(settings);
     }
@@ -275,12 +305,29 @@ public class Database {
         if(profiler != null) {
             profiler.section("playerMapAsync");
         }
-        return store.mapAsync(Player.class).load(id).exceptionally(e -> {
-            Sentry.capture(e);
-            // This is okay I promise ;-;
-            //noinspection OptionalAssignedToNull
-            return null;
+        final Player[] cached = {null};
+        redis(r -> {
+            final String json = r.get("mewna:player:cache:" + id);
+            if(json != null) {
+                // logger.info("Reading player {} from cache", id);
+                cached[0] = new JsonObject(json).mapTo(Player.class);
+            }
         });
+        if(cached[0] != null) {
+            return SafeVertxCompletableFuture.completedFuture(Optional.of(cached[0]));
+        }
+        return store.mapAsync(Player.class).load(id)
+                .thenApply(player -> {
+                    // logger.info("Caching player {}", id);
+                    redis(r -> r.set("mewna:player:cache:" + id, JsonObject.mapFrom(player).encode()));
+                    return player;
+                })
+                .exceptionally(e -> {
+                    Sentry.capture(e);
+                    // This is okay I promise ;-;
+                    //noinspection OptionalAssignedToNull
+                    return null;
+                });
     }
     
     public CompletableFuture<Player> getPlayer(final User user, final Profiler profiler) {
@@ -317,7 +364,11 @@ public class Database {
     
     public CompletableFuture<Void> savePlayer(final Player player) {
         player.cleanup();
-        return store.mapAsync(Player.class).save(player);
+        return store.mapAsync(Player.class).save(player)
+                .thenAccept(__ -> {
+                    // logger.info("Removing player {} from cache", player.getId());
+                    redis(r -> r.del("mewna:player:cache:" + player.getId()));
+                });
     }
     
     public void redis(final Consumer<Jedis> c) {

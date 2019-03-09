@@ -34,6 +34,8 @@ public interface PluginSettings {
         return settings;
     }
     
+    String getId();
+    
     Map<String, CommandSettings> getCommandSettings();
     
     PluginSettings refreshCommands();

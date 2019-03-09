@@ -368,9 +368,10 @@ public class CommandManager {
                             final CommandContext ctx = paymentCtx.toBuilder().cost(cost).build();
                             
                             profiler.section("exec");
-                            logger.info("Command: {}#{} ({}, account: {}) in {}#{}-{}: {} {}", user.username(), user.discriminator(),
-                                    user.id(), ctx.getAccount().id(), guild.id(), channelId, event.message().id(), commandName, argstr);
-                            mewna.statsClient().count("discord.backend.commands.run", 1, "name:" + cmd.getName());
+                            logger.info("Command: {}#{} ({}) in {}#{}-{}: {} {}", user.username(), user.discriminator(),
+                                    user.id(), guild.id(), channelId, event.message().id(), commandName, argstr);
+                            mewna.statsClient().count("discord.backend.commands.run", 1,
+                                    "name:" + cmd.getName());
                             
                             try {
                                 cmd.getMethod().invoke(cmd.getPlugin(), ctx);

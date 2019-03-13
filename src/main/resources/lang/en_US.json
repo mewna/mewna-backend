@@ -178,6 +178,7 @@
       "change-background": "You can change your background on your profile.",
       "change-background-description": "You can change your description and background on your profile.",
       "view-full-profile": "View full profile",
+      "render-error": "An error occured while rendering the card! Try again in a few minutes.",
       "commands": {
         "rank": {
           "generating": {

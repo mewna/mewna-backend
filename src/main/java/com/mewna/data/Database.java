@@ -391,10 +391,35 @@ public class Database {
     //////////////
     
     public Optional<Account> getAccountById(final String id) {
-        return store.mapSync(Account.class).load(id);
+        final AtomicReference<Optional<Account>> cached = new AtomicReference<>(null);
+        redis(r -> {
+            final String json = r.get("mewna:account:cache:" + id);
+            if(json != null) {
+                // logger.info("Reading settings {} for guild {} from cache", type.getSimpleName(), id);
+                cached.set(Optional.ofNullable(new JsonObject(json).mapTo(Account.class)));
+            }
+        });
+        if(cached.get().isPresent()) {
+            return cached.get();
+        }
+        final Optional<Account> loaded = store.mapSync(Account.class).load(id);
+        loaded.ifPresent(account -> redis(r -> r.set("mewna:account:cache:" + id, JsonObject.mapFrom(account).encode())));
+        return loaded;
     }
     
     public Optional<Account> getAccountByDiscordId(final String id) {
+        final AtomicReference<Optional<Account>> cached = new AtomicReference<>(null);
+        redis(r -> {
+            final String json = r.get("mewna:account:cache:id:" + id);
+            if(json != null) {
+                // logger.info("Reading settings {} for guild {} from cache", type.getSimpleName(), id);
+                cached.set(Optional.ofNullable(new JsonObject(json).mapTo(Account.class)));
+            }
+        });
+        if(cached.get().isPresent()) {
+            return cached.get();
+        }
+        
         final OptionalHolder<Account> holder = new OptionalHolder<>();
         
         store.sql("SELECT data FROM " + store.mapSync(Account.class).getTableName() + " WHERE data->>'discordAccountId' = ?;", p -> {
@@ -411,11 +436,17 @@ public class Database {
                 }
             }
         });
+    
+        holder.value.ifPresent(account -> redis(r -> r.set("mewna:account:cache:id:" + id, JsonObject.mapFrom(account).encode())));
         
         return holder.value;
     }
     
     public void saveAccount(final Account account) {
+        redis(r -> {
+            r.del("mewna:account:cache:" + account.id());
+            r.del("mewna:account:cache:id:" + account.discordAccountId());
+        });
         store.mapSync(Account.class).save(account);
     }
     

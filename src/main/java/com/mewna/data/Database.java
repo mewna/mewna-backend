@@ -399,7 +399,7 @@ public class Database {
                 cached.set(Optional.ofNullable(new JsonObject(json).mapTo(Account.class)));
             }
         });
-        if(cached.get().isPresent()) {
+        if(cached.get() != null && cached.get().isPresent()) {
             return cached.get();
         }
         final Optional<Account> loaded = store.mapSync(Account.class).load(id);
@@ -416,7 +416,7 @@ public class Database {
                 cached.set(Optional.ofNullable(new JsonObject(json).mapTo(Account.class)));
             }
         });
-        if(cached.get().isPresent()) {
+        if(cached.get() != null && cached.get().isPresent()) {
             return cached.get();
         }
         

@@ -323,6 +323,7 @@ public class Database {
                     return player;
                 })
                 .exceptionally(e -> {
+                    logger.info("Error fetching player {}", id, e);
                     Sentry.capture(e);
                     // This is okay I promise ;-;
                     //noinspection OptionalAssignedToNull

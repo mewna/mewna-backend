@@ -101,15 +101,20 @@ public class PluginStaff extends BasePlugin {
     public void trace(final CommandContext ctx) {
         ctx.getProfiler().end();
         final StringBuilder sb = new StringBuilder("```CSS\n");
+        sb.append("[PROFILER]\n");
         ctx.getProfiler().sections().forEach(section -> sb.append('[').append(section.name()).append("] ")
                 .append(section.end() - section.start()).append("ms\n"));
         sb.append('\n');
+        sb.append("[WORKER]\n");
         try {
             sb.append("[worker] ").append(InetAddress.getLocalHost().getHostName()).append('\n');
         } catch(final UnknownHostException e) {
             sb.append("[worker] unknown (check sentry)\n");
             Sentry.capture(e);
         }
+        sb.append("[image] ").append(System.getenv("IMAGE_NAME")).append('\n');
+        sb.append('\n');
+        sb.append("[CONTEXT]\n");
         // sb.append("[shard] ").append(0).append('\n');
         sb.append("[guild] ").append(ctx.getGuild().id()).append('\n');
         sb.append("[user] ").append(ctx.getUser().id()).append('\n');

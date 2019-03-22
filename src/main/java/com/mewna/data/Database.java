@@ -368,7 +368,8 @@ public class Database {
         return store.mapAsync(Player.class).save(player)
                 .thenAccept(__ -> {
                     // logger.info("Removing player {} from cache", player.getId());
-                    redis(r -> r.del("mewna:player:cache:" + player.getId()));
+                    // redis(r -> r.del("mewna:player:cache:" + player.getId()));
+                    redis(r -> r.set("mewna:player:cache:" + player.getId(), JsonObject.mapFrom(player).encode()));
                 });
     }
     

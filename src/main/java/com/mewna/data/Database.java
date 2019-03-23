@@ -135,7 +135,7 @@ public class Database {
     
     private void tryLock(final String key, final CompletableFuture<Boolean> future, final int tries) {
         final int timeout = 5;
-        final int maxTries = timeout * 50;
+        final int maxTries = timeout * 5;
         if(tries > maxTries) {
             future.complete(false);
         }

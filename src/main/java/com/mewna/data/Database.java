@@ -134,11 +134,13 @@ public class Database {
     }
     
     private void tryLock(final String key, final CompletableFuture<Boolean> future, final int tries) {
-        if(tries > 10) {
+        final int timeout = 5;
+        final int maxTries = timeout * 50;
+        if(tries > maxTries) {
             future.complete(false);
         }
         redis(c -> {
-            final String set = c.set(key, "value", "NX", "EX", 5);
+            final String set = c.set(key, "value", "NX", "EX", timeout);
             if("OK".equalsIgnoreCase(set)) {
                 future.complete(true);
             } else {

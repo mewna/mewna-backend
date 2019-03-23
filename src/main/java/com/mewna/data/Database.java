@@ -157,6 +157,7 @@ public class Database {
     
     public CompletableFuture<Boolean> lockPlayer(final String id) {
         // logger.info("Locking player: {}", id);
+        mewna.statsClient().increment("playerLocksTaken", 1);
         return lock("mewna:locks:players:" + id);
     }
     
@@ -166,6 +167,7 @@ public class Database {
     
     public void unlockPlayer(final String id) {
         // logger.info("Unlocking player: {}", id);
+        mewna.statsClient().increment("playerLocksReleased", 1);
         unlock("mewna:locks:players:" + id);
     }
     

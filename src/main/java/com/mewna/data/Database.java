@@ -46,7 +46,6 @@ public class Database {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     @Getter
     private final Map<String, Class<? extends PluginSettings>> pluginSettingsByName = new HashMap<>();
-    @SuppressWarnings("TypeMayBeWeakened")
     private final OkHttpClient client = new OkHttpClient();
     private boolean init;
     @Getter
@@ -107,6 +106,67 @@ public class Database {
             store.mapSync(c);
             store.mapAsync(c);
         }
+    }
+    
+    ///////////
+    // Redis //
+    ///////////
+    
+    public void redis(final Consumer<Jedis> c) {
+        try(final Jedis jedis = jedisPool.getResource()) {
+            jedis.auth(System.getenv("REDIS_PASS"));
+            c.accept(jedis);
+        }
+    }
+    
+    public void tredis(final Consumer<Transaction> t) {
+        redis(c -> {
+            final Transaction transaction = c.multi();
+            t.accept(transaction);
+            transaction.exec();
+        });
+    }
+    
+    public CompletableFuture<Boolean> lock(final String key) {
+        final CompletableFuture<Boolean> future = new CompletableFuture<>();
+        tryLock(key, future, 0);
+        return future;
+    }
+    
+    private void tryLock(final String key, final CompletableFuture<Boolean> future, final int tries) {
+        if(tries > 10) {
+            future.complete(false);
+        }
+        redis(c -> {
+            final String set = c.set(key, "value", "NX", "EX", 5);
+            if("OK".equalsIgnoreCase(set)) {
+                future.complete(true);
+            } else {
+                mewna.catnip().vertx().setTimer(100, __ -> tryLock(key, future, tries + 1));
+            }
+        });
+    }
+    
+    public void unlock(final String key) {
+        redis(c -> c.del(key));
+    }
+    
+    public CompletableFuture<Boolean> lockPlayer(final Player player) {
+        return lockPlayer(player.getId());
+    }
+    
+    public CompletableFuture<Boolean> lockPlayer(final String id) {
+        // logger.info("Locking player: {}", id);
+        return lock("mewna:locks:players:" + id);
+    }
+    
+    public void unlockPlayer(final Player player) {
+        unlockPlayer(player.getId());
+    }
+    
+    public void unlockPlayer(final String id) {
+        // logger.info("Unlocking player: {}", id);
+        unlock("mewna:locks:players:" + id);
     }
     
     //////////////
@@ -350,7 +410,7 @@ public class Database {
                             final Player base = Player.base(user.id());
                             savePlayer(base);
                             // If we don't have a player, then we also need to create an account for them
-                            if(!mewna.accountManager().getAccountByLinkedDiscord(user.id()).isPresent()) {
+                            if(mewna.accountManager().getAccountByLinkedDiscord(user.id()).isEmpty()) {
                                 mewna.accountManager().createNewDiscordLinkedAccount(base, user);
                             }
                             return base;
@@ -365,26 +425,19 @@ public class Database {
     
     public CompletableFuture<Void> savePlayer(final Player player) {
         player.cleanup();
-        return store.mapAsync(Player.class).save(player)
-                .thenAccept(__ -> {
-                    // logger.info("Removing player {} from cache", player.getId());
-                    redis(r -> r.del("mewna:player:cache:" + player.getId()));
-                });
-    }
-    
-    public void redis(final Consumer<Jedis> c) {
-        try(final Jedis jedis = jedisPool.getResource()) {
-            jedis.auth(System.getenv("REDIS_PASS"));
-            c.accept(jedis);
-        }
-    }
-    
-    public void tredis(final Consumer<Transaction> t) {
-        redis(c -> {
-            final Transaction transaction = c.multi();
-            t.accept(transaction);
-            transaction.exec();
-        });
+        return lockPlayer(player)
+                .thenApply(state -> {
+                    if(state) {
+                        return (Void) null;
+                    } else {
+                        throw new IllegalStateException("Tried to save player " + player.getId() + ", but couldn't lock!");
+                    }
+                }).thenCompose(__ -> store.mapAsync(Player.class).save(player)
+                        .thenAccept(___ -> {
+                            // logger.info("Removing player {} from cache", player.getId());
+                            redis(r -> r.del("mewna:player:cache:" + player.getId()));
+                            unlockPlayer(player);
+                        }));
     }
     
     //////////////
@@ -437,7 +490,7 @@ public class Database {
                 }
             }
         });
-    
+        
         holder.value.ifPresent(account -> redis(r -> r.set("mewna:account:cache:id:" + id, JsonObject.mapFrom(account).encode())));
         
         return holder.value;

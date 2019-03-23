@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * @author amy
@@ -80,6 +82,16 @@ public final class LevelsImporter {
                     // God this is gonna suck...
                     pages.forEach(page -> {
                         // Convert players
+    
+                        final List<MEE6Player> players = page.getJsonArray("players").stream()
+                                .map(e -> ((JsonObject) e).mapTo(MEE6Player.class))
+                                .collect(Collectors.toList());
+                        
+                        // Lock all players
+                        final List<CompletableFuture<?>> futures = new ArrayList<>();
+                        players.forEach(p -> futures.add(Mewna.getInstance().database().lockPlayer(p.getId())));
+                        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+    
                         Mewna.getInstance().database().getStore().sql("BEGIN TRANSACTION;");
                         page.getJsonArray("players").forEach(o -> {
                             final MEE6Player player = ((JsonObject) o).mapTo(MEE6Player.class);
@@ -103,6 +115,9 @@ public final class LevelsImporter {
                             */
                         });
                         Mewna.getInstance().database().getStore().sql("COMMIT;");
+                        // Unlock them again
+                        players.forEach(e -> Mewna.getInstance().database().unlock(e.getId()));
+                        
                         try {
                             Thread.sleep(1000L);
                         } catch(final InterruptedException e) {

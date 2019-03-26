@@ -201,9 +201,9 @@ public class PluginEconomy extends BasePlugin {
     @Command(names = "heist", desc = "commands.economy.heist", usage = "heist", examples = "heist")
     public void heist(final CommandContext ctx) {
         final int chance = random().nextInt(1000);
-        if(chance < 10) {
+        if(chance < 15) {
             // win
-            final long reward = HEIST_BASE_COST * 15;
+            final long reward = HEIST_BASE_COST * 20;
             ctx.getPlayer().incrementBalance(reward);
             database().savePlayer(ctx.getPlayer()).thenAccept(__ ->
                     ctx.sendMessage($(ctx.getLanguage(), "plugins.economy.commands.heist.success")

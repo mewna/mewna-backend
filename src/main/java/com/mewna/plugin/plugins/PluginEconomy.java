@@ -266,8 +266,6 @@ public class PluginEconomy extends BasePlugin {
             } else {
                 payout = roll[1][0].worth + payment;
             }
-            // TODO: Rare bonus chance like I always do
-            
             ctx.getPlayer().incrementBalance(payout);
             database().savePlayer(ctx.getPlayer()).thenAccept(__ -> {
                 if(roll[1][0] != BOOM) {
@@ -336,7 +334,6 @@ public class PluginEconomy extends BasePlugin {
     @Command(names = "gamble", desc = "commands.economy.gamble", usage = "gamble [amount]",
             examples = {"gamble", "gamble 100"})
     public void gamble(final CommandContext ctx) {
-        // TODO: Allow a way for a player to choose this
         final int playerWumpus = random().nextInt(GAMBLE_WUMPUS_COUNT) + 1;
         final int winningWumpus = random().nextInt(GAMBLE_WUMPUS_COUNT) + 1;
         
@@ -711,11 +708,6 @@ public class PluginEconomy extends BasePlugin {
         }
     }
     
-    /* // TODO
-    public boolean tryDropItem(final CommandContext ctx) {
-        return false;
-    }
-    */
     private Map<Item, Long> lootToMap(final Collection<Item> loot) {
         return loot.stream().collect(Collectors.groupingBy(e -> e, Collectors.counting()));
     }

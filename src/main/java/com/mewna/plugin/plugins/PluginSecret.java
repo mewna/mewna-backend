@@ -276,7 +276,7 @@ public class PluginSecret extends BasePlugin {
             ctx.sendMessage(Emotes.NO);
         } else {
             move(() -> {
-                final StringBuilder sb = new StringBuilder("Result: ");
+                final StringBuilder sb = new StringBuilder("Result:\n");
                 final String[] users = ctx.getArgs().remove(0).split(",");
                 final String reason = String.join(" ", ctx.getArgs());
                 for(final String user : users) {

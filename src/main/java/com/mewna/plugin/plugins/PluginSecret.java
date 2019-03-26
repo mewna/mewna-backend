@@ -31,6 +31,8 @@ import java.sql.ResultSet;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.mewna.util.Async.move;
+
 /**
  * @author amy
  * @since 10/18/18.
@@ -266,5 +268,32 @@ public class PluginSecret extends BasePlugin {
             catnip().rest().user().createDM(ctx.getUser().id())
                     .thenAccept(channel -> channel.sendMessage("Finished forcing twitch resub (" + ids.size() + " streamers)."));
         }).start();
+    }
+    
+    @Command(names = {"blacklist", "heck-off", "heckoff"}, desc = "", usage = "", examples = "", owner = true)
+    public void blacklist(final CommandContext ctx) {
+        if(ctx.getArgs().size() < 2) {
+            ctx.sendMessage(Emotes.NO);
+        } else {
+            move(() -> {
+                final StringBuilder sb = new StringBuilder("Result: ");
+                final String[] users = ctx.getArgs().remove(0).split(",");
+                final String reason = String.join(" ", ctx.getArgs());
+                for(final String user : users) {
+                    final Optional<Account> maybeAccount = database().getAccountById(user);
+                    if(maybeAccount.isPresent()) {
+                        final Account account = maybeAccount.get();
+                        account.banned(true);
+                        account.isBanned(true);
+                        account.banReason(reason);
+                        database().saveAccount(account);
+                        sb.append(Emotes.YES).append(' ').append(user).append('\n');
+                    } else {
+                        sb.append(Emotes.NO).append(' ').append(user).append('\n');
+                    }
+                }
+                ctx.sendMessage(sb.toString());
+            });
+        }
     }
 }

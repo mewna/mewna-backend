@@ -284,7 +284,7 @@ public class PluginSecret extends BasePlugin {
                     if(maybeAccount.isPresent()) {
                         final Account account = maybeAccount.get();
                         account.banned(true);
-                        account.isBanned(true);
+                        // account.isBanned(true);
                         account.banReason(reason);
                         database().saveAccount(account);
                         sb.append(Emotes.YES).append(' ').append(user).append('\n');

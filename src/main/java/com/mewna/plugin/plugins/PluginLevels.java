@@ -11,6 +11,7 @@ import com.mewna.catnip.rest.guild.MemberData;
 import com.mewna.catnip.shard.DiscordEvent.Raw;
 import com.mewna.catnip.util.SafeVertxCompletableFuture;
 import com.mewna.data.Player;
+import com.mewna.event.discord.DiscordGuildMemberAdd;
 import com.mewna.event.discord.DiscordMessageCreate;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Command;
@@ -31,8 +32,8 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.awt.*;
 import java.sql.ResultSet;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -218,6 +219,18 @@ public class PluginLevels extends BasePlugin {
         }
     }
     
+    @Event(Raw.GUILD_MEMBER_ADD)
+    public void handleJoinPersist(final DiscordGuildMemberAdd event) {
+        database().getPlayer(event.user(), null)
+                .thenAccept(player -> database().getOrBaseSettings(LevelsSettings.class, event.guild().id())
+                        .thenAccept(settings -> {
+                            final long xp = player.getXp(event.guild().id());
+                            final long level = xpToLevel(xp);
+                            removeAndAddRoleRewards(settings, event.guild(), event.member(), level, () -> {
+                            });
+                        }));
+    }
+    
     @Event(Raw.MESSAGE_CREATE)
     public void handleChatMessage(final DiscordMessageCreate event) {
         final User author = event.message().author();
@@ -250,7 +263,7 @@ public class PluginLevels extends BasePlugin {
                     }
                 }
             }
-
+            
             final Guild guild = event.guild();
             database().getOrBaseSettings(LevelsSettings.class, guild.id()).thenAccept(settings -> {
                 if(!settings.isLevelsEnabled()) {
@@ -318,7 +331,7 @@ public class PluginLevels extends BasePlugin {
                                         // lol
                                         // we do everything possible to guarantee that this should be safe
                                         // without doing a check here
-                                        //noinspection ConstantConditions,OptionalGetWithoutIsPresent
+                                        // noinspection OptionalGetWithoutIsPresent
                                         final Account account = database().getAccountByDiscordId(user.id()).get();
                                         final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.id();
                                         
@@ -392,7 +405,7 @@ public class PluginLevels extends BasePlugin {
                                             // lol
                                             // we do everything possible to guarantee that this should be safe
                                             // without doing a check here
-                                            //noinspection ConstantConditions,OptionalGetWithoutIsPresent
+                                            // noinspection OptionalGetWithoutIsPresent
                                             final Account account = database().getAccountByDiscordId(user.id()).get();
                                             final String profileUrl = System.getenv("DOMAIN") + "/profile/" + account.id();
                                             final byte[] cardBytes = Renderer.generateProfileCard(user, player);

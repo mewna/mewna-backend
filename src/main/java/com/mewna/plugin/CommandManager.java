@@ -101,7 +101,6 @@ public class CommandManager {
         }
     }
     
-    @SuppressWarnings("TypeMayBeWeakened")
     private CompletableFuture<List<String>> getAllPrefixes(final Guild guild, final Profiler profiler) {
         return mewna.database().getOrBaseSettings(BehaviourSettings.class, guild.id()).thenApply(settings -> {
             profiler.section("prefixesCleanup");
@@ -292,7 +291,6 @@ public class CommandManager {
                     }
                 }
                 profiler.section("playerStart");
-                //noinspection CodeBlock2Expr
                 mewna.database().getPlayer(user, profiler).thenAccept(player -> {
                     profiler.section("playerMove");
                     move(() -> {
@@ -306,12 +304,12 @@ public class CommandManager {
                         // ie. this will only really be necessary for ex.
                         // some levels imports.
                         Optional<Account> maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());
-                        if(!maybeAccount.isPresent()) {
+                        if(maybeAccount.isEmpty()) {
                             logger.error("No account present for Discord account {}!!!", user.id());
                             //Sentry.capture("No account present for Discord account: " + user.id());
                             mewna.accountManager().createNewDiscordLinkedAccount(player, user);
                             maybeAccount = mewna.accountManager().getAccountByLinkedDiscord(user.id());
-                            if(!maybeAccount.isPresent()) {
+                            if(maybeAccount.isEmpty()) {
                                 logger.error("No account present for Discord account {} after creation!?", user.id());
                                 Sentry.capture("No account present for Discord account despite creation: " + user.id());
                                 return;

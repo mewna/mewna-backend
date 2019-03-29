@@ -30,9 +30,9 @@ public class InternalSnowflake {
     /*
      * max values of timeStamp, workerId, datacenterId and sequence
      */
-    private final long maxDatacenterId = -1L ^ -1L << datacenterIdBits; // 2^5-1
-    private final long maxWorkerId = -1L ^ -1L << workerIdBits; // 2^5-1
-    private final long maxSequence = -1L ^ -1L << sequenceBits; // 2^12-1
+    private final long maxDatacenterId = ~(-1L << datacenterIdBits); // 2^5-1
+    private final long maxWorkerId = ~(-1L << workerIdBits); // 2^5-1
+    private final long maxSequence = ~(-1L << sequenceBits); // 2^12-1
     
     /**
      * left shift bits of timeStamp, workerId and datacenterId

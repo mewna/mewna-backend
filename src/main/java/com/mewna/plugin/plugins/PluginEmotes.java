@@ -19,11 +19,11 @@ public class PluginEmotes extends BasePlugin {
             examples = {"bap someone", "stab someone else", "poke everyone"}, aliased = false)
     public void emote(final CommandContext ctx) {
         if(ctx.getArgstr().isEmpty()) {
-            ctx.sendMessage( "You need to tell me who you're doing that to.");
+            ctx.sendMessage("You need to tell me who you're doing that to.");
             return;
         }
         
-        final String action = $(ctx.getLanguage(), "plugins.emotes.commands."+ctx.getCommand());
+        final String action = $(ctx.getLanguage(), "plugins.emotes.commands." + ctx.getCommand());
         final String base = $(ctx.getLanguage(), "plugins.emotes.base");
         final String out = base
                 .replace("$target", ctx.getArgstr())
@@ -31,7 +31,7 @@ public class PluginEmotes extends BasePlugin {
                 .replace("$action", action)
                 .replace("@everyone", "very funny")
                 .replace("@here", "very funny");
-
+        
         ctx.sendMessage(out);
     }
 }

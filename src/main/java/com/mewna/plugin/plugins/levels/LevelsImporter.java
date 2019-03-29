@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -90,30 +92,36 @@ public final class LevelsImporter {
                         // Lock all players
                         final List<CompletableFuture<?>> futures = new ArrayList<>();
                         players.forEach(p -> futures.add(Mewna.getInstance().database().lockPlayer(p.getId())));
-                        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
                         
-                        Mewna.getInstance().database().getStore().sql("BEGIN TRANSACTION;");
+                        final Collection<Runnable> statements = new LinkedList<>();
                         page.getJsonArray("players").forEach(o -> {
                             final MEE6Player player = ((JsonObject) o).mapTo(MEE6Player.class);
                             
-                            Mewna.getInstance().database().getStore().sql("INSERT INTO players (id, data) VALUES (?, to_jsonb(?::jsonb)) " +
-                                            "ON CONFLICT (id) DO UPDATE " +
-                                            "SET data = jsonb_set(players.data, '{guildXp, " + guild + "}', '" + player.getXp() + "');",
-                                    c -> {
-                                        c.setString(1, player.getId());
-                                        final Player p = new Player();
-                                        p.setId(player.getId());
-                                        c.setString(2, JsonObject.mapFrom(p).encode());
-                                        c.execute();
-                                    });
-                            // TODO: INSERT INTO accounts ... ON CONFLICT DO NOTHING;
-                            /*
-                            if(!Mewna.getInstance().accountManager().getAccountByLinkedDiscord(player.getId()).isPresent()) {
-                                Mewna.getInstance().accountManager().createNewDiscordLinkedAccount(null,
-                                        new UserImpl().avatar(player.getAvatar()).username(player.getUsername()).discriminator(player.getDiscriminator()));
-                            }
-                            */
+                            statements.add(() -> {
+                                Mewna.getInstance().database().getStore().sql("INSERT INTO players (id, data) VALUES (?, to_jsonb(?::jsonb)) " +
+                                                "ON CONFLICT (id) DO UPDATE " +
+                                                "SET data = jsonb_set(players.data, '{guildXp, " + guild + "}', '" + player.getXp() + "');",
+                                        c -> {
+                                            c.setString(1, player.getId());
+                                            final Player p = new Player();
+                                            p.setId(player.getId());
+                                            c.setString(2, JsonObject.mapFrom(p).encode());
+                                            c.execute();
+                                        });
+                                // TODO: INSERT INTO accounts ... ON CONFLICT DO NOTHING;
+                                /*
+                                if(!Mewna.getInstance().accountManager().getAccountByLinkedDiscord(player.getId()).isPresent()) {
+                                    Mewna.getInstance().accountManager().createNewDiscordLinkedAccount(null,
+                                            new UserImpl().avatar(player.getAvatar()).username(player.getUsername()).discriminator(player.getDiscriminator()));
+                                }
+                                */
+                            });
                         });
+                        
+                        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+                        
+                        Mewna.getInstance().database().getStore().sql("BEGIN TRANSACTION;");
+                        statements.forEach(Runnable::run);
                         Mewna.getInstance().database().getStore().sql("COMMIT;");
                         // Unlock them again
                         players.forEach(e -> {

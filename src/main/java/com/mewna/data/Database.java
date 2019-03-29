@@ -134,8 +134,10 @@ public class Database {
     }
     
     private void tryLock(final String key, final CompletableFuture<Boolean> future, final int tries) {
-        final int timeout = 5;
-        final int maxTries = timeout * 5;
+        // I really don't know???
+        // Somehow it's deadlocking???
+        final int timeout = 30;
+        final int maxTries = 10;
         if(tries > maxTries) {
             future.complete(false);
         }

@@ -2,7 +2,7 @@ package com.mewna.data;
 
 import com.mewna.Mewna;
 import com.mewna.plugin.CommandManager.CommandWrapper;
-import gg.amy.singyeong.SafeVertxCompletableFuture;
+import gg.amy.vertx.SafeVertxCompletableFuture;
 import io.sentry.Sentry;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
  * @author amy
  * @since 5/19/18.
  */
-@SuppressWarnings("InterfaceMayBeAnnotatedFunctional")
 public interface PluginSettings {
     static <T> List<String> commandsOwnedByPlugin(final Class<T> cls) {
         return Mewna.getInstance().commandManager().getCommandsForPlugin(cls).stream().map(CommandWrapper::getBaseName)

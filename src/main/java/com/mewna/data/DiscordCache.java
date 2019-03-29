@@ -14,7 +14,7 @@ import com.mewna.catnip.entity.impl.VoiceChannelImpl;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.user.VoiceState;
 import gg.amy.singyeong.QueryBuilder;
-import gg.amy.singyeong.SafeVertxCompletableFuture;
+import gg.amy.vertx.SafeVertxCompletableFuture;
 import io.sentry.Sentry;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;

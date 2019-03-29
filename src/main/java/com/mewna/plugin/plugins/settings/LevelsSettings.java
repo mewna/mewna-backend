@@ -10,7 +10,7 @@ import com.mewna.plugin.plugins.PluginLevels;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
-import gg.amy.singyeong.SafeVertxCompletableFuture;
+import gg.amy.vertx.SafeVertxCompletableFuture;
 import io.sentry.Sentry;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -94,6 +94,7 @@ public class LevelsSettings implements PluginSettings {
     @Override
     public boolean validateSettings(final JsonObject data) {
         for(final String key : data.fieldNames()) {
+            //noinspection SwitchStatementWithTooFewBranches
             switch(key) {
                 case "levelUpMessage": {
                     final Optional<String> maybeData = Optional.ofNullable(data.getString(key, null));

@@ -235,6 +235,10 @@ public class PluginLevels extends BasePlugin {
     public void handleChatMessage(final DiscordMessageCreate event) {
         final User author = event.message().author();
         database().getPlayer(author, null).thenAccept(player -> move(() -> {
+            final Account account = player.getAccount();
+            if(account.banned()) {
+                return;
+            }
             final ImmutablePair<Boolean, Long> globalRes = mewna().ratelimiter()
                     .checkUpdateRatelimit(author.id(), "chat-xp-global", TimeUnit.MINUTES.toMillis(10));
             if(!globalRes.left) {

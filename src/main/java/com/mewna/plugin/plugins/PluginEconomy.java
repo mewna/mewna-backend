@@ -3,8 +3,8 @@ package com.mewna.plugin.plugins;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.mewna.catnip.entity.builder.EmbedBuilder;
-import com.mewna.catnip.entity.builder.MessageBuilder;
 import com.mewna.catnip.entity.guild.Guild;
+import com.mewna.catnip.entity.message.MessageOptions;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.util.SafeVertxCompletableFuture;
 import com.mewna.data.DiscordCache;
@@ -127,7 +127,7 @@ public class PluginEconomy extends BasePlugin {
             final long nextMillis = TimeUnit.SECONDS.toMillis(last.toLocalDate().plusDays(1).atStartOfDay(zone).toEpochSecond());
             final long nowMillis = TimeUnit.SECONDS.toMillis(now.toEpochSecond(zone.getRules().getOffset(now)));
             ctx.sendMessage(
-                    new MessageBuilder()
+                    new MessageOptions()
                             .content($(ctx.getLanguage(), "plugins.economy.commands.daily.failure-wait")
                                     .replace("$time", Time.toHumanReadableDuration(nextMillis - nowMillis)))
                             .embed(new EmbedBuilder()
@@ -136,8 +136,7 @@ public class PluginEconomy extends BasePlugin {
                                             .replace("$link", "https://discordbots.org/bot/251930037673132032/vote")
                                             .replace("$amount", VOTE_BONUS + "")
                                             .replace("$symbol", helper.getCurrencySymbol(ctx)))
-                                    .build())
-                            .build());
+                                    .build()));
             return;
         }
         tryDropBox(ctx).thenAccept(__ -> {
@@ -168,7 +167,7 @@ public class PluginEconomy extends BasePlugin {
             player.updateLastDaily();
             final String finalMsg = msg;
             database().savePlayer(player).thenAccept(___ -> ctx.sendMessage(
-                    new MessageBuilder()
+                    new MessageOptions()
                             .content(finalMsg)
                             .embed(new EmbedBuilder()
                                     .title("Hint")
@@ -176,8 +175,7 @@ public class PluginEconomy extends BasePlugin {
                                             .replace("$link", "https://discordbots.org/bot/251930037673132032/vote")
                                             .replace("$amount", VOTE_BONUS + "")
                                             .replace("$symbol", helper.getCurrencySymbol(ctx)))
-                                    .build())
-                            .build()));
+                                    .build())));
         });
     }
     

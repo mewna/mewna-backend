@@ -17,9 +17,8 @@ import com.mewna.plugin.plugins.settings.MusicSettings;
 import com.mewna.plugin.util.Emotes;
 import com.mewna.util.Time;
 import gg.amy.singyeong.QueryBuilder;
-import gg.amy.singyeong.SafeVertxCompletableFuture;
+import gg.amy.vertx.SafeVertxCompletableFuture;
 import io.sentry.Sentry;
-import io.sentry.event.EventBuilder;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 

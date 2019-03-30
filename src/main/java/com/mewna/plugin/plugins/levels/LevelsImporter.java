@@ -97,6 +97,15 @@ public final class LevelsImporter {
                         page.getJsonArray("players").forEach(o -> {
                             final MEE6Player player = ((JsonObject) o).mapTo(MEE6Player.class);
                             
+                            // This looks really dumb. I know.
+                            // That's because it is.
+                            // My current theory is that when running this transaction, deserializing everything into JSON
+                            // takes too long. This causes the transaction to run slowly, and ALSO causes the player locks to
+                            // expire. This means that other stuff tries to write to those players, but we're ALREADY holding
+                            // a lock on these players for doing the transaction! This makes postgres deadlock, which takes
+                            // around 30 seconds to be detected iirc. This, of course, leads to the meme pile of issues that
+                            // we've been seeing lately...
+                            // TODO: Verify that this is actually the cause
                             statements.add(() -> {
                                 Mewna.getInstance().database().getStore().sql("INSERT INTO players (id, data) VALUES (?, to_jsonb(?::jsonb)) " +
                                                 "ON CONFLICT (id) DO UPDATE " +

@@ -3,7 +3,6 @@ package com.mewna.plugin.plugins;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mewna.catnip.entity.builder.EmbedBuilder;
-import com.mewna.catnip.entity.message.MessageOptions;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.data.DiscordCache;
 import com.mewna.data.Player.ClickerBuildings;
@@ -370,9 +369,8 @@ public class PluginMisc extends BasePlugin {
         final long start = System.currentTimeMillis();
         ctx.getProfiler().section("startPing");
         ctx.sendMessage("Pinging...").thenAccept(msg -> {
-            ctx.getProfiler().section("edit");
             final long end = System.currentTimeMillis();
-            msg.edit(new MessageOptions().content("Pong! (took " + (end - start) + "ms)").buildMessage()).thenAccept(_msg -> {
+            msg.edit("Pong! (took " + (end - start) + "ms)").thenAccept(_msg -> {
                 ctx.getProfiler().end();
                 if(ctx.getArgstr().equalsIgnoreCase("--profile")
                         && ctx.getUser().id().equalsIgnoreCase("128316294742147072")) {
@@ -391,6 +389,9 @@ public class PluginMisc extends BasePlugin {
                     
                     ctx.sendMessage(sb.toString());
                 }
+            }).exceptionally(e -> {
+                e.printStackTrace();
+                return null;
             });
         });
     }

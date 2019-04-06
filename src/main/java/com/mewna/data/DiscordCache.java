@@ -73,7 +73,7 @@ public final class DiscordCache {
                                     .filter(e -> {
                                         // ugh
                                         // TODO: Figure out better deserialization
-                                        return !e.getJsonObject("d").getString("@c").equalsIgnoreCase(".CategoryImpl");
+                                        return !e.getJsonObject("d").getString("@c").toLowerCase().contains("category");
                                     })
                                     .map(e -> {
                                         final ChannelType channelType = e.getJsonObject("d").getString("@c").equals(".TextChannelImpl") ? ChannelType.TEXT : ChannelType.VOICE;

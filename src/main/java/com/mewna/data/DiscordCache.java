@@ -73,10 +73,11 @@ public final class DiscordCache {
                                     .filter(e -> {
                                         // ugh
                                         // TODO: Figure out better deserialization
-                                        return !e.getJsonObject("d").getString("@c").toLowerCase().contains("category");
+                                        return !e.getJsonObject("d").getString("@class").contains("Category");
                                     })
                                     .map(e -> {
-                                        final ChannelType channelType = e.getJsonObject("d").getString("@c").equals(".TextChannelImpl") ? ChannelType.TEXT : ChannelType.VOICE;
+                                        final ChannelType channelType = e.getJsonObject("d").getString("@class")
+                                                .contains("TextChannel") ? ChannelType.TEXT : ChannelType.VOICE;
                                         if(channelType == ChannelType.TEXT) {
                                             return Entity.fromJson(Mewna.getInstance().catnip(), TextChannelImpl.class, e);
                                         } else {

@@ -351,8 +351,8 @@ public class Player {
         POTATO_CHIP_FACTORY("potatochipfactory", "Turn tato into french chips to boost output.",                        T2, 5000L,  BigDecimal.valueOf(1000L),    Item.FRIES, Item.BURGER, Item.BOOT),
         FOOD_TRUCK(         "foodtruck",         "Cart out tato faster for extra income.",                              T3, 10000L, BigDecimal.valueOf(30000L),   Item.FRIES, Item.BURGER, Item.HOTDOG, Item.PASTA, Item.RAMEN, Item.FISH, Item.TROPICAL_FISH, Item.BURRITO),
         TATO_TEMPLE(        "tatotemple",        "Worship the Almighty Tato for mining blessings.",                     T4, 30000L, BigDecimal.valueOf(50000L),   Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE),
-        TATO_PORTAL(        "tatoportal",        "Open a portal to the Tato Dimension for even more tato!",             T8, 10000L, BigDecimal.valueOf(250000L),  Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE, Item.RAMEN, Item.TACO),
-        ASCENDED_MEWNA(     "ascendedmewna",     "A Mewna who has ascended to godhood and produces tato from nothing.", T9, 30000L, BigDecimal.valueOf(2000000L), Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE, Item.RAMEN, Item.TACO),
+        TATO_PORTAL(        "tatoportal",        "Open a portal to the Tato Dimension for even more tato!",             T7, 10000L, BigDecimal.valueOf(250000L),  Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE, Item.RAMEN, Item.TACO),
+        ASCENDED_MEWNA(     "ascendedmewna",     "A Mewna who has ascended to godhood and produces tato from nothing.", T8, 30000L, BigDecimal.valueOf(2000000L), Item.FRIES, Item.BOOT, Item.WEED, Item.FISH, Item.PICKAXE, Item.FISHING_ROD, Item.STAR, Item.DIAMOND, Item.PIZZA, Item.WHALE, Item.RAMEN, Item.TACO),
         ;
     
         // @formatter:off

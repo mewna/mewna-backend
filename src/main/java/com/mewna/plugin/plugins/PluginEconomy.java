@@ -691,7 +691,6 @@ public class PluginEconomy extends BasePlugin {
                                     .replace("$box", box.getName()))
                             .thenAccept(___ -> future.complete(null))
                             .exceptionally(e -> {
-                                Sentry.capture(e);
                                 future.complete(null);
                                 return null;
                             }))

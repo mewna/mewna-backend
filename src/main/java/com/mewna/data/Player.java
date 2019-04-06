@@ -302,7 +302,7 @@ public class Player {
     // TODO: This is kinda dumb tbqh
     @JsonIgnore
     public Account getAccount() {
-        //noinspection ConstantConditions,OptionalGetWithoutIsPresent
+        // noinspection OptionalGetWithoutIsPresent
         return Mewna.getInstance().database().getAccountByDiscordId(id).get();
     }
     

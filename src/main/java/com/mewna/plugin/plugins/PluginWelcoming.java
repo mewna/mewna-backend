@@ -10,7 +10,6 @@ import com.mewna.plugin.Plugin;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.plugins.settings.WelcomingSettings;
 import com.mewna.util.Templater;
-import io.sentry.Sentry;
 import io.vertx.core.json.JsonObject;
 
 import java.util.HashMap;
@@ -22,7 +21,7 @@ import java.util.Map;
  */
 @Plugin(name = "Welcoming", desc = "Hello and goodbye to your server's members.", settings = WelcomingSettings.class)
 public class PluginWelcoming extends BasePlugin {
-    private Templater map(@SuppressWarnings("TypeMayBeWeakened") final Guild guild, final User user) {
+    private Templater map(final Guild guild, final User user) {
         final Map<String, String> data = new HashMap<>();
         final JsonObject jGuild = JsonObject.mapFrom(guild);
         for(final String key : jGuild.fieldNames()) {
@@ -54,10 +53,7 @@ public class PluginWelcoming extends BasePlugin {
             }
             final String roleId = settings.getJoinRoleId();
             if(roleId != null && !roleId.isEmpty()) {
-                catnip().rest().guild().addGuildMemberRole(guildId, event.member().id(), roleId).exceptionally(e -> {
-                    Sentry.capture(e);
-                    return null;
-                });
+                catnip().rest().guild().addGuildMemberRole(guildId, event.member().id(), roleId).exceptionally(e -> null);
             }
         });
     }

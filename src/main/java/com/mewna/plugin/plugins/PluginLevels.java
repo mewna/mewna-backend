@@ -235,7 +235,13 @@ public class PluginLevels extends BasePlugin {
     public void handleChatMessage(final DiscordMessageCreate event) {
         final User author = event.message().author();
         database().getPlayer(author, null).thenAccept(player -> move(() -> {
-            final Account account = player.getAccount();
+            Account account;
+            try {
+                account = player.getAccount();
+            } catch(final NoSuchElementException e) {
+                mewna().accountManager().createNewDiscordLinkedAccount(player, author);
+                account = player.getAccount();
+            }
             if(account.banned()) {
                 return;
             }

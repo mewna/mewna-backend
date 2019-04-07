@@ -140,6 +140,8 @@ public class PluginStaff extends BasePlugin {
         
                     "[GLOBAL EXP] grant globalexp <user id> <amount>\n" +
                     "[GLOBAL EXP] grant globallevels <user id> <amount>\n\n" +
+                    
+                    "[DAILY] grant daily <user id> <streak amount>\n" +
                     "```");
         } else {
             final String mode = ctx.getArgs().remove(0).toLowerCase();

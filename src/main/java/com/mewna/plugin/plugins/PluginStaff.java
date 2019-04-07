@@ -131,10 +131,15 @@ public class PluginStaff extends BasePlugin {
     public void grant(final CommandContext ctx) {
         if(ctx.getArgs().size() < 3) {
             ctx.sendMessage("```CSS\n" +
-                    "[ITEMS] grant item <user id> <item> <amount>\n" +
+                    "[ITEMS] grant item <user id> <item> <amount>\n\n" +
+        
+                    "[MONEY] grant money <user id> <amount>\n\n" +
+                    
                     "[GUILD EXP] grant exp <user id> <guild id> <amount>\n" +
-                    "[GUILD EXP] grant levels <user id> <guild id> <amount>\n" +
-                    "[MONEY] grant money <user id> <amount>\n" +
+                    "[GUILD EXP] grant levels <user id> <guild id> <amount>\n\n" +
+        
+                    "[GLOBAL EXP] grant globalexp <user id> <amount>\n" +
+                    "[GLOBAL EXP] grant globallevels <user id> <amount>\n\n" +
                     "```");
         } else {
             final String mode = ctx.getArgs().remove(0).toLowerCase();
@@ -213,6 +218,58 @@ public class PluginStaff extends BasePlugin {
                             if(o.isPresent()) {
                                 final Player player = o.get();
                                 player.setBalance(amount);
+                                database().savePlayer(player).thenAccept(__ -> ctx.sendMessage(Emotes.YES));
+                            } else {
+                                ctx.sendMessage(Emotes.NO + " No such player!");
+                            }
+                        }));
+                    } catch(final Exception e) {
+                        ctx.sendMessage(Emotes.NO + " Invalid command usage!");
+                    }
+                    break;
+                }
+                case "globalexp": {
+                    try {
+                        final long amount = Long.parseLong(ctx.getArgs().get(1));
+                        database().getOptionalPlayer(playerId, ctx.getProfiler()).thenAccept(o -> move(() -> {
+                            if(o.isPresent()) {
+                                final Player player = o.get();
+                                player.setGlobalXp(amount);
+                                database().savePlayer(player).thenAccept(__ -> ctx.sendMessage(Emotes.YES));
+                            } else {
+                                ctx.sendMessage(Emotes.NO + " No such player!");
+                            }
+                        }));
+                    } catch(final Exception e) {
+                        ctx.sendMessage(Emotes.NO + " Invalid command usage!");
+                    }
+                    break;
+                }
+                case "globallevels": {
+                    try {
+                        final int level = Integer.parseInt(ctx.getArgs().get(1));
+                        database().getOptionalPlayer(playerId, ctx.getProfiler()).thenAccept(o -> move(() -> {
+                            if(o.isPresent()) {
+                                final Player player = o.get();
+                                player.setGlobalXp(PluginLevels.fullLevelToXp(level));
+                                database().savePlayer(player).thenAccept(__ -> ctx.sendMessage(Emotes.YES));
+                            } else {
+                                ctx.sendMessage(Emotes.NO + " No such player!");
+                            }
+                        }));
+                    } catch(final Exception e) {
+                        ctx.sendMessage(Emotes.NO + " Invalid command usage!");
+                    }
+                    break;
+                }
+                case "daily": {
+                    try {
+                        final int streak = Integer.parseInt(ctx.getArgs().get(1));
+                        database().getOptionalPlayer(playerId, ctx.getProfiler()).thenAccept(o -> move(() -> {
+                            if(o.isPresent()) {
+                                final Player player = o.get();
+                                player.setDailyStreak(streak);
+                                player.setLastDaily(System.currentTimeMillis());
                                 database().savePlayer(player).thenAccept(__ -> ctx.sendMessage(Emotes.YES));
                             } else {
                                 ctx.sendMessage(Emotes.NO + " No such player!");

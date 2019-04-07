@@ -41,6 +41,7 @@ public final class LevelsImporter {
             boolean exception = false;
             int currentPage = 0;
             while(true) {
+                JsonObject json = null;
                 try {
                     // Don't care about the possible npe b/c we catch it anyway
                     @SuppressWarnings({"UnnecessarilyQualifiedInnerClassAccess", "ConstantConditions"})
@@ -48,7 +49,7 @@ public final class LevelsImporter {
                             .url(MEE6_IMPORTER.replace("$guild", guild).replace("$page", currentPage + ""))
                             .get()
                             .build()).execute().body().string();
-                    final JsonObject json = new JsonObject(res);
+                    json = new JsonObject(res);
                     pages.add(json);
                     if(json.getJsonArray("players").isEmpty()) {
                         // Ran out of pages
@@ -58,8 +59,8 @@ public final class LevelsImporter {
                         Thread.sleep(100L);
                         ++currentPage;
                     }
-                } catch(Exception e) {
-                    Sentry.capture(e);
+                } catch(final Exception e) {
+                    Sentry.capture(new RuntimeException(json != null ? json.encode() : "<no json available>", e));
                     e.printStackTrace();
                     exception = true;
                     break;

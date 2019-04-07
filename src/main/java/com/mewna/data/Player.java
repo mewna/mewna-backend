@@ -320,7 +320,7 @@ public class Player {
         T8  (8,  "Found By YouTube",   BigDecimal.valueOf(        1_000_000_000_000L)), // 1t
         T9  (9,  "Caliconnoisseur",    BigDecimal.valueOf(    1_000_000_000_000_000L)), // 1qd
         T10 (10, "Uses Litterbox",     BigDecimal.valueOf(1_000_000_000_000_000_000L)), // 1qt
-        ; // Long.MAX_VALUE for comparison            9_223_372_036_854_775_807L
+        ; // Long.MAX_VALUE for comparison                            9_223_372_036_854_775_807L
     
         // @formatter:on
         @Getter

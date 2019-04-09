@@ -1,5 +1,6 @@
 package com.mewna.plugin.plugins.levels;
 
+import com.google.common.collect.Lists;
 import com.mewna.Mewna;
 import com.mewna.data.Player;
 import com.mewna.plugin.plugins.levels.mee6.MEE6Player;
@@ -89,11 +90,7 @@ public final class LevelsImporter {
                         final List<MEE6Player> players = page.getJsonArray("players").stream()
                                 .map(e -> ((JsonObject) e).mapTo(MEE6Player.class))
                                 .collect(Collectors.toList());
-                        
-                        // Lock all players
-                        final List<CompletableFuture<?>> futures = new ArrayList<>();
-                        players.forEach(p -> futures.add(Mewna.getInstance().database().lockPlayer(p.getId())));
-                        
+    
                         final Collection<Runnable> statements = new LinkedList<>();
                         page.getJsonArray("players").forEach(o -> {
                             final MEE6Player player = ((JsonObject) o).mapTo(MEE6Player.class);
@@ -128,6 +125,9 @@ public final class LevelsImporter {
                             });
                         });
                         
+                        // Lock all players
+                        final List<CompletableFuture<?>> futures = new ArrayList<>();
+                        players.forEach(p -> futures.add(Mewna.getInstance().database().lockPlayer(p.getId())));
                         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
                         
                         Mewna.getInstance().database().getStore().sql("BEGIN TRANSACTION;");

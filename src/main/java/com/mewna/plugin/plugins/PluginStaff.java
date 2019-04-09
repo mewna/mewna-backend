@@ -12,6 +12,7 @@ import com.mewna.plugin.plugins.settings.*;
 import com.mewna.plugin.util.Emotes;
 import io.sentry.Sentry;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -102,8 +103,15 @@ public class PluginStaff extends BasePlugin {
         ctx.getProfiler().end();
         final StringBuilder sb = new StringBuilder("```CSS\n");
         sb.append("[PROFILER]\n");
-        ctx.getProfiler().sections().forEach(section -> sb.append('[').append(section.name()).append("] ")
-                .append(section.end() - section.start()).append("ms\n"));
+        final Optional<Integer> maxLength = ctx.getProfiler().sections().stream()
+                .map(e -> '[' + e.name() + ']')
+                .map(String::length)
+                .max(Integer::compareTo);
+        final int max = maxLength.orElse(0);
+        ctx.getProfiler().sections().forEach(section -> {
+            final String formatted = StringUtils.leftPad('[' + section.name() + ']', max, ' ');
+            sb.append(formatted).append(' ').append(section.end() - section.start()).append("ms\n");
+        });
         sb.append('\n');
         sb.append("[WORKER]\n");
         try {
@@ -112,15 +120,15 @@ public class PluginStaff extends BasePlugin {
             sb.append("[worker] unknown (check sentry)\n");
             Sentry.capture(e);
         }
-        sb.append("[image] ").append(System.getenv("IMAGE_NAME")).append('\n');
+        sb.append(" [image] ").append(System.getenv("IMAGE_NAME")).append('\n');
         sb.append('\n');
         sb.append("[CONTEXT]\n");
         // sb.append("[shard] ").append(0).append('\n');
-        sb.append("[guild] ").append(ctx.getGuild().id()).append('\n');
-        sb.append("[user] ").append(ctx.getUser().id()).append('\n');
+        sb.append("  [guild] ").append(ctx.getGuild().id()).append('\n');
+        sb.append("   [user] ").append(ctx.getUser().id()).append('\n');
         sb.append("[message] ").append(ctx.getMessage().id()).append('\n');
-        sb.append("[ts] ").append(ctx.getSource().timestamp()).append('\n');
-        sb.append("[sender] ").append(ctx.getSource().sender()).append('\n');
+        sb.append("     [ts] ").append(ctx.getSource().timestamp()).append('\n');
+        sb.append(" [sender] ").append(ctx.getSource().sender()).append('\n');
         
         sb.append("```");
         

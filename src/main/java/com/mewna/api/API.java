@@ -27,7 +27,6 @@ public class API {
             new GuildRoutes(),
             new ImportRoutes(),
             new BlogRoutes(),
-            new StoreRoutes(),
             new MetadataRoutes(),
             new PlayerRoutes(),
             
@@ -35,9 +34,8 @@ public class API {
             new ConfigRoutes()
     );
     
-    @SuppressWarnings({"CodeBlock2Expr", "UnnecessarilyQualifiedInnerClassAccess"})
     public void start() {
-        logger.info("Starting API server...");
+            logger.info("Starting API server...");
         final HttpServer server = mewna.vertx().createHttpServer();
         final Router router = Router.router(mewna.vertx());
         routes.forEach(e -> e.registerRoutes(mewna, router));

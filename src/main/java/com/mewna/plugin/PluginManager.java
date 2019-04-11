@@ -23,6 +23,8 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
 
+import static com.mewna.util.Async.move;
+
 /**
  * @author amy
  * @since 4/8/18.
@@ -157,13 +159,13 @@ public class PluginManager {
     }
     
     public <T> void processEvent(final String type, final T event) {
-        Optional.ofNullable(discordEventHandlers.get(type)).ifPresentOrElse(x -> x.forEach(h -> {
+        move(() -> Optional.ofNullable(discordEventHandlers.get(type)).ifPresentOrElse(x -> x.forEach(h -> {
             try {
                 h.getHandle().invoke(h.getHolder(), event);
             } catch(final Exception e) {
                 Sentry.capture(e);
             }
-        }), () -> Sentry.capture("No handler for event type: " + type));
+        }), () -> Sentry.capture("No handler for event type: " + type)));
     }
     
     @SuppressWarnings({"unused", "unchecked"})

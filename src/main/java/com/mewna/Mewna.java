@@ -10,10 +10,8 @@ import com.mewna.catnip.CatnipOptions;
 import com.mewna.data.Database;
 import com.mewna.data.DiscordCache;
 import com.mewna.event.SingyeongEventManager;
-import com.mewna.paypal.PaypalHandler;
-import com.mewna.plugin.commands.CommandManager;
 import com.mewna.plugin.PluginManager;
-import com.mewna.plugin.util.TextureManager;
+import com.mewna.plugin.commands.CommandManager;
 import com.mewna.util.IOUtils;
 import com.mewna.util.Ratelimiter;
 import com.mewna.util.Translator;
@@ -38,6 +36,7 @@ import java.util.Optional;
 @SuppressWarnings("Singleton")
 @Accessors(fluent = true)
 public final class Mewna {
+    public static final int PRIMARY_COLOUR = 0xdb325c;
     @SuppressWarnings("StaticVariableOfConcreteClass")
     private static final Mewna INSTANCE = new Mewna();
     @Getter
@@ -49,8 +48,6 @@ public final class Mewna {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     @Getter
     private final AccountManager accountManager = new AccountManager(this);
-    @Getter
-    private final PaypalHandler paypalHandler = new PaypalHandler(this);
     @Getter
     private final StatsDClient statsClient;
     @Getter
@@ -96,7 +93,6 @@ public final class Mewna {
                 .registerModule(new Jdk8Module());
         // Start loading our data!
         Translator.preload();
-        TextureManager.preload(this);
         commandManager = new CommandManager(this);
         database.init();
         pluginManager.init();

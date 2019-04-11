@@ -1,6 +1,5 @@
 package com.mewna.util;
 
-import com.mewna.plugin.util.Renderer;
 import io.sentry.Sentry;
 
 import javax.annotation.Nonnull;
@@ -25,7 +24,7 @@ public final class IOUtils {
     public static void scan(@Nonnull @SuppressWarnings("SameParameterValue") final String path,
                             @Nonnull final Consumer<JarEntry> callback) {
         try {
-            final URL url = Renderer.class.getProtectionDomain().getCodeSource().getLocation();
+            final URL url = IOUtils.class.getProtectionDomain().getCodeSource().getLocation();
             try(final InputStream is = url.openStream()) {
                 final JarInputStream stream = new JarInputStream(is);
                 JarEntry entry;

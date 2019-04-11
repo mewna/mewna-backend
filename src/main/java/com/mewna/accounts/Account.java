@@ -6,7 +6,6 @@ import com.mewna.data.Database;
 import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.plugin.behaviour.AccountEvent;
 import com.mewna.plugin.event.plugin.behaviour.SystemUserEventType;
-import com.mewna.plugin.util.TextureManager;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
@@ -67,7 +66,6 @@ public class Account {
     @JsonProperty("banReason")
     private String banReason;
     
-    @SuppressWarnings("WeakerAccess")
     public Account(final String id) {
         this.id = id;
     }
@@ -108,9 +106,11 @@ public class Account {
             }
             final String pack = split[0];
             final String name = split[1];
+            /*
             if(!TextureManager.backgroundExists(pack, name)) {
                 return false;
             }
+            */
             // I like this being explicit - it feels easier to reason about
             //noinspection RedundantIfStatement
             if(!ownedBackgroundPacks.contains(pack)) {

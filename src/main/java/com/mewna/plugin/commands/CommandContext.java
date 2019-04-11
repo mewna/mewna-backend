@@ -1,4 +1,4 @@
-package com.mewna.plugin;
+package com.mewna.plugin.commands;
 
 import com.mewna.accounts.Account;
 import com.mewna.catnip.entity.guild.Guild;

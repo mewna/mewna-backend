@@ -9,9 +9,6 @@ import lombok.Getter;
 public enum SystemUserEventType {
     GLOBAL_LEVEL("event.levels.global"),
     
-    /**
-     * TODO: Add Twitch account linking
-     */
     TWITCH_STREAM("event.social.twitch"),
     
     BACKGROUND("event.account.background"),

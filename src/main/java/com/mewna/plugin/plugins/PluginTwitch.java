@@ -22,12 +22,6 @@ import java.util.*;
 import static com.mewna.util.Async.move;
 
 /**
- * TODO: HEAVY caching...
- * <p>
- * mfw these all end up being (2N+1) queries
- * <p>
- * feelsbadman
- *
  * @author amy
  * @since 5/19/18.
  */
@@ -83,7 +77,6 @@ public class PluginTwitch extends BasePlugin {
             if(resultSet.isBeforeFirst()) {
                 webhookGuilds.removeIf(e -> {
                     try {
-                        // TODO: Is this deadlocking?
                         DiscordCache.guild(e).toCompletableFuture().get();
                         return false;
                     } catch(final Exception ignored) {

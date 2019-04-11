@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mewna.Mewna;
 import com.mewna.accounts.Account;
 import com.mewna.catnip.entity.guild.Guild;
-import com.mewna.plugin.CommandContext;
+import com.mewna.plugin.commands.CommandContext;
 import com.mewna.plugin.plugins.economy.Box;
 import com.mewna.plugin.plugins.economy.Item;
 import gg.amy.pgorm.annotations.GIndex;
@@ -298,8 +298,6 @@ public class Player {
         }
     }
     
-    // TODO: Caching
-    // TODO: This is kinda dumb tbqh
     @JsonIgnore
     public Account getAccount() {
         // noinspection OptionalGetWithoutIsPresent

@@ -6,8 +6,8 @@ import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.data.DiscordCache;
 import com.mewna.plugin.BasePlugin;
-import com.mewna.plugin.Command;
-import com.mewna.plugin.CommandContext;
+import com.mewna.plugin.commands.Command;
+import com.mewna.plugin.commands.CommandContext;
 import com.mewna.plugin.Plugin;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.event.EventType;
@@ -234,15 +234,12 @@ public class PluginMusic extends BasePlugin {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Event(EventType.AUDIO_TRACK_QUEUE)
     public void handleTrackQueue(final NekoTrackEvent event) {
-        final EmbedBuilder builder = new EmbedBuilder();
-        // lol
-        
         if(event.track() == null) {
             // TODO: Dealing with no-tracks-found event
             return;
-            // Sentry.capture(new EventBuilder().withMessage("Captured null event track! Data:\n" + JsonObject.mapFrom(event).encodePrettily()).build());
         }
-        // back to srs bsns
+    
+        final EmbedBuilder builder = new EmbedBuilder();
         builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.song-queued"))
                 .url(event.track().url())
                 .field($(database().language(event.track().context().guild()), "plugins.music.events.title"),

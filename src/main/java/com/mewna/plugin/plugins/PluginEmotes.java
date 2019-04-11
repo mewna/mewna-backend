@@ -1,9 +1,10 @@
 package com.mewna.plugin.plugins;
 
 import com.mewna.plugin.BasePlugin;
-import com.mewna.plugin.Command;
-import com.mewna.plugin.CommandContext;
+import com.mewna.plugin.commands.Command;
+import com.mewna.plugin.commands.CommandContext;
 import com.mewna.plugin.Plugin;
+import com.mewna.plugin.commands.annotations.Multi;
 import com.mewna.plugin.plugins.settings.EmotesSettings;
 
 import static com.mewna.util.Translator.$;
@@ -14,9 +15,10 @@ import static com.mewna.util.Translator.$;
  */
 @Plugin(name = "Emotes", desc = "Fun little emotes for your server.", settings = EmotesSettings.class)
 public class PluginEmotes extends BasePlugin {
+    @Multi
     @Command(names = {"bap", "chew", "cookie", "hug", "lick", "nom", "pat", "poke", "prod", "shoot", "slap", "stab", "tickle"},
             desc = "commands.emotes", usage = "<command> <person>",
-            examples = {"bap someone", "stab someone else", "poke everyone"}, aliased = false)
+            examples = {"bap someone", "stab someone else", "poke everyone"})
     public void emote(final CommandContext ctx) {
         if(ctx.getArgstr().isEmpty()) {
             ctx.sendMessage("You need to tell me who you're doing that to.");

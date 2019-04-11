@@ -2,12 +2,13 @@ package com.mewna.plugin.util;
 
 import com.mewna.Mewna;
 import com.mewna.data.Player;
-import com.mewna.plugin.CommandContext;
+import com.mewna.plugin.commands.CommandContext;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import javax.inject.Inject;
 
 import static com.mewna.plugin.util.CurrencyHelper.PaymentResult.*;
+import static com.mewna.util.MewnaFutures.block;
 import static com.mewna.util.Translator.$;
 
 /**
@@ -15,11 +16,9 @@ import static com.mewna.util.Translator.$;
  * @since 4/15/18.
  */
 public final class CurrencyHelper {
-    private static final String CURRENCY_SYMBOL = ":white_flower:";
     @Inject
     private Mewna mewna;
     
-    @SuppressWarnings("WeakerAccess")
     public final ImmutablePair<Boolean, Long> handlePayment(final CommandContext ctx, final String maybeAmount, final long min, final long max) {
         final ImmutablePair<PaymentResult, Long> check = checkPayment(ctx.getPlayer(), maybeAmount, min, max);
         final String symbol = getCurrencySymbol(ctx);
@@ -61,8 +60,7 @@ public final class CurrencyHelper {
             case OK: {
                 mewna.statsClient().count("discord.backend.money.spent", check.right);
                 ctx.getPlayer().incrementBalance(-check.right);
-                // TODO: Make this properly async!
-                mewna.database().savePlayer(ctx.getPlayer()).join();
+                block(mewna.database().savePlayer(ctx.getPlayer()));
                 return ImmutablePair.of(true, check.right);
             }
             default: {

@@ -1,4 +1,4 @@
-package com.mewna.plugin.plugins.misc.serial;
+package com.mewna.plugin.plugins.dnd.serial;
 
 import com.google.gson.*;
 import com.mewna.plugin.plugins.PluginMisc.*;

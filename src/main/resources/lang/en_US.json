@@ -1,5 +1,6 @@
 {
   "commands": {
+    "banned": "You are banned from Mewna! Reason:",
     "economy": {
       "balance": "Check your balance, or someone else's balance.",
       "pay": "Send money to another user.",

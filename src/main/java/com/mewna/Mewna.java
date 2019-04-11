@@ -11,7 +11,7 @@ import com.mewna.data.Database;
 import com.mewna.data.DiscordCache;
 import com.mewna.event.SingyeongEventManager;
 import com.mewna.paypal.PaypalHandler;
-import com.mewna.plugin.CommandManager;
+import com.mewna.plugin.commands.CommandManager;
 import com.mewna.plugin.PluginManager;
 import com.mewna.plugin.util.TextureManager;
 import com.mewna.util.IOUtils;

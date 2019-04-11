@@ -1,12 +1,11 @@
-package com.mewna.plugin.metadata;
+package com.mewna.plugin.commands.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import static com.mewna.plugin.metadata.RatelimitType.GLOBAL;
-import static com.mewna.plugin.metadata.RatelimitType.GUILD;
+import static com.mewna.plugin.commands.annotations.RatelimitType.GLOBAL;
 
 /**
  * @author amy

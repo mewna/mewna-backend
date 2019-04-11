@@ -4,12 +4,12 @@ import com.google.common.collect.ImmutableMap;
 import com.mewna.Mewna;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
+import com.mewna.plugin.commands.Command;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.util.CurrencyHelper;
 import com.mewna.util.UserAgentInterceptor;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import io.sentry.Sentry;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Value;
 import okhttp3.OkHttpClient;
@@ -27,14 +27,14 @@ import java.util.function.Function;
  * @author amy
  * @since 4/8/18.
  */
-@SuppressWarnings({"WeakerAccess", "OverlyCoupledClass"})
+@SuppressWarnings("WeakerAccess")
 public class PluginManager {
     private final Collection<Class<?>> loaded = new HashSet<>();
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Map<Class<?>, Function<Class<?>, ?>> injectionClasses;
     @Getter
     private final Mewna mewna;
-    @Getter(AccessLevel.PACKAGE)
+    @Getter
     private final CurrencyHelper currencyHelper;
     @SuppressWarnings("UnnecessarilyQualifiedInnerClassAccess")
     private final OkHttpClient okHttpClient = new OkHttpClient.Builder()

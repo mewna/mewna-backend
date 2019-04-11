@@ -13,7 +13,6 @@ public final class MewnaFutures {
     private MewnaFutures() {
     }
     
-    @SuppressWarnings("unchecked")
     public static CompletableFuture<Void> allOf(final CompletionStage... futures) {
         final CompletableFuture[] arr = Arrays.stream(futures)
                 .map(CompletionStage::toCompletableFuture)
@@ -31,5 +30,13 @@ public final class MewnaFutures {
     
     public static <T> T get(@Nonnull final CompletionStage<T> future) {
         return get(future.toCompletableFuture());
+    }
+    
+    public static <T> T block(@Nonnull final CompletableFuture<T> future) {
+        return future.join();
+    }
+    
+    public static <T> T block(@Nonnull final CompletionStage<T> future) {
+        return future.toCompletableFuture().join();
     }
 }

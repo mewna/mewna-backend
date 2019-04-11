@@ -33,7 +33,6 @@ public class PluginBehaviour extends BasePlugin {
         final TimelinePost post = TimelinePost.create(account.id(), true, data
                 .put("type", type.getEventId()).toString());
         database().savePost(post);
-        // TODO: Announce in Discord or what? :V
         switch(type) {
             case GLOBAL_LEVEL: {
                 break;
@@ -60,7 +59,6 @@ public class PluginBehaviour extends BasePlugin {
         }
     }
     
-    // TODO: I just wanna highlight this so it's obvious
     // The data show in here is the data expected to be sent in the events.
     // When creating the events for these, we should pay extra attention
     // to these.

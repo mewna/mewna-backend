@@ -4,9 +4,10 @@ import com.google.common.collect.ImmutableMap;
 import com.mewna.data.Player;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.BasePlugin;
-import com.mewna.plugin.Command;
-import com.mewna.plugin.CommandContext;
+import com.mewna.plugin.commands.Command;
+import com.mewna.plugin.commands.CommandContext;
 import com.mewna.plugin.Plugin;
+import com.mewna.plugin.commands.annotations.Staff;
 import com.mewna.plugin.plugins.economy.Item;
 import com.mewna.plugin.plugins.settings.*;
 import com.mewna.plugin.util.Emotes;
@@ -24,7 +25,8 @@ import static com.mewna.util.Async.move;
  * @author amy
  * @since 2/11/19.
  */
-@Plugin(name = "staff", desc = "Staff-only commands~", settings = SecretSettings.class, staff = true)
+@Staff
+@Plugin(name = "staff", desc = "Staff-only commands~", settings = SecretSettings.class)
 public class PluginStaff extends BasePlugin {
     private final Map<String, Class<? extends PluginSettings>> configs = ImmutableMap.copyOf(new HashMap<>() {{
         put("behaviour", BehaviourSettings.class);
@@ -37,7 +39,8 @@ public class PluginStaff extends BasePlugin {
         put("welcoming", WelcomingSettings.class);
     }});
     
-    @Command(names = "config", desc = "staff-only", usage = "staff-only", examples = "staff-only", staff = true)
+    @Staff
+    @Command(names = "config", desc = "staff-only", usage = "staff-only", examples = "staff-only")
     public void config(final CommandContext ctx) {
         if(ctx.getArgs().isEmpty()) {
             ctx.sendMessage(Emotes.NO + " You need to provide a server id and a config type " +
@@ -98,7 +101,8 @@ public class PluginStaff extends BasePlugin {
         }
     }
     
-    @Command(names = "trace", desc = "staff-only", usage = "staff-only", examples = "staff-only", staff = true)
+    @Staff
+    @Command(names = "trace", desc = "staff-only", usage = "staff-only", examples = "staff-only")
     public void trace(final CommandContext ctx) {
         ctx.getProfiler().end();
         final StringBuilder sb = new StringBuilder("```CSS\n");
@@ -135,7 +139,8 @@ public class PluginStaff extends BasePlugin {
         ctx.sendMessage(sb.toString());
     }
     
-    @Command(names = "grant", desc = "secret", usage = "sercet", examples = "secret", staff = true)
+    @Staff
+    @Command(names = "grant", desc = "secret", usage = "sercet", examples = "secret")
     public void grant(final CommandContext ctx) {
         if(ctx.getArgs().size() < 3) {
             ctx.sendMessage("```CSS\n" +

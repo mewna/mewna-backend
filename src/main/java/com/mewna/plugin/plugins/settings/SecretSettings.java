@@ -3,13 +3,13 @@ package com.mewna.plugin.plugins.settings;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
-import com.mewna.plugin.plugins.PluginSecret;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
 import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
@@ -22,6 +22,7 @@ import java.util.Map;
  */
 @Getter
 @Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 @Table("settings_secret")
@@ -29,15 +30,16 @@ import java.util.Map;
 @SuppressWarnings("unused")
 public class SecretSettings implements PluginSettings {
     @PrimaryKey
-    private final String id;
-    private final Map<String, CommandSettings> commandSettings;
+    private String id;
+    private Map<String, CommandSettings> commandSettings = new HashMap<>();
+    
+    public SecretSettings(final String id) {
+        this.id = id;
+    }
     
     @Override
     public PluginSettings refreshCommands() {
-        final Map<String, CommandSettings> oldSettings = new HashMap<>(commandSettings);
-        final Map<String, CommandSettings> newSettings = generateCommandSettings(PluginSecret.class);
-        newSettings.putAll(oldSettings);
-        commandSettings.putAll(newSettings);
+        commandSettings = new HashMap<>();
         return this;
     }
     

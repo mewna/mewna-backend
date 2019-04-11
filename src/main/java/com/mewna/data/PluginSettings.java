@@ -1,7 +1,7 @@
 package com.mewna.data;
 
 import com.mewna.Mewna;
-import com.mewna.plugin.CommandManager.CommandWrapper;
+import com.mewna.plugin.commands.CommandManager.CommandWrapper;
 import gg.amy.vertx.SafeVertxCompletableFuture;
 import io.sentry.Sentry;
 import io.vertx.core.Future;

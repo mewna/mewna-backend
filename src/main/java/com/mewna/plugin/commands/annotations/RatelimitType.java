@@ -1,4 +1,4 @@
-package com.mewna.plugin.metadata;
+package com.mewna.plugin.commands.annotations;
 
 /**
  * @author amy

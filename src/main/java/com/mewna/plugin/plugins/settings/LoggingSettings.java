@@ -46,7 +46,7 @@ public class LoggingSettings implements PluginSettings {
     
     @Override
     public boolean validateSettings(final JsonObject data) {
-        // TODO: someday this will be needed
+        // Someday this will be needed
         /*
         for(final String key : data.keySet()) {
             switch(key) {

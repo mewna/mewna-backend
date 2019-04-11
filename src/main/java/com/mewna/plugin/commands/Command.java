@@ -1,4 +1,4 @@
-package com.mewna.plugin;
+package com.mewna.plugin.commands;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -19,11 +19,5 @@ public @interface Command {
     String[] usage();
     
     String[] examples();
-    
-    boolean owner() default false;
-    
-    boolean staff() default false;
-    
-    boolean aliased() default true;
 }
 

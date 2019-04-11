@@ -8,9 +8,10 @@ import com.mewna.data.DiscordCache;
 import com.mewna.data.Player;
 import com.mewna.data.Webhook;
 import com.mewna.plugin.BasePlugin;
-import com.mewna.plugin.Command;
-import com.mewna.plugin.CommandContext;
+import com.mewna.plugin.commands.Command;
+import com.mewna.plugin.commands.CommandContext;
 import com.mewna.plugin.Plugin;
+import com.mewna.plugin.commands.annotations.Owner;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
 import com.mewna.plugin.plugins.settings.SecretSettings;
 import com.mewna.plugin.plugins.settings.TwitchSettings;
@@ -37,17 +38,20 @@ import static com.mewna.util.Async.move;
  * @author amy
  * @since 10/18/18.
  */
-@Plugin(name = "secret", desc = "spooky secret things :3", settings = SecretSettings.class, owner = true)
+@Owner
+@Plugin(name = "secret", desc = "spooky secret things :3", settings = SecretSettings.class)
 public class PluginSecret extends BasePlugin {
     @Inject
     private OkHttpClient client;
     
-    @Command(names = "secret", desc = "secret", usage = "secret", examples = "secret", owner = true)
+    @Owner
+    @Command(names = "secret", desc = "secret", usage = "secret", examples = "secret")
     public void secret(final CommandContext ctx) {
         ctx.sendMessage("secret");
     }
     
-    @Command(names = "reset", desc = "secret", usage = "secret", examples = "secret", owner = true)
+    @Owner
+    @Command(names = "reset", desc = "secret", usage = "secret", examples = "secret")
     public void reset(final CommandContext ctx) {
         final Message msg = ctx.getMessage();
         if(msg.attachments().isEmpty() || ctx.getArgs().isEmpty()) {
@@ -118,7 +122,8 @@ public class PluginSecret extends BasePlugin {
         }
     }
     
-    @Command(names = "findwebhook", desc = "secret", usage = "secret", examples = "secret", owner = true)
+    @Owner
+    @Command(names = "findwebhook", desc = "secret", usage = "secret", examples = "secret")
     public void findWebhook(final CommandContext ctx) {
         if(ctx.getArgs().isEmpty()) {
             ctx.sendMessage(Emotes.NO);
@@ -136,7 +141,8 @@ public class PluginSecret extends BasePlugin {
         }
     }
     
-    @Command(names = "inspect", desc = "secret", usage = "secret", examples = "secret", owner = true)
+    @Owner
+    @Command(names = "inspect", desc = "secret", usage = "secret", examples = "secret")
     public void debugInspect(final CommandContext ctx) {
         switch(ctx.getArgs().get(0).toLowerCase()) {
             case "threads": {
@@ -158,7 +164,6 @@ public class PluginSecret extends BasePlugin {
                 database().getOptionalPlayer(snowflake, ctx.getProfiler()).thenAccept(optionalPlayer -> {
                     if(optionalPlayer.isPresent()) {
                         final JsonObject o = JsonObject.mapFrom(optionalPlayer.get());
-                        // TODO: ???
                         o.remove("account");
                         o.remove("votes");
                         o.remove("boxes");
@@ -192,7 +197,8 @@ public class PluginSecret extends BasePlugin {
         }
     }
     
-    @Command(names = "guildcast", desc = "secret", usage = "secret", examples = "secret", owner = true)
+    @Owner
+    @Command(names = "guildcast", desc = "secret", usage = "secret", examples = "secret")
     public void guildcast(final CommandContext ctx) {
         final String guildId = ctx.getGuild().id();
         mewna().singyeong().send("shards", new QueryBuilder().contains("guilds", guildId).build(),
@@ -200,7 +206,8 @@ public class PluginSecret extends BasePlugin {
         ctx.sendMessage("Casting guild " + guildId);
     }
     
-    @Command(names = "guildcheck", desc = "secret", usage = "secret", examples = "secret", owner = true)
+    @Owner
+    @Command(names = "guildcheck", desc = "secret", usage = "secret", examples = "secret")
     public void guildcheck(final CommandContext ctx) {
         final String guildId = ctx.getGuild().id();
         
@@ -214,7 +221,8 @@ public class PluginSecret extends BasePlugin {
         });
     }
     
-    @Command(names = "fetch", desc = "secret", usage = "secret", examples = "secret", owner = true)
+    @Owner
+    @Command(names = "fetch", desc = "secret", usage = "secret", examples = "secret")
     public void fetch(final CommandContext ctx) {
         final Message msg = ctx.getMessage();
         final String guildId = msg.guildId();
@@ -239,12 +247,14 @@ public class PluginSecret extends BasePlugin {
                         ));
     }
     
-    @Command(names = "dm", desc = "secret", usage = "secret", examples = "secret", owner = true)
+    @Owner
+    @Command(names = "dm", desc = "secret", usage = "secret", examples = "secret")
     public void dm(final CommandContext ctx) {
         catnip().rest().user().createDM(ctx.getUser().id()).thenAccept(channel -> channel.sendMessage("test!"));
     }
     
-    @Command(names = "forcetwitchresub", desc = "secret", usage = "secret", examples = "secret", owner = true)
+    @Owner
+    @Command(names = "forcetwitchresub", desc = "secret", usage = "secret", examples = "secret")
     public void forceTwitchResub(final CommandContext ctx) {
         new Thread(() -> {
             final Set<String> ids = new HashSet<>();
@@ -270,7 +280,8 @@ public class PluginSecret extends BasePlugin {
         }).start();
     }
     
-    @Command(names = {"blacklist", "heck-off", "heckoff"}, desc = "", usage = "", examples = "", owner = true)
+    @Owner
+    @Command(names = {"blacklist", "heck-off", "heckoff"}, desc = "", usage = "", examples = "")
     public void blacklist(final CommandContext ctx) {
         if(ctx.getArgs().size() < 2) {
             ctx.sendMessage(Emotes.NO);

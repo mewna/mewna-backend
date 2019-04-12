@@ -2,13 +2,15 @@ package com.mewna.plugin.plugins;
 
 import com.google.common.base.Strings;
 import com.mewna.catnip.entity.builder.EmbedBuilder;
+import com.mewna.catnip.entity.channel.VoiceChannel;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.user.User;
+import com.mewna.catnip.entity.user.VoiceState;
 import com.mewna.data.DiscordCache;
 import com.mewna.plugin.BasePlugin;
+import com.mewna.plugin.Plugin;
 import com.mewna.plugin.commands.Command;
 import com.mewna.plugin.commands.CommandContext;
-import com.mewna.plugin.Plugin;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.audio.NekoTrackEvent;
@@ -18,7 +20,6 @@ import com.mewna.plugin.util.Emotes;
 import com.mewna.util.Time;
 import gg.amy.singyeong.QueryBuilder;
 import gg.amy.vertx.SafeVertxCompletableFuture;
-import io.sentry.Sentry;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
@@ -33,6 +34,7 @@ import static com.mewna.util.Translator.$;
  * @author amy
  * @since 5/19/18.
  */
+@SuppressWarnings("ConstantConditions")
 @Plugin(name = "Music", desc = "Control the way music is played in your server.", settings = MusicSettings.class)
 public class PluginMusic extends BasePlugin {
     // TODO: Fill out shit with localization
@@ -58,19 +60,16 @@ public class PluginMusic extends BasePlugin {
                 ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.bot-already-in-voice"));
             } else {
-                DiscordCache.voiceState(guildId, ctx.getUser().id())
-                        .thenAccept(state -> {
-                            mewna().singyeong().send("shards",
-                                    new QueryBuilder().contains("guilds", guildId).build(),
-                                    new JsonObject().put("type", "VOICE_JOIN")
-                                            .put("guild_id", guildId)
-                                            .put("channel_id", state.channelId()));
-                            DiscordCache.voiceChannel(guildId, state.channelId())
-                                    .thenAccept(ch -> catnip().rest().channel()
-                                            .sendMessage(ctx.getMessage().channelId(),
-                                                    $(ctx.getLanguage(), "plugins.music.commands.join.joined")
-                                                            + " \uD83D\uDD0A" + ch.name()));
-                        });
+                final VoiceState state = DiscordCache.voiceState(guildId, ctx.getUser().id());
+                mewna().singyeong().send("shards",
+                        new QueryBuilder().contains("guilds", guildId).build(),
+                        new JsonObject().put("type", "VOICE_JOIN")
+                                .put("guild_id", guildId)
+                                .put("channel_id", state.channelId()));
+                final VoiceChannel ch = DiscordCache.voiceChannel(guildId, state.channelId());
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        $(ctx.getLanguage(), "plugins.music.commands.join.joined")
+                                + " \uD83D\uDD0A" + ch.name());
             }
         });
     }
@@ -90,17 +89,13 @@ public class PluginMusic extends BasePlugin {
                 ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.bot-not-in-voice"));
             } else {
-                DiscordCache.voiceState(guildId, ctx.getUser().id())
-                        .thenAccept(state ->
-                                DiscordCache.voiceChannel(guildId, state.channelId())
-                                        .thenAccept(ch -> {
-                                            catnip().rest().channel()
-                                                    .sendMessage(ctx.getMessage().channelId(),
-                                                            $(ctx.getLanguage(), "plugins.music.commands.leave.left") +
-                                                                    " \uD83D\uDD0A" + ch.name());
-                                            mewna().singyeong().send("shards", new QueryBuilder().contains("guilds", guildId).build(),
-                                                    new JsonObject().put("type", "VOICE_LEAVE").put("guild_id", guildId));
-                                        }));
+                final VoiceState state = DiscordCache.voiceState(guildId, ctx.getUser().id());
+                final VoiceChannel ch = DiscordCache.voiceChannel(guildId, state.channelId());
+                catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
+                        $(ctx.getLanguage(), "plugins.music.commands.leave.left") +
+                                " \uD83D\uDD0A" + ch.name());
+                mewna().singyeong().send("shards", new QueryBuilder().contains("guilds", guildId).build(),
+                        new JsonObject().put("type", "VOICE_LEAVE").put("guild_id", guildId));
             }
         });
     }
@@ -238,7 +233,7 @@ public class PluginMusic extends BasePlugin {
             // TODO: Dealing with no-tracks-found event
             return;
         }
-    
+        
         final EmbedBuilder builder = new EmbedBuilder();
         builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.song-queued"))
                 .url(event.track().url())
@@ -344,25 +339,19 @@ public class PluginMusic extends BasePlugin {
     private CompletionStage<VoiceCheck> checkState(final Guild guild, final User user) {
         final Future<VoiceCheck> future = Future.future();
         
-        final var selfStateFuture = DiscordCache.voiceState(guild.id(), System.getenv("CLIENT_ID")).exceptionally(e -> null);
-        final var userStateFuture = DiscordCache.voiceState(guild.id(), user.id()).exceptionally(e -> null);
+        final var selfState = DiscordCache.voiceState(guild.id(), System.getenv("CLIENT_ID"));
+        final var userState = DiscordCache.voiceState(guild.id(), user.id());
         
-        selfStateFuture.thenAcceptBoth(userStateFuture, (selfState, userState) -> {
-            if(userState == null || userState.channelId() == null) {
-                future.complete(VoiceCheck.USER_NOT_IN_VOICE);
-            } else if(selfState == null || selfState.channelId() == null) {
-                future.complete(VoiceCheck.SELF_NOT_IN_VOICE);
-            } else if(userState.channelId().equals(selfState.channelId())) {
-                // This ^ Should:tm: be safe, but yeahhhh...
-                future.complete(VoiceCheck.SELF_AND_USER_IN_SAME_VOICE);
-            } else {
-                future.complete(VoiceCheck.USER_IN_DIFFERENT_VOICE);
-            }
-        }).exceptionally(e -> {
-            e.printStackTrace();
-            Sentry.capture(e);
-            return null;
-        });
+        if(userState == null || userState.channelId() == null) {
+            future.complete(VoiceCheck.USER_NOT_IN_VOICE);
+        } else if(selfState == null || selfState.channelId() == null) {
+            future.complete(VoiceCheck.SELF_NOT_IN_VOICE);
+        } else if(userState.channelId().equals(selfState.channelId())) {
+            // This ^ Should:tm: be safe, but yeahhhh...
+            future.complete(VoiceCheck.SELF_AND_USER_IN_SAME_VOICE);
+        } else {
+            future.complete(VoiceCheck.USER_IN_DIFFERENT_VOICE);
+        }
         
         return SafeVertxCompletableFuture.from(mewna().vertx(), future);
     }

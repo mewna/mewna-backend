@@ -1,28 +1,10 @@
 package com.mewna.api.routes;
 
 import com.mewna.Mewna;
-import com.mewna.accounts.Account;
 import com.mewna.api.RouteGroup;
-import com.mewna.catnip.entity.user.User;
-import com.mewna.data.DiscordCache;
-import com.mewna.data.Player;
-import com.mewna.data.Webhook;
-import com.mewna.plugin.plugins.PluginLevels;
-import io.sentry.Sentry;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.BodyHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static com.mewna.util.Async.move;
 
 /**
  * @author amy
@@ -33,6 +15,7 @@ public class GuildRoutes implements RouteGroup {
     
     @Override
     public void registerRoutes(final Mewna mewna, final Router router) {
+        /*
         router.get("/data/guild/:id/config/:type").handler(ctx -> {
             final String id = ctx.request().getParam("id");
             final String type = ctx.request().getParam("type");
@@ -191,5 +174,6 @@ public class GuildRoutes implements RouteGroup {
                     ctx.response().putHeader("Content-Type", "application/json")
                             .end(new JsonObject().encode());
                 }));
+                */
     }
 }

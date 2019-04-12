@@ -4,20 +4,17 @@ import com.mewna.Mewna;
 import com.mewna.accounts.Account;
 import com.mewna.catnip.entity.message.Message;
 import com.mewna.catnip.entity.message.Message.Attachment;
-import com.mewna.data.DiscordCache;
 import com.mewna.data.Player;
-import com.mewna.data.Webhook;
 import com.mewna.plugin.BasePlugin;
+import com.mewna.plugin.Plugin;
 import com.mewna.plugin.commands.Command;
 import com.mewna.plugin.commands.CommandContext;
-import com.mewna.plugin.Plugin;
 import com.mewna.plugin.commands.annotations.Owner;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
 import com.mewna.plugin.plugins.settings.SecretSettings;
 import com.mewna.plugin.plugins.settings.TwitchSettings;
 import com.mewna.plugin.plugins.settings.WelcomingSettings;
 import com.mewna.plugin.util.Emotes;
-import com.mewna.util.MewnaFutures;
 import gg.amy.singyeong.QueryBuilder;
 import io.sentry.Sentry;
 import io.vertx.core.json.Json;
@@ -123,25 +120,6 @@ public class PluginSecret extends BasePlugin {
     }
     
     @Owner
-    @Command(names = "findwebhook", desc = "secret", usage = "secret", examples = "secret")
-    public void findWebhook(final CommandContext ctx) {
-        if(ctx.getArgs().isEmpty()) {
-            ctx.sendMessage(Emotes.NO);
-        } else {
-            final Optional<Webhook> maybeHook = database().getWebhook(ctx.getArgs().get(0));
-            maybeHook.ifPresentOrElse(hook ->
-                            ctx.sendMessage(String.format("%s -> %s (%s)", hook.getChannel(), hook.getId(), hook.getGuild())),
-                    () -> {
-                        final Optional<Webhook> maybeRealHook = database().getWebhookById(ctx.getArgs().get(0));
-                        maybeRealHook.ifPresentOrElse(hook -> ctx.sendMessage(
-                                String.format("%s -> %s (%s)", hook.getChannel(), hook.getId(), hook.getGuild())
-                                ),
-                                () -> ctx.sendMessage(Emotes.NO + " No webhook!"));
-                    });
-        }
-    }
-    
-    @Owner
     @Command(names = "inspect", desc = "secret", usage = "secret", examples = "secret")
     public void debugInspect(final CommandContext ctx) {
         switch(ctx.getArgs().get(0).toLowerCase()) {
@@ -195,62 +173,6 @@ public class PluginSecret extends BasePlugin {
                 break;
             }
         }
-    }
-    
-    @Owner
-    @Command(names = "guildcast", desc = "secret", usage = "secret", examples = "secret")
-    public void guildcast(final CommandContext ctx) {
-        final String guildId = ctx.getGuild().id();
-        mewna().singyeong().send("shards", new QueryBuilder().contains("guilds", guildId).build(),
-                new JsonObject().put("henlo", guildId));
-        ctx.sendMessage("Casting guild " + guildId);
-    }
-    
-    @Owner
-    @Command(names = "guildcheck", desc = "secret", usage = "secret", examples = "secret")
-    public void guildcheck(final CommandContext ctx) {
-        final String guildId = ctx.getGuild().id();
-        
-        //noinspection CodeBlock2Expr
-        DiscordCache.guild(guildId).thenAccept(g -> {
-            ctx.sendMessage("Checked casted guild " + guildId + " with result " + g);
-        }).exceptionally(e -> {
-            ctx.sendMessage("Checked casted guild " + guildId + " with exception");
-            e.printStackTrace();
-            return null;
-        });
-    }
-    
-    @Owner
-    @Command(names = "fetch", desc = "secret", usage = "secret", examples = "secret")
-    public void fetch(final CommandContext ctx) {
-        final Message msg = ctx.getMessage();
-        final String guildId = msg.guildId();
-        final String channelId = msg.channelId();
-        final String userId = msg.author().id();
-        
-        final var guild = DiscordCache.guild(guildId);
-        final var user = DiscordCache.user(userId);
-        final var channel = DiscordCache.textChannel(guildId, channelId);
-        final var member = DiscordCache.member(guildId, userId);
-        
-        MewnaFutures.allOf(guild, user, channel, member).thenAccept(__ ->
-                catnip().rest().channel()
-                        .sendMessage(channelId, "" +
-                                "__Results:__\n" +
-                                "```\n" +
-                                "  Guild: " + MewnaFutures.get(guild) + " \n" +
-                                "   User: " + MewnaFutures.get(user) + " \n" +
-                                "Channel: " + MewnaFutures.get(channel) + " \n" +
-                                " Member: " + MewnaFutures.get(member) + " \n" +
-                                "```"
-                        ));
-    }
-    
-    @Owner
-    @Command(names = "dm", desc = "secret", usage = "secret", examples = "secret")
-    public void dm(final CommandContext ctx) {
-        catnip().rest().user().createDM(ctx.getUser().id()).thenAccept(channel -> channel.sendMessage("test!"));
     }
     
     @Owner

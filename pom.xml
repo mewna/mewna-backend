@@ -27,7 +27,7 @@
         <paypal.version>1.14.0</paypal.version>
         <dogstatsd.version>2.6.1</dogstatsd.version>
         <sentry.version>1.7.5</sentry.version>
-        <vertx.version>3.6.3</vertx.version>
+        <vertx.version>3.7.0</vertx.version>
     </properties>
 
     <repositories>

@@ -4,8 +4,6 @@ import com.mewna.Mewna;
 import com.mewna.api.RouteGroup;
 import com.mewna.catnip.entity.channel.Channel;
 import com.mewna.catnip.entity.guild.Role;
-import com.mewna.data.DiscordCache;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 
@@ -46,6 +44,7 @@ public class CacheRoutes implements RouteGroup {
     
     @Override
     public void registerRoutes(final Mewna mewna, final Router router) {
+        /*
         router.get("/cache/user/:id").handler(ctx -> {
             final String id = ctx.request().getParam("id");
             DiscordCache.user(id)
@@ -94,5 +93,6 @@ public class CacheRoutes implements RouteGroup {
                         return null;
                     });
         });
+        */
     }
 }

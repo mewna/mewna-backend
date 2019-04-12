@@ -2,13 +2,10 @@ package com.mewna.data;
 
 import com.mewna.Mewna;
 import com.mewna.plugin.commands.CommandManager.CommandWrapper;
-import gg.amy.vertx.SafeVertxCompletableFuture;
 import io.sentry.Sentry;
-import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -39,8 +36,8 @@ public interface PluginSettings {
     
     PluginSettings refreshCommands();
     
-    default CompletableFuture<PluginSettings> otherRefresh() {
-        return SafeVertxCompletableFuture.from(Mewna.getInstance().vertx(), Future.succeededFuture(this));
+    default PluginSettings otherRefresh() {
+        return this;
     }
     
     /**

@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import static com.mewna.util.MewnaFutures.block;
+
 /**
  * @author amy
  * @since 1/28/19.
@@ -127,7 +129,7 @@ public final class LevelsImporter {
                         // Lock all players
                         final List<CompletableFuture<?>> futures = new ArrayList<>();
                         players.forEach(p -> futures.add(Mewna.getInstance().database().lockPlayer(p.getId())));
-                        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+                        block(CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])));
                         
                         Mewna.getInstance().database().getStore().sql("BEGIN TRANSACTION;");
                         statements.forEach(Runnable::run);

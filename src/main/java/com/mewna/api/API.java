@@ -2,8 +2,9 @@ package com.mewna.api;
 
 import com.google.common.collect.ImmutableList;
 import com.mewna.Mewna;
-import com.mewna.api.routes.*;
+import com.mewna.api.routes.v3.CacheRoutes;
 import com.mewna.api.routes.v3.ConfigRoutes;
+import com.mewna.api.routes.v3.GuildRoutes;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
 import lombok.RequiredArgsConstructor;
@@ -21,24 +22,20 @@ public class API {
     private final Mewna mewna;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final List<RouteGroup> routes = ImmutableList.of(
-            // v1 / v2
-            new CacheRoutes(),
-            new AccountRoutes(),
-            new GuildRoutes(),
-            new ImportRoutes(),
-            new BlogRoutes(),
-            new MetadataRoutes(),
-            new PlayerRoutes(),
-            
             // v3
-            new ConfigRoutes()
+            new ConfigRoutes(),
+            new GuildRoutes(),
+            new CacheRoutes()
     );
     
     public void start() {
-            logger.info("Starting API server...");
+        logger.info("Starting API server...");
         final HttpServer server = mewna.vertx().createHttpServer();
         final Router router = Router.router(mewna.vertx());
-        routes.forEach(e -> e.registerRoutes(mewna, router));
+        routes.forEach(e -> {
+            logger.info("Registering routes from RouteGroup: {}", e);
+            e.registerRoutes(mewna, router);
+        });
         server.requestHandler(router).listen(mewna.port());
     }
 }

@@ -20,6 +20,7 @@ import java.net.UnknownHostException;
 import java.util.*;
 
 import static com.mewna.util.Async.move;
+import static com.mewna.util.MewnaFutures.block;
 
 /**
  * @author amy
@@ -84,8 +85,7 @@ public class PluginStaff extends BasePlugin {
                 }
                 move(() -> {
                     for(final String p : pages) {
-                        // lol joins :^^^^^^^)
-                        ctx.getUser().createDM().toCompletableFuture().join().sendMessage(p).toCompletableFuture().join();
+                        block(block(ctx.getUser().createDM().toCompletableFuture()).sendMessage(p));
                         try {
                             Thread.sleep(100L);
                         } catch(final InterruptedException ignored) {

@@ -424,7 +424,7 @@ public class PluginMisc extends BasePlugin {
         ctx.sendMessage(sb.toString());
     }
     
-    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @SuppressWarnings({"ResultOfMethodCallIgnored", "ConstantConditions"})
     @Command(names = {"tato", "miner"}, desc = "commands.misc.tato",
             usage = {"tato", "tato help", "tato upgrade [buy <upgrade>]", "tato building [buy <building>]"/*,
                     "tato food [food[,food,...]]"*/},
@@ -633,7 +633,7 @@ public class PluginMisc extends BasePlugin {
                                     while(resultSet.next()) {
                                         final String id = resultSet.getString("id");
                                         final String clicks = resultSet.getString("clicks");
-                                        final User user = DiscordCache.user(id).toCompletableFuture().join();
+                                        final User user = DiscordCache.user(id);
                                         rows.add("**" + user.username() + '#' + user.discriminator() + "** - " + clicks + " tato");
                                     }
                                     final String res = "__Mewna Miner Leaderboards__\n\n" + String.join("\n", rows);

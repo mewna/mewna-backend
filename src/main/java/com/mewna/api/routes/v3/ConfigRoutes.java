@@ -3,16 +3,19 @@ package com.mewna.api.routes.v3;
 import com.mewna.Mewna;
 import com.mewna.api.RouteGroup;
 import com.mewna.data.PluginSettings;
+import com.mewna.plugin.plugins.settings.SecretSettings;
+import io.sentry.Sentry;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.BodyHandler;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static com.mewna.util.Async.move;
+import static com.mewna.util.MewnaFutures.block;
 
 /**
  * @author amy
@@ -30,24 +33,50 @@ public class ConfigRoutes implements RouteGroup {
     
     @Override
     public void registerRoutes(final Mewna mewna, final Router router) {
-        router.get("/v3/config/guild/:id").handler(ctx -> move(() -> {
+        router.get("/v3/guild/:id/config").handler(ctx -> move(() -> {
             final String id = ctx.request().getParam("id");
-            final List<CompletableFuture<? extends PluginSettings>> futures = new ArrayList<>();
-            mewna.pluginManager().getSettingsClasses().forEach(cls -> futures.add(mewna.database().getOrBaseSettings(cls, id)));
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenAccept(__ -> {
-                final JsonObject out = new JsonObject();
-                futures.forEach(f -> {
-                    final PluginSettings settings = f.getNow(null);
-                    if(settings == null) {
-                        ctx.response().end("{}");
-                        throw new IllegalStateException();
-                    }
-                    final String name = keyFromValue(mewna.database().getPluginSettingsByName(), settings.getClass());
-                    //noinspection ConstantConditions
-                    out.put(name, JsonObject.mapFrom(settings));
-                });
-                ctx.response().end(out.encode());
+            final List<? extends PluginSettings> settings = mewna.pluginManager().getSettingsClasses()
+                    .stream()
+                    .map(cls -> block(mewna.database().getOrBaseSettings(cls, id)))
+                    .collect(Collectors.toList());
+            final JsonObject out = new JsonObject();
+            settings.stream().filter(s -> !(s instanceof SecretSettings)).forEach(s -> {
+                if(s == null) {
+                    ctx.response().end("{}");
+                    throw new IllegalStateException();
+                }
+                final String name = keyFromValue(mewna.database().getPluginSettingsByName(), s.getClass());
+                out.put(Objects.requireNonNull(name), JsonObject.mapFrom(s));
             });
+            ctx.response().end(out.encode());
+        }));
+        
+        router.post("/v3/guild/:id/config").handler(BodyHandler.create()).handler(ctx -> move(() -> {
+            final String id = ctx.request().getParam("id");
+            
+            final var data = ctx.getBody().toJsonObject();
+            final Collection<Boolean> updates = new ArrayList<>();
+            data.getMap().keySet().forEach(key -> {
+                final var update = data.getJsonObject(key);
+                final var settings = block(mewna.database().getOrBaseSettings(key, id));
+                final boolean validate = settings.validate(update);
+                if(validate) {
+                    try {
+                        updates.add(settings.updateSettings(mewna.database(), update));
+                    } catch(final Exception e) {
+                        Sentry.capture(e);
+                        updates.add(false);
+                    }
+                } else {
+                    updates.add(false);
+                }
+            });
+            
+            if(updates.stream().allMatch(e -> e)) {
+                ctx.response().end(data.encode());
+            } else {
+                ctx.response().end(new JsonObject().put("error", new JsonArray().add("invalid settings")).encode());
+            }
         }));
     }
 }

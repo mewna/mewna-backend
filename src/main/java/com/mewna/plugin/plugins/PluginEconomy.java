@@ -10,9 +10,9 @@ import com.mewna.catnip.util.SafeVertxCompletableFuture;
 import com.mewna.data.DiscordCache;
 import com.mewna.data.Player;
 import com.mewna.plugin.BasePlugin;
+import com.mewna.plugin.Plugin;
 import com.mewna.plugin.commands.Command;
 import com.mewna.plugin.commands.CommandContext;
-import com.mewna.plugin.Plugin;
 import com.mewna.plugin.commands.annotations.Payment;
 import com.mewna.plugin.commands.annotations.Ratelimit;
 import com.mewna.plugin.plugins.economy.Box;
@@ -35,7 +35,6 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static com.mewna.data.Player.MAX_INV_WEIGHT;
@@ -293,37 +292,26 @@ public class PluginEconomy extends BasePlugin {
             final ResultSet res = p.executeQuery();
             final StringBuilder sb = new StringBuilder($(ctx.getLanguage(), "plugins.economy.commands.baltop") + "\n\n");
             final Map<String, Player> players = new LinkedHashMap<>();
-            final Map<String, CompletableFuture<User>> futures = new LinkedHashMap<>();
+            final Map<String, User> users = new LinkedHashMap<>();
             while(res.next()) {
                 final String id = res.getString("id");
                 final Player player = new JsonObject(res.getString("data")).mapTo(Player.class);
                 players.put(id, player);
-                futures.put(id, DiscordCache.user(id).toCompletableFuture());
+                users.put(id, DiscordCache.user(id));
             }
-            CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[0])).orTimeout(5L, TimeUnit.SECONDS)
-                    .thenAccept(__ -> {
-                        futures.forEach((id, e) -> {
-                            final User user = e.getNow(null);
-                            if(user != null) {
-                                final Player player = players.get(user.id());
-                                sb.append("- ").append(user.username()).append('#').append(user.discriminator()).append(" - ")
-                                        .append(player.getBalance()).append(helper.getCurrencySymbol(ctx)).append('\n');
-                            } else {
-                                final Player player = players.get(id);
-                                sb.append("- Unknown User#0000 - ").append(player.getBalance())
-                                        .append(helper.getCurrencySymbol(ctx)).append('\n');
-                            }
-                        });
-                        ctx.sendMessage(sb.toString());
-                    }).exceptionally(e -> {
-                if(e instanceof TimeoutException) {
-                    ctx.sendMessage("Couldn't load users in time :(");
+            
+            users.forEach((id, e) -> {
+                if(e != null) {
+                    final Player player = players.get(e.id());
+                    sb.append("- ").append(e.username()).append('#').append(e.discriminator()).append(" - ")
+                            .append(player.getBalance()).append(helper.getCurrencySymbol(ctx)).append('\n');
                 } else {
-                    Sentry.capture(e);
-                    ctx.sendMessage("\uD83D\uDD25 Couldn't load baltop. Try again later?");
+                    final Player player = players.get(id);
+                    sb.append("- Unknown User#0000 - ").append(player.getBalance())
+                            .append(helper.getCurrencySymbol(ctx)).append('\n');
                 }
-                return null;
             });
+            ctx.sendMessage(sb.toString());
         });
     }
     

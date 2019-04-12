@@ -214,13 +214,18 @@ public class Database {
     }
     
     public void addWebhook(final Webhook webhook) {
-        store.sql("INSERT INTO discord_webhooks (channel, guild, id, secret) VALUES (?, ?, ?, ?);", p -> {
-            p.setString(1, webhook.getChannel());
-            p.setString(2, webhook.getGuild());
-            p.setString(3, webhook.getId());
-            p.setString(4, webhook.getSecret());
-            p.execute();
-        });
+        final Optional<Webhook> hook = getWebhook(webhook.getChannel());
+        if(hook.isEmpty()) {
+            store.sql("INSERT INTO discord_webhooks (channel, guild, id, secret) VALUES (?, ?, ?, ?);", p -> {
+                p.setString(1, webhook.getChannel());
+                p.setString(2, webhook.getGuild());
+                p.setString(3, webhook.getId());
+                p.setString(4, webhook.getSecret());
+                p.execute();
+            });
+        } else {
+            // TODO: Just delete it?
+        }
     }
     
     public List<Webhook> getAllWebhooks(final String guildId) {
@@ -324,7 +329,7 @@ public class Database {
                         final T maybe = maybeSettings.get();
                         // We're joining inside of NON-vx threads here, so I'm pretty sure this is safe?
                         // Honestly I just couldn't think of a better way to do it......
-                        final T settings = (T) maybe.refreshCommands().otherRefresh().join();
+                        final T settings = (T) maybe.refreshCommands().otherRefresh();
                         saveSettings(settings);
                         // Cache 'em
                         redis(r -> {

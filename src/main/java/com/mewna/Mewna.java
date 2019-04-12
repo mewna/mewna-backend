@@ -8,7 +8,6 @@ import com.mewna.api.API;
 import com.mewna.catnip.Catnip;
 import com.mewna.catnip.CatnipOptions;
 import com.mewna.data.Database;
-import com.mewna.data.DiscordCache;
 import com.mewna.event.SingyeongEventManager;
 import com.mewna.plugin.PluginManager;
 import com.mewna.plugin.commands.CommandManager;
@@ -100,7 +99,6 @@ public final class Mewna {
         catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN")).validateToken(false), vertx);
         singyeongEventManager = new SingyeongEventManager(this);
         singyeong.connect()
-                .thenAccept(__ -> DiscordCache.setup())
                 .thenAccept(__ -> singyeong.onEvent(singyeongEventManager::handle))
                 .thenAccept(__ -> singyeong.onInvalid(i -> logger.info("Singyeong invalid: {}: {}", i.nonce(), i.reason())))
                 .thenAccept(__ -> new API(this).start())

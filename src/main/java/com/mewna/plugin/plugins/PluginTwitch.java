@@ -75,14 +75,7 @@ public class PluginTwitch extends BasePlugin {
                 webhookGuilds.add(resultSet.getString("id"));
             }
             if(resultSet.isBeforeFirst()) {
-                webhookGuilds.removeIf(e -> {
-                    try {
-                        DiscordCache.guild(e).toCompletableFuture().get();
-                        return false;
-                    } catch(final Exception ignored) {
-                        return true;
-                    }
-                });
+                webhookGuilds.removeIf(e -> DiscordCache.guild(e) == null);
             }
             move(() -> {
                 if(!webhookGuilds.isEmpty()) {

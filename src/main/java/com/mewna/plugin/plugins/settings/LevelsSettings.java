@@ -1,6 +1,5 @@
 package com.mewna.plugin.plugins.settings;
 
-import com.mewna.Mewna;
 import com.mewna.catnip.entity.guild.Role;
 import com.mewna.data.CommandSettings;
 import com.mewna.data.Database;
@@ -10,9 +9,6 @@ import com.mewna.plugin.plugins.PluginLevels;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
-import gg.amy.vertx.SafeVertxCompletableFuture;
-import io.sentry.Sentry;
-import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,7 +17,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -67,28 +62,18 @@ public class LevelsSettings implements PluginSettings {
     }
     
     @Override
-    public CompletableFuture<PluginSettings> otherRefresh() {
-        final Future<PluginSettings> future = Future.future();
+    public PluginSettings otherRefresh() {
+        final Collection<Role> e = DiscordCache.roles(id);
+        final List<String> roles = e.stream().map(Role::id).collect(Collectors.toList());
         
-        DiscordCache.roles(id)
-                .exceptionally(e -> {
-                    Sentry.capture(e);
-                    return Collections.emptyList();
-                })
-                .thenAccept(e -> {
-                    final List<String> roles = e.stream().map(Role::id).collect(Collectors.toList());
-                    
-                    final Collection<String> bad = new ArrayList<>();
-                    levelRoleRewards.keySet().forEach(r -> {
-                        if(!roles.contains(r)) {
-                            bad.add(r);
-                        }
-                    });
-                    bad.forEach(levelRoleRewards::remove);
-                    future.complete(this);
-                });
-        // return this;
-        return SafeVertxCompletableFuture.from(Mewna.getInstance().vertx(), future);
+        final Collection<String> bad = new ArrayList<>();
+        levelRoleRewards.keySet().forEach(r -> {
+            if(!roles.contains(r)) {
+                bad.add(r);
+            }
+        });
+        bad.forEach(levelRoleRewards::remove);
+        return this;
     }
     
     @Override

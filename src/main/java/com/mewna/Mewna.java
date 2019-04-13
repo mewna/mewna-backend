@@ -118,41 +118,42 @@ public final class Mewna {
                     long end = System.currentTimeMillis();
                     logger.info("Started in {}ms ({}ms JVM start).", end - start, start - jvmStart);
                     profiler.end();
-                    
-                    final StringBuilder sb = new StringBuilder();
-                    sb.append("[PROFILER]\n");
-                    final Optional<Integer> maxLength = profiler.sections().stream()
-                            .map(e -> '[' + e.name() + ']')
-                            .map(String::length)
-                            .max(Integer::compareTo);
-                    final int max = maxLength.orElse(0);
-                    profiler.sections().forEach(section -> {
-                        final String formatted = StringUtils.leftPad('[' + section.name() + ']', max, ' ');
-                        sb.append(formatted).append(' ').append(section.end() - section.start()).append("ms\n");
-                    });
-                    logger.info("Boot profiling:\n{}", sb.toString().trim());
-                    final var heap = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
-                    final var nonHeap = ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage();
-                    final long heapUsed = heap.getUsed() / (1024L * 1024L);
-                    final long heapAllocated = heap.getCommitted() / (1024L * 1024L);
-                    final long heapTotal = heap.getMax() / (1024L * 1024L);
-                    final long heapInit = heap.getInit() / (1024L * 1024L);
-                    final long nonHeapUsed = nonHeap.getUsed() / (1024L * 1024L);
-                    final long nonHeapAllocated = nonHeap.getCommitted() / (1024L * 1024L);
-                    final long nonHeapTotal = nonHeap.getMax() / (1024L * 1024L);
-                    final long nonHeapInit = nonHeap.getInit() / (1024L * 1024L);
-                    
-                    final var out = "[HEAP]\n" +
-                            "     [Init] " + heapInit + "MB\n" +
-                            "     [Used] " + heapUsed + "MB\n" +
-                            "    [Alloc] " + heapAllocated + "MB\n" +
-                            "    [Total] " + heapTotal + "MB\n" +
-                            "[NONHEAP]\n" +
-                            "     [Init] " + nonHeapInit + "MB\n" +
-                            "     [Used] " + nonHeapUsed + "MB\n" +
-                            "    [Alloc] " + nonHeapAllocated + "MB\n" +
-                            "    [Total] " + nonHeapTotal + "MB\n";
-                    logger.info("Boot RAM:\n{}", out);
+                    if(System.getenv("DEBUG") != null) {
+                        final StringBuilder sb = new StringBuilder();
+                        sb.append("[PROFILER]\n");
+                        final Optional<Integer> maxLength = profiler.sections().stream()
+                                .map(e -> '[' + e.name() + ']')
+                                .map(String::length)
+                                .max(Integer::compareTo);
+                        final int max = maxLength.orElse(0);
+                        profiler.sections().forEach(section -> {
+                            final String formatted = StringUtils.leftPad('[' + section.name() + ']', max, ' ');
+                            sb.append(formatted).append(' ').append(section.end() - section.start()).append("ms\n");
+                        });
+                        logger.info("Boot profiling:\n{}", sb.toString().trim());
+                        final var heap = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+                        final var nonHeap = ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage();
+                        final long heapUsed = heap.getUsed() / (1024L * 1024L);
+                        final long heapAllocated = heap.getCommitted() / (1024L * 1024L);
+                        final long heapTotal = heap.getMax() / (1024L * 1024L);
+                        final long heapInit = heap.getInit() / (1024L * 1024L);
+                        final long nonHeapUsed = nonHeap.getUsed() / (1024L * 1024L);
+                        final long nonHeapAllocated = nonHeap.getCommitted() / (1024L * 1024L);
+                        final long nonHeapTotal = nonHeap.getMax() / (1024L * 1024L);
+                        final long nonHeapInit = nonHeap.getInit() / (1024L * 1024L);
+    
+                        final var out = "[HEAP]\n" +
+                                "     [Init] " + heapInit + "MB\n" +
+                                "     [Used] " + heapUsed + "MB\n" +
+                                "    [Alloc] " + heapAllocated + "MB\n" +
+                                "    [Total] " + heapTotal + "MB\n" +
+                                "[NONHEAP]\n" +
+                                "     [Init] " + nonHeapInit + "MB\n" +
+                                "     [Used] " + nonHeapUsed + "MB\n" +
+                                "    [Alloc] " + nonHeapAllocated + "MB\n" +
+                                "    [Total] " + nonHeapTotal + "MB\n";
+                        logger.info("Boot RAM:\n{}", out);
+                    }
                 })
                 .exceptionally(e -> {
                     e.printStackTrace();

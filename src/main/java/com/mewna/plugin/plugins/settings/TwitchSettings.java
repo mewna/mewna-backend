@@ -17,7 +17,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -124,22 +123,19 @@ public class TwitchSettings implements PluginSettings {
                 return false;
             }
         }
-
+        
         // If a streamer is in the new list, and NOT in the old list, then we
         // need to subscribe to those notifications
         final Collection<TwitchStreamerConfig> copy = new ArrayList<>(streamers);
         
-        
         copy.removeIf(e -> twitchStreamers.stream().anyMatch(f -> f.id.equalsIgnoreCase(e.id)));
-        copy.forEach(streamer -> {
-            Mewna.getInstance().singyeong().send("telepathy",
-                    new QueryBuilder().build(),
-                    new JsonObject().put("t", "TWITCH_SUBSCRIBE")
-                            .put("d", new JsonObject().put("id", streamer.getId()).put("topic", "streams")));
-        });
+        copy.forEach(streamer -> Mewna.getInstance().singyeong().send("telepathy",
+                new QueryBuilder().build(),
+                new JsonObject().put("t", "TWITCH_SUBSCRIBE")
+                        .put("d", new JsonObject().put("id", streamer.getId()).put("topic", "streams"))));
         
         // We don't try to unsubscribe from webhooks because that would honestly be a nightmare x-x
-
+        
         twitchStreamers.clear();
         twitchStreamers.addAll(streamers);
         database.saveSettings(this);
@@ -149,7 +145,6 @@ public class TwitchSettings implements PluginSettings {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    @SuppressWarnings("WeakerAccess")
     public static class TwitchStreamerConfig {
         private String id;
         private boolean streamStartMessagesEnabled;

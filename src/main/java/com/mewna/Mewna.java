@@ -12,6 +12,7 @@ import com.mewna.event.SingyeongEventManager;
 import com.mewna.plugin.PluginManager;
 import com.mewna.plugin.commands.CommandManager;
 import com.mewna.util.IOUtils;
+import com.mewna.util.Profiler;
 import com.mewna.util.Ratelimiter;
 import com.mewna.util.Translator;
 import com.timgroup.statsd.NoOpStatsDClient;
@@ -23,9 +24,11 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import lombok.Getter;
 import lombok.experimental.Accessors;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.management.ManagementFactory;
 import java.util.Optional;
 
 /**
@@ -81,8 +84,12 @@ public final class Mewna {
     }
     
     private void start() {
+        final long jvmStart = ManagementFactory.getRuntimeMXBean().getStartTime();
+        final long start = System.currentTimeMillis();
+        final Profiler profiler = new Profiler("sentry", System.currentTimeMillis());
         logger.info("Starting Mewna backend...");
         Sentry.init();
+        profiler.section("jackson");
         // Register jackson modules w/ the v. om instances
         Json.mapper.registerModule(new JavaTimeModule())
                 .registerModule(new ParameterNamesModule())
@@ -91,18 +98,62 @@ public final class Mewna {
                 .registerModule(new ParameterNamesModule())
                 .registerModule(new Jdk8Module());
         // Start loading our data!
+        profiler.section("translations");
         Translator.preload();
         commandManager = new CommandManager(this);
+        profiler.section("databaseInit");
         database.init();
+        profiler.section("pluginInit");
         pluginManager.init();
         // Skip token validation to save on REST reqs
+        profiler.section("catnipInit");
         catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN")).validateToken(false), vertx);
+        profiler.section("singyeongInit");
         singyeongEventManager = new SingyeongEventManager(this);
         singyeong.connect()
                 .thenAccept(__ -> singyeong.onEvent(singyeongEventManager::handle))
                 .thenAccept(__ -> singyeong.onInvalid(i -> logger.info("Singyeong invalid: {}: {}", i.nonce(), i.reason())))
                 .thenAccept(__ -> new API(this).start())
-                .thenAccept(__ -> logger.info("Finished starting!"))
+                .thenAccept(__ -> {
+                    long end = System.currentTimeMillis();
+                    logger.info("Started in {}ms ({}ms JVM start).", end - start, start - jvmStart);
+                    profiler.end();
+                    
+                    final StringBuilder sb = new StringBuilder();
+                    sb.append("[PROFILER]\n");
+                    final Optional<Integer> maxLength = profiler.sections().stream()
+                            .map(e -> '[' + e.name() + ']')
+                            .map(String::length)
+                            .max(Integer::compareTo);
+                    final int max = maxLength.orElse(0);
+                    profiler.sections().forEach(section -> {
+                        final String formatted = StringUtils.leftPad('[' + section.name() + ']', max, ' ');
+                        sb.append(formatted).append(' ').append(section.end() - section.start()).append("ms\n");
+                    });
+                    logger.info("Boot profiling:\n{}", sb.toString().trim());
+                    final var heap = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+                    final var nonHeap = ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage();
+                    final long heapUsed = heap.getUsed() / (1024L * 1024L);
+                    final long heapAllocated = heap.getCommitted() / (1024L * 1024L);
+                    final long heapTotal = heap.getMax() / (1024L * 1024L);
+                    final long heapInit = heap.getInit() / (1024L * 1024L);
+                    final long nonHeapUsed = nonHeap.getUsed() / (1024L * 1024L);
+                    final long nonHeapAllocated = nonHeap.getCommitted() / (1024L * 1024L);
+                    final long nonHeapTotal = nonHeap.getMax() / (1024L * 1024L);
+                    final long nonHeapInit = nonHeap.getInit() / (1024L * 1024L);
+                    
+                    final var out = "[HEAP]\n" +
+                            "     [Init] " + heapInit + "MB\n" +
+                            "     [Used] " + heapUsed + "MB\n" +
+                            "    [Alloc] " + heapAllocated + "MB\n" +
+                            "    [Total] " + heapTotal + "MB\n" +
+                            "[NONHEAP]\n" +
+                            "     [Init] " + nonHeapInit + "MB\n" +
+                            "     [Used] " + nonHeapUsed + "MB\n" +
+                            "    [Alloc] " + nonHeapAllocated + "MB\n" +
+                            "    [Total] " + nonHeapTotal + "MB\n";
+                    logger.info("Boot RAM:\n{}", out);
+                })
                 .exceptionally(e -> {
                     e.printStackTrace();
                     return null;

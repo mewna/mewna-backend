@@ -4,6 +4,5 @@ dependency-reduced-pom.xml
 /*.iml
 /*.json
 *.sh
-hs_err_pid*.log
-replay_pid*.log
 .vertx/
+*.log

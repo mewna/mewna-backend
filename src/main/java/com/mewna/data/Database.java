@@ -64,7 +64,7 @@ public class Database {
         logger.info("Connecting to Redis...");
         final JedisPoolConfig config = new JedisPoolConfig();
         config.setMaxIdle(10);
-        config.setMaxTotal(100);
+        config.setMaxTotal(10);
         config.setMaxWaitMillis(500);
         jedisPool = new JedisPool(config, System.getenv("REDIS_HOST"));
         logger.info("Redis connection pool ready!");
@@ -215,6 +215,7 @@ public class Database {
     
     public void addWebhook(final Webhook webhook) {
         final Optional<Webhook> hook = getWebhook(webhook.getChannel());
+        //noinspection StatementWithEmptyBody
         if(hook.isEmpty()) {
             store.sql("INSERT INTO discord_webhooks (channel, guild, id, secret) VALUES (?, ?, ?, ?);", p -> {
                 p.setString(1, webhook.getChannel());

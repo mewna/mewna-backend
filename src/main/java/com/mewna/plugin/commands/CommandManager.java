@@ -63,11 +63,11 @@ public class CommandManager {
     public void loadCommandsFromMethod(final Object pluginInstance, final Plugin pluginAnnotation,
                                        final Class<?> pluginClass, final Method m) {
         if(m.getParameterCount() != 1) {
-            logger.warn("@Command method '{}' doesn't take a single parameter!", m.getName());
+            logger.error("@Command method '{}' doesn't take a single parameter!", m.getName());
             return;
         }
         if(!m.getParameterTypes()[0].equals(CommandContext.class)) {
-            logger.warn("@Command method '{}' doesn't take a single CommandContext parameter!", m.getName());
+            logger.error("@Command method '{}' doesn't take a single CommandContext parameter!", m.getName());
             return;
         }
         final Command cmd = m.getDeclaredAnnotation(Command.class);
@@ -87,8 +87,7 @@ public class CommandManager {
                             pluginInstance, m
                     )
             );
-            logger.info("Loaded plugin command '{}' for plugin '{}' ({})", s,
-                    pluginAnnotation.name(), pluginClass.getName());
+            // logger.info("Loaded plugin command '{}' for plugin '{}' ({})", s, pluginAnnotation.name(), pluginClass.getName());
         }
         // Load metadata
         if(!isOwner && !isStaff) { // ignore secret commands

@@ -55,7 +55,6 @@ public class PluginEconomy extends BasePlugin {
     private static final long CRIME_BASE_COST = 10;
     private static final long DAILY_BASE_REWARD = 100;
     private static final int GAMBLE_WUMPUS_COUNT = 4;
-    private final Map<String, SlotMachine> slotsCache = new HashMap<>();
     @Inject
     private CurrencyHelper helper;
     
@@ -221,12 +220,10 @@ public class PluginEconomy extends BasePlugin {
             examples = {"slots", "slots 100"})
     public void slots(final CommandContext ctx) {
         final User user = ctx.getUser();
-        if(!slotsCache.containsKey(user.id())) {
-            slotsCache.put(user.id(), new SlotMachine());
-        }
+        final SlotMachine machine = new SlotMachine();
         
         final long payment = ctx.getCost();
-        final ReelSymbol[][] roll = slotsCache.get(user.id()).roll();
+        final ReelSymbol[][] roll = machine.roll();
         
         // 10% chance of guaranteed win
         if(random().nextInt(100) < 25) {

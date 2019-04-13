@@ -154,7 +154,7 @@ public class PluginManager {
                     pluginMetadata.add(new PluginMetadata(pluginAnnotation.name(), pluginAnnotation.desc(), c, pluginAnnotation.settings()));
                     settingsClasses.add(pluginAnnotation.settings());
                 }
-                logger.info("Finished loading plugin {}: {}", pluginAnnotation.name(), pluginAnnotation.desc());
+                // logger.info("Finished loading plugin {}: {}", pluginAnnotation.name(), pluginAnnotation.desc());
             } catch(final InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
                 Sentry.capture(e);
                 e.printStackTrace();

@@ -105,7 +105,7 @@ public class PluginSecret extends BasePlugin {
                             // Purge cache
                             validatedPages.forEach(page -> {
                                 final String id = page.getString("id");
-                                mewna().database().redis(r -> r.del("mewna:player:cache:" + id));
+                                mewna().database().cachePrune("player", id);
                             });
                             ctx.sendMessage(Emotes.YES + " Updated " + counter[0] + " pages for table " + ctx.getArgs().get(0));
                         }

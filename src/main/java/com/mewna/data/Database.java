@@ -386,8 +386,7 @@ public class Database {
         }
         return store.mapAsync(Player.class).load(id)
                 .thenApply(player -> {
-                    // logger.info("Caching player {}", id);
-                    redis(r -> r.set("mewna:player:cache:" + id, JsonObject.mapFrom(player).encode()));
+                    cache("player", id, JsonObject.mapFrom(player).encode());
                     return player;
                 })
                 .exceptionally(e -> {
@@ -458,7 +457,7 @@ public class Database {
         }
         final Optional<Account> loaded = store.mapSync(Account.class).load(id);
         
-        loaded.ifPresent(account -> redis(r -> cache("account", id, JsonObject.mapFrom(account).encode())));
+        loaded.ifPresent(account -> cache("account", id, JsonObject.mapFrom(account).encode()));
         return loaded;
     }
     
@@ -485,7 +484,7 @@ public class Database {
             }
         });
         
-        holder.value.ifPresent(account -> redis(r -> cache("account", id, JsonObject.mapFrom(account).encode())));
+        holder.value.ifPresent(account -> cache("account", id, JsonObject.mapFrom(account).encode()));
         
         return holder.value;
     }

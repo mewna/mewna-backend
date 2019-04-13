@@ -5,6 +5,8 @@ import com.mewna.Mewna;
 import com.mewna.data.Database;
 import com.mewna.data.PluginSettings;
 import com.mewna.plugin.commands.Command;
+import com.mewna.plugin.commands.annotations.Owner;
+import com.mewna.plugin.commands.annotations.Staff;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.util.CurrencyHelper;
 import com.mewna.util.UserAgentInterceptor;
@@ -146,7 +148,9 @@ public class PluginManager {
                 }
                 
                 pluginMap.put(c, pluginInstance);
-                if(pluginAnnotation.enabled() && !pluginAnnotation.owner() && !pluginAnnotation.staff()) {
+                final boolean isOwner = c.isAnnotationPresent(Owner.class);
+                final boolean isStaff = c.isAnnotationPresent(Staff.class);
+                if(pluginAnnotation.enabled() && !isOwner && !isStaff) {
                     pluginMetadata.add(new PluginMetadata(pluginAnnotation.name(), pluginAnnotation.desc(), c, pluginAnnotation.settings()));
                     settingsClasses.add(pluginAnnotation.settings());
                 }

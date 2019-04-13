@@ -99,9 +99,7 @@ public class TwitchSettings implements PluginSettings {
     
     @Override
     public boolean updateSettings(final Database database, final JsonObject data) {
-        if(data.getString("twitchWebhookChannel", null) != null) {
-            twitchWebhookChannel = data.getString("twitchWebhookChannel");
-        }
+        twitchWebhookChannel = data.getString("twitchWebhookChannel");
         final JsonArray streamersJson = data.getJsonArray("twitchStreamers");
         final Collection<TwitchStreamerConfig> streamers = new ArrayList<>();
         for(final Object o : streamersJson) {

@@ -29,7 +29,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /**
@@ -125,6 +124,30 @@ public class Database {
             t.accept(transaction);
             transaction.exec();
         });
+    }
+    
+    public <T> void cache(final String type, final String key, final T value) {
+        redis(r -> {
+            // logger.info("Deleting settings {} for guild {} from cache", name, id);
+            r.del("mewna:cache:" + type + ':' + key, JsonObject.mapFrom(value).encode());
+        });
+    }
+    
+    public <T> T cacheRead(final String type, final String key, final Class<T> cls) {
+        final Object[] cached = {null};
+        redis(r -> {
+            final String json = r.get("mewna:cache:" + type + ':' + key);
+            if(json != null) {
+                // logger.info("Reading player {} from cache", id);
+                cached[0] = new JsonObject(json).mapTo(cls);
+            }
+        });
+        //noinspection unchecked
+        return (T) cached[0];
+    }
+    
+    public void cachePrune(final String type, final String key) {
+        redis(r -> r.del("mewna:cache:" + type + ':' + key));
     }
     
     public CompletableFuture<Boolean> lock(final String key) {
@@ -302,16 +325,9 @@ public class Database {
         if(!store.isMappedSync(type) && !store.isMappedAsync(type)) {
             throw new IllegalArgumentException("Attempted to get settings of type " + type.getName() + ", but it's not mapped!");
         }
-        final AtomicReference<T> cached = new AtomicReference<>(null);
-        redis(r -> {
-            final String json = r.get("mewna:settings:cache:" + type.getSimpleName() + ':' + id);
-            if(json != null) {
-                // logger.info("Reading settings {} for guild {} from cache", type.getSimpleName(), id);
-                cached.set(new JsonObject(json).mapTo(type));
-            }
-        });
-        if(cached.get() != null) {
-            return CompletableFuture.completedFuture(cached.get());
+        final T cached = cacheRead("settings:" + type.getSimpleName(), id, type);
+        if(cached != null) {
+            return CompletableFuture.completedFuture(cached);
         }
         return getSettingsByType(type, id)
                 .exceptionally(e -> {
@@ -333,21 +349,13 @@ public class Database {
                         final T settings = (T) maybe.refreshCommands().otherRefresh();
                         saveSettings(settings);
                         // Cache 'em
-                        redis(r -> {
-                            // logger.info("Caching settings {} for guild {}", type.getSimpleName(), id);
-                            r.set("mewna:settings:cache:" + type.getSimpleName() + ':' + id,
-                                    JsonObject.mapFrom(settings).encode());
-                        });
+                        cache("settings:" + type.getSimpleName(), id, JsonObject.mapFrom(settings).encode());
                         return settings;
                     } else {
                         try {
                             final T base = type.getConstructor(String.class).newInstance(id);
                             saveSettings(base);
-                            redis(r -> {
-                                // logger.info("Caching settings {} for guild {}", type.getSimpleName(), id);
-                                r.set("mewna:settings:cache:" + type.getSimpleName() + ':' + id,
-                                        JsonObject.mapFrom(base).encode());
-                            });
+                            cache("settings:" + type.getSimpleName(), id, JsonObject.mapFrom(base).encode());
                             return base;
                         } catch(final IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
                             Sentry.capture(e);
@@ -359,12 +367,7 @@ public class Database {
     
     @SuppressWarnings("unchecked")
     public <T extends PluginSettings> void saveSettings(final T settings) {
-        redis(r -> {
-            final String name = settings.getClass().getSimpleName();
-            final String id = settings.getId();
-            // logger.info("Deleting settings {} for guild {} from cache", name, id);
-            r.del("mewna:settings:cache:" + name + ':' + id);
-        });
+        cachePrune("settings:" + settings.getClass().getSimpleName(), settings.getId());
         // This is technically valid
         store.mapSync((Class<T>) settings.getClass()).save(settings);
     }
@@ -377,16 +380,9 @@ public class Database {
         if(profiler != null) {
             profiler.section("playerMapAsync");
         }
-        final Player[] cached = {null};
-        redis(r -> {
-            final String json = r.get("mewna:player:cache:" + id);
-            if(json != null) {
-                // logger.info("Reading player {} from cache", id);
-                cached[0] = new JsonObject(json).mapTo(Player.class);
-            }
-        });
-        if(cached[0] != null) {
-            return SafeVertxCompletableFuture.completedFuture(Optional.of(cached[0]));
+        final Player cached = cacheRead("player", id, Player.class);
+        if(cached != null) {
+            return SafeVertxCompletableFuture.completedFuture(Optional.of(cached));
         }
         return store.mapAsync(Player.class).load(id)
                 .thenApply(player -> {
@@ -446,8 +442,7 @@ public class Database {
                     }
                 }).thenCompose(__ -> store.mapAsync(Player.class).save(player)
                         .thenAccept(___ -> {
-                            // logger.info("Removing player {} from cache", player.getId());
-                            redis(r -> r.del("mewna:player:cache:" + player.getId()));
+                            cachePrune("player", player.getId());
                             unlockPlayer(player);
                         }));
     }
@@ -457,33 +452,20 @@ public class Database {
     //////////////
     
     public Optional<Account> getAccountById(final String id) {
-        final AtomicReference<Optional<Account>> cached = new AtomicReference<>(null);
-        redis(r -> {
-            final String json = r.get("mewna:account:cache:" + id);
-            if(json != null) {
-                // logger.info("Reading settings {} for guild {} from cache", type.getSimpleName(), id);
-                cached.set(Optional.ofNullable(new JsonObject(json).mapTo(Account.class)));
-            }
-        });
-        if(cached.get() != null && cached.get().isPresent()) {
-            return cached.get();
+        final Account cached = cacheRead("account", id, Account.class);
+        if(cached != null) {
+            return Optional.of(cached);
         }
         final Optional<Account> loaded = store.mapSync(Account.class).load(id);
-        loaded.ifPresent(account -> redis(r -> r.set("mewna:account:cache:" + id, JsonObject.mapFrom(account).encode())));
+        
+        loaded.ifPresent(account -> redis(r -> cache("account", id, JsonObject.mapFrom(account).encode())));
         return loaded;
     }
     
     public Optional<Account> getAccountByDiscordId(final String id) {
-        final AtomicReference<Optional<Account>> cached = new AtomicReference<>(null);
-        redis(r -> {
-            final String json = r.get("mewna:account:cache:id:" + id);
-            if(json != null) {
-                // logger.info("Reading settings {} for guild {} from cache", type.getSimpleName(), id);
-                cached.set(Optional.ofNullable(new JsonObject(json).mapTo(Account.class)));
-            }
-        });
-        if(cached.get() != null && cached.get().isPresent()) {
-            return cached.get();
+        final Account cached = cacheRead("account", id, Account.class);
+        if(cached != null) {
+            return Optional.of(cached);
         }
         
         final OptionalHolder<Account> holder = new OptionalHolder<>();
@@ -503,16 +485,13 @@ public class Database {
             }
         });
         
-        holder.value.ifPresent(account -> redis(r -> r.set("mewna:account:cache:id:" + id, JsonObject.mapFrom(account).encode())));
+        holder.value.ifPresent(account -> redis(r -> cache("account", id, JsonObject.mapFrom(account).encode())));
         
         return holder.value;
     }
     
     public void saveAccount(final Account account) {
-        redis(r -> {
-            r.del("mewna:account:cache:" + account.id());
-            r.del("mewna:account:cache:id:" + account.discordAccountId());
-        });
+        cachePrune("account", account.id());
         store.mapSync(Account.class).save(account);
     }
     

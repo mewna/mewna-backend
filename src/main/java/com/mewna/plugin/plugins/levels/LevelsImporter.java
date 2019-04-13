@@ -138,8 +138,7 @@ public final class LevelsImporter {
                         players.forEach(e -> {
                             Mewna.getInstance().database().unlock(e.getId());
                             // Cache prune
-                            // TODO: Can this be changed to a convenience method on database...?
-                            Mewna.getInstance().database().redis(r -> r.del("mewna:player:cache:" + e.getId()));
+                            Mewna.getInstance().database().cachePrune("player", e.getId());
                         });
                         
                         try {

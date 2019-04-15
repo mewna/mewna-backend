@@ -39,6 +39,10 @@ public class ConfigRoutes implements RouteGroup {
                     .stream()
                     .map(cls -> block(mewna.database().getOrBaseSettings(cls, id)))
                     .collect(Collectors.toList());
+            if(settings.isEmpty()) {
+                ctx.response().end(new JsonObject().put("errors", new JsonArray(List.of("invalid settings"))).encode());
+                return;
+            }
             final JsonObject out = new JsonObject();
             settings.stream().filter(s -> !(s instanceof SecretSettings)).forEach(s -> {
                 if(s == null) {

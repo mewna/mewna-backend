@@ -7,6 +7,7 @@ import com.mewna.catnip.entity.guild.Role;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.data.DiscordCache;
 import com.mewna.data.Player;
+import com.mewna.data.Server;
 import com.mewna.data.Webhook;
 import com.mewna.plugin.plugins.PluginLevels;
 import com.mewna.plugin.plugins.settings.BehaviourSettings;
@@ -42,6 +43,23 @@ public class GuildRoutes implements RouteGroup {
     
     @Override
     public void registerRoutes(final Mewna mewna, final Router router) {
+        router.get("/v3/guild/:id").handler(ctx -> move(() -> {
+            final String id = ctx.request().getParam("id");
+            final Server server = mewna.database().getServer(id);
+            ctx.response().end(JsonObject.mapFrom(server).encode());
+        }));
+        router.post("/v3/guild/:id").handler(BodyHandler.create()).handler(ctx -> move(() -> {
+            final String id = ctx.request().getParam("id");
+            final Server prev = mewna.database().getServer(id);
+            final Server server = ctx.getBodyAsJson().mapTo(Server.class);
+            if(server.validate(prev)) {
+                mewna.database().saveServer(server);
+                ctx.response().end(new JsonObject().encode());
+            } else {
+                ctx.response().end(new JsonObject().put("errors", new JsonArray(List.of("invalid server config"))).encode());
+            }
+        }));
+        
         router.get("/v3/guild/:id/rewards").handler(ctx -> move(() -> {
             final String id = ctx.request().getParam("id");
             final var roles = DiscordCache.roles(id);

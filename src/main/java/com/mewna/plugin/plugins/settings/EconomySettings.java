@@ -53,6 +53,7 @@ public class EconomySettings implements PluginSettings {
     @Override
     public boolean validateSettings(final JsonObject data) {
         for(final String key : data.fieldNames()) {
+            //noinspection SwitchStatementWithTooFewBranches
             switch(key) {
                 case "currencySymbol": {
                     final Optional<String> string = Optional.ofNullable(data.getString(key, null));

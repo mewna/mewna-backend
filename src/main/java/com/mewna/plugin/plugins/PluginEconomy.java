@@ -45,7 +45,7 @@ import static com.mewna.util.Translator.$;
  * @author amy
  * @since 5/19/18.
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "SqlResolve"})
 @Plugin(name = "Economy", desc = "Let people earn and spend money.", settings = EconomySettings.class)
 public class PluginEconomy extends BasePlugin {
     public static final int VOTE_BONUS = 750;

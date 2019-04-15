@@ -35,6 +35,7 @@ import static com.mewna.util.Async.move;
  * @author amy
  * @since 10/18/18.
  */
+@SuppressWarnings("SqlResolve")
 @Owner
 @Plugin(name = "secret", desc = "spooky secret things :3", settings = SecretSettings.class)
 public class PluginSecret extends BasePlugin {

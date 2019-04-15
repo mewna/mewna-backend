@@ -37,7 +37,7 @@ import java.util.function.Consumer;
  * @author amy
  * @since 4/14/18.
  */
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings({"unused", "WeakerAccess", "SqlResolve"})
 public class Database {
     @Getter
     private final Mewna mewna;
@@ -73,7 +73,7 @@ public class Database {
         
         mapSettingsClasses();
         
-        premap(Player.class, Account.class, TimelinePost.class, ServerBlogPost.class);
+        premap(Player.class, Account.class, Server.class, TimelinePost.class, ServerBlogPost.class);
         
         // Webhooks table is created manually, because it doesn't need to be JSON:b:
         store.sql("CREATE TABLE IF NOT EXISTS discord_webhooks (channel TEXT PRIMARY KEY NOT NULL UNIQUE, guild TEXT NOT NULL, " +
@@ -127,10 +127,7 @@ public class Database {
     }
     
     public <T> void cache(final String type, final String key, final T value) {
-        redis(r -> {
-            // logger.info("Deleting settings {} for guild {} from cache", name, id);
-            r.del("mewna:cache:" + type + ':' + key, JsonObject.mapFrom(value).encode());
-        });
+        redis(r -> r.set("mewna:cache:" + type + ':' + key, JsonObject.mapFrom(value).encode()));
     }
     
     public <T> T cacheRead(final String type, final String key, final Class<T> cls) {
@@ -138,7 +135,6 @@ public class Database {
         redis(r -> {
             final String json = r.get("mewna:cache:" + type + ':' + key);
             if(json != null) {
-                // logger.info("Reading player {} from cache", id);
                 cached[0] = new JsonObject(json).mapTo(cls);
             }
         });
@@ -183,7 +179,6 @@ public class Database {
     }
     
     public CompletableFuture<Boolean> lockPlayer(final String id) {
-        // logger.info("Locking player: {}", id);
         mewna.statsClient().increment("playerLocksTaken", 1);
         return lock("mewna:locks:players:" + id);
     }
@@ -193,7 +188,6 @@ public class Database {
     }
     
     public void unlockPlayer(final String id) {
-        // logger.info("Unlocking player: {}", id);
         mewna.statsClient().increment("playerLocksReleased", 1);
         unlock("mewna:locks:players:" + id);
     }
@@ -349,13 +343,13 @@ public class Database {
                         final T settings = (T) maybe.refreshCommands().otherRefresh();
                         saveSettings(settings);
                         // Cache 'em
-                        cache("settings:" + type.getSimpleName(), id, JsonObject.mapFrom(settings).encode());
+                        cache("settings:" + type.getSimpleName(), id, settings);
                         return settings;
                     } else {
                         try {
                             final T base = type.getConstructor(String.class).newInstance(id);
                             saveSettings(base);
-                            cache("settings:" + type.getSimpleName(), id, JsonObject.mapFrom(base).encode());
+                            cache("settings:" + type.getSimpleName(), id, base);
                             return base;
                         } catch(final IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
                             Sentry.capture(e);
@@ -386,7 +380,7 @@ public class Database {
         }
         return store.mapAsync(Player.class).load(id)
                 .thenApply(player -> {
-                    cache("player", id, JsonObject.mapFrom(player).encode());
+                    cache("player", id, player);
                     return player;
                 })
                 .exceptionally(e -> {
@@ -457,7 +451,7 @@ public class Database {
         }
         final Optional<Account> loaded = store.mapSync(Account.class).load(id);
         
-        loaded.ifPresent(account -> cache("account", id, JsonObject.mapFrom(account).encode()));
+        loaded.ifPresent(account -> cache("account", id, account));
         return loaded;
     }
     
@@ -484,7 +478,7 @@ public class Database {
             }
         });
         
-        holder.value.ifPresent(account -> cache("account", id, JsonObject.mapFrom(account).encode()));
+        holder.value.ifPresent(account -> cache("account", id, account));
         
         return holder.value;
     }
@@ -524,6 +518,31 @@ public class Database {
         });
         
         return posts;
+    }
+    
+    //////////////////////////
+    // Server page settings //
+    //////////////////////////
+    
+    public Server getServer(final String id) {
+        final Server server = cacheRead("server", id, Server.class);
+        if(server != null) {
+            return server;
+        }
+        final Optional<Server> maybeServer = store.mapSync(Server.class).load(id);
+        if(maybeServer.isPresent()) {
+            return maybeServer.get();
+        } else {
+            final Server base = new Server(id);
+            store.mapSync(Server.class).save(base);
+            cache("server", id, base);
+            return base;
+        }
+    }
+    
+    public void saveServer(final Server server) {
+        store.mapSync(Server.class).save(server);
+        cachePrune("server", server.getId());
     }
     
     //////////////////

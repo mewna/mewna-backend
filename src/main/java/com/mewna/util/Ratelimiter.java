@@ -6,6 +6,9 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
+ * TODO: Convert this to expire keys when ratelimit is finished so that we can
+ *  have less shit stored in Redis
+ *
  * @author amy
  * @since 4/14/18.
  */

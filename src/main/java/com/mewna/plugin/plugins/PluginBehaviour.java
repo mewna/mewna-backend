@@ -19,17 +19,17 @@ import io.vertx.core.json.JsonObject;
 @Plugin(name = "Behaviour", desc = "Change how Mewna behaves in this server.", settings = BehaviourSettings.class)
 public class PluginBehaviour extends BasePlugin {
     @Event(EventType.PLAYER_EVENT)
-    public void handleEvent(final PlayerEvent event) {
+    public void handlePlayerEvent(final PlayerEvent event) {
         database().getAccountByDiscordId(event.getPlayer().getId())
-                .ifPresent(acc -> handle(acc, event.getType(), event.getData()));
+                .ifPresent(acc -> handleUserEvent(acc, event.getType(), event.getData()));
     }
     
     @Event(EventType.ACCOUNT_EVENT)
-    public void handleEvent(final AccountEvent event) {
-        handle(event.getAccount(), event.getType(), event.getData());
+    public void handleAccountEvent(final AccountEvent event) {
+        handleUserEvent(event.getAccount(), event.getType(), event.getData());
     }
     
-    private void handle(final Account account, final SystemUserEventType type, final JsonObject data) {
+    private void handleUserEvent(final Account account, final SystemUserEventType type, final JsonObject data) {
         final TimelinePost post = TimelinePost.create(account.id(), true, data
                 .put("type", type.getEventId()).toString());
         database().savePost(post);
@@ -37,13 +37,13 @@ public class PluginBehaviour extends BasePlugin {
             case GLOBAL_LEVEL: {
                 break;
             }
-            case BACKGROUND: {
+            case ACCOUNT_BACKGROUND: {
                 break;
             }
-            case DESCRIPTION: {
+            case ACCOUNT_DESCRIPTION: {
                 break;
             }
-            case DISPLAY_NAME: {
+            case ACCOUNT_DISPLAY_NAME: {
                 break;
             }
             case TWITCH_STREAM: {

@@ -29,6 +29,7 @@ import java.util.List;
 @Table("accounts")
 @GIndex({"id", "email", "username", "discordAccountId"})
 @Builder(toBuilder = true)
+@SuppressWarnings("unused")
 public class Account {
     public static final int MAX_ABOUT_TEXT_LENGTH = 150;
     public static final int MAX_DISPLAY_NAME_LENGTH = 32;
@@ -127,7 +128,7 @@ public class Account {
         if(data.getMap().containsKey("aboutText")) {
             if(!builder.aboutText.equals(data.getString("aboutText"))) {
                 Mewna.getInstance().pluginManager().processEvent(EventType.ACCOUNT_EVENT,
-                        new AccountEvent(SystemUserEventType.DESCRIPTION, this,
+                        new AccountEvent(SystemUserEventType.ACCOUNT_DESCRIPTION, this,
                                 new JsonObject()
                                         .put("old", builder.aboutText)
                                         .put("new", data.getString("aboutText"))
@@ -139,7 +140,7 @@ public class Account {
         if(data.getMap().containsKey("customBackground")) {
             if(!builder.customBackground.equals("/backgrounds/" + data.getString("customBackground"))) {
                 Mewna.getInstance().pluginManager().processEvent(EventType.ACCOUNT_EVENT,
-                        new AccountEvent(SystemUserEventType.BACKGROUND, this,
+                        new AccountEvent(SystemUserEventType.ACCOUNT_BACKGROUND, this,
                                 new JsonObject().put("bg", "/backgrounds/" + data.getString("customBackground"))));
             }
             builder.customBackground("/backgrounds/" + data.getString("customBackground"));
@@ -148,7 +149,7 @@ public class Account {
         if(data.getMap().containsKey("displayName")) {
             if(!builder.displayName.equals(data.getString("displayName"))) {
                 Mewna.getInstance().pluginManager().processEvent(EventType.ACCOUNT_EVENT,
-                        new AccountEvent(SystemUserEventType.DISPLAY_NAME, this,
+                        new AccountEvent(SystemUserEventType.ACCOUNT_DISPLAY_NAME, this,
                                 new JsonObject()
                                         .put("old", builder.displayName)
                                         .put("new", data.getString("displayName"))

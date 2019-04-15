@@ -49,7 +49,7 @@ public class TimelinePost {
     public static TimelinePost create(final String author, final boolean system, final String text) {
         return new TimelinePost(Snowflakes.getNewSnowflake(), author, system,
                 system ? new PostContent(null, new JsonObject(text).getMap())
-                        : new PostContent(text, null));
+                        : new PostContent(new JsonObject(text), null));
     }
     
     @Getter
@@ -58,7 +58,7 @@ public class TimelinePost {
     @AllArgsConstructor
     @SuppressWarnings("WeakerAccess")
     public static final class PostContent {
-        private String text;
+        private JsonObject text;
         private Map<String, Object> data;
     }
 }

@@ -119,6 +119,7 @@ public class CommandManager {
             return prefixes;
         }).exceptionally(e -> {
             profiler.section("prefixesError");
+            e.printStackTrace();
             Sentry.capture(e);
             return Collections.emptyList();
         });
@@ -146,8 +147,6 @@ public class CommandManager {
                 }
             }
             profiler.section("prefixesStart");
-            
-            // ENTER THE REALM OF THE ASYNC HELL
             
             move(() -> {
                 List<String> prefixes;

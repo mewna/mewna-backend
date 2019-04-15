@@ -34,7 +34,7 @@ import static com.mewna.data.Player.ClickerTiers.*;
 @AllArgsConstructor
 @Table("players")
 @GIndex({"id", "guildXp", "ownedBackgroundPacks", "balance"})
-@SuppressWarnings({"unused", "RedundantFieldInitialization", "WeakerAccess", "UnusedReturnValue"})
+@SuppressWarnings({"RedundantFieldInitialization", "unused", "WeakerAccess", "UnusedReturnValue"})
 public class Player {
     public static final long MAX_INV_WEIGHT = 10_000;
     // We don't use the constant here because it might change later on

@@ -17,6 +17,7 @@ import static com.mewna.util.Async.move;
  * @author amy
  * @since 2/10/19.
  */
+@SuppressWarnings("unused")
 public class AccountRoutes implements RouteGroup {
     @Override
     public void registerRoutes(final Mewna mewna, final Router router) {

@@ -105,6 +105,7 @@ public final class Mewna {
         database.init();
         profiler.section("pluginInit");
         pluginManager.init();
+        logger.info("Loaded {} commands", commandManager.getCommandMetadata().size());
         // Skip token validation to save on REST reqs
         profiler.section("catnipInit");
         catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN")).validateToken(false), vertx);

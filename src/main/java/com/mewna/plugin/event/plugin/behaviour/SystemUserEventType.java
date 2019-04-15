@@ -7,15 +7,22 @@ import lombok.Getter;
  * @since 6/30/18.
  */
 public enum SystemUserEventType {
+    // Account events
     GLOBAL_LEVEL("event.levels.global"),
     
     TWITCH_STREAM("event.social.twitch"),
     
-    BACKGROUND("event.account.background"),
-    DESCRIPTION("event.account.description"),
-    DISPLAY_NAME("event.account.displayName"),
+    ACCOUNT_BACKGROUND("event.account.background"),
+    ACCOUNT_DESCRIPTION("event.account.description"),
+    ACCOUNT_DISPLAY_NAME("event.account.displayName"),
     
-    MONEY("event.money"),;
+    MONEY("event.money"),
+    
+    // Guild events
+    GUILD_NAME("event.guild.name"),
+    GUILD_DESCRIPTION("event.guild.description"),
+    GUILD_BACKGROUND("event.guild.background"),
+    ;
     @Getter
     private final String eventId;
     

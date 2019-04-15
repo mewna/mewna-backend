@@ -4,6 +4,7 @@ import com.mewna.Mewna;
 import com.mewna.api.RouteGroup;
 import com.mewna.catnip.entity.channel.Channel;
 import com.mewna.catnip.entity.guild.Guild;
+import com.mewna.catnip.entity.guild.Member;
 import com.mewna.catnip.entity.guild.Role;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.util.ImageOptions;
@@ -52,6 +53,17 @@ public class CacheRoutes implements RouteGroup {
                 .put("discriminator", user.discriminator())
                 .put("avatar", user.effectiveAvatarUrl(new ImageOptions().png().size(128)))
                 .put("bot", user.bot());
+    }
+    
+    private JsonObject minify(final Member member) {
+        if(member == null) {
+            return new JsonObject();
+        }
+        return new JsonObject()
+                .put("id", member.id())
+                .put("guild", member.guildId())
+                .put("roles", member.roleIds())
+                ;
     }
     
     private JsonObject minify(final Guild guild) {

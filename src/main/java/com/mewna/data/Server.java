@@ -16,7 +16,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table("servers")
-@GIndex({"id", "description"})
+@GIndex({"id", "description", "premium", "inBeta"})
 public class Server {
     public static final int MAX_ABOUT_TEXT_LENGTH = 150;
     

@@ -53,7 +53,7 @@ public class GuildRoutes implements RouteGroup {
             final Server prev = mewna.database().getServer(id);
             final Server server = ctx.getBodyAsJson().mapTo(Server.class);
             if(server.validate(prev)) {
-                mewna.database().saveServer(server);
+                server.save(mewna.database(), prev);
                 ctx.response().end(new JsonObject().encode());
             } else {
                 ctx.response().end(new JsonObject().put("errors", new JsonArray(List.of("invalid server config"))).encode());

@@ -14,6 +14,7 @@
         <catnip.version>1.2.1</catnip.version>
         <singyeong.version>7c8ce56</singyeong.version>
         <svcf.version>50318b3</svcf.version>
+        <postgres.orm.version>f2578e1</postgres.orm.version>
 
         <fcps.version>3.1.0</fcps.version>
         <guava.version>26.0-jre</guava.version>
@@ -22,7 +23,6 @@
         <commons.collections.version>LATEST</commons.collections.version>
         <commons.text.version>1.2</commons.text.version>
         <jedis.version>2.9.0</jedis.version>
-        <postgres.orm.version>f2578e1</postgres.orm.version>
         <jackson.version>2.9.6</jackson.version>
         <paypal.version>1.14.0</paypal.version>
         <dogstatsd.version>2.6.1</dogstatsd.version>

@@ -5,14 +5,12 @@ import com.mewna.accounts.Account;
 import com.mewna.accounts.timeline.TimelinePost;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.util.SafeVertxCompletableFuture;
+import com.mewna.data.posts.Post;
 import com.mewna.plugin.Plugin;
-import com.mewna.plugin.util.Snowflakes;
-import com.mewna.servers.ServerBlogPost;
 import com.mewna.util.Profiler;
 import gg.amy.pgorm.PgStore;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import io.sentry.Sentry;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import okhttp3.OkHttpClient;
@@ -73,7 +71,7 @@ public class Database {
         
         mapSettingsClasses();
         
-        premap(Player.class, Account.class, Server.class, TimelinePost.class, ServerBlogPost.class);
+        premap(Player.class, Account.class, Server.class, TimelinePost.class);
         
         // Webhooks table is created manually, because it doesn't need to be JSON:b:
         store.sql("CREATE TABLE IF NOT EXISTS discord_webhooks (channel TEXT PRIMARY KEY NOT NULL UNIQUE, guild TEXT NOT NULL, " +
@@ -488,13 +486,93 @@ public class Database {
         store.mapSync(Account.class).save(account);
     }
     
-    public void savePost(final TimelinePost post) {
+    ////////////////////
+    // Timeline posts //
+    ////////////////////
+    
+    public Optional<TimelinePost> getTimelinePost(final String id) {
+        final TimelinePost post = cacheRead("post", id, TimelinePost.class);
+        if(post != null) {
+            return Optional.of(post);
+        }
+        final Optional<TimelinePost> optional = store.mapSync(TimelinePost.class).load(id);
+        optional.ifPresent(timelinePost -> cache("post", timelinePost.getId(), timelinePost));
+        return optional;
+    }
+    
+    public boolean saveTimelinePost(final TimelinePost post) {
+        if(!post.isSystem()) {
+            final Post body = post.getContent().getBody();
+            if(!body.validate()) {
+                return false;
+            }
+        }
+        cachePrune("post", post.getId());
         store.mapSync(TimelinePost.class).save(post);
+        return true;
+    }
+    
+    public boolean deleteTimelinePost(final String id) {
+        final Optional<TimelinePost> timelinePost = getTimelinePost(id);
+        if(timelinePost.isEmpty()) {
+            return false;
+        }
+        if(timelinePost.get().isSystem()) {
+            return false;
+        }
+        cachePrune("post", id);
+        store.sql("DELETE FROM " + store.mapSync(TimelinePost.class).getTableName() + " WHERE id = ?;", q -> {
+            q.setString(1, id);
+            q.execute();
+        });
+        return true;
+    }
+    
+    public boolean updateTimelinePost(final TimelinePost post) {
+        final Optional<TimelinePost> maybeTimelinePost = getTimelinePost(post.getId());
+        if(maybeTimelinePost.isEmpty()) {
+            return false;
+        }
+        final TimelinePost timelinePost = maybeTimelinePost.get();
+        if(timelinePost.isSystem()) {
+            return false;
+        }
+        if(post.isSystem() != timelinePost.isSystem()) {
+            return false;
+        }
+        if(!post.isSystem()) {
+            final Post body = post.getContent().getBody();
+            if(!body.validate()) {
+                return false;
+            }
+            post.getContent().getBody().setBoops(timelinePost.getContent().getBody().getBoops());
+            post.setAuthor(timelinePost.getAuthor());
+        }
+        cachePrune("post", post.getId());
+        store.mapSync(TimelinePost.class).save(post);
+        return true;
+    }
+    
+    public List<TimelinePost> getTimelinePostChunk(final String id, final long limit, final long after) {
+        // TODO: How the tato can this be cached???
+        final List<TimelinePost> posts = new ArrayList<>();
+        store.sql("SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName()
+                + " WHERE data->>'author' = ? AND id::bigint > ? ORDER BY id::bigint DESC LIMIT " + limit + ';', q -> {
+            q.setString(1, id);
+            q.setLong(2, after);
+            final ResultSet resultSet = q.executeQuery();
+            while(resultSet.next()) {
+                final String data = resultSet.getString("data");
+                posts.add(new JsonObject(data).mapTo(TimelinePost.class));
+            }
+        });
+        return posts;
     }
     
     public List<TimelinePost> getLast100TimelinePosts(final String id) {
         final List<TimelinePost> posts = new ArrayList<>();
-        store.sql("SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName() + " WHERE data->>'author' = ? ORDER BY id::bigint DESC LIMIT 100;", q -> {
+        store.sql("SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName()
+                + " WHERE data->>'author' = ? ORDER BY id::bigint DESC LIMIT 100;", q -> {
             q.setString(1, id);
             final ResultSet resultSet = q.executeQuery();
             while(resultSet.next()) {
@@ -543,109 +621,6 @@ public class Database {
     public void saveServer(final Server server) {
         store.mapSync(Server.class).save(server);
         cachePrune("server", server.getId());
-    }
-    
-    //////////////////
-    // Server blogs //
-    //////////////////
-    
-    public Optional<ServerBlogPost> getServerBlogPostById(final String id) {
-        return store.mapSync(ServerBlogPost.class).load(id);
-    }
-    
-    public String saveNewServerBlogPost(final ServerBlogPost post) {
-        post.setId(null);
-        post.setBoops(new HashSet<>());
-        if(post.validate()) {
-            post.setId(Snowflakes.getNewSnowflake());
-            store.mapSync(ServerBlogPost.class).save(post);
-            return post.getId();
-        } else {
-            return "-1";
-        }
-    }
-    
-    public String updateServerBlogPost(final ServerBlogPost post) {
-        post.setBoops(new HashSet<>());
-        if(post.validate()) {
-            final Optional<ServerBlogPost> prev = getServerBlogPostById(post.getId());
-            if(prev.isPresent()) {
-                store.mapSync(ServerBlogPost.class).save(prev.get()
-                        .toBuilder()
-                        .title(post.getTitle())
-                        .content(post.getContent())
-                        .build());
-                return post.getId();
-            } else {
-                return "-1";
-            }
-        } else {
-            return "-2";
-        }
-    }
-    
-    public void deleteServerBlogPost(final String id) {
-        store.sql("DELETE FROM " + store.mapSync(ServerBlogPost.class).getTableName() + " WHERE id = ?;", p -> {
-            p.setString(1, id);
-            p.execute();
-        });
-    }
-    
-    public List<ServerBlogPost> getLast100ServerBlogPosts(final String id) {
-        final List<ServerBlogPost> posts = new ArrayList<>();
-        store.sql("SELECT data FROM " + store.mapSync(ServerBlogPost.class).getTableName() + " WHERE data->>'guild' = ? ORDER BY id::bigint DESC LIMIT 100;", q -> {
-            q.setString(1, id);
-            final ResultSet resultSet = q.executeQuery();
-            while(resultSet.next()) {
-                final String data = resultSet.getString("data");
-                posts.add(new JsonObject(data).mapTo(ServerBlogPost.class));
-            }
-        });
-        
-        return posts;
-    }
-    
-    public List<ServerBlogPost> getServerBlogPosts(final String id) {
-        final List<ServerBlogPost> posts = new ArrayList<>();
-        store.sql("SELECT data FROM " + store.mapSync(ServerBlogPost.class).getTableName() + " WHERE data->>'guild' = ? ORDER BY id::bigint DESC;", q -> {
-            q.setString(1, id);
-            final ResultSet resultSet = q.executeQuery();
-            while(resultSet.next()) {
-                final String data = resultSet.getString("data");
-                posts.add(new JsonObject(data).mapTo(ServerBlogPost.class));
-            }
-        });
-        
-        return posts;
-    }
-    
-    public JsonArray getServerBlogPostTitles(final String id) {
-        final List<JsonObject> posts = new ArrayList<>();
-        store.sql("SELECT data FROM " + store.mapSync(ServerBlogPost.class).getTableName() + " WHERE data->>'guild' = ? ORDER BY id::bigint DESC;", q -> {
-            q.setString(1, id);
-            final ResultSet resultSet = q.executeQuery();
-            while(resultSet.next()) {
-                final String data = resultSet.getString("data");
-                final ServerBlogPost post = new JsonObject(data).mapTo(ServerBlogPost.class);
-                post.setContent(null);
-                final JsonObject d = JsonObject.mapFrom(post);
-                final Optional<Account> account = getAccountById(post.getAuthor());
-                final JsonObject author = new JsonObject();
-                if(account.isPresent()) {
-                    author.put("displayName", account.get().displayName())
-                            .put("avatar", account.get().avatar())
-                            .put("id", account.get().id());
-                } else {
-                    author.put("displayName", "Unknown User")
-                            .put("avatar", "https://cdn.discordapp.com/embed/avatars/0.png")
-                            .put("id", "0");
-                }
-                d.put("author", author);
-                posts.add(d);
-            }
-        });
-        
-        return new JsonArray(posts);
     }
     
     //////////

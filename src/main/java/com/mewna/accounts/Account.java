@@ -5,7 +5,7 @@ import com.mewna.Mewna;
 import com.mewna.data.Database;
 import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.plugin.behaviour.AccountEvent;
-import com.mewna.plugin.event.plugin.behaviour.SystemUserEventType;
+import com.mewna.plugin.event.plugin.behaviour.SystemEventType;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
@@ -128,7 +128,7 @@ public class Account {
         if(data.getMap().containsKey("aboutText")) {
             if(!builder.aboutText.equals(data.getString("aboutText"))) {
                 Mewna.getInstance().pluginManager().processEvent(EventType.ACCOUNT_EVENT,
-                        new AccountEvent(SystemUserEventType.ACCOUNT_DESCRIPTION, this,
+                        new AccountEvent(SystemEventType.ACCOUNT_DESCRIPTION, this,
                                 new JsonObject()
                                         .put("old", builder.aboutText)
                                         .put("new", data.getString("aboutText"))
@@ -140,7 +140,7 @@ public class Account {
         if(data.getMap().containsKey("customBackground")) {
             if(!builder.customBackground.equals("/backgrounds/" + data.getString("customBackground"))) {
                 Mewna.getInstance().pluginManager().processEvent(EventType.ACCOUNT_EVENT,
-                        new AccountEvent(SystemUserEventType.ACCOUNT_BACKGROUND, this,
+                        new AccountEvent(SystemEventType.ACCOUNT_BACKGROUND, this,
                                 new JsonObject().put("bg", "/backgrounds/" + data.getString("customBackground"))));
             }
             builder.customBackground("/backgrounds/" + data.getString("customBackground"));
@@ -149,7 +149,7 @@ public class Account {
         if(data.getMap().containsKey("displayName")) {
             if(!builder.displayName.equals(data.getString("displayName"))) {
                 Mewna.getInstance().pluginManager().processEvent(EventType.ACCOUNT_EVENT,
-                        new AccountEvent(SystemUserEventType.ACCOUNT_DISPLAY_NAME, this,
+                        new AccountEvent(SystemEventType.ACCOUNT_DISPLAY_NAME, this,
                                 new JsonObject()
                                         .put("old", builder.displayName)
                                         .put("new", data.getString("displayName"))

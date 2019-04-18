@@ -1,4 +1,4 @@
-package com.mewna.servers;
+package com.mewna.data.posts;
 
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;

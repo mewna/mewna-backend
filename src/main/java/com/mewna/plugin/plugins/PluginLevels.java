@@ -20,7 +20,7 @@ import com.mewna.plugin.commands.CommandContext;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.plugin.behaviour.PlayerEvent;
-import com.mewna.plugin.event.plugin.behaviour.SystemUserEventType;
+import com.mewna.plugin.event.plugin.behaviour.SystemEventType;
 import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
 import com.mewna.plugin.util.Emotes;
@@ -260,7 +260,7 @@ public class PluginLevels extends BasePlugin {
                     case 50:
                     case 100: {
                         mewna().pluginManager().processEvent(EventType.PLAYER_EVENT,
-                                new PlayerEvent(SystemUserEventType.GLOBAL_LEVEL, player,
+                                new PlayerEvent(SystemEventType.GLOBAL_LEVEL, player,
                                         new JsonObject().put("level", level)));
                         break;
                     }

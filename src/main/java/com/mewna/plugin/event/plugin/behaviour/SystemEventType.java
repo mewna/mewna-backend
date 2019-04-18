@@ -6,7 +6,7 @@ import lombok.Getter;
  * @author amy
  * @since 6/30/18.
  */
-public enum SystemUserEventType {
+public enum SystemEventType {
     // Account events
     GLOBAL_LEVEL("event.levels.global"),
     
@@ -18,15 +18,15 @@ public enum SystemUserEventType {
     
     MONEY("event.money"),
     
-    // Guild events
-    GUILD_NAME("event.guild.name"),
-    GUILD_DESCRIPTION("event.guild.description"),
-    GUILD_BACKGROUND("event.guild.background"),
+    // Server events
+    SERVER_NAME("event.server.name"),
+    SERVER_DESCRIPTION("event.server.description"),
+    SERVER_BACKGROUND("event.server.background"),
     ;
     @Getter
     private final String eventId;
     
-    SystemUserEventType(final String eventId) {
+    SystemEventType(final String eventId) {
         this.eventId = eventId;
     }
 }

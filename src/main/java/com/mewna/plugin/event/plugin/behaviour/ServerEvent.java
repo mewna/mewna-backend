@@ -1,6 +1,6 @@
 package com.mewna.plugin.event.plugin.behaviour;
 
-import com.mewna.accounts.Account;
+import com.mewna.data.Server;
 import com.mewna.plugin.event.BaseEvent;
 import com.mewna.plugin.event.EventType;
 import io.vertx.core.json.JsonObject;
@@ -8,18 +8,18 @@ import lombok.Getter;
 
 /**
  * @author amy
- * @since 6/30/18.
+ * @since 4/16/19.
  */
 @Getter
-public class AccountEvent extends BaseEvent {
+public class ServerEvent extends BaseEvent {
     private final SystemEventType type;
-    private final Account account;
+    private final Server server;
     private final JsonObject data;
     
-    public AccountEvent(final SystemEventType type, final Account account, final JsonObject data) {
-        super(EventType.ACCOUNT_EVENT);
+    public ServerEvent(final SystemEventType type, final Server server, final JsonObject data) {
+        super(EventType.SERVER_EVENT);
         this.type = type;
-        this.account = account;
+        this.server = server;
         this.data = data;
     }
 }

@@ -5,6 +5,7 @@ import com.mewna.Mewna;
 import com.mewna.api.routes.v3.CacheRoutes;
 import com.mewna.api.routes.v3.ConfigRoutes;
 import com.mewna.api.routes.v3.GuildRoutes;
+import com.mewna.api.routes.v3.PostRoutes;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,8 @@ public class API {
             // v3
             new ConfigRoutes(),
             new GuildRoutes(),
-            new CacheRoutes()
+            new CacheRoutes(),
+            new PostRoutes()
     );
     
     public void start() {

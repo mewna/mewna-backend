@@ -12,11 +12,11 @@ import lombok.Getter;
  */
 @Getter
 public class PlayerEvent extends BaseEvent {
-    private final SystemUserEventType type;
+    private final SystemEventType type;
     private final Player player;
     private final JsonObject data;
     
-    public PlayerEvent(final SystemUserEventType type, final Player player, final JsonObject data) {
+    public PlayerEvent(final SystemEventType type, final Player player, final JsonObject data) {
         super(EventType.PLAYER_EVENT);
         this.type = type;
         this.player = player;

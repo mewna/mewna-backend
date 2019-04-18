@@ -26,6 +26,7 @@ public interface EventType {
     String LEVEL_UP = "LEVEL_UP";
     String PLAYER_EVENT = "PLAYER_EVENT";
     String ACCOUNT_EVENT = "ACCOUNT_EVENT";
+    String SERVER_EVENT = "SERVER_EVENT";
     
     // Telepathy events
     String TWITCH_STREAM_START = "TWITCH_STREAM_START";

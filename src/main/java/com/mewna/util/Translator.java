@@ -42,7 +42,6 @@ public final class Translator {
                 }
             }
         });
-        System.out.println(LANGS.keySet());
         LOGGER.info("Loaded {} translations.", LANGS.size());
     }
     

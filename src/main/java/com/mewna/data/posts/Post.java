@@ -1,9 +1,6 @@
-package com.mewna.servers;
+package com.mewna.data.posts;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import gg.amy.pgorm.annotations.GIndex;
-import gg.amy.pgorm.annotations.PrimaryKey;
-import gg.amy.pgorm.annotations.Table;
 import io.vertx.core.json.JsonObject;
 import lombok.*;
 
@@ -13,22 +10,15 @@ import java.util.Set;
  * @author amy
  * @since 11/17/18.
  */
+@SuppressWarnings("unused")
 @Getter
 @Setter
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("server_blog_posts")
-@GIndex({"id", "author", "guild"})
-public class ServerBlogPost {
+public class Post {
     public static final int MAX_TITLE_LENGTH = 128;
     public static final int MAX_POST_LENGTH = 10_000;
-    
-    /**
-     * This is a snowflake and thus encodes the timestamp.
-     */
-    @PrimaryKey
-    private String id;
     
     /**
      * The ACCOUNT ID of the user that created this post. Used for correctly
@@ -36,15 +26,15 @@ public class ServerBlogPost {
      */
     private String author;
     
-    /**
+    /* *
      * The GUILD ID that this post was created for. Used for obvious things.
      */
-    private String guild;
+    // private String guild;
     
-    /**
+    /* *
      * Plain-text string, 128 char max.
      */
-    private String title;
+    // private String title;
     
     /**
      * Markdown string, 10k char max.
@@ -74,8 +64,8 @@ public class ServerBlogPost {
     public boolean validate() {
         return /* id != null && id.matches("\\d+")
                 &&*/ author != null && author.matches("\\d+")
-                && guild != null && guild.matches("\\d+")
-                && title != null && title.length() >= 3 && title.length() <= MAX_TITLE_LENGTH
+                // && guild != null && guild.matches("\\d+")
+                // && title != null && title.length() >= 3 && title.length() <= MAX_TITLE_LENGTH
                 && content != null && content.length() >= 100 && content.length() <= MAX_POST_LENGTH
                 // Incoming post update data should never have this data anyway
                 && boops.isEmpty();

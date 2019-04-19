@@ -282,8 +282,10 @@ public class CommandManager {
                 }
             } else {
                 final Account account = maybeAccount.get();
-                if(!account.id().equalsIgnoreCase(account.discordAccountId())) {
+                if(!account.id().equalsIgnoreCase(account.discordAccountId()) && account.discordAccountId() != null) {
                     mewna.database().saveAccount(account.toBuilder().id(account.discordAccountId()).build());
+                } else if(account.discordAccountId() == null) {
+                    mewna.database().saveAccount(account.toBuilder().discordAccountId(account.id()).build());
                 }
                 if(account.banned()) {
                     mewna.statsClient().count("discord.backend.commands.banned", 1);

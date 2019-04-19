@@ -2,6 +2,7 @@ package com.mewna.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mewna.Mewna;
+import com.mewna.accounts.Account;
 import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.plugin.behaviour.ServerEvent;
 import com.mewna.plugin.event.plugin.behaviour.SystemEventType;
@@ -41,6 +42,9 @@ public class Server {
     }
     
     public boolean validate(final Server prev) {
+        if(!premium && !Account.DEFAULT_BACKGROUNDS.contains(customBackground)) {
+            return false;
+        }
         return id != null
                 && aboutText != null
                 && !aboutText.isEmpty()

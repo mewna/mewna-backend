@@ -19,7 +19,7 @@ import java.util.Optional;
  * @author amy
  * @since 6/24/18.
  */
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings("unused")
 @RequiredArgsConstructor
 public class AccountManager {
     private final Mewna mewna;
@@ -105,7 +105,7 @@ public class AccountManager {
             if(maybeAccount.isPresent()) {
                 final Account account = maybeAccount.get();
                 if(account.validateSettings(data)) {
-                    account.updateSettings(mewna.database(), data);
+                    account.updateSettings(mewna.database(), id, data);
                     logger.info("Updated account {}", id);
                 } else {
                     logger.warn("Can't update account {}: Failed validateSettings, data {}", id, data);

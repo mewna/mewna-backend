@@ -2,10 +2,7 @@ package com.mewna.api;
 
 import com.google.common.collect.ImmutableList;
 import com.mewna.Mewna;
-import com.mewna.api.routes.v3.CacheRoutes;
-import com.mewna.api.routes.v3.ConfigRoutes;
-import com.mewna.api.routes.v3.GuildRoutes;
-import com.mewna.api.routes.v3.PostRoutes;
+import com.mewna.api.routes.v3.*;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +24,8 @@ public class API {
             new ConfigRoutes(),
             new GuildRoutes(),
             new CacheRoutes(),
-            new PostRoutes()
+            new PostRoutes(),
+            new UserRoutes()
     );
     
     public void start() {

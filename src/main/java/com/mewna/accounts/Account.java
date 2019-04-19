@@ -31,6 +31,10 @@ import java.util.List;
 @Builder(toBuilder = true)
 @SuppressWarnings("unused")
 public class Account {
+    public static final List<String> DEFAULT_BACKGROUNDS = List.of("/backgrounds/default/plasma",
+            "/backgrounds/default/rainbow_triangles",
+            "/backgrounds/default/triangles");
+    
     public static final int MAX_ABOUT_TEXT_LENGTH = 150;
     public static final int MAX_DISPLAY_NAME_LENGTH = 32;
     public static final String LOREM_IPSUM = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
@@ -55,6 +59,7 @@ public class Account {
     private String aboutText = "A mysterious stranger.";
     @JsonProperty("customBackground")
     private String customBackground = "/backgrounds/default/plasma";
+    @Deprecated
     @JsonProperty("ownedBackgroundPacks")
     private List<String> ownedBackgroundPacks = new ArrayList<>(Collections.singletonList("default"));
     @JsonProperty("inBeta")
@@ -66,6 +71,8 @@ public class Account {
     private boolean isBanned;
     @JsonProperty("banReason")
     private String banReason;
+    @JsonProperty("premium")
+    private boolean premium;
     
     public Account(final String id) {
         this.id = id;
@@ -74,7 +81,7 @@ public class Account {
     // Configuration
     
     boolean validateSettings(final JsonObject data) {
-        if(data.getMap().containsKey("aboutText")) {
+        if(data.containsKey("aboutText")) {
             final String aboutText = data.getString("aboutText", null);
             if(aboutText == null || aboutText.isEmpty()) {
                 return false;
@@ -83,7 +90,7 @@ public class Account {
                 return false;
             }
         }
-        if(data.getMap().containsKey("displayName")) {
+        if(data.containsKey("displayName")) {
             final String displayName = data.getString("displayName", null);
             if(displayName == null || displayName.isEmpty()) {
                 return false;
@@ -92,74 +99,63 @@ public class Account {
                 return false;
             }
         }
-        if(data.getMap().containsKey("customBackground")) {
+        if(data.containsKey("customBackground")) {
             String bg = data.getString("customBackground", null);
             if(bg == null || bg.isEmpty()) {
                 return false;
             }
             bg = bg.toLowerCase();
-            if(bg.startsWith("/") || bg.endsWith("/") || bg.endsWith(".png")) {
-                return false;
-            }
-            final String[] split = bg.split("/", 2);
-            if(split.length != 2) {
-                return false;
-            }
-            final String pack = split[0];
-            final String name = split[1];
-            /*
-            if(!TextureManager.backgroundExists(pack, name)) {
-                return false;
-            }
-            */
-            // I like this being explicit - it feels easier to reason about
+            // I like this being explicit; it's easier to reason about imo + it
+            // leaves room for future expansions
             //noinspection RedundantIfStatement
-            if(!ownedBackgroundPacks.contains(pack)) {
+            if(!premium && !DEFAULT_BACKGROUNDS.contains(bg)) {
                 return false;
             }
         }
         return true;
     }
     
-    void updateSettings(final Database database, final JsonObject data) {
-        final String id = data.getString("id");
-        final AccountBuilder builder = database.getAccountById(id).map(Account::toBuilder).orElse(builder());
+    public boolean updateSettings(final Database database, final String id, final JsonObject data) {
+        if(!validateSettings(data)) {
+            return false;
+        }
         int changes = 0;
-        if(data.getMap().containsKey("aboutText")) {
-            if(!builder.aboutText.equals(data.getString("aboutText"))) {
+        if(data.containsKey("aboutText")) {
+            if(!aboutText().equals(data.getString("aboutText"))) {
                 Mewna.getInstance().pluginManager().processEvent(EventType.ACCOUNT_EVENT,
                         new AccountEvent(SystemEventType.ACCOUNT_DESCRIPTION, this,
                                 new JsonObject()
-                                        .put("old", builder.aboutText)
+                                        .put("old", aboutText())
                                         .put("new", data.getString("aboutText"))
                         ));
             }
-            builder.aboutText(data.getString("aboutText"));
+            aboutText(data.getString("aboutText"));
             ++changes;
         }
-        if(data.getMap().containsKey("customBackground")) {
-            if(!builder.customBackground.equals("/backgrounds/" + data.getString("customBackground"))) {
+        if(data.containsKey("customBackground")) {
+            if(!customBackground().equals(data.getString("customBackground"))) {
                 Mewna.getInstance().pluginManager().processEvent(EventType.ACCOUNT_EVENT,
                         new AccountEvent(SystemEventType.ACCOUNT_BACKGROUND, this,
-                                new JsonObject().put("bg", "/backgrounds/" + data.getString("customBackground"))));
+                                new JsonObject().put("bg", data.getString("customBackground"))));
             }
-            builder.customBackground("/backgrounds/" + data.getString("customBackground"));
+            customBackground(data.getString("customBackground"));
             ++changes;
         }
-        if(data.getMap().containsKey("displayName")) {
-            if(!builder.displayName.equals(data.getString("displayName"))) {
+        if(data.containsKey("displayName")) {
+            if(!displayName().equals(data.getString("displayName"))) {
                 Mewna.getInstance().pluginManager().processEvent(EventType.ACCOUNT_EVENT,
                         new AccountEvent(SystemEventType.ACCOUNT_DISPLAY_NAME, this,
                                 new JsonObject()
-                                        .put("old", builder.displayName)
+                                        .put("old", displayName())
                                         .put("new", data.getString("displayName"))
                         ));
             }
-            builder.displayName(data.getString("displayName"));
+            displayName(data.getString("displayName"));
             ++changes;
         }
         if(changes > 0) {
-            database.saveAccount(builder.build());
+            database.saveAccount(this);
         }
+        return true;
     }
 }

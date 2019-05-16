@@ -21,6 +21,8 @@ import com.timgroup.statsd.StatsDClient;
 import gg.amy.singyeong.SingyeongClient;
 import io.sentry.Sentry;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
+import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.core.json.Json;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -53,7 +55,10 @@ public final class Mewna {
     @Getter
     private final StatsDClient statsClient;
     @Getter
-    private final Vertx vertx = Vertx.vertx();
+    private final Vertx vertx = Vertx.vertx(new VertxOptions()
+            .setAddressResolverOptions(
+                    // Work around stupid kubernetes DNS failure modes
+                    new AddressResolverOptions().setQueryTimeout(30_000L)));
     @Getter
     private final SingyeongClient singyeong;
     @Getter
@@ -67,7 +72,7 @@ public final class Mewna {
     
     private Mewna() {
         if(System.getenv("STATSD_ENABLED") != null) {
-            statsClient = new NonBlockingStatsDClient("v2.backend", System.getenv("STATSD_HOST"), 8125);
+            statsClient = new NonBlockingStatsDClient("v3.backend", System.getenv("STATSD_HOST"), 8125);
         } else {
             statsClient = new NoOpStatsDClient();
         }

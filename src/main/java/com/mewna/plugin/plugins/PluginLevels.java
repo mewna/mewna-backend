@@ -47,7 +47,7 @@ import static com.mewna.util.Translator.$;
  * @author amy
  * @since 5/19/18.
  */
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings({"unused", "WeakerAccess", "SqlResolve"})
 @Plugin(name = "Levels", desc = "Allow gaining xp and leveling up by chatting.", settings = LevelsSettings.class)
 public class PluginLevels extends BasePlugin {
     public static boolean isLevelUp(final long oldXp, final long xp) {
@@ -160,7 +160,7 @@ public class PluginLevels extends BasePlugin {
     public void handleLevelUp(final LevelUpEvent event) {
         final Guild guild = event.guild();
         final var settings = block(database().getOrBaseSettings(LevelsSettings.class, guild.id()));
-        mewna().statsClient().count("discord.backend.levelups", 1);
+        mewna().statsClient().count("levelups", 1);
         
         if(settings.isLevelsEnabled()) {
             final Member member = event.member();
@@ -247,7 +247,7 @@ public class PluginLevels extends BasePlugin {
         if(!globalRes.left) {
             final long oldXp = player.getGlobalXp();
             final long xp = getXp(player);
-            mewna().statsClient().count("discord.backend.xpgained.global", xp);
+            mewna().statsClient().count("xpgained.global", xp);
             player.incrementGlobalXp(getXp(player));
             database().savePlayer(player).join();
             // Level-up notifications here?
@@ -282,7 +282,7 @@ public class PluginLevels extends BasePlugin {
         if(!localRes.left) {
             final long oldXp = player.getXp(guild);
             final long xp = getXp(player);
-            mewna().statsClient().count("discord.backend.xpgained.local", xp);
+            mewna().statsClient().count("xpgained.local", xp);
             player.incrementLocalXp(guild, xp);
             database().savePlayer(player).join();
             if(isLevelUp(oldXp, oldXp + xp)) {

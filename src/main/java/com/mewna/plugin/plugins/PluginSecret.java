@@ -2,8 +2,11 @@ package com.mewna.plugin.plugins;
 
 import com.mewna.Mewna;
 import com.mewna.accounts.Account;
+import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.message.Message;
 import com.mewna.catnip.entity.message.Message.Attachment;
+import com.mewna.catnip.entity.user.User;
+import com.mewna.data.DiscordCache;
 import com.mewna.data.Player;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Plugin;
@@ -228,6 +231,32 @@ public class PluginSecret extends BasePlugin {
                 }
                 ctx.sendMessage(sb.toString());
             });
+        }
+    }
+    
+    @Owner
+    @Command(names = "cache", desc = "", usage = "", examples = "")
+    public void cacheRead(final CommandContext ctx) {
+        final List<String> args = ctx.getArgs();
+        if(args.isEmpty()) {
+            ctx.sendMessage(Emotes.NO);
+            return;
+        }
+        final String id = args.get(1);
+        switch(args.get(0).toLowerCase()) {
+            case "user": {
+                final User user = DiscordCache.user(id);
+                ctx.sendMessage("```Javascript\n" + user.toJson() + "\n```");
+                break;
+            }
+            case "guild": {
+                final Guild guild = DiscordCache.guild(id);
+                ctx.sendMessage("```Javascript\n" + guild.toJson() + "\n```");
+                break;
+            }
+            default: {
+                ctx.sendMessage(Emotes.NO);
+            }
         }
     }
 }

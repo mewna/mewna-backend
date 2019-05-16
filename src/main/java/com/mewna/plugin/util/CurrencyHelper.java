@@ -58,7 +58,7 @@ public final class CurrencyHelper {
                 return ImmutablePair.of(false, -1L);
             }
             case OK: {
-                mewna.statsClient().count("discord.backend.money.spent", check.right);
+                mewna.statsClient().count("money.spent", check.right);
                 ctx.getPlayer().incrementBalance(-check.right);
                 block(mewna.database().savePlayer(ctx.getPlayer()));
                 return ImmutablePair.of(true, check.right);

@@ -242,7 +242,7 @@ public class CommandManager {
             if(cmd.getRatelimit() != null) {
                 final var check = checkRatelimit(cmd, user, guild, channelId);
                 if(check.left) {
-                    mewna.statsClient().count("discord.backend.commands.ratelimit", 1,
+                    mewna.statsClient().count("commands.ratelimit", 1,
                             "name:" + cmd.getName());
                     mewna.catnip().rest().channel().sendMessage(channelId,
                             $(mewna.database().language(guild.id()), "plugins.ratelimited-command")
@@ -288,7 +288,7 @@ public class CommandManager {
                     mewna.database().saveAccount(account.toBuilder().discordAccountId(account.id()).build());
                 }
                 if(account.banned()) {
-                    mewna.statsClient().count("discord.backend.commands.banned", 1);
+                    mewna.statsClient().count("commands.banned", 1);
                     logger.warn("Denying command from banned account {}: {}", account.id(), account.banReason());
                     mewna.catnip().rest().channel().sendMessage(channelId, Emotes.NO + ' '
                             + $(mewna.database().language(guild.id()), "commands.banned") + ' ' + account.banReason());
@@ -338,7 +338,7 @@ public class CommandManager {
             profiler.section("exec");
             logger.info("Command: {}#{} ({}) in {}#{}-{}: {} {}", user.username(), user.discriminator(),
                     user.id(), guild.id(), channelId, event.message().id(), commandName, argStr);
-            mewna.statsClient().count("discord.backend.commands.run", 1,
+            mewna.statsClient().count("commands.run", 1,
                     "name:" + cmd.getName());
             
             try {

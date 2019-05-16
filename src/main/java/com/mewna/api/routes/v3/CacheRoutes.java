@@ -89,6 +89,12 @@ public class CacheRoutes implements RouteGroup {
             final Guild guild = DiscordCache.guild(id);
             ctx.response().end(minify(guild).encode());
         }));
+        router.get("/v3/cache/guild/:id/exists").handler(ctx -> move(() -> {
+            final String id = ctx.request().getParam("id");
+            final Guild guild = DiscordCache.guild(id);
+            final var out = new JsonObject().put("exists", guild != null);
+            ctx.response().end(out.encode());
+        }));
         router.get("/v3/cache/guild/:id/roles").handler(ctx -> move(() -> {
             final String id = ctx.request().getParam("id");
             final var roles = DiscordCache.roles(id).stream()

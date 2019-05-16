@@ -16,7 +16,8 @@ import static com.mewna.util.Translator.$;
 @Plugin(name = "Emotes", desc = "Fun little emotes for your server.", settings = EmotesSettings.class)
 public class PluginEmotes extends BasePlugin {
     @Multi
-    @Command(names = {"bap", "chew", "cookie", "hug", "lick", "nom", "pat", "poke", "prod", "shoot", "slap", "stab", "tickle"},
+    @Command(names = {"bap", "chew", "cookie", "hug", "lick", "nom",
+            "pat", "poke", "prod", "shoot", "slap", "stab", "tickle"},
             desc = "commands.emotes", usage = "<command> <person>",
             examples = {"bap someone", "stab someone else", "poke everyone"})
     public void emote(final CommandContext ctx) {

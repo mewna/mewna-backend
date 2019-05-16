@@ -7,7 +7,7 @@ import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.message.MessageOptions;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.util.SafeVertxCompletableFuture;
-import com.mewna.data.DiscordCache;
+import com.mewna.data.cache.DiscordCache;
 import com.mewna.data.Player;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Plugin;

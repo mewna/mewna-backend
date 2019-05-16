@@ -28,6 +28,8 @@
         <dogstatsd.version>2.6.1</dogstatsd.version>
         <sentry.version>1.7.5</sentry.version>
         <vertx.version>3.7.0</vertx.version>
+        <msgpack.version>0.8.16</msgpack.version>
+        <lettuce.version>5.1.6.RELEASE</lettuce.version>
     </properties>
 
     <repositories>
@@ -298,6 +300,25 @@
             <artifactId>vertx-web</artifactId>
             <version>${vertx.version}</version>
             <classifier>sources</classifier>
+        </dependency>
+
+        <!-- MessagePack -->
+        <dependency>
+            <groupId>org.msgpack</groupId>
+            <artifactId>msgpack-core</artifactId>
+            <version>${msgpack.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.msgpack</groupId>
+            <artifactId>jackson-dataformat-msgpack</artifactId>
+            <version>${msgpack.version}</version>
+        </dependency>
+
+        <!-- lettuce -->
+        <dependency>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
+            <version>${lettuce.version}</version>
         </dependency>
 
         <!-- JUnit -->

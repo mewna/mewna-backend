@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mewna.catnip.entity.builder.EmbedBuilder;
 import com.mewna.catnip.entity.user.User;
-import com.mewna.data.DiscordCache;
+import com.mewna.data.cache.DiscordCache;
 import com.mewna.data.Player.ClickerBuildings;
 import com.mewna.data.Player.ClickerData;
 import com.mewna.data.Player.ClickerTiers;
@@ -57,7 +57,7 @@ import static com.mewna.util.Translator.$;
  * @author amy
  * @since 5/19/18.
  */
-@SuppressWarnings("OverlyCoupledClass")
+@SuppressWarnings({"OverlyCoupledClass", "SqlResolve"})
 @Plugin(name = "Misc", desc = "Miscellaneous things, like kittens and puppies.", settings = MiscSettings.class)
 public class PluginMisc extends BasePlugin {
     private static final Map<Character, String> MEMETEXT_MAP = new HashMap<>();
@@ -424,7 +424,7 @@ public class PluginMisc extends BasePlugin {
         ctx.sendMessage(sb.toString());
     }
     
-    @SuppressWarnings({"ResultOfMethodCallIgnored", "ConstantConditions"})
+    @SuppressWarnings({"ResultOfMethodCallIgnored"})
     @Command(names = {"tato", "miner"}, desc = "commands.misc.tato",
             usage = {"tato", "tato help", "tato upgrade [buy <upgrade>]", "tato building [buy <building>]"/*,
                     "tato food [food[,food,...]]"*/},
@@ -687,21 +687,20 @@ public class PluginMisc extends BasePlugin {
         } else {
             data.getBuildings().forEach((b, c) -> buildingSB.append('.').append(b.getName()).append(" x").append(c).append('\n'));
         }
-        
-        final StringBuilder stats = new StringBuilder("```CSS\n")
-                // .append("       [Delta] : ").append(deltaSeconds).append("s\n")
-                .append("         [TPS] : ").append(data.getTatoPerSecond()).append(" tato / sec\n")
-                .append("  [Total tato] : ").append(data.getTotalClicks().setScale(0, RoundingMode.FLOOR)).append(" tato\n")
-                .append("      [Gained] : ").append(increase.setScale(0, RoundingMode.FLOOR)).append(" tato\n")
-                .append("[Current Tier] : ").append(tier.tierString()).append(" - ").append(tier.getName()).append("\n\n")
-                // oh god why
-                .append("[Upgrades]\n").append(upgradeSB.substring(0, upgradeSB.length() - 1)).append("\n\n")
-                .append("[Buildings]\n").append(buildingSB.substring(0, buildingSB.length() - 1)).append(" \n")
-                .append("```\n\n")
-                .append($(ctx.getLanguage(), "plugins.misc.commands.tato.try-help").replace("$command", ctx.getCommand()));
-        
+    
         // Finally, display
-        
+    
+        final String stats = "```CSS\n" +
+                // "       [Delta] : " + deltaSeconds + "s\n" +
+                "         [TPS] : " + data.getTatoPerSecond() + " tato / sec\n" +
+                "  [Total tato] : " + data.getTotalClicks().setScale(0, RoundingMode.FLOOR) + " tato\n" +
+                "      [Gained] : " + increase.setScale(0, RoundingMode.FLOOR) + " tato\n" +
+                "[Current Tier] : " + tier.tierString() + " - " + tier.getName() + "\n\n" +
+                // oh god why
+                "[Upgrades]\n" + upgradeSB.substring(0, upgradeSB.length() - 1) + "\n\n" +
+                "[Buildings]\n" + buildingSB.substring(0, buildingSB.length() - 1) + " \n" +
+                "```\n\n" +
+                $(ctx.getLanguage(), "plugins.misc.commands.tato.try-help").replace("$command", ctx.getCommand());
         ctx.sendMessage(
                 $(ctx.getLanguage(), "plugins.misc.commands.tato.stats-header")
                         .replace("$target", ctx.getUser().asMention()) + ":\n" + stats);

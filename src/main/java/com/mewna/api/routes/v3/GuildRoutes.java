@@ -5,7 +5,7 @@ import com.mewna.accounts.Account;
 import com.mewna.api.RouteGroup;
 import com.mewna.catnip.entity.guild.Role;
 import com.mewna.catnip.entity.user.User;
-import com.mewna.data.DiscordCache;
+import com.mewna.data.cache.DiscordCache;
 import com.mewna.data.Player;
 import com.mewna.data.Server;
 import com.mewna.data.Webhook;

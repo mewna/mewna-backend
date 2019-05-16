@@ -8,6 +8,7 @@ import com.mewna.api.API;
 import com.mewna.catnip.Catnip;
 import com.mewna.catnip.CatnipOptions;
 import com.mewna.data.Database;
+import com.mewna.data.cache.RedisCacheExtension;
 import com.mewna.event.SingyeongEventManager;
 import com.mewna.plugin.PluginManager;
 import com.mewna.plugin.commands.CommandManager;
@@ -113,7 +114,10 @@ public final class Mewna {
         logger.info("Loaded {} commands", commandManager.getCommandMetadata().size());
         // Skip token validation to save on REST reqs
         profiler.section("catnipInit");
-        catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN")).validateToken(false), vertx);
+        catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN")).validateToken(false), vertx)
+                .loadExtension(new RedisCacheExtension(String.format("redis://%s@%s:6379/0",
+                        System.getenv("REDIS_PASS"), System.getenv("REDIS_HOST"))))
+        ;
         profiler.section("singyeongInit");
         singyeongEventManager = new SingyeongEventManager(this);
         singyeong.connect()
@@ -147,7 +151,7 @@ public final class Mewna {
                         final long nonHeapAllocated = nonHeap.getCommitted() / (1024L * 1024L);
                         final long nonHeapTotal = nonHeap.getMax() / (1024L * 1024L);
                         final long nonHeapInit = nonHeap.getInit() / (1024L * 1024L);
-    
+                        
                         final var out = "[HEAP]\n" +
                                 "     [Init] " + heapInit + "MB\n" +
                                 "     [Used] " + heapUsed + "MB\n" +

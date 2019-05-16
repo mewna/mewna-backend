@@ -5,7 +5,7 @@ import com.mewna.accounts.Account;
 import com.mewna.api.RouteGroup;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.util.ImageOptions;
-import com.mewna.data.DiscordCache;
+import com.mewna.data.cache.DiscordCache;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;

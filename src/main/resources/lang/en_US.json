@@ -238,9 +238,9 @@
           "help": {
             "1": "Mewna Miner Help",
             "2": "- Get this info with `tato help`.",
-            "3": "- Check your stats by running `tato`.\n",
-            "4": "- View upgrades, or buy them, with `tato upgrade [buy <name>]`.\n",
-            "5": "- View or buy buildings with `tato build [buy <name>]`.\n",
+            "3": "- Check your stats by running `tato`.",
+            "4": "- View upgrades, or buy them, with `tato upgrade [buy <name>]`.",
+            "5": "- View or buy buildings with `tato build [buy <name>]`.",
             "6": "- Remember to check back regularly to get your tato!"
           },
           "upgrades": {

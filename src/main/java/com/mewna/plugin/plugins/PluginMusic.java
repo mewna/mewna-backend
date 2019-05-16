@@ -6,7 +6,7 @@ import com.mewna.catnip.entity.channel.VoiceChannel;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.user.VoiceState;
-import com.mewna.data.DiscordCache;
+import com.mewna.data.cache.DiscordCache;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Plugin;
 import com.mewna.plugin.commands.Command;

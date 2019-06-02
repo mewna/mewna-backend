@@ -5,10 +5,10 @@ import com.mewna.accounts.Account;
 import com.mewna.api.RouteGroup;
 import com.mewna.catnip.entity.guild.Role;
 import com.mewna.catnip.entity.user.User;
-import com.mewna.data.cache.DiscordCache;
 import com.mewna.data.Player;
 import com.mewna.data.Server;
 import com.mewna.data.Webhook;
+import com.mewna.data.cache.DiscordCache;
 import com.mewna.plugin.plugins.PluginLevels;
 import com.mewna.plugin.plugins.settings.BehaviourSettings;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
@@ -75,7 +75,7 @@ public class GuildRoutes implements RouteGroup {
                 ctx.response().end(new JsonArray().encode());
             }
         }));
-    
+        
         router.get("/v3/guild/:id/webhooks").handler(ctx -> move(() -> {
             final String id = ctx.request().getParam("id");
             final var webhooks = mewna.database().getAllWebhooks(id).stream()
@@ -90,14 +90,14 @@ public class GuildRoutes implements RouteGroup {
             // TODO: Check return values etc
             ctx.response().end(new JsonObject().encode());
         }));
-    
+        
         router.post("/v3/guild/:id/webhooks/add").handler(BodyHandler.create()).handler(ctx -> move(() -> {
             final Webhook webhook = Webhook.fromJson(ctx.getBodyAsJson());
             mewna.database().addWebhook(webhook);
             // TODO: Check return values etc
             ctx.response().end(new JsonObject().encode());
         }));
-    
+        
         router.get("/v3/guild/:id/prefix").handler(ctx -> move(() -> {
             final String id = ctx.request().getParam("id");
             final var roles = DiscordCache.roles(id);
@@ -111,6 +111,13 @@ public class GuildRoutes implements RouteGroup {
         
         router.get("/v3/guild/:id/leaderboard").handler(ctx -> move(() -> {
             final String id = ctx.request().getParam("id");
+            final List<String> afterParam = ctx.queryParam("after");
+            final long after;
+            if(afterParam == null || afterParam.isEmpty()) {
+                after = 0L;
+            } else {
+                after = Long.parseLong(afterParam.get(0));
+            }
             // This makes me feel better about passing untrusted user input from the url parameters
             if(!id.matches("\\d{17,20}")) {
                 ctx.response().end(new JsonArray().encode());
@@ -118,18 +125,32 @@ public class GuildRoutes implements RouteGroup {
             }
             // This is gonna be ugly
             final List<JsonObject> results = new ArrayList<>();
+            
             final String query = String.format(
-                    "SELECT players.data AS player, accounts.data AS account FROM players\n" +
-                            "    JOIN accounts ON accounts.data->>'discordAccountId' = players.id\n" +
-                            "    WHERE players.data->'guildXp' ?? '%s'\n" +
+                    "SELECT * FROM (\n" +
+                            "    SELECT\n" +
+                            "        row_number() OVER (\n" +
+                            "            PARTITION BY (players.data->'guildXp' ?? '%s')\n" +
+                            "            ORDER BY (players.data->'guildXp'->>'%s')::integer DESC\n" +
+                            "        ) AS rank,\n" +
+                            "        players.data AS player,\n" +
+                            "        accounts.data AS account\n" +
+                            "    FROM players\n" +
+                            "    INNER JOIN accounts ON accounts.id = players.id\n" +
+                            "    WHERE\n" +
+                            "        players.data->'guildXp' ?? '%s'\n" +
                             "        AND (players.data->'guildXp'->>'%s')::integer > 0\n" +
-                            "    ORDER BY (players.data->'guildXp'->>'%s')::integer DESC LIMIT 100;",
-                    id, id, id
+                            "    ORDER BY (players.data->'guildXp'->>'%s')::integer DESC\n" +
+                            ")\n" +
+                            "AS _\n" +
+                            "WHERE rank > %s\n" +
+                            "LIMIT 100;",
+                    id, id, id, id, id, after
             );
+            
             mewna.database().getStore().sql(query, p -> {
                 final ResultSet resultSet = p.executeQuery();
                 if(resultSet.isBeforeFirst()) {
-                    int counter = 1;
                     while(resultSet.next()) {
                         final Player player = new JsonObject(resultSet.getString("player")).mapTo(Player.class);
                         final Account account = new JsonObject(resultSet.getString("account")).mapTo(Account.class);
@@ -149,7 +170,7 @@ public class GuildRoutes implements RouteGroup {
                                     .put("userXp", userXp)
                                     .put("userLevel", userLevel)
                                     .put("nextLevel", nextLevel)
-                                    .put("playerRank", (long) counter)
+                                    .put("playerRank", (long) resultSet.getInt("rank"))
                                     .put("currentLevelXp", currentLevelXp)
                                     .put("xpNeeded", xpNeeded)
                                     .put("nextLevelXp", nextLevelXp)
@@ -164,7 +185,7 @@ public class GuildRoutes implements RouteGroup {
                                     .put("userXp", userXp)
                                     .put("userLevel", userLevel)
                                     .put("nextLevel", nextLevel)
-                                    .put("playerRank", (long) counter)
+                                    .put("playerRank", (long) resultSet.getInt("rank"))
                                     .put("currentLevelXp", currentLevelXp)
                                     .put("xpNeeded", xpNeeded)
                                     .put("nextLevelXp", nextLevelXp)
@@ -172,7 +193,6 @@ public class GuildRoutes implements RouteGroup {
                                     .put("accountId", player.getId())
                             );
                         }
-                        ++counter;
                     }
                     ctx.response().putHeader("Content-Type", "application/json")
                             .end(new JsonArray(results).encode());

@@ -1,7 +1,6 @@
 package com.mewna.data.cache;
 
 import com.mewna.Mewna;
-import com.mewna.catnip.entity.Entity;
 import com.mewna.catnip.entity.channel.Channel;
 import com.mewna.catnip.entity.channel.TextChannel;
 import com.mewna.catnip.entity.channel.VoiceChannel;
@@ -10,15 +9,11 @@ import com.mewna.catnip.entity.guild.Member;
 import com.mewna.catnip.entity.guild.Role;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.user.VoiceState;
-import gg.amy.singyeong.QueryBuilder;
-import io.vertx.core.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
-
-import static com.mewna.util.MewnaFutures.block;
 
 /**
  * @author amy
@@ -32,13 +27,11 @@ public final class DiscordCache {
     }
     
     public static Guild guild(final String id) {
-        final var buffer = block(Mewna.getInstance().singyeong().proxy(HttpMethod.GET,
-                "/cache/guild/" + id, "shards",
-                new QueryBuilder().build()));
-        if(buffer.toString().equalsIgnoreCase("{}")) {
+        try {
+            return Mewna.getInstance().catnip().cache().guild(id);
+        } catch(final Exception e) {
             return null;
         }
-        return Entity.fromJson(Mewna.getInstance().catnip(), Guild.class, buffer.toJsonObject());
     }
     
     public static User user(final String id) {

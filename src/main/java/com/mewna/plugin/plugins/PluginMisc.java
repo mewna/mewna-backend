@@ -424,7 +424,7 @@ public class PluginMisc extends BasePlugin {
         ctx.sendMessage(sb.toString());
     }
     
-    @SuppressWarnings({"ResultOfMethodCallIgnored"})
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Command(names = {"tato", "miner"}, desc = "commands.misc.tato",
             usage = {"tato", "tato help", "tato upgrade [buy <upgrade>]", "tato building [buy <building>]"/*,
                     "tato food [food[,food,...]]"*/},

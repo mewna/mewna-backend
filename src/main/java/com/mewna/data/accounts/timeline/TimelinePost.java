@@ -1,4 +1,4 @@
-package com.mewna.accounts.timeline;
+package com.mewna.data.accounts.timeline;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mewna.data.posts.Post;

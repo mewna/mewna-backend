@@ -7,8 +7,8 @@ import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.message.MessageOptions;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.util.SafeVertxCompletableFuture;
-import com.mewna.data.cache.DiscordCache;
 import com.mewna.data.Player;
+import com.mewna.data.cache.DiscordCache;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Plugin;
 import com.mewna.plugin.commands.Command;
@@ -620,7 +620,7 @@ public class PluginEconomy extends BasePlugin {
         } else {
             final StringBuilder sb = new StringBuilder();
             final Map<Item, Long> count = lootToMap(loot);
-            count.keySet().forEach(e -> sb.append(e.getEmote()).append(" `x").append(count.get(e)).append("`\n"));
+            count.forEach((e, aLong) -> sb.append(e.getEmote()).append(" `x").append(aLong).append("`\n"));
             ctx.getPlayer().addAllToInventory(count);
             database().savePlayer(ctx.getPlayer()).thenAccept(__ -> tryDropBox(ctx));
             ctx.sendMessage(
@@ -657,7 +657,7 @@ public class PluginEconomy extends BasePlugin {
         } else {
             final StringBuilder sb = new StringBuilder();
             final Map<Item, Long> count = lootToMap(loot);
-            count.keySet().forEach(e -> sb.append(e.getEmote()).append(" `x").append(count.get(e)).append("`\n"));
+            count.forEach((e, aLong) -> sb.append(e.getEmote()).append(" `x").append(aLong).append("`\n"));
             ctx.getPlayer().addAllToInventory(count);
             database().savePlayer(ctx.getPlayer()).thenAccept(__ -> tryDropBox(ctx));
             ctx.sendMessage(

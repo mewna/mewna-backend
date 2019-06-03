@@ -2,7 +2,7 @@ package com.mewna.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mewna.Mewna;
-import com.mewna.accounts.Account;
+import com.mewna.data.accounts.Account;
 import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.plugin.behaviour.ServerEvent;
 import com.mewna.plugin.event.plugin.behaviour.SystemEventType;

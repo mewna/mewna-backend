@@ -1,6 +1,6 @@
 package com.mewna.plugin.commands;
 
-import com.mewna.accounts.Account;
+import com.mewna.data.accounts.Account;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.message.Embed;
 import com.mewna.catnip.entity.message.Message;

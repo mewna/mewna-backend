@@ -1,8 +1,8 @@
 package com.mewna.data;
 
 import com.mewna.Mewna;
-import com.mewna.accounts.Account;
-import com.mewna.accounts.timeline.TimelinePost;
+import com.mewna.data.accounts.Account;
+import com.mewna.data.accounts.timeline.TimelinePost;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.util.SafeVertxCompletableFuture;
 import com.mewna.data.posts.Post;

@@ -1,8 +1,8 @@
-package com.mewna.accounts;
+package com.mewna.data.accounts;
 
 import com.mewna.Mewna;
-import com.mewna.accounts.Account.AccountBuilder;
-import com.mewna.accounts.timeline.TimelinePost;
+import com.mewna.data.accounts.Account.AccountBuilder;
+import com.mewna.data.accounts.timeline.TimelinePost;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.util.ImageOptions;
 import com.mewna.data.Player;

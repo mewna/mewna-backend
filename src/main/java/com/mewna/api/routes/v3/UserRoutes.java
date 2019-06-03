@@ -1,7 +1,7 @@
 package com.mewna.api.routes.v3;
 
 import com.mewna.Mewna;
-import com.mewna.accounts.Account;
+import com.mewna.data.accounts.Account;
 import com.mewna.api.RouteGroup;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.util.ImageOptions;

@@ -3,7 +3,7 @@ package com.mewna.data;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mewna.Mewna;
-import com.mewna.accounts.Account;
+import com.mewna.data.accounts.Account;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.plugin.commands.CommandContext;
 import com.mewna.plugin.plugins.economy.Box;

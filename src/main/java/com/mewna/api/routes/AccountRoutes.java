@@ -1,7 +1,7 @@
 package com.mewna.api.routes;
 
 import com.mewna.Mewna;
-import com.mewna.accounts.Account;
+import com.mewna.data.accounts.Account;
 import com.mewna.api.RouteGroup;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;

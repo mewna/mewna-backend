@@ -1,7 +1,7 @@
 package com.mewna.plugin.plugins;
 
 import com.mewna.Mewna;
-import com.mewna.accounts.Account;
+import com.mewna.data.accounts.Account;
 import com.mewna.catnip.entity.builder.EmbedBuilder;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.guild.Member;

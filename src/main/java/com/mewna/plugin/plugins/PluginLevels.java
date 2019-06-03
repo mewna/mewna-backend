@@ -1,7 +1,6 @@
 package com.mewna.plugin.plugins;
 
 import com.mewna.Mewna;
-import com.mewna.data.accounts.Account;
 import com.mewna.catnip.entity.builder.EmbedBuilder;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.guild.Member;
@@ -11,6 +10,7 @@ import com.mewna.catnip.entity.util.ImageOptions;
 import com.mewna.catnip.rest.guild.MemberData;
 import com.mewna.catnip.shard.DiscordEvent.Raw;
 import com.mewna.data.Player;
+import com.mewna.data.accounts.Account;
 import com.mewna.event.discord.DiscordGuildMemberAdd;
 import com.mewna.event.discord.DiscordMessageCreate;
 import com.mewna.plugin.BasePlugin;
@@ -19,8 +19,6 @@ import com.mewna.plugin.commands.Command;
 import com.mewna.plugin.commands.CommandContext;
 import com.mewna.plugin.event.Event;
 import com.mewna.plugin.event.EventType;
-import com.mewna.plugin.event.plugin.behaviour.PlayerEvent;
-import com.mewna.plugin.event.plugin.behaviour.SystemEventType;
 import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
 import com.mewna.plugin.util.Emotes;

@@ -49,6 +49,18 @@ public class AccountManager {
         mewna.database().saveAccount(account);
     }
     
+    public void createNewRawDiscordLinkedAccount(final String id, final String username, final String avatar) {
+        final Account account = new Account(id);
+        
+        account.discordAccountId(id);
+        account.displayName(username);
+        // Likely not always right, but who cares
+        // It'll get lazy-filled if needed
+        account.avatar("https://cdn.discordapp.com/avatars/" + id + '/' + avatar + ".png");
+        
+        mewna.database().saveAccount(account);
+    }
+    
     public void createOrUpdateDiscordOAuthLinkedAccount(final JsonObject data) {
         final boolean isNew = !data.containsKey("id") || !data.getString("id").matches("\\d+");
         final String id = isNew

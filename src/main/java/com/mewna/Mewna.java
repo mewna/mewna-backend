@@ -12,6 +12,7 @@ import com.mewna.data.cache.RedisCacheExtension;
 import com.mewna.event.SingyeongEventManager;
 import com.mewna.plugin.PluginManager;
 import com.mewna.plugin.commands.CommandManager;
+import com.mewna.plugin.plugins.levels.LevelsImportQueue;
 import com.mewna.util.IOUtils;
 import com.mewna.util.Profiler;
 import com.mewna.util.Ratelimiter;
@@ -70,6 +71,8 @@ public final class Mewna {
     private CommandManager commandManager;
     @Getter
     private Catnip catnip;
+    @Getter
+    private final LevelsImportQueue levelsImportQueue = new LevelsImportQueue(this);
     
     private Mewna() {
         if(System.getenv("STATSD_ENABLED") != null) {
@@ -109,6 +112,7 @@ public final class Mewna {
         commandManager = new CommandManager(this);
         profiler.section("databaseInit");
         database.init();
+        levelsImportQueue.start();
         profiler.section("pluginInit");
         pluginManager.init();
         logger.info("Loaded {} commands", commandManager.getCommandMetadata().size());
@@ -164,6 +168,10 @@ public final class Mewna {
                                 "    [Total] " + nonHeapTotal + "MB\n";
                         logger.info("Boot RAM:\n{}", out);
                     }
+                    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                        levelsImportQueue.setRun(false);
+                        // TODO: singyeong disconnect??
+                    }));
                 })
                 .exceptionally(e -> {
                     e.printStackTrace();

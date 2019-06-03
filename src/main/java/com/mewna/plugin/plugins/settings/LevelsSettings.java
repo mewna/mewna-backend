@@ -46,6 +46,11 @@ public class LevelsSettings implements PluginSettings {
      * causing issues in the JS frontend part of things. idfk HOW, but it did.
      */
     private Map<String, Long> levelRoleRewards = new HashMap<>();
+    /**
+     * Lets us prevent people from abusing the poor robotto by spamming levels
+     * imports.
+     */
+    private boolean mee6LevelsImported;
     
     public LevelsSettings(final String id) {
         this.id = id;
@@ -79,7 +84,6 @@ public class LevelsSettings implements PluginSettings {
     @Override
     public boolean validateSettings(final JsonObject data) {
         for(final String key : data.fieldNames()) {
-            //noinspection SwitchStatementWithTooFewBranches
             switch(key) {
                 case "levelUpMessage": {
                     final Optional<String> maybeData = Optional.ofNullable(data.getString(key, null));
@@ -91,6 +95,13 @@ public class LevelsSettings implements PluginSettings {
                         break;
                     }
                     // Don't return false if no message, because some people may want cards only
+                }
+                case "mee6LevelsImported": {
+                    // Don't let people try to fake imports
+                    if(data.getBoolean(key, mee6LevelsImported) != mee6LevelsImported) {
+                        return false;
+                    }
+                    break;
                 }
                 default: {
                     break;

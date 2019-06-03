@@ -422,6 +422,32 @@ public class Database {
                 });
     }
     
+    public CompletableFuture<Player> getPlayerForImport(final String id, final String username, final String avatar) {
+        return getOptionalPlayer(id, null)
+                .thenApply(o -> {
+                    // This is fine!
+                    // o is null only in case of database errors
+                    //noinspection OptionalAssignedToNull
+                    if(o == null) {
+                        throw new IllegalStateException("Database error fetching player " + id);
+                    } else {
+                        return o.orElseGet(() -> {
+                            final Player base = Player.base(id);
+                            savePlayer(base);
+                            // If we don't have a player, then we also need to create an account for them
+                            if(mewna.accountManager().getAccountByLinkedDiscord(id).isEmpty()) {
+                                mewna.accountManager().createNewRawDiscordLinkedAccount(id, username, avatar);
+                            }
+                            return base;
+                        });
+                    }
+                })
+                .exceptionally(e -> {
+                    Sentry.capture(e);
+                    return null;
+                });
+    }
+    
     public CompletableFuture<Void> savePlayer(final Player player) {
         player.cleanup();
         return lockPlayer(player)

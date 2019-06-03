@@ -242,35 +242,6 @@ public class PluginLevels extends BasePlugin {
         if(account.banned()) {
             return;
         }
-        final ImmutablePair<Boolean, Long> globalRes = mewna().ratelimiter()
-                .checkUpdateRatelimit(author.id(), "chat-xp-global", TimeUnit.MINUTES.toMillis(10));
-        if(!globalRes.left) {
-            final long oldXp = player.getGlobalXp();
-            final long xp = getXp(player);
-            mewna().statsClient().count("xpgained.global", xp);
-            player.incrementGlobalXp(getXp(player));
-            database().savePlayer(player).join();
-            // Level-up notifications here?
-            if(isLevelUp(oldXp, oldXp + xp)) {
-                final long level = xpToLevel(oldXp + xp);
-                // lol
-                switch((int) level) {
-                    case 10:
-                    case 25:
-                    case 50:
-                    case 100: {
-                        mewna().pluginManager().processEvent(EventType.PLAYER_EVENT,
-                                new PlayerEvent(SystemEventType.GLOBAL_LEVEL, player,
-                                        new JsonObject().put("level", level)));
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
-            }
-        }
-        
         final Guild guild = event.guild();
         final var settings = block(database().getOrBaseSettings(LevelsSettings.class, guild.id()));
         if(!settings.isLevelsEnabled()) {

@@ -13,7 +13,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 
-import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
 import static com.mewna.util.Async.move;
@@ -73,8 +72,7 @@ public class CacheRoutes implements RouteGroup {
         return new JsonObject()
                 .put("id", guild.id())
                 .put("name", guild.name())
-                .put("icon", guild.iconUrl(new ImageOptions().png().size(128)))
-                .put("joinedAt", guild.joinedAt().format(DateTimeFormatter.ISO_DATE_TIME));
+                .put("icon", guild.iconUrl(new ImageOptions().png().size(128)));
     }
     
     @Override

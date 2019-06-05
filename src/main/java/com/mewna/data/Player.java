@@ -46,6 +46,7 @@ public class Player {
     private long lastDaily = 0L;
     private long dailyStreak = 0L;
     private Map<String, Long> guildXp = new HashMap<>();
+    @Deprecated
     private long globalXp = 0L;
     private Map<Box, Long> boxes = new HashMap<>();
     private Map<Item, Long> items = new HashMap<>();
@@ -134,6 +135,7 @@ public class Player {
         incrementLocalXp(guild.id(), amount);
     }
     
+    @Deprecated
     public void incrementGlobalXp(final long amount) {
         globalXp += amount;
     }
@@ -148,7 +150,7 @@ public class Player {
             ++count;
         }
         final long avgXp = count == 0 ? 0 : guildXp / count;
-        final long avg = balance + globalXp + dailyStreak + avgXp;
+        final long avg = balance + dailyStreak + avgXp;
         return avg / 4;
     }
     

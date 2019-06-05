@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.mewna.util.MewnaFutures.block;
+
 /**
  * @author amy
  * @since 1/28/19.
@@ -33,6 +35,12 @@ public final class LevelsImporter {
     
     public static void importMEE6Levels(final String guild) {
         new Thread(() -> {
+            {
+                final LevelsSettings settings = block(Mewna.getInstance().database().getOrBaseSettings(LevelsSettings.class, guild));
+                if(settings.isMee6LevelsImported()) {
+                    return;
+                }
+            }
             final OkHttpClient client = new OkHttpClient();
             Thread.currentThread().setName(guild);
             final List<JsonObject> pages = new ArrayList<>();
@@ -77,9 +85,11 @@ public final class LevelsImporter {
                     LOGGER.info("Importing {} pages of MEE6 users for guild {}", pages.size(), guild);
                     // Import role rewards
                     final JsonObject firstPage = pages.get(0);
-                    final JsonArray roleRewards = firstPage.getJsonArray("role_rewards");
                     Mewna.getInstance().database().getOrBaseSettings(LevelsSettings.class, guild)
                             .thenAccept(settings -> {
+                                settings.setMee6LevelsImported(true);
+                                final JsonArray roleRewards = firstPage.getJsonArray("role_rewards");
+                                settings.setMee6LevelsImported(true);
                                 for(final Object r : roleRewards) {
                                     final JsonObject reward = (JsonObject) r;
                                     final MEE6RoleReward rr = reward.mapTo(MEE6RoleReward.class);
@@ -98,8 +108,7 @@ public final class LevelsImporter {
                                             .put("username", player.getUsername())
                                             .put("avatar", player.getAvatar())
                                             .put("guild", player.getGuildId())
-                                            .put("xp", player.getXp())
-                                            ;
+                                            .put("xp", player.getXp());
                                     Mewna.getInstance().levelsImportQueue().queue(queuedPlayer);
                                 });
                     });

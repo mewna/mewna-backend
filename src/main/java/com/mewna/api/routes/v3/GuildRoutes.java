@@ -10,6 +10,7 @@ import com.mewna.data.Server;
 import com.mewna.data.Webhook;
 import com.mewna.data.cache.DiscordCache;
 import com.mewna.plugin.plugins.PluginLevels;
+import com.mewna.plugin.plugins.levels.LevelsImporter;
 import com.mewna.plugin.plugins.settings.BehaviourSettings;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
 import io.vertx.core.json.JsonArray;
@@ -107,6 +108,17 @@ public class GuildRoutes implements RouteGroup {
             } else {
                 ctx.response().end(new JsonObject().encode());
             }
+        }));
+        
+        router.post("/v3/guild/:id/levels/import/mee6").handler(ctx -> move(() -> {
+            final String id = ctx.request().getParam("id");
+            // This makes me feel better about passing untrusted user input from the url parameters
+            if(!id.matches("\\d{17,20}")) {
+                ctx.response().end(new JsonObject().encode());
+                return;
+            }
+            LevelsImporter.importMEE6Levels(id);
+            ctx.response().end(new JsonObject().encode());
         }));
         
         router.get("/v3/guild/:id/leaderboard").handler(ctx -> move(() -> {

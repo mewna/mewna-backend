@@ -76,5 +76,19 @@ public class UserRoutes implements RouteGroup {
                 ctx.response().end(new JsonObject().put("errors", new JsonArray(List.of("no account"))).encode());
             }
         }));
+        router.get("/v3/user/:id/premium").handler(ctx -> move(() -> {
+            final String id = ctx.pathParam("id");
+            final Optional<Account> maybeAccount = mewna.database().getAccountById(id);
+            if(maybeAccount.isPresent()) {
+                final Account account = maybeAccount.get();
+                if(account.premium()) {
+                    ctx.response().end(new JsonObject().put("errors", new JsonArray(List.of("no account"))).encode());
+                } else {
+                    ctx.response().end(new JsonObject().put("errors", new JsonArray(List.of("not premium"))).encode());
+                }
+            } else {
+                ctx.response().end(new JsonObject().put("errors", new JsonArray(List.of("no account"))).encode());
+            }
+        }));
     }
 }

@@ -4,6 +4,7 @@ import com.mewna.Mewna;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.util.SafeVertxCompletableFuture;
 import com.mewna.data.account.Account;
+import com.mewna.data.account.PremiumAccount;
 import com.mewna.data.account.timeline.TimelinePost;
 import com.mewna.data.guild.Server;
 import com.mewna.data.guild.Webhook;
@@ -76,7 +77,7 @@ public class Database {
         
         mapSettingsClasses();
         
-        premap(Player.class, Account.class, Server.class, TimelinePost.class);
+        premap(Player.class, Account.class, Server.class, TimelinePost.class, PremiumAccount.class);
         
         // Webhooks table is created manually, because it doesn't need to be JSON:b:
         store.sql("CREATE TABLE IF NOT EXISTS discord_webhooks (channel TEXT PRIMARY KEY NOT NULL UNIQUE, guild TEXT NOT NULL, " +
@@ -515,6 +516,18 @@ public class Database {
     public void saveAccount(final Account account) {
         cachePrune("account", account.id());
         store.mapSync(Account.class).save(account);
+    }
+    
+    public Optional<PremiumAccount> getPremiumData(final String id) {
+        return store.mapSync(PremiumAccount.class).load(id);
+    }
+    
+    public Optional<PremiumAccount> getPremiumData(final Account account) {
+        return getPremiumData(account.id());
+    }
+    
+    public void savePremiumData(final PremiumAccount premium) {
+        store.mapSync(PremiumAccount.class).save(premium);
     }
     
     ////////////////////

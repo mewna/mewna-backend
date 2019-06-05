@@ -9,8 +9,8 @@ import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.util.ImageOptions;
 import com.mewna.catnip.rest.guild.MemberData;
 import com.mewna.catnip.shard.DiscordEvent.Raw;
-import com.mewna.data.player.Player;
 import com.mewna.data.account.Account;
+import com.mewna.data.player.Player;
 import com.mewna.event.discord.DiscordGuildMemberAdd;
 import com.mewna.event.discord.DiscordMessageCreate;
 import com.mewna.plugin.BasePlugin;
@@ -23,9 +23,9 @@ import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
 import com.mewna.plugin.util.Emotes;
 import com.mewna.util.Templater;
+import gg.amy.singyeong.ProxiedRequest;
 import gg.amy.singyeong.QueryBuilder;
 import io.sentry.Sentry;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -95,12 +95,14 @@ public class PluginLevels extends BasePlugin {
         final int[] rank = {-1};
         final String guildId = guild.id();
         final String playerId = player.id();
-        Mewna.getInstance().database().getStore().sql("SELECT rank FROM (SELECT row_number() OVER (" +
-                "ORDER BY (data->'guildXp'->>'" + guildId + "')::integer DESC" +
-                ") AS rank, data FROM players " +
-                "WHERE data->'guildXp'->'" + guildId + "' IS NOT NULL " +
-                ") AS _q " +
-                "WHERE data->>'id' = '" + playerId + "';", p -> {
+        Mewna.getInstance().database().getStore().sql("SELECT rank FROM (" +
+                "SELECT " +
+                "row_number() OVER (ORDER BY (data->'guildXp'->>'267500017260953601')::integer DESC) AS rank, " +
+                "data " +
+                "FROM players " +
+                "WHERE " +
+                "data->'guildXp' ?? '267500017260953601'" +
+                ") AS _q WHERE data->>'id' = '128316294742147072';", p -> {
             final ResultSet resultSet = p.executeQuery();
             if(resultSet.isBeforeFirst()) {
                 resultSet.next();
@@ -316,16 +318,20 @@ public class PluginLevels extends BasePlugin {
                     .footer($(ctx.getLanguage(), "plugins.levels.change-background"),
                             user.effectiveAvatarUrl());
             
-            final Buffer response = block(mewna().singyeong()
-                    .proxy(HttpMethod.POST, "/v1/render/rank", "renderer", new QueryBuilder().build(),
-                            new JsonObject()
-                                    .put("id", user.id())
-                                    .put("background", account.customBackground())
-                                    .put("avatarUrl", user.effectiveAvatarUrl(new ImageOptions().png().size(128)))
-                                    .put("username", user.username())
-                                    .put("exp", player.getXp(guild))
-                                    .put("rank", getPlayerRankInGuild(guild, user))
-                    ));
+            final var response = block(mewna().singyeong().proxy(ProxiedRequest.builder()
+                    .method(HttpMethod.POST)
+                    .route("/v1/render/rank")
+                    .target("renderer")
+                    .query(new QueryBuilder().build())
+                    .body(new JsonObject()
+                            .put("id", user.id())
+                            .put("background", account.customBackground())
+                            .put("avatarUrl", user.effectiveAvatarUrl(new ImageOptions().png().size(128)))
+                            .put("username", user.username())
+                            .put("exp", player.getXp(guild))
+                            .put("rank", getPlayerRankInGuild(guild, user)))
+                    .build()));
+            
             final byte[] bytes = response.getBytes();
             
             block(catnip().rest().channel().deleteMessage(ctx.getMessage().channelId(), message.id()));
@@ -365,10 +371,7 @@ public class PluginLevels extends BasePlugin {
                     .replace("$target", user.username());
         }
         generating = generating.replace("$mention", ctx.getUser().asMention());
-        final String finalGenerating = generating;
-        
-        final var message = block(ctx.sendMessage(Emotes.LOADING_ICON + ' ' + finalGenerating));
-        
+        final var message = block(ctx.sendMessage(Emotes.LOADING_ICON + ' ' + generating));
         block(catnip().rest().channel().triggerTypingIndicator(ctx.getMessage().channelId()));
         try {
             // lol
@@ -384,20 +387,23 @@ public class PluginLevels extends BasePlugin {
                     .description('[' + $(ctx.getLanguage(), "plugins.levels.view-full-profile") + "](" + profileUrl + ')')
                     .footer($(ctx.getLanguage(), "plugins.levels.change-background-description"), null);
             
-            final Buffer response = block(mewna().singyeong()
-                    .proxy(HttpMethod.POST, "/v1/render/profile", "renderer", new QueryBuilder().build(),
-                            new JsonObject()
-                                    .put("id", user.id())
-                                    .put("background", account.customBackground())
-                                    .put("avatarUrl", user.effectiveAvatarUrl(new ImageOptions().png().size(128)))
-                                    .put("displayName", account.displayName())
-                                    .put("aboutText", account.aboutText())
-                                    .put("exp", player.getGlobalXp())
-                                    .put("rank", getPlayerRankGlobally(user))
-                                    .put("score", player.calculateScore())
-                    ));
+            final var response = block(mewna().singyeong().proxy(ProxiedRequest.builder()
+                    .method(HttpMethod.POST)
+                    .target("renderer")
+                    .route("/v1/render/profile")
+                    .query(new QueryBuilder().build())
+                    .body(new JsonObject()
+                            .put("id", user.id())
+                            .put("background", account.customBackground())
+                            .put("avatarUrl", user.effectiveAvatarUrl(new ImageOptions().png().size(128)))
+                            .put("displayName", account.displayName())
+                            .put("aboutText", account.aboutText())
+                            .put("tato", player.getClickerData().getTotalClicks().toPlainString())
+                            .put("money", player.getBalance())
+                            .put("score", player.calculateScore()))
+                    .build()));
             final byte[] bytes = response.getBytes();
-            
+    
             block(catnip().rest().channel().deleteMessage(ctx.getMessage().channelId(), message.id()));
             catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                     new MessageOptions()

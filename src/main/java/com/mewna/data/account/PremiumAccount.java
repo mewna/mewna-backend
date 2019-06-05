@@ -19,8 +19,8 @@ import java.util.List;
 @Accessors(fluent = true)
 @AllArgsConstructor
 @RequiredArgsConstructor
-@Table("accounts")
-@GIndex({"id", "email", "username", "discordAccountId"})
+@Table("premium_accounts")
+@GIndex({"id", "personalPrefixes", "uploadedBackground"})
 @Builder(toBuilder = true)
 @SuppressWarnings("unused")
 public class PremiumAccount {

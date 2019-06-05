@@ -2,7 +2,7 @@ package com.mewna.plugin.plugins;
 
 import com.mewna.catnip.entity.message.MessageOptions;
 import com.mewna.data.cache.DiscordCache;
-import com.mewna.data.Webhook;
+import com.mewna.data.guild.Webhook;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Plugin;
 import com.mewna.plugin.event.Event;

@@ -2,8 +2,8 @@ package com.mewna.api.routes;
 
 import com.mewna.Mewna;
 import com.mewna.api.RouteGroup;
-import com.mewna.data.accounts.Account;
-import com.mewna.data.accounts.timeline.TimelinePost;
+import com.mewna.data.account.Account;
+import com.mewna.data.account.timeline.TimelinePost;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;

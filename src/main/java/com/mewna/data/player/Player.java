@@ -1,9 +1,9 @@
-package com.mewna.data;
+package com.mewna.data.player;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mewna.Mewna;
-import com.mewna.data.accounts.Account;
+import com.mewna.data.account.Account;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.plugin.commands.CommandContext;
 import com.mewna.plugin.plugins.economy.Box;
@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import static com.mewna.data.Player.ClickerTiers.*;
+import static com.mewna.data.player.Player.ClickerTiers.*;
 
 /**
  * @author amy
@@ -133,11 +133,6 @@ public class Player {
     
     public void incrementLocalXp(final Guild guild, final long amount) {
         incrementLocalXp(guild.id(), amount);
-    }
-    
-    @Deprecated
-    public void incrementGlobalXp(final long amount) {
-        globalXp += amount;
     }
     
     // Scoring

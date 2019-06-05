@@ -1,7 +1,7 @@
 package com.mewna.plugin.plugins.levels;
 
 import com.mewna.Mewna;
-import com.mewna.data.Player;
+import com.mewna.data.player.Player;
 import io.sentry.Sentry;
 import io.vertx.core.json.JsonObject;
 import lombok.Getter;

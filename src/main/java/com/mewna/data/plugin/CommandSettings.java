@@ -1,4 +1,4 @@
-package com.mewna.data;
+package com.mewna.data.plugin;
 
 import lombok.*;
 

@@ -1,6 +1,6 @@
 package com.mewna.plugin.util;
 
-import com.mewna.data.Player;
+import com.mewna.data.player.Player;
 import org.junit.Test;
 
 import java.util.HashMap;

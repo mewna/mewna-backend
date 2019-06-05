@@ -1,10 +1,10 @@
 package com.mewna.plugin.plugins.settings;
 
 import com.mewna.catnip.entity.guild.Role;
-import com.mewna.data.CommandSettings;
+import com.mewna.data.plugin.CommandSettings;
 import com.mewna.data.Database;
 import com.mewna.data.cache.DiscordCache;
-import com.mewna.data.PluginSettings;
+import com.mewna.data.plugin.PluginSettings;
 import com.mewna.plugin.plugins.PluginLevels;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;

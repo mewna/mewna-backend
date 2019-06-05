@@ -1,12 +1,12 @@
 package com.mewna.plugin.commands;
 
-import com.mewna.data.accounts.Account;
+import com.mewna.data.account.Account;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.message.Embed;
 import com.mewna.catnip.entity.message.Message;
 import com.mewna.catnip.entity.message.MessageOptions;
 import com.mewna.catnip.entity.user.User;
-import com.mewna.data.Player;
+import com.mewna.data.player.Player;
 import com.mewna.event.discord.DiscordMessageCreate;
 import com.mewna.util.Profiler;
 import lombok.Builder;

@@ -1,4 +1,4 @@
-package com.mewna.data;
+package com.mewna.data.guild;
 
 import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;

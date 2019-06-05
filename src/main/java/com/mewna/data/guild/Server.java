@@ -1,8 +1,9 @@
-package com.mewna.data;
+package com.mewna.data.guild;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mewna.Mewna;
-import com.mewna.data.accounts.Account;
+import com.mewna.data.Database;
+import com.mewna.data.account.Account;
 import com.mewna.plugin.event.EventType;
 import com.mewna.plugin.event.plugin.behaviour.ServerEvent;
 import com.mewna.plugin.event.plugin.behaviour.SystemEventType;

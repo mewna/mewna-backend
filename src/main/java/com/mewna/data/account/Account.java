@@ -1,4 +1,4 @@
-package com.mewna.data.accounts;
+package com.mewna.data.account;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mewna.Mewna;

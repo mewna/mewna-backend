@@ -2,7 +2,7 @@ package com.mewna.api.routes;
 
 import com.mewna.Mewna;
 import com.mewna.api.RouteGroup;
-import com.mewna.data.PluginSettings;
+import com.mewna.data.plugin.PluginSettings;
 import com.mewna.plugin.plugins.settings.SecretSettings;
 import io.sentry.Sentry;
 import io.vertx.core.json.JsonArray;

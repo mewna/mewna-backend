@@ -1,13 +1,13 @@
 package com.mewna.plugin.commands;
 
 import com.mewna.Mewna;
-import com.mewna.data.accounts.Account;
+import com.mewna.data.account.Account;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.shard.DiscordEvent.Raw;
-import com.mewna.data.CommandSettings;
-import com.mewna.data.Player;
-import com.mewna.data.PluginSettings;
+import com.mewna.data.plugin.CommandSettings;
+import com.mewna.data.player.Player;
+import com.mewna.data.plugin.PluginSettings;
 import com.mewna.event.discord.DiscordMessageCreate;
 import com.mewna.plugin.Plugin;
 import com.mewna.plugin.PluginManager.PluginMetadata;

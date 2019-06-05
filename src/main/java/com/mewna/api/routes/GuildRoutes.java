@@ -1,13 +1,13 @@
 package com.mewna.api.routes;
 
 import com.mewna.Mewna;
-import com.mewna.data.accounts.Account;
+import com.mewna.data.account.Account;
 import com.mewna.api.RouteGroup;
 import com.mewna.catnip.entity.guild.Role;
 import com.mewna.catnip.entity.user.User;
-import com.mewna.data.Player;
-import com.mewna.data.Server;
-import com.mewna.data.Webhook;
+import com.mewna.data.player.Player;
+import com.mewna.data.guild.Server;
+import com.mewna.data.guild.Webhook;
 import com.mewna.data.cache.DiscordCache;
 import com.mewna.plugin.plugins.PluginLevels;
 import com.mewna.plugin.plugins.levels.LevelsImporter;

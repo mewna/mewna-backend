@@ -1,6 +1,6 @@
 package com.mewna.plugin.event.plugin.behaviour;
 
-import com.mewna.data.accounts.Account;
+import com.mewna.data.account.Account;
 import com.mewna.plugin.event.BaseEvent;
 import com.mewna.plugin.event.EventType;
 import io.vertx.core.json.JsonObject;

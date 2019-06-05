@@ -7,7 +7,7 @@ import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.message.MessageOptions;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.util.SafeVertxCompletableFuture;
-import com.mewna.data.Player;
+import com.mewna.data.player.Player;
 import com.mewna.data.cache.DiscordCache;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Plugin;
@@ -37,7 +37,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.mewna.data.Player.MAX_INV_WEIGHT;
+import static com.mewna.data.player.Player.MAX_INV_WEIGHT;
 import static com.mewna.plugin.plugins.PluginEconomy.ReelSymbol.*;
 import static com.mewna.util.Translator.$;
 

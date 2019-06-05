@@ -1,8 +1,8 @@
 package com.mewna.plugin.plugins;
 
 import com.google.common.collect.ImmutableMap;
-import com.mewna.data.Player;
-import com.mewna.data.PluginSettings;
+import com.mewna.data.player.Player;
+import com.mewna.data.plugin.PluginSettings;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.commands.Command;
 import com.mewna.plugin.commands.CommandContext;
@@ -233,40 +233,6 @@ public class PluginStaff extends BasePlugin {
                             if(o.isPresent()) {
                                 final Player player = o.get();
                                 player.setBalance(amount);
-                                database().savePlayer(player).thenAccept(__ -> ctx.sendMessage(Emotes.YES));
-                            } else {
-                                ctx.sendMessage(Emotes.NO + " No such player!");
-                            }
-                        }));
-                    } catch(final Exception e) {
-                        ctx.sendMessage(Emotes.NO + " Invalid command usage!");
-                    }
-                    break;
-                }
-                case "globalexp": {
-                    try {
-                        final long amount = Long.parseLong(ctx.getArgs().get(1));
-                        database().getOptionalPlayer(playerId, ctx.getProfiler()).thenAccept(o -> move(() -> {
-                            if(o.isPresent()) {
-                                final Player player = o.get();
-                                player.setGlobalXp(amount);
-                                database().savePlayer(player).thenAccept(__ -> ctx.sendMessage(Emotes.YES));
-                            } else {
-                                ctx.sendMessage(Emotes.NO + " No such player!");
-                            }
-                        }));
-                    } catch(final Exception e) {
-                        ctx.sendMessage(Emotes.NO + " Invalid command usage!");
-                    }
-                    break;
-                }
-                case "globallevels": {
-                    try {
-                        final int level = Integer.parseInt(ctx.getArgs().get(1));
-                        database().getOptionalPlayer(playerId, ctx.getProfiler()).thenAccept(o -> move(() -> {
-                            if(o.isPresent()) {
-                                final Player player = o.get();
-                                player.setGlobalXp(PluginLevels.fullLevelToXp(level));
                                 database().savePlayer(player).thenAccept(__ -> ctx.sendMessage(Emotes.YES));
                             } else {
                                 ctx.sendMessage(Emotes.NO + " No such player!");

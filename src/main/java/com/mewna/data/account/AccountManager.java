@@ -1,11 +1,11 @@
-package com.mewna.data.accounts;
+package com.mewna.data.account;
 
 import com.mewna.Mewna;
-import com.mewna.data.accounts.Account.AccountBuilder;
-import com.mewna.data.accounts.timeline.TimelinePost;
+import com.mewna.data.account.Account.AccountBuilder;
+import com.mewna.data.account.timeline.TimelinePost;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.util.ImageOptions;
-import com.mewna.data.Player;
+import com.mewna.data.player.Player;
 import com.mewna.plugin.util.Snowflakes;
 import io.vertx.core.json.JsonObject;
 import lombok.RequiredArgsConstructor;

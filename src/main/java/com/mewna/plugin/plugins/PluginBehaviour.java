@@ -1,7 +1,7 @@
 package com.mewna.plugin.plugins;
 
-import com.mewna.data.accounts.Account;
-import com.mewna.data.accounts.timeline.TimelinePost;
+import com.mewna.data.account.Account;
+import com.mewna.data.account.timeline.TimelinePost;
 import com.mewna.plugin.BasePlugin;
 import com.mewna.plugin.Plugin;
 import com.mewna.plugin.event.Event;

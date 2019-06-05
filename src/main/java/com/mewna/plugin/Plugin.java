@@ -1,6 +1,6 @@
 package com.mewna.plugin;
 
-import com.mewna.data.PluginSettings;
+import com.mewna.data.plugin.PluginSettings;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,7 +1,7 @@
 package com.mewna.plugin.util;
 
 import com.mewna.Mewna;
-import com.mewna.data.Player;
+import com.mewna.data.player.Player;
 import com.mewna.plugin.commands.CommandContext;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 

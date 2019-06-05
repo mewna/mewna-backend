@@ -3,8 +3,12 @@ package com.mewna.data;
 import com.mewna.Mewna;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.util.SafeVertxCompletableFuture;
-import com.mewna.data.accounts.Account;
-import com.mewna.data.accounts.timeline.TimelinePost;
+import com.mewna.data.account.Account;
+import com.mewna.data.account.timeline.TimelinePost;
+import com.mewna.data.guild.Server;
+import com.mewna.data.guild.Webhook;
+import com.mewna.data.player.Player;
+import com.mewna.data.plugin.PluginSettings;
 import com.mewna.data.posts.Post;
 import com.mewna.plugin.Plugin;
 import com.mewna.util.Profiler;
@@ -129,6 +133,7 @@ public class Database {
         redis(r -> r.set("mewna:cache:" + type + ':' + key, JsonObject.mapFrom(value).encode()));
     }
     
+    @SuppressWarnings("unchecked")
     public <T> T cacheRead(final String type, final String key, final Class<T> cls) {
         final Object[] cached = {null};
         redis(r -> {
@@ -137,7 +142,6 @@ public class Database {
                 cached[0] = new JsonObject(json).mapTo(cls);
             }
         });
-        //noinspection unchecked
         return (T) cached[0];
     }
     

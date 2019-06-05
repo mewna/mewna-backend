@@ -1,6 +1,7 @@
-package com.mewna.data;
+package com.mewna.data.plugin;
 
 import com.mewna.Mewna;
+import com.mewna.data.Database;
 import com.mewna.plugin.commands.CommandManager.CommandWrapper;
 import io.sentry.Sentry;
 import io.vertx.core.json.JsonObject;

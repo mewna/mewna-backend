@@ -3,7 +3,7 @@ package com.mewna.plugin;
 import com.google.common.collect.ImmutableMap;
 import com.mewna.Mewna;
 import com.mewna.data.Database;
-import com.mewna.data.PluginSettings;
+import com.mewna.data.plugin.PluginSettings;
 import com.mewna.plugin.commands.Command;
 import com.mewna.plugin.commands.annotations.Owner;
 import com.mewna.plugin.commands.annotations.Staff;

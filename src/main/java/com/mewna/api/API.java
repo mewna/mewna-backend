@@ -2,7 +2,7 @@ package com.mewna.api;
 
 import com.google.common.collect.ImmutableList;
 import com.mewna.Mewna;
-import com.mewna.api.routes.v3.*;
+import com.mewna.api.routes.*;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
 import lombok.RequiredArgsConstructor;

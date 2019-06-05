@@ -1,10 +1,10 @@
 package com.mewna.data;
 
 import com.mewna.Mewna;
-import com.mewna.data.accounts.Account;
-import com.mewna.data.accounts.timeline.TimelinePost;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.util.SafeVertxCompletableFuture;
+import com.mewna.data.accounts.Account;
+import com.mewna.data.accounts.timeline.TimelinePost;
 import com.mewna.data.posts.Post;
 import com.mewna.plugin.Plugin;
 import com.mewna.util.Profiler;
@@ -28,6 +28,7 @@ import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Database-level abstraction
@@ -582,8 +583,11 @@ public class Database {
     public List<TimelinePost> getTimelinePostChunk(final String id, final long limit, final long after) {
         // TODO: How the tato can this be cached???
         final List<TimelinePost> posts = new ArrayList<>();
-        store.sql("SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName()
-                + " WHERE data->>'author' = ? AND id::bigint > ? ORDER BY id::bigint DESC LIMIT " + limit + ';', q -> {
+        store.sql("SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName() + ' '
+                + "WHERE data->>'author' = ? "
+                + "AND id::bigint > ? "
+                + "ORDER BY id::bigint DESC "
+                + "LIMIT " + limit + ';', q -> {
             q.setString(1, id);
             q.setLong(2, after);
             final ResultSet resultSet = q.executeQuery();
@@ -595,24 +599,46 @@ public class Database {
         return posts;
     }
     
-    public List<TimelinePost> getLast100TimelinePosts(final String id) {
+    public List<TimelinePost> getPostsFromIds(@SuppressWarnings("TypeMayBeWeakened") final List<String> ids,
+                                              final long limit, final long after) {
+        // Thank god we like chronological home pages around here...
+        
+        // Map the incoming snowflake list into a "tuple" "array" that we can
+        // use for an inline values-join
+        final String valuesJoin = ids.stream().map(e -> "('" + e + "')").collect(Collectors.joining(","));
+        // Now that we have a "list" like:
+        //     (1),(2),(3), -- ...
+        // we can use this to do the "inline values-join" part of the query.
+        // This is mainly just a performance optimization for the query, as
+        // it's possible that we could be dealing with up to 100 - maybe more,
+        // we don't know if Discord raises the limit in the future - and so it
+        // becomes prohibitively expensive to do a large select like this as
+        // the table size grows.
+        // This is basically just an optimization to make the query planner not
+        // be stupid as the values we check against grow.
+        // See: https://dba.stackexchange.com/a/91539
         final List<TimelinePost> posts = new ArrayList<>();
-        store.sql("SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName()
-                + " WHERE data->>'author' = ? ORDER BY id::bigint DESC LIMIT 100;", q -> {
-            q.setString(1, id);
+        @SuppressWarnings("SqlType")
+        final String query = "SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName() + ' '
+                + "INNER JOIN (VALUES " + valuesJoin + ") __ids(i) "
+                + "ON (data->>'author' = i) "
+                + "WHERE id::bigint > ? "
+                + "LIMIT " + limit + ';';
+        store.sql(query, q -> {
+            q.setLong(1, after);
             final ResultSet resultSet = q.executeQuery();
             while(resultSet.next()) {
                 final String data = resultSet.getString("data");
                 posts.add(new JsonObject(data).mapTo(TimelinePost.class));
             }
         });
-        
         return posts;
     }
     
     public List<TimelinePost> getAllTimelinePosts(final String id) {
         final List<TimelinePost> posts = new ArrayList<>();
-        store.sql("SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName() + " WHERE data->>'author' = ? ORDER BY id::bigint DESC;", q -> {
+        store.sql("SELECT data FROM " + store.mapSync(TimelinePost.class).getTableName()
+                + " WHERE data->>'author' = ? ORDER BY id::bigint DESC;", q -> {
             q.setString(1, id);
             final ResultSet resultSet = q.executeQuery();
             while(resultSet.next()) {

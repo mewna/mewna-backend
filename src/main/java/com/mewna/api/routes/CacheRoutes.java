@@ -1,4 +1,4 @@
-package com.mewna.api.routes.v3;
+package com.mewna.api.routes;
 
 import com.mewna.Mewna;
 import com.mewna.api.RouteGroup;

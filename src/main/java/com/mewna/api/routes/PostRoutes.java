@@ -1,9 +1,9 @@
-package com.mewna.api.routes.v3;
+package com.mewna.api.routes;
 
 import com.mewna.Mewna;
+import com.mewna.api.RouteGroup;
 import com.mewna.data.accounts.Account;
 import com.mewna.data.accounts.timeline.TimelinePost;
-import com.mewna.api.RouteGroup;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -11,6 +11,7 @@ import io.vertx.ext.web.handler.BodyHandler;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.mewna.util.Async.move;
 
@@ -52,7 +53,7 @@ public class PostRoutes implements RouteGroup {
         }));
         router.get("/v3/post/:id/posts").handler(ctx -> move(() -> {
             final String id = ctx.pathParam("id");
-        
+            
             final List<String> limits = ctx.queryParam("limit");
             final List<String> afters = ctx.queryParam("after");
             int limit = 100;
@@ -63,8 +64,27 @@ public class PostRoutes implements RouteGroup {
             if(!afters.isEmpty()) {
                 after = Integer.parseInt(afters.get(0));
             }
-        
+            
             final JsonArray out = new JsonArray(mewna.database().getTimelinePostChunk(id, limit, after));
+            ctx.response().end(out.encode());
+        }));
+        router.post("/v3/homepage").handler(BodyHandler.create()).handler(ctx -> move(() -> {
+            // Honestly this should probably just be a GET but I didn't wanna build query strings.
+            final List<String> ids = ctx.getBodyAsJsonArray().stream()
+                    .map(e -> (String) e)
+                    .collect(Collectors.toList());
+            final List<String> limits = ctx.queryParam("limit");
+            final List<String> afters = ctx.queryParam("after");
+            int limit = 100;
+            if(!limits.isEmpty()) {
+                limit = Integer.parseInt(limits.get(0));
+            }
+            long after = 0;
+            if(!afters.isEmpty()) {
+                after = Integer.parseInt(afters.get(0));
+            }
+    
+            final JsonArray out = new JsonArray(mewna.database().getPostsFromIds(ids, limit, after));
             ctx.response().end(out.encode());
         }));
         router.get("/v3/post/:id/:post").handler(BodyHandler.create()).handler(ctx -> move(() -> {

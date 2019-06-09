@@ -1,10 +1,11 @@
 package com.mewna.api.routes;
 
 import com.mewna.Mewna;
-import com.mewna.data.account.Account;
 import com.mewna.api.RouteGroup;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.util.ImageOptions;
+import com.mewna.data.account.Account;
+import com.mewna.data.account.PremiumAccount;
 import com.mewna.data.cache.DiscordCache;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -82,7 +83,39 @@ public class UserRoutes implements RouteGroup {
             if(maybeAccount.isPresent()) {
                 final Account account = maybeAccount.get();
                 if(account.premium()) {
-                    ctx.response().end(new JsonObject().put("errors", new JsonArray(List.of("no account"))).encode());
+                    final Optional<PremiumAccount> maybeData = mewna.database().getPremiumData(account);
+                    final PremiumAccount data;
+                    if(maybeData.isPresent()) {
+                        data = maybeData.get();
+                    } else {
+                        data = new PremiumAccount();
+                        data.id(account.id());
+                        mewna.database().savePremiumData(data);
+                    }
+                    ctx.response().end(JsonObject.mapFrom(data).encode());
+                } else {
+                    ctx.response().end(new JsonObject().put("errors", new JsonArray(List.of("not premium"))).encode());
+                }
+            } else {
+                ctx.response().end(new JsonObject().put("errors", new JsonArray(List.of("no account"))).encode());
+            }
+        }));
+        router.post("/v3/user/:id/premium").handler(BodyHandler.create()).handler(ctx -> move(() -> {
+            final String id = ctx.pathParam("id");
+            final Optional<Account> maybeAccount = mewna.database().getAccountById(id);
+            if(maybeAccount.isPresent()) {
+                final Account account = maybeAccount.get();
+                if(account.premium()) {
+                    final Optional<PremiumAccount> maybeData = mewna.database().getPremiumData(account);
+                    final PremiumAccount data;
+                    if(maybeData.isPresent()) {
+                        data = maybeData.get();
+                    } else {
+                        data = new PremiumAccount();
+                        data.id(account.id());
+                        mewna.database().savePremiumData(data);
+                    }
+                    ctx.response().end(JsonObject.mapFrom(data).encode());
                 } else {
                     ctx.response().end(new JsonObject().put("errors", new JsonArray(List.of("not premium"))).encode());
                 }

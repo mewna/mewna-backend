@@ -12,7 +12,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <catnip.version>1.3.0</catnip.version>
-        <singyeong.version>4243029</singyeong.version>
+        <singyeong.version>75ab2c5</singyeong.version>
         <svcf.version>50318b3</svcf.version>
         <postgres.orm.version>f2578e1</postgres.orm.version>
 

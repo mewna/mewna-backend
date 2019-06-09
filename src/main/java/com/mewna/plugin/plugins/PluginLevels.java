@@ -23,8 +23,8 @@ import com.mewna.plugin.event.plugin.levels.LevelUpEvent;
 import com.mewna.plugin.plugins.settings.LevelsSettings;
 import com.mewna.plugin.util.Emotes;
 import com.mewna.util.Templater;
-import gg.amy.singyeong.ProxiedRequest;
-import gg.amy.singyeong.QueryBuilder;
+import gg.amy.singyeong.client.query.QueryBuilder;
+import gg.amy.singyeong.data.ProxiedRequest;
 import io.sentry.Sentry;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
@@ -98,35 +98,17 @@ public class PluginLevels extends BasePlugin {
         Mewna.getInstance().database().getStore().sql("SELECT rank FROM (" +
                 "SELECT " +
                 "row_number() OVER (ORDER BY (data->'guildXp'->>'267500017260953601')::integer DESC) AS rank, " +
-                "data " +
+                "data, id " +
                 "FROM players " +
                 "WHERE " +
                 "data->'guildXp' ?? '267500017260953601'" +
-                ") AS _q WHERE data->>'id' = '128316294742147072';", p -> {
+                ") AS _q WHERE id = '128316294742147072';", p -> {
             final ResultSet resultSet = p.executeQuery();
             if(resultSet.isBeforeFirst()) {
                 resultSet.next();
                 rank[0] = resultSet.getInt("rank");
             } else {
                 rank[0] = 1;
-            }
-        });
-        return rank[0];
-    }
-    
-    public static int getPlayerRankGlobally(final User player) {
-        final int[] rank = {-1};
-        final String playerId = player.id();
-        Mewna.getInstance().database().getStore().sql("SELECT rank FROM (SELECT row_number() OVER (" +
-                "ORDER BY (data->>'globalXp')::integer DESC" +
-                ") AS rank, data FROM players) AS _q " +
-                "WHERE data->>'id' = '" + playerId + "';", p -> {
-            final ResultSet resultSet = p.executeQuery();
-            if(resultSet.isBeforeFirst()) {
-                resultSet.next();
-                rank[0] = resultSet.getInt("rank");
-            } else {
-                rank[0] = -1;
             }
         });
         return rank[0];
@@ -321,8 +303,7 @@ public class PluginLevels extends BasePlugin {
             final var response = block(mewna().singyeong().proxy(ProxiedRequest.builder()
                     .method(HttpMethod.POST)
                     .route("/v1/render/rank")
-                    .target("renderer")
-                    .query(new QueryBuilder().build())
+                    .query(new QueryBuilder().target("renderer").build())
                     .body(new JsonObject()
                             .put("id", user.id())
                             .put("background", account.customBackground())
@@ -389,9 +370,8 @@ public class PluginLevels extends BasePlugin {
             
             final var response = block(mewna().singyeong().proxy(ProxiedRequest.builder()
                     .method(HttpMethod.POST)
-                    .target("renderer")
                     .route("/v1/render/profile")
-                    .query(new QueryBuilder().build())
+                    .query(new QueryBuilder().target("renderer").build())
                     .body(new JsonObject()
                             .put("id", user.id())
                             .put("background", account.customBackground())

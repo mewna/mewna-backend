@@ -16,7 +16,7 @@ import com.mewna.plugin.event.plugin.twitch.TwitchStreamData;
 import com.mewna.plugin.event.plugin.twitch.TwitchStreamEndEvent;
 import com.mewna.plugin.event.plugin.twitch.TwitchStreamStartEvent;
 import com.mewna.plugin.event.plugin.twitch.TwitchStreamer;
-import gg.amy.singyeong.Dispatch;
+import gg.amy.singyeong.data.Dispatch;
 import io.vertx.core.json.JsonObject;
 
 import static com.mewna.util.Async.move;

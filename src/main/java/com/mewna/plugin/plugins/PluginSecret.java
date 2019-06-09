@@ -18,7 +18,7 @@ import com.mewna.plugin.plugins.settings.SecretSettings;
 import com.mewna.plugin.plugins.settings.TwitchSettings;
 import com.mewna.plugin.plugins.settings.WelcomingSettings;
 import com.mewna.plugin.util.Emotes;
-import gg.amy.singyeong.QueryBuilder;
+import gg.amy.singyeong.client.query.QueryBuilder;
 import io.sentry.Sentry;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -197,8 +197,7 @@ public class PluginSecret extends BasePlugin {
                     }
                 }
             });
-            ids.forEach(e -> Mewna.getInstance().singyeong().send("telepathy",
-                    new QueryBuilder().build(),
+            ids.forEach(e -> Mewna.getInstance().singyeong().send(new QueryBuilder().target("telepathy").build(),
                     new JsonObject().put("t", "TWITCH_SUBSCRIBE")
                             .put("d", new JsonObject().put("id", e).put("topic", "streams"))));
             catnip().rest().user().createDM(ctx.getUser().id())

@@ -18,7 +18,7 @@ import com.mewna.plugin.plugins.music.NekoTrackContext;
 import com.mewna.plugin.plugins.settings.MusicSettings;
 import com.mewna.plugin.util.Emotes;
 import com.mewna.util.Time;
-import gg.amy.singyeong.QueryBuilder;
+import gg.amy.singyeong.client.query.QueryBuilder;
 import gg.amy.vertx.SafeVertxCompletableFuture;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -61,8 +61,7 @@ public class PluginMusic extends BasePlugin {
                         $(ctx.getLanguage(), "plugins.music.bot-already-in-voice"));
             } else {
                 final VoiceState state = DiscordCache.voiceState(guildId, ctx.getUser().id());
-                mewna().singyeong().send("shards",
-                        new QueryBuilder().contains("guilds", guildId).build(),
+                mewna().singyeong().send(new QueryBuilder().target("shards").contains("guilds", guildId).build(),
                         new JsonObject().put("type", "VOICE_JOIN")
                                 .put("guild_id", guildId)
                                 .put("channel_id", state.channelId()));
@@ -94,7 +93,7 @@ public class PluginMusic extends BasePlugin {
                 catnip().rest().channel().sendMessage(ctx.getMessage().channelId(),
                         $(ctx.getLanguage(), "plugins.music.commands.leave.left") +
                                 " \uD83D\uDD0A" + ch.name());
-                mewna().singyeong().send("shards", new QueryBuilder().contains("guilds", guildId).build(),
+                mewna().singyeong().send(new QueryBuilder().target("shards").contains("guilds", guildId).build(),
                         new JsonObject().put("type", "VOICE_LEAVE").put("guild_id", guildId));
             }
         });
@@ -134,7 +133,8 @@ public class PluginMusic extends BasePlugin {
                 case "youtube.com":
                 case "youtu.be": {
                     // YT URLs are ok, so just send it directly
-                    mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
+                    mewna().singyeong().send(new QueryBuilder().target("nekomimi")
+                                    .contains("guilds", ctx.getGuild().id()).build(),
                             new JsonObject().put("type", "VOICE_QUEUE")
                                     .put("url", ctx.getArgstr())
                                     .put("context", JsonObject.mapFrom(context)));
@@ -154,8 +154,8 @@ public class PluginMusic extends BasePlugin {
             }
         } catch(final Exception e) {
             // Not a valid url, search it
-            mewna().singyeong().send("nekomimi",
-                    new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
+            mewna().singyeong().send(
+                    new QueryBuilder().target("nekomimi").contains("guilds", ctx.getGuild().id()).build(),
                     new JsonObject().put("type", "VOICE_QUEUE")
                             .put("search", ctx.getArgstr())
                             .put("context", JsonObject.mapFrom(context)));
@@ -177,7 +177,8 @@ public class PluginMusic extends BasePlugin {
                         $(ctx.getLanguage(), "plugins.music.bot-not-in-voice"));
             } else {
                 if(ctx.getArgs().isEmpty()) {
-                    mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
+                    mewna().singyeong().send(new QueryBuilder().target("nekomimi")
+                                    .contains("guilds", ctx.getGuild().id()).build(),
                             new JsonObject().put("type", "VOICE_PLAY")
                                     .put("guild_id", ctx.getGuild().id()));
                 } else {
@@ -206,7 +207,8 @@ public class PluginMusic extends BasePlugin {
                 ctx.sendMessage(
                         $(ctx.getLanguage(), "plugins.music.bot-not-in-voice"));
             } else {
-                mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
+                mewna().singyeong().send(new QueryBuilder().target("nekomimi")
+                                .contains("guilds", ctx.getGuild().id()).build(),
                         new JsonObject().put("type", "VOICE_SKIP")
                                 .put("guild_id", ctx.getGuild().id()));
             }
@@ -220,7 +222,7 @@ public class PluginMusic extends BasePlugin {
                 ctx.getMessage().channelId(),
                 ctx.getMessage().guildId()
         );
-        mewna().singyeong().send("nekomimi", new QueryBuilder().contains("guilds", ctx.getGuild().id()).build(),
+        mewna().singyeong().send(new QueryBuilder().target("nekomimi").contains("guilds", ctx.getGuild().id()).build(),
                 new JsonObject().put("type", "VOICE_NOW_PLAYING")
                         .put("guild_id", ctx.getGuild().id())
                         .put("context", JsonObject.mapFrom(context)));

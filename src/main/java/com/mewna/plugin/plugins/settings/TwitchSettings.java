@@ -1,14 +1,14 @@
 package com.mewna.plugin.plugins.settings;
 
 import com.mewna.Mewna;
-import com.mewna.data.plugin.CommandSettings;
 import com.mewna.data.Database;
+import com.mewna.data.plugin.CommandSettings;
 import com.mewna.data.plugin.PluginSettings;
 import com.mewna.plugin.plugins.PluginTwitch;
 import gg.amy.pgorm.annotations.GIndex;
 import gg.amy.pgorm.annotations.PrimaryKey;
 import gg.amy.pgorm.annotations.Table;
-import gg.amy.singyeong.QueryBuilder;
+import gg.amy.singyeong.client.query.QueryBuilder;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
@@ -129,10 +129,10 @@ public class TwitchSettings implements PluginSettings {
         final Collection<TwitchStreamerConfig> copy = new ArrayList<>(streamers);
         
         copy.removeIf(e -> twitchStreamers.stream().anyMatch(f -> f.id.equalsIgnoreCase(e.id)));
-        copy.forEach(streamer -> Mewna.getInstance().singyeong().send("telepathy",
-                new QueryBuilder().build(),
-                new JsonObject().put("t", "TWITCH_SUBSCRIBE")
-                        .put("d", new JsonObject().put("id", streamer.getId()).put("topic", "streams"))));
+        copy.forEach(streamer -> Mewna.getInstance().singyeong()
+                .send(new QueryBuilder().target("telepathy").build(),
+                        new JsonObject().put("t", "TWITCH_SUBSCRIBE")
+                                .put("d", new JsonObject().put("id", streamer.getId()).put("topic", "streams"))));
         
         // We don't try to unsubscribe from webhooks because that would honestly be a nightmare x-x
         

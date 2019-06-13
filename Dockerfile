@@ -7,4 +7,4 @@ RUN mvn -B -q clean package
 FROM openjdk:11-jdk-slim
 COPY --from=0 /app/target/mewna*.jar /app/mewna.jar
 
-ENTRYPOINT ["java", "-Djavax.net.ssl.trustStorePassword=changeit", "-Xms128M", "-Xmx8192M", "-jar", "/app/mewna.jar"]
+ENTRYPOINT ["java", "-Djava.io.tmpdir=/app", "-Djavax.net.ssl.trustStorePassword=changeit", "-Xms128M", "-Xmx8192M", "-jar", "/app/mewna.jar"]

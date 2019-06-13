@@ -11,7 +11,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <catnip.version>1.2.0</catnip.version>
+        <catnip.version>06af1cb</catnip.version>
         <singyeong.version>8dd40df</singyeong.version>
         <svcf.version>50318b3</svcf.version>
 

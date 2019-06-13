@@ -4,7 +4,8 @@ COPY . /app
 WORKDIR /app
 RUN mvn -B -q clean package
 
-FROM openjdk:11-jdk-slim
+FROM openjdk:11-jdk
 COPY --from=0 /app/target/mewna*.jar /app/mewna.jar
+RUN apt-get install -y libfontconfig
 
 ENTRYPOINT ["java", "-Djava.awt.headless=true", "-Djava.io.tmpdir=/app", "-Djavax.net.ssl.trustStorePassword=changeit", "-Xms128M", "-Xmx8192M", "-jar", "/app/mewna.jar"]

@@ -19,8 +19,11 @@ import com.mewna.plugin.plugins.settings.MusicSettings;
 import com.mewna.plugin.util.Emotes;
 import com.mewna.util.Time;
 import gg.amy.singyeong.client.query.QueryBuilder;
+import gg.amy.singyeong.data.ProxiedRequest;
 import gg.amy.vertx.SafeVertxCompletableFuture;
 import io.vertx.core.Future;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 
 import java.net.URI;
@@ -28,6 +31,7 @@ import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.concurrent.CompletionStage;
 
+import static com.mewna.util.MewnaFutures.block;
 import static com.mewna.util.Translator.$;
 
 /**
@@ -222,67 +226,24 @@ public class PluginMusic extends BasePlugin {
                 ctx.getMessage().channelId(),
                 ctx.getMessage().guildId()
         );
-        mewna().singyeong().send(new QueryBuilder().target("nekomimi").contains("guilds", ctx.getGuild().id()).build(),
-                new JsonObject().put("type", "VOICE_NOW_PLAYING")
-                        .put("guild_id", ctx.getGuild().id())
-                        .put("context", JsonObject.mapFrom(context)));
-    }
-    
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    @Event(EventType.AUDIO_TRACK_QUEUE)
-    public void handleTrackQueue(final NekoTrackEvent event) {
-        if(event.track() == null) {
-            // TODO: Dealing with no-tracks-found event
-            return;
-        }
+        final Buffer res = block(mewna().singyeong().proxy(ProxiedRequest.builder()
+                .method(HttpMethod.POST)
+                .route("/api/np/" + ctx.getGuild().id())
+                .query(new QueryBuilder().target("nekomimi").contains("guilds", ctx.getGuild().id()).build())
+                .body(JsonObject.mapFrom(context).encode())
+                .build()));
         
-        final EmbedBuilder builder = new EmbedBuilder();
-        builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.song-queued"))
-                .url(event.track().url())
-                .field($(database().language(event.track().context().guild()), "plugins.music.events.title"),
-                        event.track().title(), true)
-                .field("\u200B", "\u200B", true)
-                .field($(database().language(event.track().context().guild()), "plugins.music.events.artist"),
-                        event.track().author(), true)
-                .field($(database().language(event.track().context().guild()), "plugins.music.events.length"),
-                        Time.toHumanReadableDuration(event.track().length()), true);
-        catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
-    }
-    
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    @Event(EventType.AUDIO_TRACK_START)
-    public void handleTrackStart(final NekoTrackEvent event) {
-        final EmbedBuilder builder = new EmbedBuilder();
-        builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.song-started"))
-                .url(event.track().url())
-                .field($(database().language(event.track().context().guild()), "plugins.music.events.title"),
-                        event.track().title(), true)
-                .field("\u200B", "\u200B", true)
-                .field($(database().language(event.track().context().guild()), "plugins.music.events.artist"),
-                        event.track().author(), true)
-                .field($(database().language(event.track().context().guild()), "plugins.music.events.length"),
-                        Time.toHumanReadableDuration(event.track().length()), true);
-        catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
-    }
-    
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    @Event(EventType.AUDIO_QUEUE_END)
-    public void handleQueueEnd(final NekoTrackEvent event) {
-        final EmbedBuilder builder = new EmbedBuilder();
-        builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.queue-ended"));
-        catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
-    }
-    
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    @Event(EventType.AUDIO_TRACK_NOW_PLAYING)
-    public void handleNowPlaying(final NekoTrackEvent event) {
+        final NekoTrackEvent event = res.toJsonObject().mapTo(NekoTrackEvent.class);
+        
         if(event.track() == null || event.track().title() == null) {
-            final EmbedBuilder builder = new EmbedBuilder();
-            builder.title(Emotes.NO + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.now-playing.nothing"));
+            final EmbedBuilder builder = new EmbedBuilder()
+                    .title(Emotes.NO + ' ' + $(database().language(event.track().context().guild()),
+                            "plugins.music.events.now-playing.nothing"));
             catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
         } else {
-            final EmbedBuilder builder = new EmbedBuilder();
-            builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.now-playing.now-playing"))
+            final EmbedBuilder builder = new EmbedBuilder()
+                    .title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()),
+                            "plugins.music.events.now-playing.now-playing"))
                     .url(event.track().url())
                     .field($(database().language(event.track().context().guild()), "plugins.music.events.title"),
                             event.track().title(), true)
@@ -307,6 +268,7 @@ public class PluginMusic extends BasePlugin {
                 }
                 final Duration position = Duration.ofMillis(event.track().position());
                 final Duration length = Duration.ofMillis(event.track().length());
+                //noinspection ResultOfMethodCallIgnored
                 builder.field($(database().language(event.track().context().guild()), "plugins.music.events.time"),
                         String.format("%s:%s / %s:%s\n%s",
                                 Strings.padStart("" + position.toMinutesPart(), 2, '0'),
@@ -321,10 +283,59 @@ public class PluginMusic extends BasePlugin {
     }
     
     @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Event(EventType.AUDIO_TRACK_QUEUE)
+    public void handleTrackQueue(final NekoTrackEvent event) {
+        if(event.track() == null) {
+            // TODO: Dealing with no-tracks-found event
+            return;
+        }
+        
+        final EmbedBuilder builder = new EmbedBuilder();
+        builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()),
+                "plugins.music.events.song-queued"))
+                .url(event.track().url())
+                .field($(database().language(event.track().context().guild()), "plugins.music.events.title"),
+                        event.track().title(), true)
+                .field("\u200B", "\u200B", true)
+                .field($(database().language(event.track().context().guild()), "plugins.music.events.artist"),
+                        event.track().author(), true)
+                .field($(database().language(event.track().context().guild()), "plugins.music.events.length"),
+                        Time.toHumanReadableDuration(event.track().length()), true);
+        catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
+    }
+    
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Event(EventType.AUDIO_TRACK_START)
+    public void handleTrackStart(final NekoTrackEvent event) {
+        final EmbedBuilder builder = new EmbedBuilder();
+        builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()),
+                "plugins.music.events.song-started"))
+                .url(event.track().url())
+                .field($(database().language(event.track().context().guild()), "plugins.music.events.title"),
+                        event.track().title(), true)
+                .field("\u200B", "\u200B", true)
+                .field($(database().language(event.track().context().guild()), "plugins.music.events.artist"),
+                        event.track().author(), true)
+                .field($(database().language(event.track().context().guild()), "plugins.music.events.length"),
+                        Time.toHumanReadableDuration(event.track().length()), true);
+        catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
+    }
+    
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Event(EventType.AUDIO_QUEUE_END)
+    public void handleQueueEnd(final NekoTrackEvent event) {
+        final EmbedBuilder builder = new EmbedBuilder();
+        builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()),
+                "plugins.music.events.queue-ended"));
+        catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
+    }
+    
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Event(EventType.AUDIO_TRACK_QUEUE_MANY)
     public void handleQueueMany(final NekoTrackEvent event) {
         final EmbedBuilder builder = new EmbedBuilder();
-        builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.queue.many")
+        builder.title(Emotes.YES + ' ' + $(database().language(event.track().context().guild()),
+                "plugins.music.events.queue.many")
                 .replace("$amount", event.track().title()));
         catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
     }
@@ -333,7 +344,8 @@ public class PluginMusic extends BasePlugin {
     @Event(EventType.AUDIO_TRACK_NO_MATCHES)
     public void handleNoMatches(final NekoTrackEvent event) {
         final EmbedBuilder builder = new EmbedBuilder();
-        builder.title(Emotes.NO + ' ' + $(database().language(event.track().context().guild()), "plugins.music.events.queue.no-matches"));
+        builder.title(Emotes.NO + ' ' + $(database().language(event.track().context().guild()),
+                "plugins.music.events.queue.no-matches"));
         catnip().rest().channel().sendMessage(event.track().context().channel(), builder.build());
     }
     

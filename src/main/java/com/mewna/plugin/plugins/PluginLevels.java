@@ -46,7 +46,7 @@ import static com.mewna.util.Translator.$;
  * @author amy
  * @since 5/19/18.
  */
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings({"unused", "WeakerAccess", "SqlResolve"})
 @Plugin(name = "Levels", desc = "Allow gaining xp and leveling up by chatting.", settings = LevelsSettings.class)
 public class PluginLevels extends BasePlugin {
     public static boolean isLevelUp(final long oldXp, final long xp) {

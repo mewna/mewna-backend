@@ -7,9 +7,11 @@ import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.guild.Member;
 import com.mewna.catnip.entity.message.MessageOptions;
 import com.mewna.catnip.entity.user.User;
+import com.mewna.catnip.entity.user.VoiceState;
 import com.mewna.catnip.rest.guild.MemberData;
 import com.mewna.catnip.shard.DiscordEvent.Raw;
 import com.mewna.catnip.util.SafeVertxCompletableFuture;
+import com.mewna.data.DiscordCache;
 import com.mewna.data.Player;
 import com.mewna.event.discord.DiscordGuildMemberAdd;
 import com.mewna.event.discord.DiscordMessageCreate;
@@ -194,6 +196,10 @@ public class PluginLevels extends BasePlugin {
             endRoles.addAll(rewards);
             endRoles.removeAll(removeRoles);
             final MemberData memberData = new MemberData();
+            // lol
+            final String voiceChannel = Optional.ofNullable(DiscordCache.voiceState(guild.id(), member.id()).toCompletableFuture().join())
+                    .map(VoiceState::channelId).orElse(null);
+            memberData.channelId(voiceChannel);
             //noinspection ResultOfMethodCallIgnored
             endRoles.forEach(memberData::addRole);
             catnip().rest().guild().modifyGuildMember(guild.id(), member.id(), memberData)
@@ -209,6 +215,10 @@ public class PluginLevels extends BasePlugin {
                 .filter(e -> e.getValue() <= level).map(Entry::getKey).collect(Collectors.toList());
         if(!rewards.isEmpty()) {
             final MemberData memberData = new MemberData();
+            // lol
+            final String voiceChannel = Optional.ofNullable(DiscordCache.voiceState(guild.id(), member.id()).toCompletableFuture().join())
+                    .map(VoiceState::channelId).orElse(null);
+            memberData.channelId(voiceChannel);
             member.roleIds().forEach(memberData::addRole);
             rewards.forEach(memberData::addRole);
             catnip().rest().guild().modifyGuildMember(guild.id(), member.id(), memberData)

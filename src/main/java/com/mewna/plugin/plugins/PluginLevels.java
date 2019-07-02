@@ -94,6 +94,7 @@ public class PluginLevels extends BasePlugin {
         return count[0];
     }
     
+    @SuppressWarnings("SingleCharacterStringConcatenation")
     public static int getPlayerRankInGuild(final Guild guild, final User player) {
         final int[] rank = {-1};
         final String guildId = guild.id();
@@ -101,7 +102,7 @@ public class PluginLevels extends BasePlugin {
         Mewna.getInstance().database().getStore().sql("SELECT rank FROM (SELECT row_number() OVER (" +
                 "ORDER BY (data->'guildXp'->>'" + guildId + "')::integer DESC" +
                 ") AS rank, data FROM players " +
-                "WHERE data->'guildXp'->'" + guildId + "' IS NOT NULL " +
+                "WHERE data->'guildXp' ?? '" + guildId + "'" +
                 ") AS _q " +
                 "WHERE data->>'id' = '" + playerId + "';", p -> {
             final ResultSet resultSet = p.executeQuery();
